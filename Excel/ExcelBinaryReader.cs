@@ -514,6 +514,7 @@ namespace Excel
 							else
 								Helpers.AddColumnHandleDuplicate(table, string.Concat(COLUMN, i));
 						}
+						justAddedColumns = true;
 					}
 					else
 					{
@@ -524,7 +525,6 @@ namespace Excel
 					}
 
 					triggerCreateColumns = false;
-					justAddedColumns = true;
 					table.BeginLoadData();
 				}
 
