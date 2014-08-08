@@ -406,7 +406,7 @@ namespace Excel
 				XlsBiffRecord rec = m_stream.ReadAt(m_cellOffset);
 				m_cellOffset += rec.Size;
 
-				if ((rec is XlsBiffDbCell)) { break; };//break;
+				if ((rec is XlsBiffDbCell) || (rec is XlsBiffMSODrawing)) { break; };//break;
 				if (rec is XlsBiffEOF) { return false; };
 
 				XlsBiffBlankCell cell = rec as XlsBiffBlankCell;
