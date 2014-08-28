@@ -37,18 +37,18 @@ namespace Excel.Log
 		{
 			ILog result = null;
 
-			if (_dictionary.ContainsKey(objectName))
-				result = _dictionary[objectName];
-
-			if (result == null)
+			lock (_sync)
 			{
-				lock (_sync)
+				if (_dictionary.ContainsKey(objectName))
+					result = _dictionary[objectName];
+
+				if (result == null)
 				{
 					result = Excel.Log.Log.GetLoggerFor(objectName);
 					_dictionary.Add(objectName, result);
 				}
 			}
-			
+
 			return result;
 		}
 	}
