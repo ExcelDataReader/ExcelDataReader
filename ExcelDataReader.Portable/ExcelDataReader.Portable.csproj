@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{00125EE9-759B-4D3E-8A0C-36BE6B7E2FB7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ExcelDataReader.Portable</RootNamespace>
+    <AssemblyName>ExcelDataReader.Portable</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Profile7</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>exceldatareader.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- A reference to the entire .NET Framework is automatically included -->
+    <None Include="app.config" />
+    <None Include="exceldatareader.snk" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Async\AsyncHelper.cs" />
+    <Compile Include="Core\BinaryFormat\Enums.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffBlankCell.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffBOF.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffBoundSheet.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffContinue.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffDbCell.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffDimensions.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffEOF.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffFormatString.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffFormulaCell.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffFormulaString.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffIndex.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffIntegerCell.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffInterfaceHdr.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffLabelCell.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffLabelSSTCell.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffMulBlankCell.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffMulRKCell.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffNumberCell.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffQuickTip.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffRecord.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffRKCell.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffRow.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffSimpleValueRecord.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffSST.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffStream.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffUncalced.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffWindow1.cs" />
+    <Compile Include="Core\BinaryFormat\XlsDirectoryEntry.cs" />
+    <Compile Include="Core\BinaryFormat\XlsFat.cs" />
+    <Compile Include="Core\BinaryFormat\XlsFormattedUnicodeString.cs" />
+    <Compile Include="Core\BinaryFormat\XlsHeader.cs" />
+    <Compile Include="Core\BinaryFormat\XlsRootDirectory.cs" />
+    <Compile Include="Core\BinaryFormat\XlsStream.cs" />
+    <Compile Include="Core\BinaryFormat\XlsWorkbookGlobals.cs" />
+    <Compile Include="Core\BinaryFormat\XlsWorksheet.cs" />
+    <Compile Include="Core\FormatReader.cs" />
+    <Compile Include="Core\Helpers.cs" />
+    <Compile Include="Core\OpenXmlFormat\XlsxDimension.cs" />
+    <Compile Include="Core\OpenXmlFormat\XlsxNumFmt.cs" />
+    <Compile Include="Core\OpenXmlFormat\XlsxSST.cs" />
+    <Compile Include="Core\OpenXmlFormat\XlsxStyles.cs" />
+    <Compile Include="Core\OpenXmlFormat\XlsxWorkbook.cs" />
+    <Compile Include="Core\OpenXmlFormat\XlsxWorksheet.cs" />
+    <Compile Include="Core\OpenXmlFormat\XlsxXf.cs" />
+    <Compile Include="Core\OpenXmlFormat\XmlReaderExtensions.cs" />
+    <Compile Include="Core\ReferenceHelper.cs" />
+    <Compile Include="Core\StringHelper.cs" />
+    <Compile Include="Core\ZipWorker.cs" />
+    <Compile Include="Data\IDataHelper.cs" />
+    <Compile Include="Data\IDataReader.cs" />
+    <Compile Include="Data\IDataRecord.cs" />
+    <Compile Include="Errors.cs" />
+    <Compile Include="Data\IDatasetHelper.cs" />
+    <Compile Include="ExcelBinaryReader.cs" />
+    <Compile Include="ExcelOpenXmlReader.cs" />
+    <Compile Include="ExcelReaderFactory.cs" />
+    <Compile Include="Exceptions\BiffRecordException.cs" />
+    <Compile Include="Exceptions\HeaderException.cs" />
+    <Compile Include="IExcelDataReader.cs" />
+    <Compile Include="IO\PCLStorage\FolderExtensions.cs" />
+    <Compile Include="Misc\DateTimeHelper.cs" />
+    <Compile Include="Misc\ListExtensions.cs" />
+    <Compile Include="IO\IFileHelper.cs" />
+    <Compile Include="Log\ILog-4.5.cs" />
+    <Compile Include="Log\ILog.cs" />
+    <Compile Include="Log\Log.cs" />
+    <Compile Include="Log\LogExtensions.cs" />
+    <Compile Include="Log\Logger\NullLog-4.5.cs" />
+    <Compile Include="Log\Logger\NullLog.cs" />
+    <Compile Include="Log\LogManager.cs" />
+    <Compile Include="Log\StringExtensions.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="readme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="PCLStorage">
+      <HintPath>..\packages\PCLStorage.0.9.6\lib\portable-net45+wp8+wpa81+win8+monoandroid+monotouch\PCLStorage.dll</HintPath>
+    </Reference>
+    <Reference Include="PCLStorage.Abstractions">
+      <HintPath>..\packages\PCLStorage.0.9.6\lib\portable-net45+wp8+wpa81+win8+monoandroid+monotouch\PCLStorage.Abstractions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

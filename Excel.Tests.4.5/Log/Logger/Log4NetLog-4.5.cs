@@ -1,6 +1,5 @@
 ﻿using System;
-using Excel.Log;
-using log4net.Config;
+using ExcelDataReader.Portable.Log;
 
 namespace Excel.Tests.Log.Logger
 {

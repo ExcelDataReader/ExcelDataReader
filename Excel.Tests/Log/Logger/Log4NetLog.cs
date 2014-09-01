@@ -1,4 +1,8 @@
-﻿using Excel.Log;
+﻿#if NET20
+using Excel.Log;
+#else
+using ExcelDataReader.Portable.Log;
+#endif
 using log4net.Config;
 
 [assembly: XmlConfigurator(Watch = true)]

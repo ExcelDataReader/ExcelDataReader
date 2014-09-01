@@ -36,9 +36,6 @@ namespace Excel.Tests
 			if (canSeek)
 				return base.Seek(offset, loc);
 
-		    if (offset == this.Position)
-                return offset;
-
 			//throw offset error to simuate problem we had with HttpInputStream
 			throw new ArgumentOutOfRangeException("offset");
 		}

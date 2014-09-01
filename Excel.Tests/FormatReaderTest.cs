@@ -1,15 +1,10 @@
 ﻿using System;
 using Excel.Core;
-#if MSTEST_DEBUG || MSTEST_RELEASE
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-using NUnit.Framework;
-using TestClass = NUnit.Framework.TestFixtureAttribute;
-using TestInitialize = NUnit.Framework.SetUpAttribute;
-using TestCleanup = NUnit.Framework.TearDownAttribute;
-using TestMethod = NUnit.Framework.TestAttribute;
-
+#if !NET20
+using ExcelDataReader.Portable.Core;
 #endif
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Excel.Tests
 {

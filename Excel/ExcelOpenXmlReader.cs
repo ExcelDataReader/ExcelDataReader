@@ -1,4 +1,4 @@
-#define DEBUGREADERS
+//#define DEBUGREADERS
 
 using System;
 using System.Collections.Generic;

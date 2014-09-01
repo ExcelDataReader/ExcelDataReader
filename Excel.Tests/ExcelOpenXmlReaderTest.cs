@@ -3,19 +3,17 @@ using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Threading;
-using Excel.Core;
-#if MSTEST_DEBUG || MSTEST_RELEASE
 using Excel.Tests.Log.Logger;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+#if NET20
 #else
-using Excel.Tests.Log.Logger;
-using NUnit.Framework;
-using TestClass = NUnit.Framework.TestFixtureAttribute;
-using TestInitialize = NUnit.Framework.SetUpAttribute;
-using TestCleanup = NUnit.Framework.TearDownAttribute;
-using TestMethod = NUnit.Framework.TestAttribute;
-
+using ExcelDataReader.Portable.Core;
+using ExcelDataReader.Portable.IO;
+using Moq;
+using PCLStorage;
 #endif
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 
 namespace Excel.Tests
 {
@@ -263,7 +261,7 @@ namespace Excel.Tests
 
             Assert.AreEqual(false, excelReader.IsValid);
             Assert.AreEqual(true, excelReader.IsClosed);
-            Assert.AreEqual("Cannot find central directory", excelReader.ExceptionMessage);
+            Assert.AreEqual("End of Central Directory record could not be found.", excelReader.ExceptionMessage);
         }
 
 
@@ -722,14 +720,18 @@ namespace Excel.Tests
             Assert.AreEqual(Helper.GetKey("TestUnicodePos2x1"), result.Rows[1][0].ToString());
         }
 
+#if !NET20
         [TestMethod]
         public void ZipWorker_Extract_Test()
         {
-            var zipper = new ZipWorker();
+            var zipper = new ZipWorker(FileSystem.Current, new Portable.FileHelper());
+
+            //this first one isn't a valid xlsx so we are expecting no side effects in the directory tree
             zipper.Extract(Helper.GetTestWorkbook("TestChess"));
             Assert.AreEqual(false, Directory.Exists(zipper.TempPath));
             Assert.AreEqual(false, zipper.IsValid);
 
+            //this one is valid so we expect to find the files
             zipper.Extract(Helper.GetTestWorkbook("xTestOpenXml"));
 
             Assert.AreEqual(true, Directory.Exists(zipper.TempPath));
@@ -737,10 +739,21 @@ namespace Excel.Tests
 
             string tPath = zipper.TempPath;
 
+            //make sure that dispose gets rid of the files
             zipper.Dispose();
 
             Assert.AreEqual(false, Directory.Exists(tPath));
         }
+
+        private class FileHelper : IFileHelper
+        {
+            public string GetTempPath()
+            {
+                return System.IO.Path.GetTempPath();
+            }
+        }
+#endif
+
 
 		[TestMethod]
 		public void Issue_DateFormatButNotDate()
@@ -773,8 +786,9 @@ namespace Excel.Tests
 		[TestMethod]
 		public void Issue_11573_BlankValues()
 		{
-			Excel.Log.Log.InitializeWith<Log4NetLog>();
-
+#if !NET20
+			ExcelDataReader.Portable.Log.Log.InitializeWith<Log4NetLog>();
+#endif
 			IExcelDataReader excelReader =
 				ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Issue_11573_BlankValues"));
 			excelReader.IsFirstRowAsColumnNames = false;
@@ -789,8 +803,6 @@ namespace Excel.Tests
 		[TestMethod]
 		public void Issue_11773_Exponential()
 		{
-			Excel.Log.Log.InitializeWith<Log4NetLog>();
-
 			IExcelDataReader excelReader =
 				ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Issue_11773_Exponential"));
 			excelReader.IsFirstRowAsColumnNames = true;
@@ -806,8 +818,6 @@ namespace Excel.Tests
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE", false); 
 
-            Excel.Log.Log.InitializeWith<Log4NetLog>();
-
             IExcelDataReader excelReader =
                 ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Issue_11773_Exponential"));
             excelReader.IsFirstRowAsColumnNames = true;
@@ -821,8 +831,6 @@ namespace Excel.Tests
         [TestMethod]
         public void Test_googlesourced()
         {
-            Excel.Log.Log.InitializeWith<Log4NetLog>();
-
             IExcelDataReader excelReader =
                 ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_googlesourced"));
             excelReader.IsFirstRowAsColumnNames = true;
@@ -838,8 +846,6 @@ namespace Excel.Tests
         [TestMethod]
         public void Test_Issue_12667_GoogleExport_MissingColumns  ()
         {
-            Excel.Log.Log.InitializeWith<Log4NetLog>();
-
             IExcelDataReader excelReader =
                 ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Issue_12667_GoogleExport_MissingColumns"));
             excelReader.IsFirstRowAsColumnNames = true;
@@ -857,8 +863,6 @@ namespace Excel.Tests
 	    [TestMethod]
         public void Issue_12271_NextResultSet()
         {
-            Excel.Log.Log.InitializeWith<Log4NetLog>();
-
             IExcelDataReader excelReader =
                 ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_LotsOfSheets"));
             //excelReader.IsFirstRowAsColumnNames = true;
