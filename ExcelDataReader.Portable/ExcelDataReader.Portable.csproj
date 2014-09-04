@@ -123,9 +123,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="PCLStorage">
       <HintPath>..\packages\PCLStorage.0.9.6\lib\portable-net45+wp8+wpa81+win8+monoandroid+monotouch\PCLStorage.dll</HintPath>
     </Reference>

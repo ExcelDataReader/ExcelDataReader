@@ -724,7 +724,7 @@ namespace Excel.Tests
         [TestMethod]
         public void ZipWorker_Extract_Test()
         {
-            var zipper = new ZipWorker(FileSystem.Current, new Portable.FileHelper());
+            var zipper = new ZipWorker(FileSystem.Current, new FileHelper());
 
             //this first one isn't a valid xlsx so we are expecting no side effects in the directory tree
             zipper.Extract(Helper.GetTestWorkbook("TestChess"));

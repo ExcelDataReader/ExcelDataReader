@@ -1,8 +1,7 @@
 using System;
 using System.Data;
 using System.IO;
-using System.Threading.Tasks;
-using Excel.Portable;
+using ExcelDataReader.Desktop.Portable;
 
 namespace Excel
 {

@@ -2,7 +2,7 @@
 
 using System;
 using System.Data;
-using Excel.Portable;
+using ExcelDataReader.Desktop.Portable;
 
 namespace Excel
 {

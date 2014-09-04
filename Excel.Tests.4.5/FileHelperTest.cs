@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Excel.Portable;
+using ExcelDataReader.Desktop.Portable;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

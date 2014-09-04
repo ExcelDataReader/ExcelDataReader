@@ -632,8 +632,6 @@ namespace Excel.Tests
         [TestMethod]
         public void Test_OpenOffice()
         {
-            ExcelDataReader.Portable.Log.Log.InitializeWith<Log4NetLog>();
-
             IExcelDataReader excelReader =
                 ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_OpenOffice"));
             excelReader.IsFirstRowAsColumnNames = true;

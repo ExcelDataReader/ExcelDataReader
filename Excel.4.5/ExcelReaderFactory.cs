@@ -1,5 +1,5 @@
 using System.IO;
-using Excel.Portable;
+using ExcelDataReader.Desktop.Portable;
 using ExcelDataReader.Portable.Data;
 using ExcelDataReader.Portable.IO;
 using PCLStorage;

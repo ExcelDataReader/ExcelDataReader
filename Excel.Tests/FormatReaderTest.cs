@@ -1,5 +1,4 @@
 ﻿using System;
-using Excel.Core;
 #if !NET20
 using ExcelDataReader.Portable.Core;
 #endif

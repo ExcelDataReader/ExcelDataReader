@@ -1,9 +1,9 @@
 ﻿using System;
 using ExcelDataReader.Portable.Data;
 
-namespace Excel.Portable
+namespace ExcelDataReader.Desktop.Portable
 {
-    internal class DataHelper : IDataHelper
+    public class DataHelper : IDataHelper
     {
         public bool IsDBNull(object value)
         {

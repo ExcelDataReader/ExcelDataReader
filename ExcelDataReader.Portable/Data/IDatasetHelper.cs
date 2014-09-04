@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 namespace ExcelDataReader.Portable.Data
 {
     /// <summary>
-    /// Implement this
+    /// Implement this to provide Dataset support. The platform doesn't need Dataset as such
+    /// but could implement this to populate some native structure
     /// </summary>
     public interface IDatasetHelper
     {
@@ -55,14 +56,4 @@ namespace ExcelDataReader.Portable.Data
         void DatasetLoadComplete();
     }
 
-    //public interface ITableHelper
-    //{
-    //    void CreateNew(string sheetName);
-    //}
-
-    //public interface ITableHelperFactory
-    //{
-    //    IDatasetHelper CreateDataset();
-    //    ITableHelper CreateTable();
-    //}
 }

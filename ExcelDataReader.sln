@@ -26,6 +26,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{2BC605
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelDataReader.Desktop", "ExcelDataReader.Desktop\ExcelDataReader.Desktop.csproj", "{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -115,6 +117,16 @@ Global
 		{00125EE9-759B-4D3E-8A0C-36BE6B7E2FB7}.MSTEST_RELEASE|Any CPU.Build.0 = Release|Any CPU
 		{00125EE9-759B-4D3E-8A0C-36BE6B7E2FB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00125EE9-759B-4D3E-8A0C-36BE6B7E2FB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.Debug-net20|Any CPU.ActiveCfg = Debug|Any CPU
+		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.Debug-net20|Any CPU.Build.0 = Debug|Any CPU
+		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.MSTEST_DEBUG|Any CPU.ActiveCfg = Release|Any CPU
+		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.MSTEST_DEBUG|Any CPU.Build.0 = Release|Any CPU
+		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.MSTEST_RELEASE|Any CPU.ActiveCfg = Release|Any CPU
+		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.MSTEST_RELEASE|Any CPU.Build.0 = Release|Any CPU
+		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

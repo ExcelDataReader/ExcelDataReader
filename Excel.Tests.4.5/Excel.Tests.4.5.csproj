@@ -85,6 +85,10 @@
       <Project>{D1905BBD-5F3B-4112-90BD-2D97C8B539C9}</Project>
       <Name>Excel.4.5</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ExcelDataReader.Desktop\ExcelDataReader.Desktop.csproj">
+      <Project>{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}</Project>
+      <Name>ExcelDataReader.Desktop</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ExcelDataReader.Portable\ExcelDataReader.Portable.csproj">
       <Project>{00125ee9-759b-4d3e-8a0c-36be6b7e2fb7}</Project>
       <Name>ExcelDataReader.Portable</Name>
