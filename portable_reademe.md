@@ -10,3 +10,5 @@ Also, ConcurrentDictionary is not available on Silverlight though that can be wo
 
 Windows Phone
 As far as I can tell it should work with Windows Phone 8.1, but we need some one who has Windows 8 to build ExcelDataReader.WindowsPhone
+
+Xamarin - implementation classes need writing but ExcelDataReader.Portable should be compatible (need testers)
