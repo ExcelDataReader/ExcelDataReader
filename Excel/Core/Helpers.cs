@@ -106,9 +106,11 @@ namespace Excel.Core
                         if (newTable == null)
                             newTable = table.Clone();
                         newTable.Columns[i].DataType = type;
-						if (columnMustBeNullable
-							&& !(type.IsGenericType && type.GetGenericTypeDefinition () == typeof(Nullable<>))) {
-							newTable.Columns [i].DataType = typeof(String);
+						if (columnMustBeNullable) {
+							if ( (type.IsGenericType && !(type.GetGenericTypeDefinition () == typeof(Nullable<>)))
+								|| type.IsPrimitive ) {
+								newTable.Columns [i].DataType = typeof(Nullable<>).MakeGenericType (type);
+							}
 						}
                     }
                 }
