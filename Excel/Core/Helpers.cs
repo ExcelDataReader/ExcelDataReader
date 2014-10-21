@@ -78,13 +78,16 @@ namespace Excel.Core
                     continue;
                 }
                 DataTable newTable = null;
-                for (int i = 0; i < table.Columns.Count; i++)
+				var columnCount = table.Columns.Count;
+				for (int i = 0; i < table.Columns.Count; i++)
                 {
+					var columnMustBeNullable = false;
                     Type type = null;
                     foreach (DataRow row  in table.Rows)
                     {
-                        if (row.IsNull(i))
-                            continue;
+						if (row.IsNull (i)) {
+							columnMustBeNullable = true;
+						}
                         var curType = row[i].GetType();
                         if (curType != type)
                         {
@@ -102,8 +105,11 @@ namespace Excel.Core
                         convert = true;
                         if (newTable == null)
                             newTable = table.Clone();
-                        newTable.Columns[i].DataType = type;
-
+						newTable.Columns[i].DataType = type;
+						if (columnMustBeNullable
+						    && !(type.IsGenericType && type.GetGenericTypeDefinition () == typeof(Nullable<>))) {
+							newTable.Columns [i].DataType = typeof(String);
+						}
                     }
                 }
                 if (newTable != null)
