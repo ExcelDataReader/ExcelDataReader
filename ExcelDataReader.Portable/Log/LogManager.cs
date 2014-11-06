@@ -34,21 +34,30 @@ namespace ExcelDataReader.Portable.Log
 		/// <returns>Instance of a logger for the object.</returns>
 		public static ILog Log(string objectName)
 		{
-			ILog result = null;
+            ILog result = null;
 
-			if (_dictionary.ContainsKey(objectName))
-				result = _dictionary[objectName];
+            if (_dictionary.ContainsKey(objectName))
+                result = _dictionary[objectName];
 
-			if (result == null)
-			{
-				lock (_sync)
-				{
-					result = Portable.Log.Log.GetLoggerFor(objectName);
-					_dictionary.Add(objectName, result);
-				}
-			}
-			
-			return result;
+            if (result == null)
+            {
+                lock (_sync)
+                {
+                    if (_dictionary.ContainsKey(objectName))
+                    {
+                        result = _dictionary[objectName];
+                    }
+                    else
+                    {
+                        result = Portable.Log.Log.GetLoggerFor(objectName);
+                        _dictionary.Add(objectName, result);
+                    }
+
+                    result = _dictionary[objectName];
+                }
+            }
+
+            return result;
 		}
 	}
 }

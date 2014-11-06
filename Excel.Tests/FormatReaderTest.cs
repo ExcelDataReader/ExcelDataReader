@@ -1,8 +1,9 @@
 ﻿using System;
 #if !NET20
 using ExcelDataReader.Portable.Core;
+#else
+using Excel.Core;
 #endif
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Excel.Tests
