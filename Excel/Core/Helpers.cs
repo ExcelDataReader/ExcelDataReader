@@ -110,14 +110,14 @@ namespace Excel.Core
                             newTable = table.Clone();
                         newTable.Columns[i].DataType = type;
 						if (columnMustBeNullable) {
-							#if __MonoCS__
 							if ( (type.IsGenericType && !(type.GetGenericTypeDefinition () == typeof(Nullable<>)))
 								|| type.IsPrimitive ) {
+								#if __MonoCS__
 								newTable.Columns [i].DataType = typeof(Nullable<>).MakeGenericType (type);
+								#else
+								newTable.Columns [i].DataType = typeof(String);
+								#endif
 							}
-							#else
-							newTable.Columns [i].DataType = typeof(String);
-							#endif
 						}
                     }
                 }
