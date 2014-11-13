@@ -86,12 +86,14 @@ namespace Excel.Core
 					#endif
                     foreach (DataRow row  in table.Rows)
                     {
-						#if __MonoCS__
 						if (row.IsNull (i)) {
+							#if __MonoCS__
 							columnMustBeNullable = true;
+							#else
+							row[i] = row[i].ToString();
+							#endif
 							continue;
 						}
-						#endif
                         var curType = row[i].GetType();
                         if (curType != type)
                         {
