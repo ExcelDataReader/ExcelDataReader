@@ -46,8 +46,8 @@ namespace Excel.Core.BinaryFormat
 					bts = base.ReadArray(0x9, Length * (Helpers.IsSingleByteEncoding(m_UseEncoding) ? 1 : 2));
 				}
 				else
-				{ //biff 3-5
-					bts = base.ReadArray(0x2, Length * (Helpers.IsSingleByteEncoding(m_UseEncoding) ? 1 : 2));
+				{ //biff 3-5 - string length starts at offset 0x6, string at 0x8
+					bts = base.ReadArray(0x8, Length * (Helpers.IsSingleByteEncoding(m_UseEncoding) ? 1 : 2));
 				}
 				
 
