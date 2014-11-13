@@ -90,7 +90,9 @@ namespace Excel.Core
 							#if __MonoCS__
 							columnMustBeNullable = true;
 							#else
-							row[i] = row[i].ToString();
+							if ( null != type ) {
+								row[i] = Convert.ChangeType(row[i], type);
+							}
 							#endif
 							continue;
 						}
