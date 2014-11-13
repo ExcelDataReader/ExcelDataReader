@@ -458,7 +458,7 @@ namespace Excel
 				//DataTable columns
 				if (triggerCreateColumns)
 				{
-					if (_isFirstRowAsColumnNames && readWorkSheetRow() || (_isFirstRowAsColumnNames && m_maxRow == 1))
+					if ((_isFirstRowAsColumnNames && readWorkSheetRow()) || (_isFirstRowAsColumnNames && m_maxRow == 1))
 					{
 						for (int i = 0; i < m_maxCol; i++)
 						{
@@ -497,41 +497,51 @@ namespace Excel
 
 		private void readWholeWorkSheetNoIndex(bool triggerCreateColumns, DataTable table)
 		{
-			while (Read())
+		    if (!_isFirstRowAsColumnNames && triggerCreateColumns) 
+            {
+                for (int i = 0; i < m_maxCol; i++) 
+                {
+                    table.Columns.Add(null, typeof(Object));
+                }
+                triggerCreateColumns = false;
+            }
+
+			while (m_depth < m_maxRow)
 			{
-				if (m_depth == m_maxRow) break;
+			    if (Read())
+			    {
+			        bool justAddedColumns = false;
+			        //DataTable columns
+			        if (triggerCreateColumns)
+			        {
+			            if (_isFirstRowAsColumnNames)
+			            {
+			                for (int i = 0; i < m_maxCol; i++)
+			                {
+			                    if (m_cellsValues[i] != null && m_cellsValues[i].ToString().Length > 0)
+			                        Helpers.AddColumnHandleDuplicate(table, m_cellsValues[i].ToString());
+			                    else
+			                        Helpers.AddColumnHandleDuplicate(table, string.Concat(COLUMN, i));
+			                }
+			            }
 
-				bool justAddedColumns = false;
-				//DataTable columns
-				if (triggerCreateColumns)
-				{
-					if (_isFirstRowAsColumnNames || (_isFirstRowAsColumnNames && m_maxRow == 1))
-					{
-						for (int i = 0; i < m_maxCol; i++)
-						{
-							if (m_cellsValues[i] != null && m_cellsValues[i].ToString().Length > 0)
-								Helpers.AddColumnHandleDuplicate(table, m_cellsValues[i].ToString());
-							else
-								Helpers.AddColumnHandleDuplicate(table, string.Concat(COLUMN, i));
-						}
-					}
-					else
-					{
-						for (int i = 0; i < m_maxCol; i++)
-						{
-							table.Columns.Add(null, typeof(Object));
-						}
-					}
+			            triggerCreateColumns = false;
+			            justAddedColumns = true;
+			            table.BeginLoadData();
+			        }
 
-					triggerCreateColumns = false;
-					justAddedColumns = true;
-					table.BeginLoadData();
-				}
-
-				if (!justAddedColumns && m_depth > 0 && !(_isFirstRowAsColumnNames && m_maxRow == 1))
-				{
-					table.Rows.Add(m_cellsValues);
-				}
+			        if (!justAddedColumns && m_depth > 0 && !(_isFirstRowAsColumnNames && m_maxRow == 1))
+			        {
+			            if (m_cellsValues != null)
+			            {
+			                table.Rows.Add(m_cellsValues);
+			            }
+			            else
+			            {
+			                table.Rows.Add(new object[m_maxCol]);
+			            }
+			        }
+			    }
 			}
 
 			if (m_depth > 0 && !(_isFirstRowAsColumnNames && m_maxRow == 1))
@@ -691,12 +701,18 @@ namespace Excel
 			XlsBiffBlankCell cell = null;
 			do
 			{
-				if (m_stream.Position >= m_stream.Size)
-					return false;
+			    if (m_stream.Position >= m_stream.Size)
+			    {
+			        m_depth++;
+			        return true;
+			    }
 
-				var record = m_stream.Read();
-				if (record is XlsBiffEOF)
-					return false;
+			    var record = m_stream.Read();
+				if (record is XlsBiffEOF) 
+                {
+                    m_depth++;
+                    return true;
+                }
 
 				if (record.IsCell)
 				{
