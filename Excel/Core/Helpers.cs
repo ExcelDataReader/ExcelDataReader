@@ -87,17 +87,11 @@ namespace Excel.Core
                     foreach (DataRow row  in table.Rows)
                     {
 						if (row.IsNull (i)) {
-//							#if __MonoCS__
+							#if __MonoCS__
 							columnMustBeNullable = true;
-//							#else
-//							if ( null != type ) {
-//								object o = row[i];
-//								if ( null == o || o is DBNull ) {
-//									o = String.Empty;
-//								}
-//								row[i] = Convert.ChangeType(o, type);
-//							}
-//							#endif
+							#else
+							row [i] = String.Empty;
+							#endif
 							continue;
 						}
                         var curType = row[i].GetType();
