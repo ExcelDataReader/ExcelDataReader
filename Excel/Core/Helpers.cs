@@ -81,13 +81,17 @@ namespace Excel.Core
                 for (int i = 0; i < table.Columns.Count; i++)
                 {
                     Type type = null;
+					#if __MonoCS__
 					var columnMustBeNullable = false;
+					#endif
                     foreach (DataRow row  in table.Rows)
                     {
+						#if __MonoCS__
 						if (row.IsNull (i)) {
 							columnMustBeNullable = true;
 							continue;
 						}
+						#endif
                         var curType = row[i].GetType();
                         if (curType != type)
                         {
@@ -106,12 +110,14 @@ namespace Excel.Core
                         if (newTable == null)
                             newTable = table.Clone();
                         newTable.Columns[i].DataType = type;
+						#if __MonoCS__
 						if (columnMustBeNullable) {
 							if ( (type.IsGenericType && !(type.GetGenericTypeDefinition () == typeof(Nullable<>)))
 								|| type.IsPrimitive ) {
 								newTable.Columns [i].DataType = typeof(Nullable<>).MakeGenericType (type);
 							}
 						}
+						#endif
                     }
                 }
                 if (newTable != null)
