@@ -87,17 +87,17 @@ namespace Excel.Core
                     foreach (DataRow row  in table.Rows)
                     {
 						if (row.IsNull (i)) {
-							#if __MonoCS__
+//							#if __MonoCS__
 							columnMustBeNullable = true;
-							#else
-							if ( null != type ) {
-								object o = row[i];
-								if ( null == o || o is DBNull ) {
-									o = String.Empty;
-								}
-								row[i] = Convert.ChangeType(o, type);
-							}
-							#endif
+//							#else
+//							if ( null != type ) {
+//								object o = row[i];
+//								if ( null == o || o is DBNull ) {
+//									o = String.Empty;
+//								}
+//								row[i] = Convert.ChangeType(o, type);
+//							}
+//							#endif
 							continue;
 						}
                         var curType = row[i].GetType();
@@ -118,14 +118,15 @@ namespace Excel.Core
                         if (newTable == null)
                             newTable = table.Clone();
                         newTable.Columns[i].DataType = type;
-						#if __MonoCS__
 						if (columnMustBeNullable) {
+							#if __MonoCS__
 							if ( (type.IsGenericType && !(type.GetGenericTypeDefinition () == typeof(Nullable<>)))
 								|| type.IsPrimitive ) {
 								newTable.Columns [i].DataType = typeof(Nullable<>).MakeGenericType (type);
 							}
+							#endif
+							newTable.Columns [i].DataType = typeof(String);
 						}
-						#endif
                     }
                 }
                 if (newTable != null)
