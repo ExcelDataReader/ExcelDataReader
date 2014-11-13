@@ -91,7 +91,11 @@ namespace Excel.Core
 							columnMustBeNullable = true;
 							#else
 							if ( null != type ) {
-								row[i] = Convert.ChangeType(row[i], type);
+								object o = row[i];
+								if ( null == o || o is typeof(DBNull) ) {
+									o = String.Empty;
+								}
+								row[i] = Convert.ChangeType(o, type);
 							}
 							#endif
 							continue;
