@@ -92,7 +92,7 @@ namespace Excel.Core
 							#else
 							if ( null != type ) {
 								object o = row[i];
-								if ( null == o || o is typeof(DBNull) ) {
+								if ( null == o || o is DBNull ) {
 									o = String.Empty;
 								}
 								row[i] = Convert.ChangeType(o, type);
