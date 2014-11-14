@@ -50,7 +50,7 @@ namespace Excel.Core.BinaryFormat
 		/// </summary>
 		public SheetType Type
 		{
-			get { return (SheetType)base.ReadByte(0x4); }
+			get { return (SheetType)base.ReadByte(0x5); }
 		}
 
 		/// <summary>
@@ -58,7 +58,7 @@ namespace Excel.Core.BinaryFormat
 		/// </summary>
 		public SheetVisibility VisibleState
 		{
-			get { return (SheetVisibility)(base.ReadByte(0x5) & 0x3); }
+			get { return (SheetVisibility)base.ReadByte(0x4); }
 		}
 
 		/// <summary>
