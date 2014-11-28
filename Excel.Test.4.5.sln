@@ -1,11 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Excel", "Excel\Excel.csproj", "{4CB0690E-3E7A-497C-9116-D52024F63195}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Excel.4.5", "Excel\Excel.4.5.csproj", "{D1905BBD-5F3B-4112-90BD-2D97C8B539C9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{537D3BEA-4A18-4381-A955-DF762D21E100}"
+	ProjectSection(SolutionItems) = preProject
+		test.runsettings = test.runsettings
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Excel.Tests.4.5", "Excel.Tests.4.5\Excel.Tests.4.5.csproj", "{7E59CFF5-9A01-4DBC-A6E0-130C60F8EE18}"
 EndProject
@@ -14,36 +19,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Excel.Tests", "Excel.Tests\Excel.Tests.csproj", "{7ACFD25F-D601-454C-A963-B2C1E46ED3FC}"
 EndProject
 Global
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 5
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs08
-		SccProjectUniqueName0 = Excel\\Excel.csproj
-		SccProjectName0 = Excel
-		SccAuxPath0 = https://tfs.codeplex.com/tfs/tfs08
-		SccLocalPath0 = Excel
-		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccProjectUniqueName1 = Excel\\Excel.4.5.csproj
-		SccProjectName1 = Excel
-		SccAuxPath1 = https://tfs.codeplex.com/tfs/tfs08
-		SccLocalPath1 = Excel
-		SccProvider1 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccProjectUniqueName2 = Excel.Tests.4.5\\Excel.Tests.4.5.csproj
-		SccProjectName2 = Excel.Tests.4.5
-		SccAuxPath2 = https://tfs.codeplex.com/tfs/tfs08
-		SccLocalPath2 = Excel.Tests.4.5
-		SccProvider2 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccProjectUniqueName3 = TestApp\\TestApp.csproj
-		SccProjectName3 = TestApp
-		SccAuxPath3 = https://tfs.codeplex.com/tfs/tfs08
-		SccLocalPath3 = TestApp
-		SccProvider3 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccProjectUniqueName4 = Excel.Tests\\Excel.Tests.csproj
-		SccProjectName4 = Excel.Tests
-		SccAuxPath4 = https://tfs.codeplex.com/tfs/tfs08
-		SccLocalPath4 = Excel.Tests
-		SccProvider4 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		MSTEST_DEBUG|Any CPU = MSTEST_DEBUG|Any CPU

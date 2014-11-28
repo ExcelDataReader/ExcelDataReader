@@ -21,7 +21,7 @@ using TestMethod = NUnit.Framework.TestAttribute;
 namespace Excel.Tests
 {
     [TestClass]
-    [DeploymentItem("log4net.config")]
+    
     public class ExcelBinaryReaderTest
     {
 		[TestInitialize]
@@ -29,7 +29,7 @@ namespace Excel.Tests
 		{
 			
 		}
-        [DeploymentItem("log4net.config")]
+        
         [TestMethod]
         public void AsDataSet_Test()
         {
