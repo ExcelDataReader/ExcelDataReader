@@ -53,6 +53,13 @@ namespace Excel.Core.OpenXmlFormat
 			get { return _Name; }
 		}
 
+	    private string _visibleState;
+
+	    public string VisibleState
+	    {
+            get { return _visibleState; }
+	    }
+
 		private int _id;
 
 		public int Id
@@ -89,11 +96,12 @@ namespace Excel.Core.OpenXmlFormat
 			}
 		}
 
-		public XlsxWorksheet(string name, int id, string rid)
+		public XlsxWorksheet(string name, int id, string rid, string visibleState)
 		{
 			_Name = name;
 			_id = id;
 			_rid = rid;
+		    _visibleState = string.IsNullOrEmpty(visibleState) ? "visible" : visibleState.ToLower();
 		}
 
 	}

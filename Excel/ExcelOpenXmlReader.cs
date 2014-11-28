@@ -360,6 +360,8 @@ namespace Excel
 			{
 				DataTable table = new DataTable(_workbook.Sheets[ind].Name);
 
+                table.ExtendedProperties.Add("visiblestate", _workbook.Sheets[ind].VisibleState);
+
 				ReadSheetGlobals(_workbook.Sheets[ind]);
 
 				if (_workbook.Sheets[ind].Dimension == null) continue;
@@ -432,6 +434,14 @@ namespace Excel
 				return (_resultIndex >= 0 && _resultIndex < ResultsCount) ? _workbook.Sheets[_resultIndex].Name : null;
 			}
 		}
+
+        public string VisibleState
+        {
+            get
+            {
+                return (_resultIndex >= 0 && _resultIndex < ResultsCount) ? _workbook.Sheets[_resultIndex].VisibleState : null;
+            }
+        }
 
 		public void Close()
 		{

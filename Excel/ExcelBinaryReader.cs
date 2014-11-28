@@ -937,7 +937,10 @@ namespace Excel
 				DataTable table = readWholeWorkSheet(m_sheets[index]);
 
 				if (null != table)
+                {
+                    table.ExtendedProperties.Add("visiblestate", m_sheets[index].VisibleState);
 					m_workbookData.Tables.Add(table);
+                } 
 			}
 
 			m_file.Close();
@@ -963,6 +966,17 @@ namespace Excel
 					return null;
 			}
 		}
+
+        public string VisibleState
+        {
+            get
+            {
+                if (null != m_sheets && m_sheets.Count > 0)
+                    return m_sheets[m_SheetIndex].VisibleState;
+                else
+                    return null;
+            }
+        }
 
 		public bool IsValid
 		{
