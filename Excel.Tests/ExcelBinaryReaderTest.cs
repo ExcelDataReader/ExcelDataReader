@@ -29,6 +29,39 @@ namespace Excel.Tests
 		{
 			
 		}
+
+        [TestMethod]
+        public void GitIssue_29_ReadSheetStatesReadsCorrectly()
+        {
+            IExcelDataReader excelReader =
+                ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Excel_Dataset"));
+
+            Assert.AreEqual("hidden", excelReader.VisibleState);
+
+            excelReader.NextResult();
+            Assert.AreEqual("visible", excelReader.VisibleState);
+
+            excelReader.NextResult();
+            Assert.AreEqual("veryhidden", excelReader.VisibleState);
+        }
+
+        [TestMethod]
+        public void GitIssue_29_AsDataSetProvidesCorrectSheetVisibleState()
+        {
+            IExcelDataReader reader =
+                ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Excel_Dataset"));
+
+            var dataset = reader.AsDataSet();
+
+            reader.Close();
+
+            Assert.IsTrue(dataset != null);
+            Assert.AreEqual(3, dataset.Tables.Count);
+            Assert.AreEqual("hidden", dataset.Tables[0].ExtendedProperties["visiblestate"]);
+            Assert.AreEqual("visible", dataset.Tables[1].ExtendedProperties["visiblestate"]);
+            Assert.AreEqual("veryhidden", dataset.Tables[2].ExtendedProperties["visiblestate"]);
+        }
+        
         [DeploymentItem("log4net.config")]
         [TestMethod]
         public void AsDataSet_Test()

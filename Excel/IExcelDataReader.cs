@@ -45,6 +45,14 @@ namespace Excel
 		/// <value>The sheet name.</value>
 		string Name { get;}
 
+        /// <summary>
+        /// Gets the state of the visible.
+        /// </summary>
+        /// <value>
+        /// The state of the visible.
+        /// </value>
+        string VisibleState { get; }
+
 		/// <summary>
 		/// Gets the number of results (workbooks).
 		/// </summary>
