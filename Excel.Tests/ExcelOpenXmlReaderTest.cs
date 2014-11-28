@@ -598,7 +598,7 @@ namespace Excel.Tests
         public void Test_OpenOffice_SavedInExcel()
         {
             IExcelDataReader excelReader =
-                ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Excel_Dataset"));
+                ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Excel_OpenOffice"));
             excelReader.IsFirstRowAsColumnNames = true;
 
             ExcelBinaryReaderTest.DoOpenOfficeTest(excelReader);

@@ -29,6 +29,9 @@ namespace Excel.Tests
 		{
 			
 		}
+<<<<<<< HEAD
+        
+=======
 
         [TestMethod]
         public void GitIssue_29_ReadSheetStatesReadsCorrectly()
@@ -62,6 +65,8 @@ namespace Excel.Tests
             Assert.AreEqual("veryhidden", dataset.Tables[2].ExtendedProperties["visiblestate"]);
         }
         
+        [DeploymentItem("log4net.config")]
+>>>>>>> 9a4306fbb7dca34b66cadff354eb8635335a89f3
         [TestMethod]
         public void AsDataSet_Test()
         {
@@ -687,7 +692,7 @@ namespace Excel.Tests
         public void Test_OpenOffice_SavedInExcel()
         {
             IExcelDataReader excelReader =
-                ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Excel_OpenOffice"));
+                ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Excel_Dataset"));
             excelReader.IsFirstRowAsColumnNames = true;
 
             DoOpenOfficeTest(excelReader);
