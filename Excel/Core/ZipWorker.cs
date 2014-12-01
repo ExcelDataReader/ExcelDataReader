@@ -199,7 +199,8 @@ namespace Excel.Core
 
 		private void ExtractZipEntry(ZipFile zipFile, ZipEntry entry)
 		{
-			if (!entry.IsCompressionMethodSupported() || string.IsNullOrEmpty(entry.Name)) return;
+//			if (!entry.IsCompressionMethodSupported() || string.IsNullOrEmpty(entry.Name)) return;
+			if ( string.IsNullOrEmpty(entry.Name)) return;
 
 			string tPath = Path.Combine(_tempPath, entry.Name);
 			string path = entry.IsDirectory ? tPath : Path.GetDirectoryName(Path.GetFullPath(tPath));
