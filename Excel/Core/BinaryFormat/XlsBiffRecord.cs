@@ -158,6 +158,8 @@ namespace Excel.Core.BinaryFormat
 					return new XlsBiffUncalced(bytes, offset, reader);
 				case BIFFRECORDTYPE.QUICKTIP:
 					return new XlsBiffQuickTip(bytes, offset, reader);
+				case BIFFRECORDTYPE.MSODRAWING:
+            				return new XlsBiffMSODrawing(bytes, offset, reader);
 
 				default:
 					return new XlsBiffRecord(bytes, offset, reader);
