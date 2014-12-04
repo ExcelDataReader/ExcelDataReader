@@ -156,8 +156,12 @@ namespace Excel.Core.OpenXmlFormat
 
                     if (reader.NodeType == XmlNodeType.Element && reader.LocalName == N_t)
                     {
-                        // Append to the string item.
-                        sStringItem += reader.ReadElementContentAsString();
+                    	// Skip phonetic string data.
+                    	if (sStringItem.Length == 0)
+                    	{
+                            // Add to the string item.
+                            sStringItem = reader.ReadElementContentAsString();
+                    	}
                     }
                 }
                 // Do not add the last string item unless we have read previous string items.
