@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Runtime.InteropServices.ComTypes;
 using Excel;
 using Excel.Tests;
 using Excel.Tests.Log.Logger;
@@ -7,7 +8,6 @@ using Excel.Tests.Log.Logger;
 #else
 
 #endif
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 
@@ -70,6 +70,32 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual(1, result.Tables.Count);
             Assert.AreEqual(4, result.Tables[0].Rows.Count);
             Assert.AreEqual(6, result.Tables[0].Columns.Count);
+
+            excelReader.Close();
+        }
+
+        [TestMethod]
+        public void AsDataSet_Test_Row_Count()
+        {
+            var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestChess"));
+            excelReader.IsFirstRowAsColumnNames = false;
+            var result = excelReader.AsDataSet();
+
+            Assert.AreEqual(4, result.Tables[0].Rows.Count);
+
+
+            excelReader.Close();
+        }
+
+        [TestMethod]
+        public void AsDataSet_Test_Row_Count_FirstRowAsColumnNames()
+        {
+            var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestChess"));
+            excelReader.IsFirstRowAsColumnNames = true;
+            var result = excelReader.AsDataSet();
+
+            Assert.AreEqual(3, result.Tables[0].Rows.Count);
+
 
             excelReader.Close();
         }
@@ -675,6 +701,20 @@ namespace ExcelDataReader.Tests
             excelReader.IsFirstRowAsColumnNames = true;
 
             DoOpenOfficeTest(excelReader);
+        }
+
+        /// <summary>
+        /// Issue 11 - OpenOffice files were skipping the first row if IsFirstRowAsColumnNames = false;
+        /// </summary>
+        [TestMethod]
+        public void GitIssue_11_OpenOffice_Row_Count()
+        {
+            IExcelDataReader excelReader =
+                ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_OpenOffice"));
+            excelReader.IsFirstRowAsColumnNames = false;
+
+            var dataset = excelReader.AsDataSet();
+            Assert.AreEqual(34, dataset.Tables[0].Rows.Count);
         }
 
         /// <summary>

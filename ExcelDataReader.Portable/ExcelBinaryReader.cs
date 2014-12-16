@@ -407,7 +407,7 @@ namespace ExcelDataReader.Portable
 				XlsBiffRecord rec = m_stream.ReadAt(m_cellOffset);
 				m_cellOffset += rec.Size;
 
-				if ((rec is XlsBiffDbCell)) { break; };//break;
+                if ((rec is XlsBiffDbCell) || (rec is XlsBiffMSODrawing)) { break; };
 				if (rec is XlsBiffEOF) { return false; };
 
 				XlsBiffBlankCell cell = rec as XlsBiffBlankCell;
@@ -1243,6 +1243,7 @@ namespace ExcelDataReader.Portable
                             else
                                 datasetHelper.AddColumn(string.Concat(COLUMN, i));
                         }
+                        justAddedColumns = true;
                     }
                     else
                     {
@@ -1253,7 +1254,6 @@ namespace ExcelDataReader.Portable
                     }
 
                     triggerCreateColumns = false;
-                    justAddedColumns = true;
                     datasetHelper.BeginLoadData();
                 }
 

@@ -95,6 +95,9 @@
     <Compile Include="..\Excel\Core\BinaryFormat\XlsBiffLabelSSTCell.cs">
       <Link>Core\BinaryFormat\XlsBiffLabelSSTCell.cs</Link>
     </Compile>
+    <Compile Include="..\Excel\Core\BinaryFormat\XlsBiffMSODrawing.cs">
+      <Link>Core\BinaryFormat\XlsBiffMSODrawing.cs</Link>
+    </Compile>
     <Compile Include="..\Excel\Core\BinaryFormat\XlsBiffMulBlankCell.cs">
       <Link>Core\BinaryFormat\XlsBiffMulBlankCell.cs</Link>
     </Compile>

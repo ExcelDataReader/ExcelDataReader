@@ -156,6 +156,7 @@
     <Compile Include="Core\BinaryFormat\XlsBiffInterfaceHdr.cs" />
     <Compile Include="Core\BinaryFormat\XlsBiffLabelCell.cs" />
     <Compile Include="Core\BinaryFormat\XlsBiffLabelSSTCell.cs" />
+    <Compile Include="Core\BinaryFormat\XlsBiffMSODrawing.cs" />
     <Compile Include="Core\BinaryFormat\XlsBiffMulBlankCell.cs" />
     <Compile Include="Core\BinaryFormat\XlsBiffMulRKCell.cs" />
     <Compile Include="Core\BinaryFormat\XlsBiffNumberCell.cs" />
