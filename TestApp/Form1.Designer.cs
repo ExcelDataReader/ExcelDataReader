@@ -44,7 +44,7 @@
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
-            this.openFileDialog1.Filter = "*.xls|*.xlsx";
+            this.openFileDialog1.Filter = "xls|*.xls|xlsx|*.xlsx|All|*.*";
             // 
             // button1
             // 
