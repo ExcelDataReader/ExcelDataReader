@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+#endif
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents Excel file FAT table
@@ -61,8 +63,13 @@ namespace Excel.Core.BinaryFormat
 				m_fat = new List<uint>(m_sectors);
 				for (int i = 0; i < m_sectors; i++)
 					m_fat.Add(rd.ReadUInt32());
-				rd.Close();
-				ms.Close();
+#if LEGACY
+                rd.Close();
+#else
+                rd.Dispose();
+#endif
+
+                ms.Dispose();
 			}
 		}
 

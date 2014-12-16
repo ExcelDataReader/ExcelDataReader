@@ -43,7 +43,7 @@ namespace ExcelDataReader.Portable
 		public IExcelDataReader CreateBinaryReader(Stream fileStream, ReadOption option)
 		{
             IExcelDataReader reader = new ExcelBinaryReader(dataHelper);
-		    reader.SheetReadOption = option;
+		    reader.ReadOption = option;
 			reader.Initialize(fileStream);
 
 			return reader;

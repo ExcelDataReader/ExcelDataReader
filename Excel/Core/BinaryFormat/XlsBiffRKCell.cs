@@ -1,6 +1,9 @@
-using System;
 
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+using Excel.Core;
+#endif
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents an RK number cell

@@ -1,6 +1,10 @@
 using System.Text;
 
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+using Excel.Core;
+#endif
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents Sheet record in Workbook Globals
@@ -31,7 +35,7 @@ namespace Excel.Core.BinaryFormat
 		#endregion
 
 		private bool isV8 = true;
-		private Encoding m_UseEncoding = Encoding.Default;
+		private Encoding m_UseEncoding = Encoding.UTF8; 
 
 		internal XlsBiffBoundSheet(byte[] bytes, uint offset, ExcelBinaryReader reader)
 			: base(bytes, offset, reader)
@@ -73,11 +77,11 @@ namespace Excel.Core.BinaryFormat
 				int start = 0x8;
 				if (isV8)
 					if (base.ReadByte(0x7) == 0)
-						return Encoding.Default.GetString(m_bytes, m_readoffset + start, len);
+                        return Encoding.UTF8.GetString(m_bytes, m_readoffset + start, len);
 					else
 						return m_UseEncoding.GetString(m_bytes, m_readoffset + start, Helpers.IsSingleByteEncoding(m_UseEncoding) ? len : len * 2);
 				else
-					return Encoding.Default.GetString(m_bytes, m_readoffset + start - 1, len);
+                    return Encoding.UTF8.GetString(m_bytes, m_readoffset + start - 1, len);
 			}
 		}
 

@@ -1092,7 +1092,7 @@ namespace ExcelDataReader.Portable
 	        set { convertOaDate = value; }
 	    }
 
-	    public ReadOption SheetReadOption
+	    public ReadOption ReadOption
 		{
 			get { return readOption; }
             set { readOption = value;  }

@@ -1,7 +1,11 @@
 using System;
 using System.Text;
 
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+using Excel.Core;
+#endif
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents a cell containing formula
@@ -20,21 +24,21 @@ namespace Excel.Core.BinaryFormat
 
 		#endregion
 
-		private Encoding m_UseEncoding = Encoding.Default;
+		private Encoding m_UseEncoding = Encoding.Unicode;
 
 		internal XlsBiffFormulaCell(byte[] bytes, uint offset, ExcelBinaryReader reader)
 			: base(bytes, offset, reader)
 		{
 		}
 
-		/// <summary>
-		/// Encoding used to deal with strings
-		/// </summary>
-		public Encoding UseEncoding
-		{
-			get { return m_UseEncoding; }
-			set { m_UseEncoding = value; }
-		}
+        ///// <summary>
+        ///// Encoding used to deal with strings
+        ///// </summary>
+        //public Encoding UseEncoding
+        //{
+        //    get { return m_UseEncoding; }
+        //    set { m_UseEncoding = value; }
+        //}
 
 		/// <summary>
 		/// Formula flags
@@ -71,7 +75,7 @@ namespace Excel.Core.BinaryFormat
                             //////////////fix
                             XlsBiffRecord rec = GetRecord(m_bytes, (uint)(Offset + Size), reader);
                             XlsBiffFormulaString str;
-                            if (rec.ID == BIFFRECORDTYPE.SHRFMLA)
+                            if (rec.ID == BIFFRECORDTYPE.SHAREDFMLA)
 								str = GetRecord(m_bytes, (uint)(Offset + Size + rec.Size), reader) as XlsBiffFormulaString;
                             else
                                 str = rec as XlsBiffFormulaString;
@@ -81,7 +85,7 @@ namespace Excel.Core.BinaryFormat
                                 return string.Empty;
                             else
                             {
-                                str.UseEncoding = m_UseEncoding;
+                                //str.UseEncoding = m_UseEncoding;
                                 return str.Value;
                             }
 						case 1: // Boolean
@@ -104,7 +108,7 @@ namespace Excel.Core.BinaryFormat
 			get
 			{
 				byte[] bts = base.ReadArray(0x10, FormulaLength);
-				return Encoding.Default.GetString(bts, 0, bts.Length);
+                return Encoding.Unicode.GetString(bts, 0, bts.Length);
 			}
 		}
 	}

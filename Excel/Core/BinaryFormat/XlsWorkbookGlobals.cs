@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Excel.Core.BinaryFormat
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents Globals section of workbook

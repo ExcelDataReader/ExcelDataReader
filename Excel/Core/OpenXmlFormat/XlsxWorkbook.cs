@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Xml;
 using System.IO;
 
-
-namespace Excel.Core.OpenXmlFormat
+namespace ExcelDataReader.Portable.Core.OpenXmlFormat
 {
     internal class XlsxWorkbook
     {
@@ -116,7 +114,7 @@ namespace Excel.Core.OpenXmlFormat
                     }
                 }
 
-                xmlFileStream.Close();
+                xmlFileStream.Dispose();
             }
         }
 
@@ -166,7 +164,7 @@ namespace Excel.Core.OpenXmlFormat
                     _SST.Add(sStringItem);
                 }
 
-                xmlFileStream.Close();
+                xmlFileStream.Dispose();
             }
         }
 
@@ -188,7 +186,7 @@ namespace Excel.Core.OpenXmlFormat
 
                 }
 
-                xmlFileStream.Close();
+                xmlFileStream.Dispose();
             }
 
         }
@@ -218,7 +216,7 @@ namespace Excel.Core.OpenXmlFormat
 
                 }
 
-                xmlFileStream.Close();
+                xmlFileStream.Dispose();
             }
         }
 

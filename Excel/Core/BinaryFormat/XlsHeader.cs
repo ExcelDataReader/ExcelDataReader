@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Excel.Exceptions;
 
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+using Excel.Exceptions;
+#else
+using ExcelDataReader.Portable.Exceptions;
+#endif
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents Excel file header

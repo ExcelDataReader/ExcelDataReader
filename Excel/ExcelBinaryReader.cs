@@ -4,8 +4,8 @@ using System.Data;
 using System.IO;
 using System.Text;
 using Excel.Core;
-using Excel.Core.BinaryFormat;
 using Excel.Log;
+using ExcelDataReader.Portable.Core.BinaryFormat;
 
 namespace Excel
 {
@@ -232,7 +232,7 @@ namespace Excel
                     case BIFFRECORDTYPE.FORMAT_V23:
 				        {
 				            var fmt = (XlsBiffFormatString) rec;
-				            fmt.UseEncoding = m_encoding;
+                            //fmt.UseEncoding = m_encoding;
 				            m_globals.Formats.Add((ushort) m_globals.Formats.Count, fmt);
 				        }
                         break;

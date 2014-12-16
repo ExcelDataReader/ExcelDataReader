@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Excel.Core.OpenXmlFormat
+namespace ExcelDataReader.Portable.Core.OpenXmlFormat
 {
 	internal class XlsxStyles
 	{

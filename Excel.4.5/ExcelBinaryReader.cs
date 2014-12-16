@@ -293,7 +293,7 @@ namespace Excel
 
 		public ReadOption ReadOption
 		{
-            get { return (ReadOption)portable.SheetReadOption; }
+            get { return (ReadOption)portable.ReadOption; }
 		}
 
 		#endregion

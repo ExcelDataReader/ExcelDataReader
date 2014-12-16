@@ -1,6 +1,8 @@
 using System.Collections.Generic;
-
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+#endif
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents cell-indexing record, finishes each row values block

@@ -431,7 +431,7 @@ namespace ExcelDataReader.Portable
 		}
 
 	    public bool ConvertOaDate { get; set; }
-	    public ReadOption SheetReadOption { get; set; }
+	    public ReadOption ReadOption { get; set; }
 
 	    public bool IsValid
 		{

@@ -1,6 +1,7 @@
-using System;
-
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+#endif
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// For now QuickTip will do nothing, it seems to have a different

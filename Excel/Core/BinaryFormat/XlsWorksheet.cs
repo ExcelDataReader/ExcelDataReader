@@ -1,5 +1,5 @@
 
-namespace Excel.Core.BinaryFormat
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents Worksheet section in workbook

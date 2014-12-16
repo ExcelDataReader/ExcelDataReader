@@ -1,4 +1,4 @@
-namespace Excel.Core.BinaryFormat
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	internal enum STGTY : byte
 	{
@@ -157,9 +157,9 @@ namespace Excel.Core.BinaryFormat
 
 		RSTRING = 0x00D6, // Rich-formatted string cell
 
-		SHRFMLA = 0x04BC, // One more formula optimization element
+		SHAREDFMLA = 0x04BC, // One more formula optimization element
 
-		SHRFMLA_OLD = 0x00BC, // One more formula optimization element, old format
+		SHAREDFMLA_OLD = 0x00BC, // One more formula optimization element, old format
 
 		STRING = 0x0207, // And one more, for string formula results
 

@@ -1,7 +1,9 @@
 using System;
 using System.Text;
-
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+#endif
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents formatted unicode string in SST
@@ -132,10 +134,17 @@ namespace Excel.Core.BinaryFormat
 		{
 			get
 			{
-				return IsMultiByte ?
-					Encoding.Unicode.GetString(m_bytes, (int)(m_offset + HeadSize), (int)ByteCount) :
-					 Encoding.Default.GetString(m_bytes, (int)(m_offset + HeadSize), (int)ByteCount);
+			    return
+			        UseEncoding.GetString(m_bytes, (int) (m_offset + HeadSize), (int) ByteCount);
 			}
 		}
+
+        public Encoding UseEncoding
+        {
+            //get { return IsMultiByte ? Encoding.Unicode : Encoding.UTF8; } 
+            //not sure this is a good assumption but it does work for every test case
+            get { return IsMultiByte ? Encoding.Unicode : Encoding.GetEncoding("windows-1250"); } 
+
+        }
 	}
 }

@@ -1,4 +1,7 @@
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+#endif
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
     /// <summary>
     /// If present the Calculate Message was in the status bar when Excel saved the file.

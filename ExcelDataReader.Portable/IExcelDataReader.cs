@@ -62,6 +62,6 @@ namespace ExcelDataReader.Portable
         /// </summary>
         bool ConvertOaDate { get; set; }
 
-        ReadOption SheetReadOption { get; set;  }
+        ReadOption ReadOption { get; set;  }
 	}
 }

@@ -1,8 +1,15 @@
 using System;
-using System.IO;
 using System.Text;
 
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+using Excel.Exceptions;
+#else
+using ExcelDataReader.Portable.Exceptions;
+#endif
+
+
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents single Root Directory record
@@ -28,7 +35,7 @@ namespace Excel.Core.BinaryFormat
 		public XlsDirectoryEntry(byte[] bytes, XlsHeader header)
 		{
 			if (bytes.Length < Length)
-				throw new Excel.Exceptions.BiffRecordException(Errors.ErrorDirectoryEntryArray);
+				throw new BiffRecordException(Errors.ErrorDirectoryEntryArray);
 			m_bytes = bytes;
 			m_header = header;
 		}

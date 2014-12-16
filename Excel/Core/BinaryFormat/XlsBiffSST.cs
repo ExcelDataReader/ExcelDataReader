@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+#endif
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents a Shared String Table in BIFF8 format
@@ -47,7 +49,7 @@ namespace Excel.Core.BinaryFormat
 			uint count = UniqueCount;
 			while (offset < last)
 			{
-				XlsFormattedUnicodeString str = new XlsFormattedUnicodeString(m_bytes, offset);
+				var str = new XlsFormattedUnicodeString(m_bytes, offset);
 				uint prefix = str.HeadSize;
 				uint postfix = str.TailSize;
 				uint len = str.CharacterCount;
@@ -63,7 +65,7 @@ namespace Excel.Core.BinaryFormat
 					if (encoding == 0 && str.IsMultiByte)
 					{
 						len -= (last - prefix - offset) / 2;
-						string temp = Encoding.Default.GetString(m_bytes,
+                        string temp = Encoding.Unicode.GetString(m_bytes,
 																 (int)contoffset + 5,
 																 (int)len);
 						byte[] tempbytes = Encoding.Unicode.GetBytes(temp);
@@ -77,7 +79,7 @@ namespace Excel.Core.BinaryFormat
 						string temp = Encoding.Unicode.GetString(m_bytes,
 																 (int)contoffset + 5,
 																 (int)(len + len));
-						byte[] tempbytes = Encoding.Default.GetBytes(temp);
+                        byte[] tempbytes = Encoding.Unicode.GetBytes(temp);
 						Buffer.BlockCopy(tempbytes, 0, buff, (int)(last - offset), tempbytes.Length);
 						Buffer.BlockCopy(m_bytes, (int)(contoffset + 5 + len + len), buff, (int)(last - offset + len), (int)postfix);
 						offset = contoffset + 5 + len + len + postfix;

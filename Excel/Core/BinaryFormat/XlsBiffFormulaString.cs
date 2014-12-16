@@ -1,35 +1,39 @@
 using System.Text;
-
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+#endif
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents a string value of formula
 	/// </summary>
 	internal class XlsBiffFormulaString : XlsBiffRecord
 	{
-		private Encoding m_UseEncoding = Encoding.Default;
-		private const int LEADING_BYTES_COUNT = 3;
+	    private XlsFormattedUnicodeString unicodeString;
 
 		internal XlsBiffFormulaString(byte[] bytes, uint offset, ExcelBinaryReader reader)
 			: base(bytes, offset, reader)
 		{
+		    unicodeString = new XlsFormattedUnicodeString(bytes, offset + 4); 
 		}
 
-		/// <summary>
+	    /// <summary>
 		/// Encoding used to deal with strings
 		/// </summary>
 		public Encoding UseEncoding
 		{
-			get { return m_UseEncoding; }
-			set { m_UseEncoding = value; }
+			get { return unicodeString.UseEncoding; }
 		}
 
 		/// <summary>
 		/// Length of the string
 		/// </summary>
-		public ushort Length
+		public uint Length
 		{
-			get { return base.ReadUInt16(0x0); }
+            get
+            {
+                return unicodeString.CharacterCount;
+            }
 		}
 
 		/// <summary>
@@ -39,13 +43,7 @@ namespace Excel.Core.BinaryFormat
 		{
 			get
 			{
-				//is unicode?
-				if (base.ReadUInt16(0x01) != 0)
-				{
-					return Encoding.Unicode.GetString(m_bytes, m_readoffset + LEADING_BYTES_COUNT, Length * 2);
-				}
-
-				return m_UseEncoding.GetString(m_bytes, m_readoffset + LEADING_BYTES_COUNT, Length);
+			    return unicodeString.Value;
 			}
 		}
 	}

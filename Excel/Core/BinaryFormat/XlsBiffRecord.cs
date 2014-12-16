@@ -1,8 +1,8 @@
 using System;
-using System.IO;
-
-
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+#endif
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents basic BIFF record

@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Excel.Core.BinaryFormat
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents an Excel file stream

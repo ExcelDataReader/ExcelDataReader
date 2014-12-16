@@ -2,7 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+
+#else
+using ExcelDataReader.Portable.Misc;
+#endif
+
+
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents Root Directory in file

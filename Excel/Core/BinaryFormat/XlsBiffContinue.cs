@@ -1,4 +1,8 @@
-namespace Excel.Core.BinaryFormat
+#if LEGACY
+using Excel;
+#endif
+
+namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
 	/// <summary>
 	/// Represents additional space for very large records
