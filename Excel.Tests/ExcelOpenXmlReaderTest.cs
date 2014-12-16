@@ -27,6 +27,38 @@ namespace Excel.Tests
 		}
 
         [TestMethod]
+        public void GitIssue_29_ReadSheetStatesReadsCorrectly()
+        {
+            IExcelDataReader excelReader =
+                ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Excel_Dataset"));
+
+            Assert.AreEqual("hidden", excelReader.VisibleState);
+
+            excelReader.NextResult();
+            Assert.AreEqual("visible", excelReader.VisibleState);
+
+            excelReader.NextResult();
+            Assert.AreEqual("veryhidden", excelReader.VisibleState);
+        }
+
+        [TestMethod]
+        public void GitIssue_29_AsDataSetProvidesCorrectSheetState()
+        {
+            IExcelDataReader reader =
+                ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Excel_Dataset"));
+
+            var dataset = reader.AsDataSet();
+
+            reader.Close();
+
+            Assert.IsTrue(dataset != null);
+            Assert.AreEqual(3, dataset.Tables.Count);
+            Assert.AreEqual("hidden", dataset.Tables[0].ExtendedProperties["visiblestate"]);
+            Assert.AreEqual("visible", dataset.Tables[1].ExtendedProperties["visiblestate"]);
+            Assert.AreEqual("veryhidden", dataset.Tables[2].ExtendedProperties["visiblestate"]);
+        }
+
+        [TestMethod]
         public void Issue_11516_workbook_with_single_sheet_should_not_return_empty_dataset()
         {
             IExcelDataReader reader = ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Issue_11516_Single_Tab"));
@@ -564,7 +596,7 @@ namespace Excel.Tests
         public void Test_OpenOffice_SavedInExcel()
         {
             IExcelDataReader excelReader =
-                ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Excel_Dataset"));
+                ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Excel_OpenOffice"));
             excelReader.IsFirstRowAsColumnNames = true;
 
             ExcelBinaryReaderTest.DoOpenOfficeTest(excelReader);

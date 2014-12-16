@@ -1,13 +1,22 @@
 using System;
 using System.Data;
+#if MSTEST_DEBUG || MSTEST_RELEASE
 using Excel.Tests.Log.Logger;
-#if NET20
-#else
-using ExcelDataReader.Portable;
-#endif
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
+#else
+using System.Globalization;
+using System.IO;
+using System.Threading;
+using Excel.Log;
+using Excel.Tests.Log.Logger;
+using NUnit.Framework;
+using TestClass = NUnit.Framework.TestFixtureAttribute;
+using TestInitialize = NUnit.Framework.SetUpAttribute;
+using TestCleanup = NUnit.Framework.TearDownAttribute;
+using TestMethod = NUnit.Framework.TestAttribute;
+
+#endif
 
 namespace Excel.Tests
 {
@@ -20,6 +29,9 @@ namespace Excel.Tests
 		{
 			
 		}
+<<<<<<< HEAD
+        
+=======
 
         [TestMethod]
         public void GitIssue_29_ReadSheetStatesReadsCorrectly()
@@ -53,6 +65,8 @@ namespace Excel.Tests
             Assert.AreEqual("veryhidden", dataset.Tables[2].ExtendedProperties["visiblestate"]);
         }
         
+        [DeploymentItem("log4net.config")]
+>>>>>>> 9a4306fbb7dca34b66cadff354eb8635335a89f3
         [TestMethod]
         public void AsDataSet_Test()
         {
@@ -678,7 +692,7 @@ namespace Excel.Tests
         public void Test_OpenOffice_SavedInExcel()
         {
             IExcelDataReader excelReader =
-                ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Excel_OpenOffice"));
+                ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Excel_Dataset"));
             excelReader.IsFirstRowAsColumnNames = true;
 
             DoOpenOfficeTest(excelReader);
@@ -885,7 +899,8 @@ namespace Excel.Tests
 		[TestMethod]
 		public void Issue_11545_NoIndex()
 		{
-            Assert.Inconclusive("not fixed yet");
+			Excel.Log.Log.InitializeWith<Log4NetLog>();
+
 			IExcelDataReader excelReader =
 				ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11545_NoIndex"));
 			excelReader.IsFirstRowAsColumnNames = true;
@@ -901,7 +916,8 @@ namespace Excel.Tests
 		[TestMethod]
 		public void Issue_11573_BlankValues()
 		{
-            
+			Excel.Log.Log.InitializeWith<Log4NetLog>();
+
 			IExcelDataReader excelReader =
 				ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11573_BlankValues"));
 			excelReader.IsFirstRowAsColumnNames = false;
@@ -961,6 +977,8 @@ namespace Excel.Tests
 		[TestMethod]
 		public void Issue_11636_BiffStream()
 		{
+			//Excel.Log.Log.InitializeWith<Log4NetLog>();
+
 			IExcelDataReader excelReader =
 				ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11636_BiffStream"), ReadOption.Loose);
 			excelReader.IsFirstRowAsColumnNames = false;
@@ -983,7 +1001,6 @@ namespace Excel.Tests
 		[TestMethod]
 		public void Issue_11639_11644_ForwardOnlyStream()
 		{
-            Assert.Inconclusive("Not fixed yet");
 			//Excel.Log.Log.InitializeWith<Log4NetLog>();
 			var forwardStream = SeekErrorMemoryStream.CreateFromStream(Helper.GetTestWorkbook("Test_OpenOffice"));
 

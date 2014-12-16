@@ -14,6 +14,7 @@ namespace ExcelDataReader.Portable.Core.OpenXmlFormat
         private const string N_numFmts = "numFmts";
 
         private const string A_sheetId = "sheetId";
+        private const string A_visibleState = "state";
         private const string A_name = "name";
         private const string A_rid = "r:id";
 
@@ -181,7 +182,9 @@ namespace ExcelDataReader.Portable.Core.OpenXmlFormat
                     {
                         sheets.Add(new XlsxWorksheet(
                                                reader.GetAttribute(A_name),
-                                               int.Parse(reader.GetAttribute(A_sheetId)), reader.GetAttribute(A_rid)));
+                                               int.Parse(reader.GetAttribute(A_sheetId)), 
+                                               reader.GetAttribute(A_rid),
+                                               reader.GetAttribute(A_visibleState)));
                     }
 
                 }

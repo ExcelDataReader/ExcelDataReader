@@ -9,6 +9,7 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 		private readonly uint m_dataOffset;
 		private readonly int m_Index;
 		private readonly string m_Name = string.Empty;
+	    private readonly string m_VisibleState = string.Empty;
 		private XlsBiffSimpleValueRecord m_CalcCount;
 		private XlsBiffSimpleValueRecord m_CalcMode;
 		private XlsBiffRecord m_Delta;
@@ -22,6 +23,19 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 			m_Index = index;
 			m_Name = refSheet.SheetName;
 			m_dataOffset = refSheet.StartOffset;
+
+		    switch (refSheet.VisibleState)
+		    {
+		        case XlsBiffBoundSheet.SheetVisibility.Hidden:
+		            m_VisibleState = "hidden";
+		            break;
+                case XlsBiffBoundSheet.SheetVisibility.VeryHidden:
+		            m_VisibleState = "veryhidden";
+		            break;
+                default:
+		            m_VisibleState = "visible";
+		            break;
+		    }
 		}
 
 		/// <summary>
@@ -31,6 +45,14 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 		{
 			get { return m_Name; }
 		}
+
+        /// <summary>
+        /// Visibility of worksheet
+        /// </summary>
+        public string VisibleState
+        {
+            get { return m_VisibleState; }
+        }
 
 		/// <summary>
 		/// Zero-based index of worksheet

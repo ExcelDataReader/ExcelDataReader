@@ -391,6 +391,14 @@
       <Link>Resources\Uncalculated.xls</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\Excel.Tests.4.5\Resources\Test_Excel_OpenOffice.xls">
+      <Link>Resources\Test_Excel_OpenOffice.xls</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Excel.Tests.4.5\Resources\Test_Excel_OpenOffice.xlsx">
+      <Link>Resources\Test_Excel_OpenOffice.xlsx</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
@@ -424,6 +432,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ResourcesOld\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
