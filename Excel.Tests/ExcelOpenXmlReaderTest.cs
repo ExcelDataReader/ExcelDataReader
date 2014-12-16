@@ -3,8 +3,9 @@ using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+using Excel;
 using Excel.Tests.Log.Logger;
-#if NET20
+#if LEGACY
 #else
 using ExcelDataReader.Portable.Core;
 using ExcelDataReader.Portable.IO;
@@ -15,7 +16,11 @@ using PCLStorage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 
+#if LEGACY
 namespace Excel.Tests
+#else
+namespace ExcelDataReader.Tests
+#endif
 {
     [TestClass]
     public class ExcelOpenXmlReaderTest
@@ -293,7 +298,12 @@ namespace Excel.Tests
 
             Assert.AreEqual(false, excelReader.IsValid);
             Assert.AreEqual(true, excelReader.IsClosed);
-            Assert.AreEqual("End of Central Directory record could not be found.", excelReader.ExceptionMessage);
+#if LEGACY
+            Assert.AreEqual("Cannot find central directory", excelReader.ExceptionMessage);
+            
+#else
+            Assert.AreEqual("End of Central Directory record could not be found.", excelReader.ExceptionMessage);        
+#endif
         }
 
 
@@ -752,7 +762,7 @@ namespace Excel.Tests
             Assert.AreEqual(Helper.GetKey("TestUnicodePos2x1"), result.Rows[1][0].ToString());
         }
 
-#if !NET20
+#if !LEGACY
         [TestMethod]
         public void ZipWorker_Extract_Test()
         {
@@ -817,11 +827,11 @@ namespace Excel.Tests
 
 		[TestMethod]
 		public void Issue_11573_BlankValues()
-		{
-#if !NET20
+        {
+#if !LEGACY
 			ExcelDataReader.Portable.Log.Log.InitializeWith<Log4NetLog>();
 #endif
-			IExcelDataReader excelReader =
+            IExcelDataReader excelReader =
 				ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Issue_11573_BlankValues"));
 			excelReader.IsFirstRowAsColumnNames = false;
 			var dataset = excelReader.AsDataSet();

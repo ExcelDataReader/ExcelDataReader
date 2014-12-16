@@ -80,12 +80,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Excel\IExcelDataReader.cs">
+      <Link>IExcelDataReader.cs</Link>
+    </Compile>
     <Compile Include="ExcelOpenXmlReader.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ExcelBinaryReader.cs" />
     <Compile Include="ExcelReaderFactory.cs" />
-    <Compile Include="IExcelDataReader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

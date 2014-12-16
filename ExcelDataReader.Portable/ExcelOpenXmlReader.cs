@@ -284,7 +284,7 @@ namespace ExcelDataReader.Portable
                         else if (null != a_s) //if something else
                         {
                             XlsxXf xf = _workbook.Styles.CellXfs[int.Parse(a_s)];
-                            if (xf.ApplyNumberFormat && o != null && o.ToString() != string.Empty && IsDateTimeStyle(xf.NumFmtId))
+                            if (o != null && o.ToString() != string.Empty && IsDateTimeStyle(xf.NumFmtId))
                                 o = Helpers.ConvertFromOATime(number);
                             else if (xf.NumFmtId == 49)
                                 o = o.ToString();
@@ -374,6 +374,8 @@ namespace ExcelDataReader.Portable
             for (int ind = 0; ind < _workbook.Sheets.Count; ind++)
             {
                 datasetHelper.CreateNewTable(_workbook.Sheets[ind].Name);
+                datasetHelper.AddExtendedPropertyToTable("visiblestate", _workbook.Sheets[ind].VisibleState);
+
                 ReadSheetGlobals(_workbook.Sheets[ind]);
 
                 if (_workbook.Sheets[ind].Dimension == null) continue;
@@ -450,6 +452,14 @@ namespace ExcelDataReader.Portable
 				return (_resultIndex >= 0 && _resultIndex < ResultsCount) ? _workbook.Sheets[_resultIndex].Name : null;
 			}
 		}
+
+        public string VisibleState
+        {
+            get
+            {
+                return (_resultIndex >= 0 && _resultIndex < ResultsCount) ? _workbook.Sheets[_resultIndex].VisibleState : null;
+            }
+        }
 
 		public void Close()
 		{

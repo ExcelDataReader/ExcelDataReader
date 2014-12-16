@@ -1,12 +1,16 @@
 ﻿using System;
-#if !NET20
+#if !LEGACY
 using ExcelDataReader.Portable.Core;
 #else
 using Excel.Core;
 #endif
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#if LEGACY
 namespace Excel.Tests
+#else
+namespace ExcelDataReader.Tests
+#endif
 {
 	[TestClass]
 	class FormatReaderTest

@@ -12,7 +12,11 @@ using TestCleanup = NUnit.Framework.TearDownAttribute;
 using TestMethod = NUnit.Framework.TestAttribute;
 #endif
 
+#if LEGACY
 namespace Excel.Tests
+#else
+namespace ExcelDataReader.Tests
+#endif
 {
     internal static class Helper
     {

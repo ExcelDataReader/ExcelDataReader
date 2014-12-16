@@ -83,7 +83,12 @@ namespace Excel
 			}
 		}
 
-        public void Close()
+	    public string VisibleState
+	    {
+	        get { return portable.VisibleState; }
+	    }
+
+	    public void Close()
         {
             portable.Close();
         }

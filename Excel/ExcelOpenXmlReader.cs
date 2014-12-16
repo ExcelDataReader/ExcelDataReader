@@ -2,13 +2,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Excel.Core.OpenXmlFormat;
 using System.IO;
 using Excel.Core;
 using System.Data;
 using System.Xml;
 using System.Globalization;
+using ExcelDataReader.Portable.Core.OpenXmlFormat;
 
 namespace Excel
 {

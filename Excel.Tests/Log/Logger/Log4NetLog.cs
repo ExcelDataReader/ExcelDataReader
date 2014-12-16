@@ -1,4 +1,4 @@
-﻿#if NET20
+﻿#if LEGACY
 using Excel.Log;
 #else
 using ExcelDataReader.Portable.Log;

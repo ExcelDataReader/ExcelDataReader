@@ -849,6 +849,17 @@ namespace ExcelDataReader.Portable
 			}
 		}
 
+        public string VisibleState
+        {
+            get
+            {
+                if (null != m_sheets && m_sheets.Count > 0)
+                    return m_sheets[m_SheetIndex].VisibleState;
+                else
+                    return null;
+            }
+        }
+
 		public bool IsValid
 		{
 			get { return m_isValid; }
@@ -1145,6 +1156,7 @@ namespace ExcelDataReader.Portable
 
             //DataTable table = new DataTable(sheet.Name);
             datasetHelper.CreateNewTable(sheet.Name);
+            datasetHelper.AddExtendedPropertyToTable("visiblestate", sheet.VisibleState);
 
             bool triggerCreateColumns = true;
 

@@ -54,6 +54,13 @@ namespace ExcelDataReader.Portable.Data
         /// Dataset loading is finished
         /// </summary>
         void DatasetLoadComplete();
+
+        /// <summary>
+        /// Add extended property to the current table
+        /// </summary>
+        /// <param name="propertyName"></param>
+        /// <param name="propertyValue"></param>
+        void AddExtendedPropertyToTable(string propertyName, string propertyValue);
     }
 
 }

@@ -1,15 +1,21 @@
 using System;
 using System.Data;
+using Excel;
+using Excel.Tests;
 using Excel.Tests.Log.Logger;
 #if NET20
 #else
-using ExcelDataReader.Portable;
+
 #endif
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 
+#if LEGACY
 namespace Excel.Tests
+#else
+namespace ExcelDataReader.Tests
+#endif
 {
     [TestClass]
     

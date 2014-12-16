@@ -67,6 +67,11 @@ namespace ExcelDataReader.Desktop.Portable
             workbookData.AcceptChanges();
             DatasetHelpers.FixDataTypes(workbookData);
         }
+
+        public void AddExtendedPropertyToTable(string propertyName, string propertyValue)
+        {
+            currentTable.ExtendedProperties.Add(propertyName, propertyValue);
+        }
     }
 
     //public class TableHelper : ITableHelper

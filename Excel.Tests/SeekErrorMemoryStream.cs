@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+#if LEGACY
 namespace Excel.Tests
+#else
+namespace ExcelDataReader.Tests
+#endif
 {
 	public class SeekErrorMemoryStream : MemoryStream
 	{

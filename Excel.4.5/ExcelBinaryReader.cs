@@ -86,6 +86,11 @@ namespace Excel
 			}
 		}
 
+        public string VisibleState
+        {
+            get { return portable.VisibleState; }
+        }
+
 		public bool IsValid
 		{
             get { return portable.IsValid; }
