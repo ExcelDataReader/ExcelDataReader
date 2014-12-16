@@ -10,6 +10,8 @@ Please feel free to fork and submit pull requests.
 Please try the latest source from the repo before reporting issues as there have been recent changes.
 Also, if you are reporting an issue it is really useful if you can supply an example excel file as this makes debugging much easier and without it we may not be able to resolve any problems.
 
+This project is using a git-flow style workflow so please submit pull requests to the develop branch if possible.
+
 ## Finding the binaries
 It is recommended to use Nuget 
 ```
