@@ -837,7 +837,7 @@ namespace ExcelDataReader.Tests
 			var dataset = excelReader.AsDataSet();
 
 			Assert.AreEqual(1D, dataset.Tables[0].Rows[12][0]);
-			Assert.AreEqual(070202D, dataset.Tables[0].Rows[12][1]);
+			Assert.AreEqual("070202", dataset.Tables[0].Rows[12][1]);
 
 			excelReader.Close();
 		}
@@ -926,5 +926,26 @@ namespace ExcelDataReader.Tests
             excelReader.Close();
         }        
 
+		[TestMethod]
+		public void Issue_53_Cached_Formula_String_Type()
+		{
+			using(var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Issue_53_Cached_Formula_String_Type")))
+			{
+				excelReader.IsFirstRowAsColumnNames = true;
+				var dataset = excelReader.AsDataSet();
+
+				// Ensure that parseable, numeric cached formula values are read as a double
+				Assert.IsInstanceOfType(dataset.Tables[0].Rows[0][2], typeof(double));
+				Assert.AreEqual(3D, dataset.Tables[0].Rows[0][2]);
+
+				// Ensure that non-parseable, non-numeric cached formula values are read as a string
+				Assert.IsInstanceOfType(dataset.Tables[0].Rows[1][2], typeof(string));
+				Assert.AreEqual("AB", dataset.Tables[0].Rows[1][2]);
+
+				// Ensure that parseable, non-numeric cached formula values are read as a string
+				Assert.IsInstanceOfType(dataset.Tables[0].Rows[2][2], typeof(string));
+				Assert.AreEqual("1,", dataset.Tables[0].Rows[2][2]);
+			}
+		}
     }
 }
