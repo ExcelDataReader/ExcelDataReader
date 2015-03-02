@@ -1,4 +1,5 @@
 using System.IO;
+using System.Threading.Tasks;
 using ExcelDataReader.Portable.Data;
 using ExcelDataReader.Portable.IO;
 using PCLStorage;
@@ -27,10 +28,10 @@ namespace ExcelDataReader.Portable
 		/// </summary>
 		/// <param name="fileStream">The file stream.</param>
 		/// <returns></returns>
-		public IExcelDataReader CreateBinaryReader(Stream fileStream)
+		public async Task<IExcelDataReader> CreateBinaryReaderAsync(Stream fileStream)
 		{
             IExcelDataReader reader = new ExcelBinaryReader(dataHelper);
-			reader.Initialize(fileStream);
+            await reader.InitializeAsync(fileStream);
 
 			return reader;
 		}
@@ -40,11 +41,11 @@ namespace ExcelDataReader.Portable
 		/// </summary>
 		/// <param name="fileStream">The file stream.</param>
 		/// <returns></returns>
-		public IExcelDataReader CreateBinaryReader(Stream fileStream, ReadOption option)
+        public async Task<IExcelDataReader> CreateBinaryReaderAsync(Stream fileStream, ReadOption option)
 		{
             IExcelDataReader reader = new ExcelBinaryReader(dataHelper);
 		    reader.ReadOption = option;
-			reader.Initialize(fileStream);
+			await reader.InitializeAsync(fileStream);
 
 			return reader;
 		}
@@ -54,9 +55,9 @@ namespace ExcelDataReader.Portable
 		/// </summary>
 		/// <param name="fileStream">The file stream.</param>
 		/// <returns></returns>
-		public IExcelDataReader CreateBinaryReader(Stream fileStream, bool convertOADate)
+        public async Task<IExcelDataReader> CreateBinaryReaderAsync(Stream fileStream, bool convertOADate)
 		{
-			IExcelDataReader reader = CreateBinaryReader(fileStream);
+			IExcelDataReader reader = await CreateBinaryReaderAsync(fileStream);
 			((ExcelBinaryReader) reader).ConvertOaDate = convertOADate;
 
 			return reader;
@@ -67,9 +68,9 @@ namespace ExcelDataReader.Portable
 		/// </summary>
 		/// <param name="fileStream">The file stream.</param>
 		/// <returns></returns>
-		public IExcelDataReader CreateBinaryReader(Stream fileStream, bool convertOADate, ReadOption readOption)
+        public async Task<IExcelDataReader> CreateBinaryReaderAsync(Stream fileStream, bool convertOADate, ReadOption readOption)
 		{
-			IExcelDataReader reader = CreateBinaryReader(fileStream, readOption);
+			IExcelDataReader reader = await CreateBinaryReaderAsync(fileStream, readOption);
 			((ExcelBinaryReader)reader).ConvertOaDate = convertOADate;
 
 			return reader;
@@ -80,10 +81,10 @@ namespace ExcelDataReader.Portable
 		/// </summary>
 		/// <param name="fileStream">The file stream.</param>
 		/// <returns></returns>
-		public IExcelDataReader CreateOpenXmlReader(Stream fileStream)
+        public async Task<IExcelDataReader> CreateOpenXmlReader(Stream fileStream)
 		{
             IExcelDataReader reader = new ExcelOpenXmlReader(fileSystem, fileHelper, dataHelper);
-			reader.Initialize(fileStream);
+			await reader.InitializeAsync(fileStream);
 
 			return reader;
 		}

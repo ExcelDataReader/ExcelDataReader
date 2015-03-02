@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Text;
 
-namespace Excel.Core
+namespace ExcelDataReader.Portable.Core
 {
 	/// <summary>
 	/// Helpers class
@@ -142,7 +142,5 @@ namespace Excel.Core
 
 			table.Columns.Add(adjustedColumnName, typeof(Object));
 		}
-
-
     }
 }

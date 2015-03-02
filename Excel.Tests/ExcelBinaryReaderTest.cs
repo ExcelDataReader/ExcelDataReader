@@ -3,18 +3,24 @@ using System.Data;
 using System.Runtime.InteropServices.ComTypes;
 using Excel;
 using Excel.Tests;
-using Excel.Tests.Log.Logger;
+//using Excel.Tests.Log.Logger;
 #if NET20
 #else
 
 #endif
+using Excel.Tests.Log.Logger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 
 #if LEGACY
+using Excel.Tests.Log.Logger;
+using Logger = Excel.Log.Log;
 namespace Excel.Tests
 #else
+using ExcelDataReader.Portable.Log;
+using Logger = ExcelDataReader.Portable.Log.Log;
 namespace ExcelDataReader.Tests
+
 #endif
 {
     [TestClass]
@@ -1052,7 +1058,7 @@ namespace ExcelDataReader.Tests
         [ExpectedException(typeof(InvalidOperationException))]
         public void Issue_12556_corrupt()
 		{
-			//Excel.Log.Log.InitializeWith<Log4NetLog>();
+            //Excel.Log.Log.InitializeWith<Log4NetLog>();
             var forwardStream = Helper.GetTestWorkbook("Test_Issue_12556_corrupt");
 
 			IExcelDataReader excelReader =
@@ -1070,6 +1076,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_Issue_11818_OutOfRange()
 		{
+            Logger.InitializeWith<Log4NetLog>();
             IExcelDataReader excelReader =
                 ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11818_OutOfRange"), ReadOption.Loose);
             excelReader.IsFirstRowAsColumnNames = false;

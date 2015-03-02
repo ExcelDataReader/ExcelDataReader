@@ -2,7 +2,10 @@
 
 using System;
 using System.Data;
+using System.Text;
 using ExcelDataReader.Desktop.Portable;
+using ExcelDataReader.Portable.Async;
+using ExcelDataReader.Portable.Misc;
 
 namespace Excel
 {
@@ -36,7 +39,7 @@ namespace Excel
 
 		public void Initialize(System.IO.Stream fileStream)
 		{
-			portable.Initialize(fileStream);
+			AsyncHelper.RunSync(() => portable.InitializeAsync(fileStream));
 		}
 
 		public DataSet AsDataSet()
@@ -48,7 +51,7 @@ namespace Excel
 		public DataSet AsDataSet(bool convertOADateTime)
 		{
             var datasetHelper = new DatasetHelper();
-            portable.LoadDataSet(datasetHelper, convertOADateTime);
+            AsyncHelper.RunSync(() => portable.LoadDataSetAsync(datasetHelper, convertOADateTime));
 
             return (DataSet)datasetHelper.Dataset;
 		}
@@ -65,7 +68,17 @@ namespace Excel
 			}
 		}
 
-		public bool IsValid
+	    public Encoding Encoding
+	    {
+	        get { return portable.Encoding; }
+	    }
+
+	    public Encoding DefaultEncoding
+	    {
+	        get { return portable.DefaultEncoding; }
+	    }
+
+	    public bool IsValid
 		{
 			get { return portable.IsValid; }
 		}

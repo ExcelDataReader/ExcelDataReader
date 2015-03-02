@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using ExcelDataReader.Portable.Async;
 using ExcelDataReader.Portable.Core;
 using ExcelDataReader.Portable.Core.BinaryFormat;
 using ExcelDataReader.Portable.Data;
@@ -195,8 +196,8 @@ namespace ExcelDataReader.Portable
 
 						if (sheet.Type != XlsBiffBoundSheet.SheetType.Worksheet) break;
 
-						sheet.IsV8 = isV8();
-						sheet.UseEncoding = m_encoding;
+						sheet.IsV8 = isV8();                        
+                        //sheet.UseEncoding = Encoding;
 						this.Log().Debug("BOUNDSHEET IsV8={0}", sheet.IsV8);
 
 						m_sheets.Add(new XlsWorksheet(m_globals.Sheets.Count, sheet));
@@ -213,9 +214,14 @@ namespace ExcelDataReader.Portable
 
 						m_globals.CodePage = (XlsBiffSimpleValueRecord)rec;
 
+                        //set encoding based on code page name
+                        //PCL does not supported codepage numbers
+                        if (m_globals.CodePage.Value == 1200)
+                            m_encoding = EncodingHelper.GetEncoding(65001);
+                        else
+                            m_encoding = EncodingHelper.GetEncoding(m_globals.CodePage.Value);
                         //note: the format spec states that for BIFF8 this is always UTF-16.
                         //as PCL does not supported codepage numbers, it is best to assume UTF-16 for encoding
-
                         //try
                         //{
                         //    m_encoding = Encoding.GetEncoding(m_globals.CodePage.Value);
@@ -792,11 +798,11 @@ namespace ExcelDataReader.Portable
 
 		#region IExcelDataReader Members
 
-		public void Initialize(Stream fileStream)
+		public async Task InitializeAsync(Stream fileStream)
 		{
 			m_file = fileStream;
 
-            readWorkBookGlobals();
+            await Task.Run(() => readWorkBookGlobals());
 
             // set the sheet index to the index of the first sheet.. this is so that properties such as Name which use m_sheetIndex reflect the first sheet in the file without having to perform a read() operation
             m_SheetIndex = 0;
@@ -1109,16 +1115,26 @@ namespace ExcelDataReader.Portable
             set { readOption = value;  }
 		}
 
-		#endregion
+	    public Encoding Encoding
+	    {
+	        get { return m_encoding; }
+	    }
+
+	    public Encoding DefaultEncoding
+	    {
+	        get { return Encoding.UTF8; }
+	    }
+
+	    #endregion
 
         #region Dataset
 
-        public void LoadDataSet(IDatasetHelper datasetHelper)
+        public async Task LoadDataSetAsync(IDatasetHelper datasetHelper)
         {
-            LoadDataSet(datasetHelper, false);
+            await LoadDataSetAsync(datasetHelper, false);
         }
 
-        public void LoadDataSet(IDatasetHelper datasetHelper, bool convertOADateTime)
+        public async Task LoadDataSetAsync(IDatasetHelper datasetHelper, bool convertOADateTime)
         {
             if (!m_isValid)
             {
@@ -1126,17 +1142,16 @@ namespace ExcelDataReader.Portable
             }
             datasetHelper.IsValid = true;
 
-            if (m_isClosed) return;
+            if (m_isClosed)
+            {
+                await Task.FromResult(0);
+            }
 
             ConvertOaDate = convertOADateTime;
             datasetHelper.CreateNew();
             //m_workbookData = new DataSet();
 
-            for (int index = 0; index < ResultsCount; index++)
-            {
-                readWholeWorkSheet(m_sheets[index], datasetHelper);
-
-            }
+            await Task.Run(() => readAllSheets(datasetHelper));
 
             m_file.Dispose();
             m_isClosed = true;
@@ -1144,7 +1159,15 @@ namespace ExcelDataReader.Portable
 
         }
 
-        private void readWholeWorkSheet(XlsWorksheet sheet, IDatasetHelper datasetHelper)
+	    private void readAllSheets(IDatasetHelper datasetHelper)
+	    {
+	        for (int index = 0; index < ResultsCount; index++)
+	        {
+	            readWholeWorkSheet(m_sheets[index], datasetHelper);
+	        }
+	    }
+
+	    private void readWholeWorkSheet(XlsWorksheet sheet, IDatasetHelper datasetHelper)
         {
             XlsBiffIndex idx;
 
@@ -1272,7 +1295,173 @@ namespace ExcelDataReader.Portable
         #endregion
     }
 
-	/// <summary>
+    internal class EncodingHelper
+    {
+
+        public static Encoding GetEncoding(ushort codePage)
+        {
+            var encoding = (Encoding)null;
+            switch (codePage)
+            {
+                case 037: encoding = Encoding.GetEncoding("IBM037"); break;
+                case 437: encoding = Encoding.GetEncoding("IBM437"); break;
+                case 500: encoding = Encoding.GetEncoding("IBM500"); break;
+                case 708: encoding = Encoding.GetEncoding("ASMO-708"); break;
+                case 709: encoding = Encoding.GetEncoding(""); break;
+                case 710: encoding = Encoding.GetEncoding(""); break;
+                case 720: encoding = Encoding.GetEncoding("DOS-720"); break;
+                case 737: encoding = Encoding.GetEncoding("ibm737"); break;
+                case 775: encoding = Encoding.GetEncoding("ibm775"); break;
+                case 850: encoding = Encoding.GetEncoding("ibm850"); break;
+                case 852: encoding = Encoding.GetEncoding("ibm852"); break;
+                case 855: encoding = Encoding.GetEncoding("IBM855"); break;
+                case 857: encoding = Encoding.GetEncoding("ibm857"); break;
+                case 858: encoding = Encoding.GetEncoding("IBM00858"); break;
+                case 860: encoding = Encoding.GetEncoding("IBM860"); break;
+                case 861: encoding = Encoding.GetEncoding("ibm861"); break;
+                case 862: encoding = Encoding.GetEncoding("DOS-862"); break;
+                case 863: encoding = Encoding.GetEncoding("IBM863"); break;
+                case 864: encoding = Encoding.GetEncoding("IBM864"); break;
+                case 865: encoding = Encoding.GetEncoding("IBM865"); break;
+                case 866: encoding = Encoding.GetEncoding("cp866"); break;
+                case 869: encoding = Encoding.GetEncoding("ibm869"); break;
+                case 870: encoding = Encoding.GetEncoding("IBM870"); break;
+                case 874: encoding = Encoding.GetEncoding("windows-874"); break;
+                case 875: encoding = Encoding.GetEncoding("cp875"); break;
+                case 932: encoding = Encoding.GetEncoding("shift_jis"); break;
+                case 936: encoding = Encoding.GetEncoding("gb2312"); break;
+                case 949: encoding = Encoding.GetEncoding("ks_c_5601-1987"); break;
+                case 950: encoding = Encoding.GetEncoding("big5"); break;
+                case 1026: encoding = Encoding.GetEncoding("IBM1026"); break;
+                case 1047: encoding = Encoding.GetEncoding("IBM01047"); break;
+                case 1140: encoding = Encoding.GetEncoding("IBM01140"); break;
+                case 1141: encoding = Encoding.GetEncoding("IBM01141"); break;
+                case 1142: encoding = Encoding.GetEncoding("IBM01142"); break;
+                case 1143: encoding = Encoding.GetEncoding("IBM01143"); break;
+                case 1144: encoding = Encoding.GetEncoding("IBM01144"); break;
+                case 1145: encoding = Encoding.GetEncoding("IBM01145"); break;
+                case 1146: encoding = Encoding.GetEncoding("IBM01146"); break;
+                case 1147: encoding = Encoding.GetEncoding("IBM01147"); break;
+                case 1148: encoding = Encoding.GetEncoding("IBM01148"); break;
+                case 1149: encoding = Encoding.GetEncoding("IBM01149"); break;
+                case 1200: encoding = Encoding.GetEncoding("utf-16"); break;
+                case 1201: encoding = Encoding.GetEncoding("unicodeFFFE"); break;
+                case 1250: encoding = Encoding.GetEncoding("windows-1250"); break;
+                case 1251: encoding = Encoding.GetEncoding("windows-1251"); break;
+                case 1252: encoding = Encoding.GetEncoding("windows-1252"); break;
+                case 1253: encoding = Encoding.GetEncoding("windows-1253"); break;
+                case 1254: encoding = Encoding.GetEncoding("windows-1254"); break;
+                case 1255: encoding = Encoding.GetEncoding("windows-1255"); break;
+                case 1256: encoding = Encoding.GetEncoding("windows-1256"); break;
+                case 1257: encoding = Encoding.GetEncoding("windows-1257"); break;
+                case 1258: encoding = Encoding.GetEncoding("windows-1258"); break;
+                case 1361: encoding = Encoding.GetEncoding("Johab"); break;
+                case 10000: encoding = Encoding.GetEncoding("macintosh"); break;
+                case 10001: encoding = Encoding.GetEncoding("x-mac-japanese"); break;
+                case 10002: encoding = Encoding.GetEncoding("x-mac-chinesetrad"); break;
+                case 10003: encoding = Encoding.GetEncoding("x-mac-korean"); break;
+                case 10004: encoding = Encoding.GetEncoding("x-mac-arabic"); break;
+                case 10005: encoding = Encoding.GetEncoding("x-mac-hebrew"); break;
+                case 10006: encoding = Encoding.GetEncoding("x-mac-greek"); break;
+                case 10007: encoding = Encoding.GetEncoding("x-mac-cyrillic"); break;
+                case 10008: encoding = Encoding.GetEncoding("x-mac-chinesesimp"); break;
+                case 10010: encoding = Encoding.GetEncoding("x-mac-romanian"); break;
+                case 10017: encoding = Encoding.GetEncoding("x-mac-ukrainian"); break;
+                case 10021: encoding = Encoding.GetEncoding("x-mac-thai"); break;
+                case 10029: encoding = Encoding.GetEncoding("x-mac-ce"); break;
+                case 10079: encoding = Encoding.GetEncoding("x-mac-icelandic"); break;
+                case 10081: encoding = Encoding.GetEncoding("x-mac-turkish"); break;
+                case 10082: encoding = Encoding.GetEncoding("x-mac-croatian"); break;
+                case 12000: encoding = Encoding.GetEncoding("utf-32"); break;
+                case 12001: encoding = Encoding.GetEncoding("utf-32BE"); break;
+                case 20000: encoding = Encoding.GetEncoding("x-Chinese_CNS"); break;
+                case 20001: encoding = Encoding.GetEncoding("x-cp20001"); break;
+                case 20002: encoding = Encoding.GetEncoding("x_Chinese-Eten"); break;
+                case 20003: encoding = Encoding.GetEncoding("x-cp20003"); break;
+                case 20004: encoding = Encoding.GetEncoding("x-cp20004"); break;
+                case 20005: encoding = Encoding.GetEncoding("x-cp20005"); break;
+                case 20105: encoding = Encoding.GetEncoding("x-IA5"); break;
+                case 20106: encoding = Encoding.GetEncoding("x-IA5-German"); break;
+                case 20107: encoding = Encoding.GetEncoding("x-IA5-Swedish"); break;
+                case 20108: encoding = Encoding.GetEncoding("x-IA5-Norwegian"); break;
+                case 20127: encoding = Encoding.GetEncoding("us-ascii"); break;
+                case 20261: encoding = Encoding.GetEncoding("x-cp20261"); break;
+                case 20269: encoding = Encoding.GetEncoding("x-cp20269"); break;
+                case 20273: encoding = Encoding.GetEncoding("IBM273"); break;
+                case 20277: encoding = Encoding.GetEncoding("IBM277"); break;
+                case 20278: encoding = Encoding.GetEncoding("IBM278"); break;
+                case 20280: encoding = Encoding.GetEncoding("IBM280"); break;
+                case 20284: encoding = Encoding.GetEncoding("IBM284"); break;
+                case 20285: encoding = Encoding.GetEncoding("IBM285"); break;
+                case 20290: encoding = Encoding.GetEncoding("IBM290"); break;
+                case 20297: encoding = Encoding.GetEncoding("IBM297"); break;
+                case 20420: encoding = Encoding.GetEncoding("IBM420"); break;
+                case 20423: encoding = Encoding.GetEncoding("IBM423"); break;
+                case 20424: encoding = Encoding.GetEncoding("IBM424"); break;
+                case 20833: encoding = Encoding.GetEncoding("x-EBCDIC-KoreanExtended"); break;
+                case 20838: encoding = Encoding.GetEncoding("IBM-Thai"); break;
+                case 20866: encoding = Encoding.GetEncoding("koi8-r"); break;
+                case 20871: encoding = Encoding.GetEncoding("IBM871"); break;
+                case 20880: encoding = Encoding.GetEncoding("IBM880"); break;
+                case 20905: encoding = Encoding.GetEncoding("IBM905"); break;
+                case 20924: encoding = Encoding.GetEncoding("IBM00924"); break;
+                case 20932: encoding = Encoding.GetEncoding("EUC-JP"); break;
+                case 20936: encoding = Encoding.GetEncoding("x-cp20936"); break;
+                case 20949: encoding = Encoding.GetEncoding("x-cp20949"); break;
+                case 21025: encoding = Encoding.GetEncoding("cp1025"); break;
+                case 21027: encoding = Encoding.GetEncoding(""); break;
+                case 21866: encoding = Encoding.GetEncoding("koi8-u"); break;
+                case 28591: encoding = Encoding.GetEncoding("iso-8859-1"); break;
+                case 28592: encoding = Encoding.GetEncoding("iso-8859-2"); break;
+                case 28593: encoding = Encoding.GetEncoding("iso-8859-3"); break;
+                case 28594: encoding = Encoding.GetEncoding("iso-8859-4"); break;
+                case 28595: encoding = Encoding.GetEncoding("iso-8859-5"); break;
+                case 28596: encoding = Encoding.GetEncoding("iso-8859-6"); break;
+                case 28597: encoding = Encoding.GetEncoding("iso-8859-7"); break;
+                case 28598: encoding = Encoding.GetEncoding("iso-8859-8"); break;
+                case 28599: encoding = Encoding.GetEncoding("iso-8859-9"); break;
+                case 28603: encoding = Encoding.GetEncoding("iso-8859-13"); break;
+                case 28605: encoding = Encoding.GetEncoding("iso-8859-15"); break;
+                case 29001: encoding = Encoding.GetEncoding("x-Europa"); break;
+                case 38598: encoding = Encoding.GetEncoding("iso-8859-8-i"); break;
+                case 50220: encoding = Encoding.GetEncoding("iso-2022-jp"); break;
+                case 50221: encoding = Encoding.GetEncoding("csISO2022JP"); break;
+                case 50222: encoding = Encoding.GetEncoding("iso-2022-jp"); break;
+                case 50225: encoding = Encoding.GetEncoding("iso-2022-kr"); break;
+                case 50227: encoding = Encoding.GetEncoding("x-cp50227"); break;
+                case 50229: encoding = Encoding.GetEncoding(""); break;
+                case 50930: encoding = Encoding.GetEncoding(""); break;
+                case 50931: encoding = Encoding.GetEncoding(""); break;
+                case 50933: encoding = Encoding.GetEncoding(""); break;
+                case 50935: encoding = Encoding.GetEncoding(""); break;
+                case 50936: encoding = Encoding.GetEncoding(""); break;
+                case 50937: encoding = Encoding.GetEncoding(""); break;
+                case 50939: encoding = Encoding.GetEncoding(""); break;
+                case 51932: encoding = Encoding.GetEncoding("euc-jp"); break;
+                case 51936: encoding = Encoding.GetEncoding("EUC-CN"); break;
+                case 51949: encoding = Encoding.GetEncoding("euc-kr"); break;
+                case 51950: encoding = Encoding.GetEncoding(""); break;
+                case 52936: encoding = Encoding.GetEncoding("hz-gb-2312"); break;
+                case 54936: encoding = Encoding.GetEncoding("GB18030"); break;
+                case 57002: encoding = Encoding.GetEncoding("x-iscii-de"); break;
+                case 57003: encoding = Encoding.GetEncoding("x-iscii-be"); break;
+                case 57004: encoding = Encoding.GetEncoding("x-iscii-ta"); break;
+                case 57005: encoding = Encoding.GetEncoding("x-iscii-te"); break;
+                case 57006: encoding = Encoding.GetEncoding("x-iscii-as"); break;
+                case 57007: encoding = Encoding.GetEncoding("x-iscii-or"); break;
+                case 57008: encoding = Encoding.GetEncoding("x-iscii-ka"); break;
+                case 57009: encoding = Encoding.GetEncoding("x-iscii-ma"); break;
+                case 57010: encoding = Encoding.GetEncoding("x-iscii-gu"); break;
+                case 57011: encoding = Encoding.GetEncoding("x-iscii-pa"); break;
+                case 65000: encoding = Encoding.GetEncoding("utf-7"); break;
+                case 65001: encoding = Encoding.GetEncoding("utf-8"); break;
+            }
+
+            return encoding;
+        }
+    }
+
+    /// <summary>
 	/// Strict is as normal, Loose is more forgiving and will not cause an exception if a record size takes it beyond the end of the file. It will be trunacted in this case (SQl Reporting Services)
 	/// </summary>
 	public enum ReadOption

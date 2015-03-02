@@ -67,5 +67,7 @@ namespace Excel
 		/// </value>
 		bool IsFirstRowAsColumnNames { get;set;}
 
+        Encoding Encoding { get; }
+        Encoding DefaultEncoding { get; }
 	}
 }

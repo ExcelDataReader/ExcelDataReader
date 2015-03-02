@@ -5,11 +5,11 @@ using Excel;
 #endif
 namespace ExcelDataReader.Portable.Core.BinaryFormat
 {
-	/// <summary>
+    /// <summary>
 	/// Represents formatted unicode string in SST
 	/// </summary>
-	internal class XlsFormattedUnicodeString
-	{
+	internal class XlsFormattedUnicodeString : IXlsString
+    {
 		#region FormattedUnicodeStringFlags enum
 
 		[Flags]
@@ -24,12 +24,21 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 
 		protected byte[] m_bytes;
 		protected uint m_offset;
+        //private readonly Encoding encoding;
 
-		public XlsFormattedUnicodeString(byte[] bytes, uint offset)
-		{
-			m_bytes = bytes;
-			m_offset = offset;
-		}
+        public XlsFormattedUnicodeString(byte[] bytes, uint offset)
+        {
+            m_bytes = bytes;
+            m_offset = offset;
+            //this.encoding = encoding;
+        }
+
+        //public XlsFormattedUnicodeString(byte[] bytes, uint offset, Encoding encoding)
+        //{
+        //    m_bytes = bytes;
+        //    m_offset = offset;
+        //    //this.encoding = encoding;
+        //}
 
 		/// <summary>
 		/// Count of characters in string
@@ -135,7 +144,7 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 			get
 			{
 			    return
-			        UseEncoding.GetString(m_bytes, (int) (m_offset + HeadSize), (int) ByteCount);
+                    UseEncoding.GetString(m_bytes, (int)(m_offset + HeadSize), (int)ByteCount);
 			}
 		}
 
@@ -143,7 +152,7 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
         {
             //get { return IsMultiByte ? Encoding.Unicode : Encoding.UTF8; } 
             //not sure this is a good assumption but it does work for every test case
-            get { return IsMultiByte ? Encoding.Unicode : Encoding.GetEncoding("windows-1250"); } 
+            get { return IsMultiByte ? Encoding.Unicode : Encoding.GetEncoding("windows-1250"); }
 
         }
 	}

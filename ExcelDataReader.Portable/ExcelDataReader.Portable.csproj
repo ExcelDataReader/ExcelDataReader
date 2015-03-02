@@ -50,6 +50,9 @@
     <Compile Include="..\Excel\Core\BinaryFormat\Enums.cs">
       <Link>Core\BinaryFormat\Enums.cs</Link>
     </Compile>
+    <Compile Include="..\Excel\Core\BinaryFormat\IXlsString.cs">
+      <Link>Core\BinaryFormat\IXlsString.cs</Link>
+    </Compile>
     <Compile Include="..\Excel\Core\BinaryFormat\XlsBiffBlankCell.cs">
       <Link>Core\BinaryFormat\XlsBiffBlankCell.cs</Link>
     </Compile>
@@ -134,6 +137,9 @@
     <Compile Include="..\Excel\Core\BinaryFormat\XlsBiffWindow1.cs">
       <Link>Core\BinaryFormat\XlsBiffWindow1.cs</Link>
     </Compile>
+    <Compile Include="..\Excel\Core\BinaryFormat\XlsByteString.cs">
+      <Link>Core\BinaryFormat\XlsByteString.cs</Link>
+    </Compile>
     <Compile Include="..\Excel\Core\BinaryFormat\XlsDirectoryEntry.cs">
       <Link>Core\BinaryFormat\XlsDirectoryEntry.cs</Link>
     </Compile>
@@ -151,6 +157,9 @@
     </Compile>
     <Compile Include="..\Excel\Core\BinaryFormat\XlsStream.cs">
       <Link>Core\BinaryFormat\XlsStream.cs</Link>
+    </Compile>
+    <Compile Include="..\Excel\Core\BinaryFormat\XlsStringFactory.cs">
+      <Link>Core\BinaryFormat\XlsStringFactory.cs</Link>
     </Compile>
     <Compile Include="..\Excel\Core\BinaryFormat\XlsWorkbookGlobals.cs">
       <Link>Core\BinaryFormat\XlsWorkbookGlobals.cs</Link>

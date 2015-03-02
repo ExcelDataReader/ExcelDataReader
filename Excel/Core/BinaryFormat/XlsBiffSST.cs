@@ -49,7 +49,8 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 			uint count = UniqueCount;
 			while (offset < last)
 			{
-				var str = new XlsFormattedUnicodeString(m_bytes, offset);
+                //var str = new XlsFormattedUnicodeString(m_bytes, offset, reader.Encoding);
+                var str = XlsStringFactory.CreateXlsString(m_bytes, offset, reader);
 				uint prefix = str.HeadSize;
 				uint postfix = str.TailSize;
 				uint len = str.CharacterCount;
@@ -92,6 +93,7 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 					last = contoffset + 4 + BitConverter.ToUInt16(m_bytes, (int)contoffset + 2);
 					lastcontinue++;
 
+                    //str = new XlsFormattedUnicodeString(buff, 0, reader.Encoding);
 					str = new XlsFormattedUnicodeString(buff, 0);
 				}
 				else

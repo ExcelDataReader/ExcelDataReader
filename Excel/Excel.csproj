@@ -141,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\BinaryFormat\Enums.cs" />
+    <Compile Include="Core\BinaryFormat\IXlsString.cs" />
     <Compile Include="Core\BinaryFormat\XlsBiffBlankCell.cs" />
     <Compile Include="Core\BinaryFormat\XlsBiffBOF.cs" />
     <Compile Include="Core\BinaryFormat\XlsBiffBoundSheet.cs" />
@@ -169,6 +170,7 @@
     <Compile Include="Core\BinaryFormat\XlsBiffStream.cs" />
     <Compile Include="Core\BinaryFormat\XlsBiffUncalced.cs" />
     <Compile Include="Core\BinaryFormat\XlsBiffWindow1.cs" />
+    <Compile Include="Core\BinaryFormat\XlsByteString.cs" />
     <Compile Include="Core\BinaryFormat\XlsDirectoryEntry.cs" />
     <Compile Include="Core\BinaryFormat\XlsFormattedUnicodeString.cs" />
     <Compile Include="Core\BinaryFormat\XlsRootDirectory.cs" />
@@ -186,6 +188,7 @@
     <Compile Include="Core\OpenXmlFormat\XlsxXf.cs" />
     <Compile Include="Core\OpenXmlFormat\XmlReaderExtensions.cs" />
     <Compile Include="Core\ReferenceHelper.cs" />
+    <Compile Include="Core\BinaryFormat\XlsStringFactory.cs" />
     <Compile Include="Core\ZipWorker.cs" />
     <Compile Include="Exceptions\BiffRecordException.cs" />
     <Compile Include="Exceptions\HeaderException.cs" />

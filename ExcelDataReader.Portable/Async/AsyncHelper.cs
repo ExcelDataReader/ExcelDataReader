@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ExcelDataReader.Portable.Async
 {
-    internal static class AsyncHelper
+    public static class AsyncHelper
     {
         private static readonly TaskFactory _myTaskFactory = new
           TaskFactory(CancellationToken.None,

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using ExcelDataReader.Portable.Data;
 
@@ -10,20 +11,20 @@ namespace ExcelDataReader.Portable
 		/// Initializes the instance with specified file stream.
 		/// </summary>
 		/// <param name="fileStream">The file stream.</param>
-		void Initialize(Stream fileStream);
+		Task InitializeAsync(Stream fileStream);
 
         ///// <summary>
         ///// Read all data in to DataSet and return it
         ///// </summary>
         ///// <returns>The DataSet</returns>
-        void LoadDataSet(IDatasetHelper datasetHelper);
+        Task LoadDataSetAsync(IDatasetHelper datasetHelper);
 
         ///// <summary>
         /////Read all data in to DataSet and return it
         ///// </summary>
         ///// <param name="convertOADateTime">if set to <c>true</c> [try auto convert OA date time format].</param>
         ///// <returns>The DataSet</returns>
-        void LoadDataSet(IDatasetHelper datasetHelper, bool convertOADateTime);
+        Task LoadDataSetAsync(IDatasetHelper datasetHelper, bool convertOADateTime);
 
 		/// <summary>
 		/// Gets a value indicating whether file stream is valid.
@@ -71,5 +72,7 @@ namespace ExcelDataReader.Portable
         bool ConvertOaDate { get; set; }
 
         ReadOption ReadOption { get; set;  }
+	    Encoding Encoding { get; }
+	    Encoding DefaultEncoding { get; }
 	}
 }

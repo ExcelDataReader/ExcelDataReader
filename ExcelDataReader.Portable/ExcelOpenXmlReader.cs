@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Globalization;
@@ -63,7 +64,7 @@ namespace ExcelDataReader.Portable
 
 		}
 
-		private async void ReadGlobals()
+		private async Task ReadGlobalsAsync()
 		{
 			_workbook = new XlsxWorkbook(
 				await _zipWorker.GetWorkbookStream(),
@@ -107,7 +108,7 @@ namespace ExcelDataReader.Portable
 			}
 		}
 
-		private async void ReadSheetGlobals(XlsxWorksheet sheet)
+		private async Task ReadSheetGlobalsAsync(XlsxWorksheet sheet)
 		{
             if (_xmlReader != null) _xmlReader.Dispose();
             if (_sheetStream != null) _sheetStream.Dispose();
@@ -313,11 +314,11 @@ namespace ExcelDataReader.Portable
 			return false;
 		}
 
-		private bool InitializeSheetRead()
+		private async Task<bool> InitializeSheetReadAsync()
 		{
 			if (ResultsCount <= 0) return false;
 
-			ReadSheetGlobals(_workbook.Sheets[_resultIndex]);
+			await ReadSheetGlobalsAsync(_workbook.Sheets[_resultIndex]);
 
 			if (_workbook.Sheets[_resultIndex].Dimension == null) return false;
 
@@ -337,11 +338,11 @@ namespace ExcelDataReader.Portable
 
 		#region IExcelDataReader Members
 
-		public void Initialize(System.IO.Stream fileStream)
+		public async Task InitializeAsync(System.IO.Stream fileStream)
 		{
             _zipWorker = new ZipWorker(fileSystem, fileHelper);
 
-            AsyncHelper.RunSync(() => _zipWorker.Extract(fileStream));
+            await _zipWorker.Extract(fileStream);
 
 			if (!_zipWorker.IsValid)
 			{
@@ -353,15 +354,15 @@ namespace ExcelDataReader.Portable
 				return;
 			}
 
-			ReadGlobals();
+			await ReadGlobalsAsync();
 		}
 
-	    public void LoadDataSet(IDatasetHelper datasetHelper)
+        public async Task LoadDataSetAsync(IDatasetHelper datasetHelper)
 	    {
-	        LoadDataSet(datasetHelper, true);
+	        await LoadDataSetAsync(datasetHelper, true);
 	    }
 
-	    public void LoadDataSet(IDatasetHelper datasetHelper, bool convertOADateTime)
+	    public async Task LoadDataSetAsync(IDatasetHelper datasetHelper, bool convertOADateTime)
 	    {
             if (!_isValid)
             {
@@ -376,7 +377,7 @@ namespace ExcelDataReader.Portable
                 datasetHelper.CreateNewTable(_workbook.Sheets[ind].Name);
                 datasetHelper.AddExtendedPropertyToTable("visiblestate", _workbook.Sheets[ind].VisibleState);
 
-                ReadSheetGlobals(_workbook.Sheets[ind]);
+                await ReadSheetGlobalsAsync(_workbook.Sheets[ind]);
 
                 if (_workbook.Sheets[ind].Dimension == null) continue;
 
@@ -434,6 +435,16 @@ namespace ExcelDataReader.Portable
 
 	    public bool ConvertOaDate { get; set; }
 	    public ReadOption ReadOption { get; set; }
+
+	    public Encoding Encoding
+	    {
+	        get { return null; }
+	    }
+
+        public Encoding DefaultEncoding
+        {
+            get { return Encoding.UTF8; }
+        }
 
 	    public bool IsValid
 		{
@@ -499,17 +510,19 @@ namespace ExcelDataReader.Portable
 			return true;
 		}
 
-		public bool Read()
-		{
-			if (!_isValid) return false;
+        public bool Read()
+        {
+            if (!_isValid) return false;
 
-			if (_isFirstRead && !InitializeSheetRead())
-			{
-				return false;
-			}
+            if (_isFirstRead)
+            {
+                var initializeSheetRead = AsyncHelper.RunSync(() => InitializeSheetReadAsync());
+                if (!initializeSheetRead)
+                    return false;
+            }
 
-			return ReadSheetRow(_workbook.Sheets[_resultIndex]);
-		}
+            return ReadSheetRow(_workbook.Sheets[_resultIndex]);
+        }
 
 		public int FieldCount
 		{

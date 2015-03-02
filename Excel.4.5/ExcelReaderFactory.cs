@@ -1,7 +1,9 @@
 using System.IO;
 using ExcelDataReader.Desktop.Portable;
+using ExcelDataReader.Portable.Async;
 using ExcelDataReader.Portable.Data;
 using ExcelDataReader.Portable.IO;
+using ExcelDataReader.Portable.Misc;
 using PCLStorage;
 
 namespace Excel
@@ -23,7 +25,7 @@ namespace Excel
 		{
             var factory = CreateFactory();
 
-		    var reader = factory.CreateBinaryReader(fileStream);
+		    var reader = AsyncHelper.RunSync(() => factory.CreateBinaryReaderAsync(fileStream));
 
             return new ExcelBinaryReader(reader);
 		}
@@ -43,7 +45,7 @@ namespace Excel
             var factory = CreateFactory();
 
             var portableReadOption = (ExcelDataReader.Portable.ReadOption)option;
-            var reader = factory.CreateBinaryReader(fileStream, portableReadOption);
+            var reader = AsyncHelper.RunSync(() => factory.CreateBinaryReaderAsync(fileStream, portableReadOption));
 
             return new ExcelBinaryReader(reader);
 		}
@@ -58,7 +60,7 @@ namespace Excel
 		{
             var factory = CreateFactory();
 
-            var reader = factory.CreateBinaryReader(fileStream, convertOADate);
+            var reader = AsyncHelper.RunSync(() => factory.CreateBinaryReaderAsync(fileStream, convertOADate));
 
             return new ExcelBinaryReader(reader);
 
@@ -76,7 +78,7 @@ namespace Excel
             var factory = CreateFactory();
 
             var portableReadOption = (ExcelDataReader.Portable.ReadOption)readOption;
-            var reader = factory.CreateBinaryReader(fileStream, convertOADate, portableReadOption);
+            var reader = AsyncHelper.RunSync(() => factory.CreateBinaryReaderAsync(fileStream, convertOADate, portableReadOption));
 
             return new ExcelBinaryReader(reader);
 		}
@@ -90,7 +92,7 @@ namespace Excel
 		{
             var factory = CreateFactory();
 
-			var reader = factory.CreateOpenXmlReader(fileStream);
+			var reader = AsyncHelper.RunSync(() => factory.CreateOpenXmlReader(fileStream));
 
 			return new ExcelOpenXmlReader(reader);
 		}

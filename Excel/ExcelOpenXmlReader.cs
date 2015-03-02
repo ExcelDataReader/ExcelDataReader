@@ -3,10 +3,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Excel.Core;
 using System.Data;
 using System.Xml;
 using System.Globalization;
+using ExcelDataReader.Portable.Core;
 using ExcelDataReader.Portable.Core.OpenXmlFormat;
 
 namespace Excel
@@ -37,8 +39,9 @@ namespace Excel
 
 		private List<int> _defaultDateTimeStyles;
 		private string _namespaceUri;
+	    private Encoding defaultEncoding = Encoding.UTF8;
 
-		#endregion
+	    #endregion
 
 		internal ExcelOpenXmlReader()
 		{
@@ -416,7 +419,17 @@ namespace Excel
 			}
 		}
 
-		public bool IsValid
+	    public Encoding Encoding
+	    {
+	        get { return null; }
+	    }
+
+	    public Encoding DefaultEncoding
+	    {
+	        get { return defaultEncoding; }
+	    }
+
+	    public bool IsValid
 		{
 			get { return _isValid; }
 		}

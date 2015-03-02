@@ -35,7 +35,7 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 		#endregion
 
 		private bool isV8 = true;
-		private Encoding m_UseEncoding = Encoding.UTF8; 
+        //private Encoding m_UseEncoding = Encoding.UTF8; 
 
 		internal XlsBiffBoundSheet(byte[] bytes, uint offset, ExcelBinaryReader reader)
 			: base(bytes, offset, reader)
@@ -79,20 +79,20 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 					if (base.ReadByte(0x7) == 0)
                         return Encoding.UTF8.GetString(m_bytes, m_readoffset + start, len);
 					else
-						return m_UseEncoding.GetString(m_bytes, m_readoffset + start, Helpers.IsSingleByteEncoding(m_UseEncoding) ? len : len * 2);
+                        return reader.Encoding.GetString(m_bytes, m_readoffset + start, Helpers.IsSingleByteEncoding(reader.Encoding) ? len : len * 2);
 				else
                     return Encoding.UTF8.GetString(m_bytes, m_readoffset + start - 1, len);
 			}
 		}
 
-		/// <summary>
-		/// Encoding used to deal with strings
-		/// </summary>
-		public Encoding UseEncoding
-		{
-			get { return m_UseEncoding; }
-			set { m_UseEncoding = value; }
-		}
+        ///// <summary>
+        ///// Encoding used to deal with strings
+        ///// </summary>
+        //public Encoding UseEncoding
+        //{
+        //    get { return m_UseEncoding; }
+        //    set { m_UseEncoding = value; }
+        //}
 
 		/// <summary>
 		/// Specifies if BIFF8 format should be used

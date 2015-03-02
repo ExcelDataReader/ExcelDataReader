@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using Excel.Core;
 using Excel.Log;
+using ExcelDataReader.Portable.Core;
 using ExcelDataReader.Portable.Core.BinaryFormat;
 
 namespace Excel
@@ -50,8 +51,8 @@ namespace Excel
 		private const string COLUMN = "Column";
 
 		private bool disposed;
-		
-		#endregion
+
+	    #endregion
 
 		internal ExcelBinaryReader()
 		{
@@ -197,7 +198,7 @@ namespace Excel
 						if (sheet.Type != XlsBiffBoundSheet.SheetType.Worksheet) break;
 
 						sheet.IsV8 = isV8();
-						sheet.UseEncoding = m_encoding;
+                        //sheet.UseEncoding = m_encoding;
 						LogManager.Log(this).Debug("BOUNDSHEET IsV8={0}", sheet.IsV8);
 
 						m_sheets.Add(new XlsWorksheet(m_globals.Sheets.Count, sheet));
@@ -216,7 +217,11 @@ namespace Excel
 
 						try
 						{
-							m_encoding = Encoding.GetEncoding(m_globals.CodePage.Value);
+                            //workaround: 1200 should actually be UTF-8 for some reason
+                            if (m_globals.CodePage.Value == 1200)
+                                m_encoding = Encoding.GetEncoding(65001);
+                            else
+                                m_encoding = Encoding.GetEncoding(m_globals.CodePage.Value);
 						}
 						catch (ArgumentException)
 						{
@@ -1226,7 +1231,17 @@ namespace Excel
 			}
 		}
 
-		public bool ConvertOaDate
+	    public Encoding Encoding
+	    {
+	        get { return m_encoding; }
+	    }
+
+	    public Encoding DefaultEncoding
+	    {
+            get { return m_Default_Encoding; }
+	    }
+
+	    public bool ConvertOaDate
 		{
 			get { return m_ConvertOADate; }
 			set { m_ConvertOADate = value; }
