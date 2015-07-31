@@ -52,18 +52,26 @@ namespace ExcelDataReader.Portable.Core
             return re.Replace(input, m => (((char)UInt32.Parse(m.Groups[1].Value, NumberStyles.HexNumber))).ToString());
         }
 
-	    public static object ConvertFromOATime(double value)
-	    {
-	        if ((value >= 0.0) && (value < 60.0))
-	        {
-	            value++;
-	        }
-	        //if (date1904)
-	        //{
-	        //    Value += 1462.0;
-	        //}
-	        return DateTime.FromOADate(value);
-	    }
+        public static object ConvertFromOATime(double value)
+        {
+            if ((value >= 0.0) && (value < 60.0))
+            {
+                value++;
+            }
+            //if (date1904)
+            //{
+            //    Value += 1462.0;
+            //}
+            try
+            {
+                return DateTime.FromOADate(value);
+            }
+            catch(ArgumentException)
+            {
+                throw;
+            }
+            
+        }
 
         internal static void FixDataTypes(DataSet dataset)
         {
