@@ -53,25 +53,25 @@ excelReader.Close();
 
 Dim stream As FileStream = File.Open(filePath, FileMode.Open, FileAccess.Read)
 
-1. Reading from a binary Excel file ('97-2003 format; *.xls)
+'1. Reading from a binary Excel file ('97-2003 format; *.xls)
 Dim excelReader As IExcelDataReader = ExcelReaderFactory.CreateBinaryReader(stream)
-...
-2. Reading from a OpenXml Excel file (2007 format; *.xlsx)
+
+'2. Reading from a OpenXml Excel file (2007 format; *.xlsx)
 Dim excelReader As IExcelDataReader = ExcelReaderFactory.CreateOpenXmlReader(stream)
-...
-3. DataSet - The result of each spreadsheet will be created in the result.Tables
+
+'3. DataSet - The result of each spreadsheet will be created in the result.Tables
 Dim result As DataSet = excelReader.AsDataSet()
-...
-4. DataSet - Create column names from first row
+
+'4. DataSet - Create column names from first row
 excelReader.IsFirstRowAsColumnNames = True
 Dim result As DataSet = excelReader.AsDataSet()
 
-5. Data Reader methods
+'5. Data Reader methods
 While excelReader.Read()
 	'excelReader.GetInt32(0);
 End While
 
-6. Free resources (IExcelDataReader is IDisposable)
+'6. Free resources (IExcelDataReader is IDisposable)
 excelReader.Close()
 ```
 
