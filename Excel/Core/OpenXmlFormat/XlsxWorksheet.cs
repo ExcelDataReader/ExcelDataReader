@@ -15,6 +15,7 @@ namespace ExcelDataReader.Portable.Core.OpenXmlFormat
 		public const string A_s = "s";
 		public const string N_sheetData = "sheetData";
 		public const string N_inlineStr = "inlineStr";
+		public const string N_str = "str";
 
 		private XlsxDimension _dimension;
 

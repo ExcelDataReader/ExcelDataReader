@@ -274,9 +274,9 @@ namespace ExcelDataReader.Portable
                         {
                             o = Helpers.ConvertEscapeChars(_workbook.SST[int.Parse(o.ToString())]);
                         } // Requested change 4: missing (it appears that if should be else if)
-                        else if (null != a_t && a_t == XlsxWorksheet.N_inlineStr) //if string inline
-                        {
-                            o = Helpers.ConvertEscapeChars(o.ToString());
+						else if(null != a_t && (a_t == XlsxWorksheet.N_inlineStr || a_t == XlsxWorksheet.N_str)) //if string inline or cached formula string value
+						{
+							o = Helpers.ConvertEscapeChars(_xmlReader.Value.ToString());
                         }
                         else if (a_t == "b") //boolean
 						{
