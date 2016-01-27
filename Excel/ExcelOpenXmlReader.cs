@@ -104,6 +104,8 @@ namespace Excel
 			if (_xmlReader != null) _xmlReader.Close();
 			if (_sheetStream != null) _sheetStream.Close();
 
+			if (null == sheet.Path) return;
+
 			_sheetStream = _zipWorker.GetWorksheetStream(sheet.Path);
 
 			if (null == _sheetStream) return;
