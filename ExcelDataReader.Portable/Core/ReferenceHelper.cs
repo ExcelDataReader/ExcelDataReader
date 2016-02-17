@@ -13,7 +13,12 @@ namespace ExcelDataReader.Portable.Core
         public static int[] ReferenceToColumnAndRow(string reference)
         {
             //split the string into row and column parts
-            
+            Regex hasBothLettersNumbers = new Regex("([a-zA-Z]+)([0-9]+)");
+            if (!hasBothLettersNumbers.IsMatch(reference))
+            {
+                // 1 based column index
+                return new int[2] { 0, int.Parse(reference) + 1 };
+            }
 
             Regex matchLettersNumbers = new Regex("([a-zA-Z]*)([0-9]*)");
             string column = matchLettersNumbers.Match(reference).Groups[1].Value.ToUpper();

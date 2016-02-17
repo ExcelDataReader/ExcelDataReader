@@ -86,7 +86,7 @@ namespace ExcelDataReader.Portable.Core.OpenXmlFormat
 			int index = 0;
 			val1 = 0;
 			int[] arr = new int[value.Length - 1];
-
+            blllllllllllllllllllllaaaaaaaaaaaaaaaaaaaaaaaaa
 			while (index < value.Length)
 			{
 				if (char.IsDigit(value[index])) break;
