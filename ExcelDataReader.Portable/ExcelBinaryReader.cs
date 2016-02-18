@@ -781,6 +781,8 @@ namespace ExcelDataReader.Portable
 	    {
 	        double _dValue;
 
+	        if (value == null)
+	            return null;
 
 			if (double.TryParse(value.ToString(), out _dValue))
 				return tryConvertOADateTime(_dValue, XFormat);

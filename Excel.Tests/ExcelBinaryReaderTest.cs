@@ -34,6 +34,19 @@ namespace ExcelDataReader.Tests
 		}
 
         [TestMethod]
+        public void GitIssue_70_ExcelBinaryReader_tryConvertOADateTime_forumla()
+        {
+            var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Git_Issue_70"), true);
+
+            var ds = excelReader.AsDataSet(true);
+            Assert.IsNotNull(ds);
+
+            var date = ds.Tables[0].Rows[1].Field<DateTime>(0);
+
+            Assert.AreEqual(new DateTime(2014,01,01), date);
+        }
+
+        [TestMethod]
         public void GitIssue_29_ReadSheetStatesReadsCorrectly()
         {
             IExcelDataReader excelReader =
