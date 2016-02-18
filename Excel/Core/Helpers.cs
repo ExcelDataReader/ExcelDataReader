@@ -140,7 +140,7 @@ namespace ExcelDataReader.Portable.Core
 				i++;
 			}
 
-			table.Columns.Add(adjustedColumnName, typeof(Object));
+			table.Columns.Add(new DataColumn(adjustedColumnName, typeof(Object)) { Caption = columnName });
 		}
     }
 }
