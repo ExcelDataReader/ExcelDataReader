@@ -8,7 +8,7 @@ using System.Collections;
 
 namespace Excel.Core
 {
-	public class ZipWorker : IDisposable
+	public class ZipWorker : IExcelWorker
 	{
 		#region Members and Properties
 
