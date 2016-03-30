@@ -197,6 +197,7 @@
     <Compile Include="Core\ReferenceHelper.cs" />
     <Compile Include="Core\StringHelper.cs" />
     <Compile Include="Core\ZipWorker.cs" />
+    <Compile Include="Core\MemoryWorker.cs" />
     <Compile Include="Data\IDataHelper.cs" />
     <Compile Include="Data\IDataReader.cs" />
     <Compile Include="Data\IDataRecord.cs" />
@@ -208,6 +209,7 @@
     <Compile Include="Exceptions\BiffRecordException.cs" />
     <Compile Include="Exceptions\HeaderException.cs" />
     <Compile Include="IExcelDataReader.cs" />
+    <Compile Include="IExcelWorker.cs" />
     <Compile Include="IO\PCLStorage\FolderExtensions.cs" />
     <Compile Include="Misc\DateTimeHelper.cs" />
     <Compile Include="Misc\ListExtensions.cs" />

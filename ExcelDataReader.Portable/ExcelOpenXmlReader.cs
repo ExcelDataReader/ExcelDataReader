@@ -33,11 +33,12 @@ namespace ExcelDataReader.Portable
 		private int _depth;
 		private int _resultIndex;
 		private int _emptyRowCount;
-		private ZipWorker _zipWorker;
+		private IExcelWorker _zipWorker;
 		private XmlReader _xmlReader;
 		private Stream _sheetStream;
 		private object[] _cellsValues;
 		private object[] _savedCellsValues;
+		private ReadOption readOption = ReadOption.FileSystem;
 
 		private bool disposed;
 		private bool _isFirstRowAsColumnNames;
@@ -340,9 +341,13 @@ namespace ExcelDataReader.Portable
 
 		public async Task InitializeAsync(System.IO.Stream fileStream)
 		{
-            _zipWorker = new ZipWorker(fileSystem, fileHelper);
+			if (ReadOption == ReadOption.FileSystem)
+				_zipWorker = new ZipWorker(fileSystem, fileHelper);
+			else if (ReadOption == ReadOption.Memory)
+				_zipWorker = new MemoryWorker();
+			else throw new Exception("Unsopported ReadOption, please use FileSystem or Memory instead");
 
-            await _zipWorker.Extract(fileStream);
+			await _zipWorker.Extract(fileStream);
 
 			if (!_zipWorker.IsValid)
 			{
@@ -434,7 +439,12 @@ namespace ExcelDataReader.Portable
 		}
 
 	    public bool ConvertOaDate { get; set; }
-	    public ReadOption ReadOption { get; set; }
+
+        public ReadOption ReadOption
+        {
+            get { return readOption; }
+            set { readOption = value; }
+        }
 
 	    public Encoding Encoding
 	    {

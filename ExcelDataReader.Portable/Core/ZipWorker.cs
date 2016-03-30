@@ -11,7 +11,7 @@ using PCLStorage;
 
 namespace ExcelDataReader.Portable.Core
 {
-	public class ZipWorker : IDisposable
+	public class ZipWorker : IExcelWorker
 	{
 	    private readonly IFileSystem fileSystem;
 	    private readonly IFileHelper fileHelper;
