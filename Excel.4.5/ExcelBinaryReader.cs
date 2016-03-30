@@ -318,11 +318,15 @@ namespace Excel
 	}
 
 	/// <summary>
-	/// Strict is as normal, Loose is more forgiving and will not cause an exception if a record size takes it beyond the end of the file. It will be trunacted in this case (SQl Reporting Services)
+	/// Strict is as normal, Loose is more forgiving and will not cause an exception if a record size takes it beyond the end of the file.
+	/// It will be trunacted in this case (SQl Reporting Services)
+	/// FileSystem is default for OpenXml.
 	/// </summary>
 	public enum ReadOption
 	{
 		Strict,
-		Loose
+		Loose,
+		FileSystem,
+		Memory
 	}
 }

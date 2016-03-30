@@ -190,6 +190,7 @@
     <Compile Include="Core\ReferenceHelper.cs" />
     <Compile Include="Core\BinaryFormat\XlsStringFactory.cs" />
     <Compile Include="Core\ZipWorker.cs" />
+    <Compile Include="Core\MemoryWorker.cs" />
     <Compile Include="Exceptions\BiffRecordException.cs" />
     <Compile Include="Exceptions\HeaderException.cs" />
     <Compile Include="Core\BinaryFormat\XlsFat.cs" />
@@ -198,6 +199,7 @@
     <Compile Include="ExcelBinaryReader.cs" />
     <Compile Include="ExcelReaderFactory.cs" />
     <Compile Include="IExcelDataReader.cs" />
+    <Compile Include="IExcelWorker.cs" />
     <Compile Include="ExcelOpenXmlReader.cs" />
     <Compile Include="Log\ILog.cs" />
     <Compile Include="Log\Log.cs" />

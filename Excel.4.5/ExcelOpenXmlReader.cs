@@ -78,6 +78,13 @@ namespace Excel
 	        get { return portable.DefaultEncoding; }
 	    }
 
+        public ExcelDataReader.Portable.ReadOption SheetReadOption { get; private set; }
+
+        public ReadOption ReadOption
+        {
+            get { return (ReadOption)portable.ReadOption; }
+        }
+
 	    public bool IsValid
 		{
 			get { return portable.IsValid; }
