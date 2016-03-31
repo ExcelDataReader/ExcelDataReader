@@ -16,7 +16,7 @@ namespace ExcelDataReader.Portable.Core
 
         private bool disposed;
 
-        private const string TMP = "TMP_Z";
+        //private const string TMP = "TMP_Z";
         //private const string FOLDER_xl = "xl";
         //private const string FOLDER_worksheets = "worksheets";
         //private const string FILE_sharedStrings = "sharedStrings.{0}";
@@ -79,7 +79,7 @@ namespace ExcelDataReader.Portable.Core
                         zipfileitems.Add(entry.ToString());
                         try
                         {
-                            zipfileitems.Add(reader.ReadToEnd());
+                            zipfileitems.Add(await reader.ReadToEndAsync());
                         }
                         catch (Exception ex)
                         {
@@ -161,7 +161,8 @@ namespace ExcelDataReader.Portable.Core
         /// <returns></returns>
         public async Task<Stream> GetWorksheetStream(int sheetId)
         {
-            return null;
+            string excelcontent = "xl/worksheets/sheet" + sheetId + ".xml";
+            return await getStream(excelcontent);
         }
 
         public async Task<Stream> GetWorksheetStream(string sheetPath)
@@ -214,7 +215,7 @@ namespace ExcelDataReader.Portable.Core
             {
                 if (item.Contains(itemlist))
                 {
-                    data = getStreamFromString(item[1]);
+                    data = await Task.Run(() => getStreamFromString(item[1]));
                     return data;
                 }
             }

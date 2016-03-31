@@ -89,18 +89,18 @@ namespace ExcelDataReader.Portable
 			return reader;
 		}
 
-        /// <summary>
-        /// Creates an instance of <see cref="ExcelOpenXmlReader"/>
-        /// </summary>
-        /// <param name="fileStream">The file stream.</param>
-        /// <returns></returns>
-        public async Task<IExcelDataReader> CreateOpenXmlReader(Stream fileStream, ReadOption option)
-        {
-            IExcelDataReader reader = new ExcelOpenXmlReader(fileSystem, fileHelper, dataHelper);
-            reader.ReadOption = option;
-            await reader.InitializeAsync(fileStream);
+		/// <summary>
+		/// Creates an instance of <see cref="ExcelOpenXmlReader"/>
+		/// </summary>
+		/// <param name="fileStream">The file stream.</param>
+		/// <returns></returns>
+		public async Task<IExcelDataReader> CreateOpenXmlReader(Stream fileStream, ReadOption option)
+		{
+			IExcelDataReader reader = new ExcelOpenXmlReader(fileSystem, fileHelper, dataHelper);
+			reader.ReadOption = option;
+			await reader.InitializeAsync(fileStream);
 
-            return reader;
-        }
+			return reader;
+		}
 	}
 }

@@ -40,7 +40,7 @@ namespace Excel
 		private List<int> _defaultDateTimeStyles;
 		private string _namespaceUri;
 		private Encoding defaultEncoding = Encoding.UTF8;
-		private readonly ReadOptionOpenXml m_ReadOption = ReadOptionOpenXml.FileSystem;
+		private readonly ReadOption m_ReadOption = ReadOption.FileSystem;
 
 	    #endregion
 
@@ -56,7 +56,7 @@ namespace Excel
 
 		}
 
-		internal ExcelOpenXmlReader(ReadOptionOpenXml readOption) : this()
+		internal ExcelOpenXmlReader(ReadOption readOption) : this()
 		{
 			m_ReadOption = readOption;
 		}
@@ -337,9 +337,9 @@ namespace Excel
 
 		public void Initialize(System.IO.Stream fileStream)
 		{
-			if (ReadOption == ReadOptionOpenXml.FileSystem)
+			if (ReadOption == ReadOption.FileSystem)
 				_zipWorker = new ZipWorker();
-			else if (ReadOption == ReadOptionOpenXml.Memory)
+			else if (ReadOption == ReadOption.Memory)
 				_zipWorker = new MemoryWorker();
 			else throw new Exception("Unsopported ReadOption, please use FileSystem or Memory instead");
 			_zipWorker.Extract(fileStream);
@@ -417,7 +417,7 @@ namespace Excel
 			return dataset;
 		}
 
-		public ReadOptionOpenXml ReadOption
+		public ReadOption ReadOption
 		{
 			get { return m_ReadOption; }
 		}
@@ -733,14 +733,5 @@ namespace Excel
 		}
 
 		#endregion
-	}
-
-	/// <summary>
-	/// FileSystem is default.
-	/// </summary>
-	public enum ReadOptionOpenXml
-	{
-		FileSystem,
-		Memory
 	}
 }

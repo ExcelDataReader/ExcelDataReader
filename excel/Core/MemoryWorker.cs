@@ -205,7 +205,8 @@ namespace Excel.Core
         /// <returns></returns>
         public Stream GetWorksheetStream(int sheetId)
         {
-            return null;
+            string excelcontent = "xl/worksheets/sheet" + sheetId + ".xml";
+            return getStream(excelcontent);
         }
 
         public Stream GetWorksheetStream(string sheetPath)
