@@ -803,7 +803,7 @@ namespace ExcelDataReader.Portable
 		public async Task InitializeAsync(Stream fileStream)
 		{
 			if (ReadOption == ReadOption.FileSystem || ReadOption == ReadOption.Memory)
-				throw new Exception("Unsopported ReadOption, please use Strict or Loose instead");
+				throw new Exception("Unsupported ReadOption, please use Strict or Loose instead");
 
 			m_file = fileStream;
 

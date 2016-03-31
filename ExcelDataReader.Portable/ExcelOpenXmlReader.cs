@@ -345,7 +345,7 @@ namespace ExcelDataReader.Portable
 				_zipWorker = new ZipWorker(fileSystem, fileHelper);
 			else if (ReadOption == ReadOption.Memory)
 				_zipWorker = new MemoryWorker();
-			else throw new Exception("Unsopported ReadOption, please use FileSystem or Memory instead");
+			else throw new Exception("Unsupported ReadOption, please use FileSystem or Memory instead");
 
 			await _zipWorker.Extract(fileStream);
 
