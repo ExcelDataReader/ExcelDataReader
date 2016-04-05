@@ -100,7 +100,8 @@ namespace ExcelDataReader.Tests
 			{ "bTest10x10", "Test10x10.xlsb" },
 			{ "xTest_googlesourced", "Test_googlesourced.xlsx" },
 			{ "xTest_Issue_12667_GoogleExport_MissingColumns", "Test_Issue_12667_GoogleExport_MissingColumns.xlsx" },
-			{ "xTest_Excel_OpenOffice", "Test_Excel_OpenOffice.xlsx" }
+			{ "xTest_Excel_OpenOffice", "Test_Excel_OpenOffice.xlsx" },
+            { "Test_Issue_NoStyles_NoRAttribute", "Test_Issue_NoStyles_NoRAttribute.xlsx" }
 		};
 
 		public static Stream GetTestWorkbook(string key)

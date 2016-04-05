@@ -932,5 +932,28 @@ namespace ExcelDataReader.Tests
 
             Assert.AreEqual(4, dataset.Tables[0].Columns.Count);
         }
+        /// <summary>
+        /// Sheet has no [dimension] and/or no [cols].
+        /// Sheet has no [styles].
+        /// Each row [row] has no "r" attribute.
+        /// Each cell [c] has no "r" attribute.
+        /// </summary>
+        [TestMethod]
+        public void Issue_NoStyles_NoRAttribute()
+        {
+            using (IExcelDataReader excelReader =
+                ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Issue_NoStyles_NoRAttribute")))
+            {
+                excelReader.IsFirstRowAsColumnNames = false;
+                DataSet result = excelReader.AsDataSet();
+
+                Assert.IsTrue(result.Tables.Count > 0);
+                Assert.AreEqual(39, result.Tables[0].Rows.Count);
+                Assert.AreEqual(27, result.Tables[0].Columns.Count);
+                Assert.AreEqual("ROW NUMBER 5", result.Tables[0].Rows[4][4].ToString());
+
+                excelReader.Close();
+            }
+        }
     }
 }
