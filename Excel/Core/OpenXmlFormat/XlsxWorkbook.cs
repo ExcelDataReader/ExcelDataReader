@@ -129,6 +129,8 @@ namespace Excel.Core.OpenXmlFormat
 
             using (XmlReader reader = XmlReader.Create(xmlFileStream))
             {
+                // Skip phonetic string data.
+                bool bSkipPhonetic = false;
                 // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
                 bool bAddStringItem = false;
                 string sStringItem = "";
@@ -153,11 +155,27 @@ namespace Excel.Core.OpenXmlFormat
                         // Reset the string item.
                         sStringItem = "";
                     }
-
-                    if (reader.NodeType == XmlNodeType.Element && reader.LocalName == N_t)
+                    else if (reader.NodeType == XmlNodeType.Element && reader.LocalName == N_t)
                     {
-                        // Append to the string item.
-                        sStringItem += reader.ReadElementContentAsString();
+                        // Skip phonetic string data.
+                        if (!bSkipPhonetic)
+                        {
+                            // Append to the string item.
+                            sStringItem += reader.ReadElementContentAsString();
+                        }
+                    }
+                    if (reader.LocalName == "rPh")
+                    {
+                        // Phonetic items represents pronunciation hints for some East Asian languages.
+                        // In the file 'xl/sharedStrings.xml', the phonetic properties appear like:
+                        // <si>
+                        //  <t>(a japanese text in KANJI)</t>
+                        //  <rPh sb="0" eb="1">
+                        //      <t>(its pronounciation in KATAKANA)</t>
+                        //  </rPh>
+                        // </si>
+                        if (reader.NodeType == XmlNodeType.Element) bSkipPhonetic = true;
+                        else if (reader.NodeType == XmlNodeType.EndElement) bSkipPhonetic = false;
                     }
                 }
                 // Do not add the last string item unless we have read previous string items.
@@ -167,7 +185,7 @@ namespace Excel.Core.OpenXmlFormat
                     _SST.Add(sStringItem);
                 }
 
-                xmlFileStream.Close();
+                xmlFileStream.Dispose();
             }
         }
 
