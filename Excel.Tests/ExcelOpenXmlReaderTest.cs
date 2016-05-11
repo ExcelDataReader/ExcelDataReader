@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Globalization;
 using System.IO;
@@ -548,8 +548,8 @@ namespace Excel.Tests
             val2 = dataSet.Tables[0].Rows[1][0].ToString();
             Assert.AreEqual(val1, val2);
 
-            //librement r�utilisable
-            val1 = "librement r�utilisable";
+            //librement réutilisable
+            val1 = "librement réutilisable";
             val2 = dataSet.Tables[0].Rows[7][0].ToString();
             Assert.AreEqual(val1, val2);
 
@@ -910,7 +910,27 @@ namespace Excel.Tests
             } while (excelReader.NextResult());
 
             excelReader.Close();
-        }        
+        }
+
+        [TestMethod]
+        public void Issue_12_phonetic()
+        {
+            IExcelDataReader excelReader =
+                ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("phonetic_issue"));
+
+            excelReader.IsFirstRowAsColumnNames = true;
+            excelReader.AsDataSet();
+            string expected = "日本事務器(株)";
+            var actual = String.Empty;
+            while (excelReader.Read())
+            {
+                actual = excelReader.GetString(0);
+            }
+
+            Assert.AreEqual(expected, actual);
+            excelReader.Close();
+
+        }
 
     }
 }
