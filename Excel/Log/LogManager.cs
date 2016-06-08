@@ -14,7 +14,7 @@ namespace Excel.Log
 		/// </summary>
 		private static readonly Dictionary<string, ILog> _dictionary = new Dictionary<string, ILog>();
 
-		private static object _sync = new object();
+		private static readonly object _sync = new object();
 
 		/// <summary>
 		/// Gets the logger for <see cref="T"/>.
