@@ -41,7 +41,7 @@ namespace ExcelDataReader.Tests
             var ds = excelReader.AsDataSet(true);
             Assert.IsNotNull(ds);
 
-            var date = ds.Tables[0].Rows[1].Field<DateTime>(0);
+            var date = ds.Tables[0].Rows[1].ItemArray[0];
 
             Assert.AreEqual(new DateTime(2014,01,01), date);
         }
