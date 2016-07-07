@@ -43,8 +43,10 @@ namespace ExcelDataReader.Portable
 		private int m_maxRow;
 		private bool m_noIndex;
 		private XlsBiffRow m_currentRowRecord;
-		private ReadOption readOption = ReadOption.Strict;
+        private XlsBiffBlankCell m_currentCellRecord;
+        private ReadOption readOption = ReadOption.Strict;
 		private bool m_IsFirstRead;
+        private bool m_noRow;
 
 	    private const string WORKBOOK = "Workbook";
 		private const string BOOK = "Book";
@@ -284,12 +286,13 @@ namespace ExcelDataReader.Portable
 			}
 		}
 
-		private bool readWorkSheetGlobals(XlsWorksheet sheet, out XlsBiffIndex idx, out XlsBiffRow row)
-		{
+        private bool readWorkSheetGlobals(XlsWorksheet sheet, out XlsBiffIndex idx, out XlsBiffRow row, out XlsBiffBlankCell cell)
+        {
 			idx = null;
 			row = null;
+            cell = null;
 
-			m_stream.Seek((int)sheet.DataOffset, SeekOrigin.Begin);
+            m_stream.Seek((int)sheet.DataOffset, SeekOrigin.Begin);
 
 			XlsBiffBOF bof = m_stream.Read() as XlsBiffBOF;
 			if (bof == null || bof.Type != BIFFTYPE.Worksheet) return false;
@@ -340,7 +343,9 @@ namespace ExcelDataReader.Portable
 			if (trec.ID == BIFFRECORDTYPE.ROW)
 				row = (XlsBiffRow)trec;
 
-			XlsBiffRow rowRecord = null;
+            bool foundCell = false;
+
+            XlsBiffRow rowRecord = null;
 			while (rowRecord == null)
 			{
 				if (m_stream.Position >= m_stream.Size)
@@ -351,7 +356,18 @@ namespace ExcelDataReader.Portable
 				if (thisRec is XlsBiffEOF)
 					break;
 				rowRecord = thisRec as XlsBiffRow;
-			}
+
+                if (readOption == ReadOption.Loose)
+                {
+                    XlsBiffBlankCell thisCell = thisRec as XlsBiffBlankCell;
+                    if (thisCell != null)
+                    {
+                        foundCell = true;
+                        cell = thisCell;
+                        break;
+                    }
+                }
+            }
 
 			if (rowRecord != null)
 				this.Log().Debug("Got row {0}, rec: id={1},rowindex={2}, rowColumnStart={3}, rowColumnEnd={4}", rowRecord.Offset, rowRecord.ID, rowRecord.RowIndex, rowRecord.FirstDefinedColumn, rowRecord.LastDefinedColumn);
@@ -380,11 +396,13 @@ namespace ExcelDataReader.Portable
 			{
 				return false;
 			}
-			else if (row == null)
+
+            if (row == null && !foundCell)
 			{
 				return false;
 			}
 
+            m_noRow = foundCell;
 			m_depth = 0;
 
 			return true;
@@ -525,7 +543,13 @@ namespace ExcelDataReader.Portable
 			//if sheet has no index
 			if (m_noIndex)
 			{
-				this.Log().Debug("No index");
+                if (m_noRow)
+                {
+                    LogManager.Log(this).Debug("No index and no row");
+                    return moveToNextRecordNoIndexOrRow();
+                }
+
+                this.Log().Debug("No index");
 				return moveToNextRecordNoIndex();
 			}
 
@@ -619,7 +643,39 @@ namespace ExcelDataReader.Portable
 			return m_canRead;
 		}
 
-		private void initializeSheetRead()
+        private bool moveToNextRecordNoIndexOrRow()
+        {
+            //seek from current row record to start of cell data where that cell relates to the next row record
+            XlsBiffBlankCell currentCell = m_currentCellRecord;
+
+            if (currentCell == null)
+                return false;
+
+            if (currentCell.RowIndex < m_depth)
+            {
+                do
+                {
+                    if (m_stream.Position >= m_stream.Size)
+                        return false;
+
+                    var record = m_stream.Read();
+                    if (record is XlsBiffEOF)
+                        return false;
+
+                    currentCell = record as XlsBiffBlankCell;
+
+                } while (currentCell == null || currentCell.RowIndex < m_depth);
+            }
+
+            m_currentCellRecord = currentCell;
+
+            m_cellOffset = currentCell.Offset;
+            m_canRead = readWorkSheetRow();
+
+            return m_canRead;
+        }
+
+        private void initializeSheetRead()
 		{
 			if (m_SheetIndex == ResultsCount) return;
 
@@ -631,7 +687,7 @@ namespace ExcelDataReader.Portable
 
 			XlsBiffIndex idx;
 
-			if (!readWorkSheetGlobals(m_sheets[m_SheetIndex], out idx, out m_currentRowRecord))
+			if (!readWorkSheetGlobals(m_sheets[m_SheetIndex], out idx, out m_currentRowRecord, out m_currentCellRecord))
 			{
 				//read next sheet
 				m_SheetIndex++;
@@ -1173,7 +1229,7 @@ namespace ExcelDataReader.Portable
         {
             XlsBiffIndex idx;
 
-            if (!readWorkSheetGlobals(sheet, out idx, out m_currentRowRecord))
+            if (!readWorkSheetGlobals(sheet, out idx, out m_currentRowRecord, out m_currentCellRecord))
             {
                 datasetHelper.IsValid = false;
                 return;
