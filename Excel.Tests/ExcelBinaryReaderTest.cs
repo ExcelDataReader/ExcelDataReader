@@ -1099,6 +1099,21 @@ namespace ExcelDataReader.Tests
 
             excelReader.Close();
 		}
-        
+
+        [TestMethod]
+        public void Test_Issue_111_NoRowRecords()
+        {
+            Logger.InitializeWith<Log4NetLog>();
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_111_NoRowRecords"), ReadOption.Loose))
+            {
+                var dataset = excelReader.AsDataSet();
+                
+                Assert.AreEqual(1, dataset.Tables.Count);
+                Assert.AreEqual(12, dataset.Tables[0].Rows.Count);
+                Assert.AreEqual(14, dataset.Tables[0].Columns.Count);
+
+                Assert.AreEqual("2015", dataset.Tables[0].Rows[7][0]);
+            }
+        }
     }
 }
