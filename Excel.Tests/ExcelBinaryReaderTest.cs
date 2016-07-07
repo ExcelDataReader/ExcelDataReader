@@ -1112,7 +1112,7 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(12, dataset.Tables[0].Rows.Count);
                 Assert.AreEqual(14, dataset.Tables[0].Columns.Count);
 
-                Assert.AreEqual("2015", dataset.Tables[0].Rows[7][0]);
+                Assert.AreEqual(2015.0, dataset.Tables[0].Rows[7][0]);
             }
         }
     }

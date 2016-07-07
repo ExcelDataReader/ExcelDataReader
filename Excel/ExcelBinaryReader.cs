@@ -41,9 +41,11 @@ namespace Excel
 		private int m_maxRow;
 		private bool m_noIndex;
 		private XlsBiffRow m_currentRowRecord;
+        private XlsBiffBlankCell m_currentCellRecord;
 		private readonly ReadOption m_ReadOption = ReadOption.Strict;
+        private bool m_noRow;
 
-		private bool m_IsFirstRead;
+        private bool m_IsFirstRead;
 		private bool _isFirstRowAsColumnNames;
 
 		private const string WORKBOOK = "Workbook";
@@ -282,12 +284,13 @@ namespace Excel
 			}
 		}
 
-		private bool readWorkSheetGlobals(XlsWorksheet sheet, out XlsBiffIndex idx, out XlsBiffRow row)
+		private bool readWorkSheetGlobals(XlsWorksheet sheet, out XlsBiffIndex idx, out XlsBiffRow row, out XlsBiffBlankCell cell)
 		{
 			idx = null;
 			row = null;
-
-			m_stream.Seek((int)sheet.DataOffset, SeekOrigin.Begin);
+		    cell = null;
+            
+            m_stream.Seek((int)sheet.DataOffset, SeekOrigin.Begin);
 
 			XlsBiffBOF bof = m_stream.Read() as XlsBiffBOF;
 			if (bof == null || bof.Type != BIFFTYPE.Worksheet) return false;
@@ -338,6 +341,8 @@ namespace Excel
 			if (trec.ID == BIFFRECORDTYPE.ROW)
 				row = (XlsBiffRow)trec;
 
+		    bool foundCell = false;
+
 			XlsBiffRow rowRecord = null;
 			while (rowRecord == null)
 			{
@@ -349,6 +354,17 @@ namespace Excel
 				if (thisRec is XlsBiffEOF)
 					break;
 				rowRecord = thisRec as XlsBiffRow;
+
+			    if (m_ReadOption == ReadOption.Loose)
+			    {
+			        XlsBiffBlankCell thisCell = thisRec as XlsBiffBlankCell;
+                    if (thisCell != null)
+			        {
+			            foundCell = true;
+			            cell = thisCell;
+                        break;
+			        }
+			    }
 			}
 
 			if (rowRecord != null)
@@ -378,11 +394,13 @@ namespace Excel
 			{
 				return false;
 			}
-			else if (row == null)
+
+            if (row == null && !foundCell)
 			{
 				return false;
 			}
 
+		    m_noRow = foundCell;
 			m_depth = 0;
 
 			return true;
@@ -431,7 +449,7 @@ namespace Excel
 		{
 			XlsBiffIndex idx;
 
-			if (!readWorkSheetGlobals(sheet, out idx, out m_currentRowRecord)) return null;
+			if (!readWorkSheetGlobals(sheet, out idx, out m_currentRowRecord, out m_currentCellRecord)) return null;
 
 			DataTable table = new DataTable(sheet.Name);
 
@@ -638,7 +656,13 @@ namespace Excel
 			//if sheet has no index
 			if (m_noIndex)
 			{
-				LogManager.Log(this).Debug("No index");
+			    if (m_noRow)
+			    {
+                    LogManager.Log(this).Debug("No index and no row");
+			        return moveToNextRecordNoIndexOrRow();
+			    }
+
+                LogManager.Log(this).Debug("No index");
 				return moveToNextRecordNoIndex();
 			}
 
@@ -732,7 +756,40 @@ namespace Excel
 			return m_canRead;
 		}
 
-		private void initializeSheetRead()
+	    private bool moveToNextRecordNoIndexOrRow()
+	    {
+            //seek from current row record to start of cell data where that cell relates to the next row record
+            XlsBiffBlankCell currentCell = m_currentCellRecord;
+
+            if (currentCell == null)
+                return false;
+
+            if (currentCell.RowIndex < m_depth)
+            {
+                do
+                {
+                    if (m_stream.Position >= m_stream.Size)
+                        return false;
+
+                    var record = m_stream.Read();
+                    if (record is XlsBiffEOF)
+                        return false;
+
+                    currentCell = record as XlsBiffBlankCell;
+
+                } while (currentCell == null || currentCell.RowIndex < m_depth);
+            }
+
+            m_currentCellRecord = currentCell;
+
+            m_cellOffset = currentCell.Offset;
+            m_canRead = readWorkSheetRow();
+
+            return m_canRead;
+        }
+
+
+	    private void initializeSheetRead()
 		{
 			if (m_SheetIndex == ResultsCount) return;
 
@@ -744,7 +801,7 @@ namespace Excel
 
 			XlsBiffIndex idx;
 
-			if (!readWorkSheetGlobals(m_sheets[m_SheetIndex], out idx, out m_currentRowRecord))
+			if (!readWorkSheetGlobals(m_sheets[m_SheetIndex], out idx, out m_currentRowRecord, out m_currentCellRecord))
 			{
 				//read next sheet
 				m_SheetIndex++;
