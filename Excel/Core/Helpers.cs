@@ -62,7 +62,20 @@ namespace Excel.Core
 	        //{
 	        //    Value += 1462.0;
 	        //}
-	        return DateTime.FromOADate(value);
+
+          // added to fix out of range problem, sdh, 20140826
+          const double OADateMax = 2958465.99999999;
+          const double OADateMin = -657435.0;
+
+          if (value < OADateMin)
+          {
+            value = OADateMin;
+          }
+          else if (value > OADateMax)
+          {
+            value = OADateMax;
+          }
+          return DateTime.FromOADate(value);
 	    }
 
         internal static void FixDataTypes(DataSet dataset)
