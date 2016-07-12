@@ -65,7 +65,7 @@ namespace Excel.Core
 
           // added to fix out of range problem, sdh, 20140826
           const double OADateMax = 2958465.99999999;
-          const double OADateMin = 657435.0;
+          const double OADateMin = -657435.0;
 
           if (value < OADateMin)
           {
