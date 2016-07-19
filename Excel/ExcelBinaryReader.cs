@@ -218,9 +218,12 @@ namespace Excel
 						try
 						{
                             //workaround: 1200 should actually be UTF-8 for some reason
+                            //If UTF-16 is placed instead of UTF-8, everything works correctly.
+                            //There are no Cyrillic encoding issues in this case.
                             if (m_globals.CodePage.Value == 1200)
-                                m_encoding = Encoding.GetEncoding(65001);
-                            else
+                                //m_encoding = Encoding.GetEncoding(65001);
+                                m_encoding = Encoding.GetEncoding(1200);
+                           else
                                 m_encoding = Encoding.GetEncoding(m_globals.CodePage.Value);
 						}
 						catch (ArgumentException)

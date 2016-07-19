@@ -217,7 +217,7 @@ namespace ExcelDataReader.Portable
                         //set encoding based on code page name
                         //PCL does not supported codepage numbers
                         if (m_globals.CodePage.Value == 1200)
-                            m_encoding = EncodingHelper.GetEncoding(65001);
+                            m_encoding = Encoding.Unicode;//EncodingHelper.GetEncoding(Encoding.Unicode);
                         else
                             m_encoding = EncodingHelper.GetEncoding(m_globals.CodePage.Value);
                         //note: the format spec states that for BIFF8 this is always UTF-16.

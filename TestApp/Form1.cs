@@ -40,7 +40,6 @@ namespace TestApp
                 if (file.Extension == ".xls")
                 {
                    reader = ExcelReaderFactory.CreateBinaryReader(stream);
-                    
                 }
                 else if (file.Extension == ".xlsx")
                 {

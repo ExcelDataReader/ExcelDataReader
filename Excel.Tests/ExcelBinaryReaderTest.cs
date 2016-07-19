@@ -1100,5 +1100,22 @@ namespace ExcelDataReader.Tests
             excelReader.Close();
 		}
         
+        /// <summary>
+        /// If worksheets had names written in Cyrillic characters (e.g. they were in Russian), 
+        /// there were incorrect symbols instead of their names.
+        /// </summary>
+        [TestMethod]
+        public void Test_Issue_Cyrillic_Worksheet_Name_Encoding()
+        {
+            Logger.InitializeWith<Log4NetLog>();
+
+            IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_EncodingXlsWorksheetNames"),ReadOption.Loose);
+            excelReader.IsFirstRowAsColumnNames = true;
+            var dataset = excelReader.AsDataSet();
+
+            //If Cyrillic encoding is enabled on your computer, this test will pass correctly
+            string firstWorksheetName = excelReader.AsDataSet().Tables[0].TableName;
+            Assert.AreEqual("Таблица номер 1", firstWorksheetName);
+        }
     }
 }
