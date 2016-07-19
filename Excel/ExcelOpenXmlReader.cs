@@ -26,7 +26,7 @@ namespace Excel
 		private int _depth;
 		private int _resultIndex;
 		private int _emptyRowCount;
-		private ZipWorker _zipWorker;
+		private IExcelWorker _zipWorker;
 		private XmlReader _xmlReader;
 		private Stream _sheetStream;
 		private object[] _cellsValues;
@@ -39,7 +39,8 @@ namespace Excel
 
 		private List<int> _defaultDateTimeStyles;
 		private string _namespaceUri;
-	    private Encoding defaultEncoding = Encoding.UTF8;
+		private Encoding defaultEncoding = Encoding.UTF8;
+		private readonly ReadOption m_ReadOption = ReadOption.FileSystem;
 
 	    #endregion
 
@@ -53,6 +54,11 @@ namespace Excel
 				14, 15, 16, 17, 18, 19, 20, 21, 22, 45, 46, 47
 			});
 
+		}
+
+		internal ExcelOpenXmlReader(ReadOption readOption) : this()
+		{
+			m_ReadOption = readOption;
 		}
 
 		private void ReadGlobals()
@@ -331,7 +337,11 @@ namespace Excel
 
 		public void Initialize(System.IO.Stream fileStream)
 		{
-			_zipWorker = new ZipWorker();
+			if (ReadOption == ReadOption.FileSystem)
+				_zipWorker = new ZipWorker();
+			else if (ReadOption == ReadOption.Memory)
+				_zipWorker = new MemoryWorker();
+			else throw new Exception("Unsupported ReadOption, please use FileSystem or Memory instead");
 			_zipWorker.Extract(fileStream);
 
 			if (!_zipWorker.IsValid)
@@ -405,6 +415,11 @@ namespace Excel
             dataset.AcceptChanges();
 		    Helpers.FixDataTypes(dataset);
 			return dataset;
+		}
+
+		public ReadOption ReadOption
+		{
+			get { return m_ReadOption; }
 		}
 
 		public bool IsFirstRowAsColumnNames
@@ -718,7 +733,5 @@ namespace Excel
 		}
 
 		#endregion
-
-
 	}
 }

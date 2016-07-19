@@ -28,6 +28,7 @@ namespace Excel
 		/// Creates an instance of <see cref="ExcelBinaryReader"/>
 		/// </summary>
 		/// <param name="fileStream">The file stream.</param>
+		/// <param name="option"></param>
 		/// <returns></returns>
 		public static IExcelDataReader CreateBinaryReader(Stream fileStream, ReadOption option)
 		{
@@ -54,6 +55,7 @@ namespace Excel
 		/// Creates an instance of <see cref="ExcelBinaryReader"/>
 		/// </summary>
 		/// <param name="fileStream">The file stream.</param>
+		/// <param name="readOption"></param>
 		/// <returns></returns>
 		public static IExcelDataReader CreateBinaryReader(Stream fileStream, bool convertOADate, ReadOption readOption)
 		{
@@ -71,6 +73,20 @@ namespace Excel
 		public static IExcelDataReader CreateOpenXmlReader(Stream fileStream)
 		{
 			IExcelDataReader reader = new ExcelOpenXmlReader();
+			reader.Initialize(fileStream);
+
+			return reader;
+		}
+
+		/// <summary>
+		/// Creates an instance of <see cref="ExcelOpenXmlReader"/>
+		/// </summary>
+		/// <param name="fileStream">The file stream.</param>
+		/// <param name="option"></param>
+		/// <returns></returns>
+		public static IExcelDataReader CreateOpenXmlReader(Stream fileStream, ReadOption option)
+		{
+			IExcelDataReader reader = new ExcelOpenXmlReader(option);
 			reader.Initialize(fileStream);
 
 			return reader;

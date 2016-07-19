@@ -802,6 +802,9 @@ namespace ExcelDataReader.Portable
 
 		public async Task InitializeAsync(Stream fileStream)
 		{
+			if (ReadOption == ReadOption.FileSystem || ReadOption == ReadOption.Memory)
+				throw new Exception("Unsupported ReadOption, please use Strict or Loose instead");
+
 			m_file = fileStream;
 
             await Task.Run(() => readWorkBookGlobals());
@@ -1463,12 +1466,16 @@ namespace ExcelDataReader.Portable
         }
     }
 
-    /// <summary>
-	/// Strict is as normal, Loose is more forgiving and will not cause an exception if a record size takes it beyond the end of the file. It will be trunacted in this case (SQl Reporting Services)
+	/// <summary>
+	/// Strict is as normal for <see cref="ExcelBinaryReader"/>, Loose is more forgiving and will not cause an exception if a record size takes it beyond the end of the file.
+	/// It will be truncated in this case (SQL Reporting Services).
+	/// FileSystem is default for <see cref="ExcelOpenXmlReader"/>.
 	/// </summary>
 	public enum ReadOption
 	{
 		Strict,
-		Loose
+		Loose,
+		FileSystem,
+		Memory
 	}
 }

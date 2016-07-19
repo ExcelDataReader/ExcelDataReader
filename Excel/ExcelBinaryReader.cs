@@ -1256,11 +1256,15 @@ namespace Excel
 	}
 
 	/// <summary>
-	/// Strict is as normal, Loose is more forgiving and will not cause an exception if a record size takes it beyond the end of the file. It will be trunacted in this case (SQl Reporting Services)
+	/// Strict is as normal for <see cref="ExcelBinaryReader"/>, Loose is more forgiving and will not cause an exception if a record size takes it beyond the end of the file.
+	/// It will be truncated in this case (SQL Reporting Services).
+	/// FileSystem is default for <see cref="ExcelOpenXmlReader"/>.
 	/// </summary>
 	public enum ReadOption
 	{
 		Strict,
-		Loose
+		Loose,
+		FileSystem,
+		Memory
 	}
 }

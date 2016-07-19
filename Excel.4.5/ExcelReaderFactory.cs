@@ -63,6 +63,7 @@ namespace Excel
         /// Creates an instance of <see cref="ExcelBinaryReader"/>
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
+        /// <param name="option"></param>
         /// <returns></returns>
         public static IExcelDataReader CreateBinaryReader(Stream fileStream, ReadOption option)
 		{
@@ -120,5 +121,22 @@ namespace Excel
 
 			return new ExcelOpenXmlReader(reader);
 		}
+
+		/// <summary>
+		/// Creates an instance of <see cref="ExcelOpenXmlReader"/>
+		/// </summary>
+		/// <param name="fileStream">The file stream.</param>
+		/// <param name="option"></param>
+		/// <returns></returns>
+		public static IExcelDataReader CreateOpenXmlReader(Stream fileStream, ReadOption option)
+		{
+			var factory = CreateFactory();
+
+			var portableReadOption = (ExcelDataReader.Portable.ReadOption)option;
+			var reader = AsyncHelper.RunSync(() => factory.CreateOpenXmlReader(fileStream, portableReadOption));
+
+			return new ExcelOpenXmlReader(reader);
+		}
+
 	}
 }
