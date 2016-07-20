@@ -179,6 +179,7 @@
     <Compile Include="Core\BinaryFormat\XlsWorksheet.cs" />
     <Compile Include="Core\FormatReader.cs" />
     <Compile Include="Core\Helpers.cs" />
+    <Compile Include="Core\MemoryData.cs" />
     <Compile Include="Core\OpenXmlFormat\XlsxDimension.cs" />
     <Compile Include="Core\OpenXmlFormat\XlsxNumFmt.cs" />
     <Compile Include="Core\OpenXmlFormat\XlsxSST.cs" />
