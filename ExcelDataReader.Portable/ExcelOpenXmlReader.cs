@@ -145,8 +145,15 @@ namespace ExcelDataReader.Portable
                 //if (_xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_col)
                 //    cols++;
 
-				if (_xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_row)
-                    rows++;
+                if (_xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_row)
+                {
+                    var refAttribute = _xmlReader.GetAttribute(XlsxWorksheet.A_r);
+                    if (refAttribute != null)
+                    {
+                        rows = Math.Max(rows, int.Parse(refAttribute));
+                    }
+                    //rows++;
+                }
 
                 //check cells so we can find size of sheet if can't work it out from dimension or col elements (dimension should have been set before the cells if it was available)
                 //ditto for cols

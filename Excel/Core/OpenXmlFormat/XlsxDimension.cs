@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 
 namespace ExcelDataReader.Portable.Core.OpenXmlFormat
 {
@@ -83,10 +84,18 @@ namespace ExcelDataReader.Portable.Core.OpenXmlFormat
 		/// <param name="val2">out val2.</param>
 		public static void XlsxDim(string value, out int val1, out int val2)
 		{//INFO: Check for a simple Solution
+            Regex hasBothLettersNumbers = new Regex("([a-zA-Z]+)([0-9]+)");
+            if (!hasBothLettersNumbers.IsMatch(value))
+            {
+                val1 = int.Parse(value) + 1;
+                val2 = 0;
+
+                return;
+            }
+
 			int index = 0;
 			val1 = 0;
 			int[] arr = new int[value.Length - 1];
-
 			while (index < value.Length)
 			{
 				if (char.IsDigit(value[index])) break;
