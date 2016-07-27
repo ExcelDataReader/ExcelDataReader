@@ -3,9 +3,7 @@ using System.IO;
 using ExcelDataReader.Desktop.Portable;
 using ExcelDataReader.Portable.Async;
 using ExcelDataReader.Portable.Data;
-using ExcelDataReader.Portable.IO;
 using ExcelDataReader.Portable.Misc;
-using PCLStorage;
 
 namespace Excel
 {
@@ -15,8 +13,6 @@ namespace Excel
 	public static class ExcelReaderFactory
 	{
 	    private static readonly IDataHelper dataHelper = new DataHelper();
-	    private static readonly IFileHelper fileHelper = new FileHelper();
-	    private static readonly IFileSystem fileSystem = FileSystem.Current;
 		/// <summary>
 		/// Creates an instance of <see cref="ExcelBinaryReader"/>
 		/// </summary>
@@ -33,7 +29,7 @@ namespace Excel
 
 	    private static ExcelDataReader.Portable.ExcelReaderFactory CreateFactory()
 	    {
-	        return new ExcelDataReader.Portable.ExcelReaderFactory(dataHelper, fileHelper, fileSystem);
+	        return new ExcelDataReader.Portable.ExcelReaderFactory(dataHelper);
 	    }
 
         /// <summary>

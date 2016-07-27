@@ -761,7 +761,7 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual(8, result.Columns.Count);
             Assert.AreEqual(Helper.GetKey("TestUnicodePos2x1"), result.Rows[1][0].ToString());
         }
-
+/*
 #if !LEGACY
         [TestMethod]
         public void ZipWorker_Extract_Test()
@@ -795,7 +795,7 @@ namespace ExcelDataReader.Tests
             }
         }
 #endif
-
+*/
 
 		[TestMethod]
 		public void Issue_DateFormatButNotDate()
