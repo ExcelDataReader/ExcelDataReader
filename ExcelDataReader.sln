@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Excel", "Excel\Excel.csproj", "{4CB0690E-3E7A-497C-9116-D52024F63195}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{537D3BEA-4A18-4381-A955-DF762D21E100}"
@@ -27,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{2BC605
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelDataReader.Desktop", "ExcelDataReader.Desktop\ExcelDataReader.Desktop.csproj", "{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ExcelDataReader", "src\ExcelDataReader\ExcelDataReader.xproj", "{627CD303-4CE5-4300-8BD1-0FCF143D4874}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -127,6 +131,16 @@ Global
 		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.MSTEST_RELEASE|Any CPU.Build.0 = Release|Any CPU
 		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7216DCBC-8F38-4115-9B5A-1452EB8DD0BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{627CD303-4CE5-4300-8BD1-0FCF143D4874}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{627CD303-4CE5-4300-8BD1-0FCF143D4874}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{627CD303-4CE5-4300-8BD1-0FCF143D4874}.Debug-net20|Any CPU.ActiveCfg = Debug|Any CPU
+		{627CD303-4CE5-4300-8BD1-0FCF143D4874}.Debug-net20|Any CPU.Build.0 = Debug|Any CPU
+		{627CD303-4CE5-4300-8BD1-0FCF143D4874}.MSTEST_DEBUG|Any CPU.ActiveCfg = Debug|Any CPU
+		{627CD303-4CE5-4300-8BD1-0FCF143D4874}.MSTEST_DEBUG|Any CPU.Build.0 = Debug|Any CPU
+		{627CD303-4CE5-4300-8BD1-0FCF143D4874}.MSTEST_RELEASE|Any CPU.ActiveCfg = Debug|Any CPU
+		{627CD303-4CE5-4300-8BD1-0FCF143D4874}.MSTEST_RELEASE|Any CPU.Build.0 = Debug|Any CPU
+		{627CD303-4CE5-4300-8BD1-0FCF143D4874}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{627CD303-4CE5-4300-8BD1-0FCF143D4874}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
