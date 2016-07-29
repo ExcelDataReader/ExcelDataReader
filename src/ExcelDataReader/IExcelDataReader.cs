@@ -12,18 +12,10 @@ namespace Excel
 		/// <param name="fileStream">The file stream.</param>
 		void Initialize(Stream fileStream);
 
-        ///// <summary>
-        ///// Read all data in to DataSet and return it
-        ///// </summary>
-        ///// <returns>The DataSet</returns>
-        void LoadDataSet(IDatasetHelper datasetHelper);
-
-        ///// <summary>
-        /////Read all data in to DataSet and return it
-        ///// </summary>
-        ///// <param name="convertOADateTime">if set to <c>true</c> [try auto convert OA date time format].</param>
-        ///// <returns>The DataSet</returns>
-        void LoadDataSet(IDatasetHelper datasetHelper, bool convertOADateTime);
+		/// <summary>
+		/// Seeks to the first result.
+		/// </summary>
+		void Reset();
 
 		/// <summary>
 		/// Gets a value indicating whether file stream is valid.

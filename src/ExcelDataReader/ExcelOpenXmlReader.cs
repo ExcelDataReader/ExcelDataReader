@@ -30,8 +30,6 @@ namespace Excel
 		private const string A_id = "Id";
 		private const string A_target = "Target";
 
-		private readonly IDataHelper dataHelper;
-
 	    #region Members
 
 		private XlsxWorkbook _workbook;
@@ -45,6 +43,7 @@ namespace Excel
 		private ZipWorker _zipWorker;
 		private XmlReader _xmlReader;
 		private Stream _sheetStream;
+		private string[] _cellsNames;
 		private object[] _cellsValues;
 		private object[] _savedCellsValues;
 
@@ -58,9 +57,8 @@ namespace Excel
 
 		#endregion
 
-		public ExcelOpenXmlReader(IDataHelper dataHelper)
+		public ExcelOpenXmlReader()
 		{
-		    this.dataHelper = dataHelper;
 		    _isValid = true;
 			_isFirstRead = true;
 
@@ -524,71 +522,13 @@ namespace Excel
 			}
 		}
 
-        public void LoadDataSet(IDatasetHelper datasetHelper)
-	    {
-	        LoadDataSet(datasetHelper, true);
-	    }
+		public void Reset() {
+			_resultIndex = 0;
+			_isFirstRead = true;
+			_savedCellsValues = null;
+		}
 
-	    public void LoadDataSet(IDatasetHelper datasetHelper, bool convertOADateTime)
-	    {
-            if (!_isValid)
-            {
-                datasetHelper.IsValid = false;
-            }
-            datasetHelper.IsValid = true;
-
-            datasetHelper.CreateNew();
-
-            for (int ind = 0; ind < _workbook.Sheets.Count; ind++)
-            {
-                datasetHelper.CreateNewTable(_workbook.Sheets[ind].Name);
-                datasetHelper.AddExtendedPropertyToTable("visiblestate", _workbook.Sheets[ind].VisibleState);
-
-                ReadSheetGlobals(_workbook.Sheets[ind]);
-
-                if (_workbook.Sheets[ind].Dimension == null) continue;
-
-                _depth = 0;
-                _emptyRowCount = 0;
-
-                //DataTable columns
-                //todo: all very similar to sheet load in binary reader
-                if (!_isFirstRowAsColumnNames)
-                {
-                    for (int i = 0; i < _workbook.Sheets[ind].ColumnsCount; i++)
-                    {
-                        datasetHelper.AddColumn(null);
-                    }
-                }
-                else if (ReadSheetRow(_workbook.Sheets[ind]))
-                {
-                    for (int index = 0; index < _cellsValues.Length; index++)
-                    {
-                        if (_cellsValues[index] != null && _cellsValues[index].ToString().Length > 0)
-                            datasetHelper.AddColumn(_cellsValues[index].ToString());
-                        else
-                            datasetHelper.AddColumn(string.Concat(COLUMN, index));
-                    }
-                }
-                else continue;
-
-                datasetHelper.BeginLoadData();
-
-                var hasRows = false;
-                while (ReadSheetRow(_workbook.Sheets[ind]))
-                {
-                    hasRows = true;
-                    datasetHelper.AddRow(_cellsValues);
-                }
-
-                if (hasRows)
-                    datasetHelper.EndLoadTable();
-            }
-            datasetHelper.DatasetLoadComplete();
-
-	    }
-
-	    public bool IsFirstRowAsColumnNames
+		public bool IsFirstRowAsColumnNames
 		{
 			get
 			{
@@ -686,7 +626,23 @@ namespace Excel
                 var initializeSheetRead = InitializeSheetRead();
                 if (!initializeSheetRead)
                     return false;
-            }
+
+				if (IsFirstRowAsColumnNames) {
+					if (ReadSheetRow(_workbook.Sheets[_resultIndex])) {
+						_cellsNames = new string[_cellsValues.Length];
+						for (var i = 0; i < _cellsValues.Length; i++) {
+							var value = _cellsValues[i]?.ToString();
+							if (value != null && value.Length > 0)
+								_cellsNames[i] = value;
+						}
+					} else {
+						return false;
+					}
+				} else {
+					_cellsNames = null;
+				}
+
+			}
 
             return ReadSheetRow(_workbook.Sheets[_resultIndex]);
         }
@@ -774,7 +730,7 @@ namespace Excel
 
 		public bool IsDBNull(int i)
 		{
-            return (null == _cellsValues[i]) || (dataHelper.IsDBNull(_cellsValues[i]));
+            return (null == _cellsValues[i]);
 		}
 
 		public object this[int i]
@@ -870,7 +826,9 @@ namespace Excel
 
 		public Type GetFieldType(int i)
 		{
-			throw new NotSupportedException();
+			if (_cellsValues[i] == null)
+				return null;
+			return _cellsValues[i].GetType();
 		}
 
 		public Guid GetGuid(int i)
@@ -880,7 +838,9 @@ namespace Excel
 
 		public string GetName(int i)
 		{
-			throw new NotSupportedException();
+			if (_cellsNames == null)
+				return null;
+			return _cellsNames[i];
 		}
 
 		public int GetOrdinal(string name)

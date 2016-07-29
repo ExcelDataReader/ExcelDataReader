@@ -9,7 +9,6 @@ namespace Excel
 	/// </summary>
 	public static class ExcelReaderFactory
 	{
-	    private static readonly IDataHelper dataHelper = new DataHelper();
 		/// <summary>
 		/// Creates an instance of <see cref="ExcelBinaryReader"/>
 		/// </summary>
@@ -17,7 +16,7 @@ namespace Excel
 		/// <returns></returns>
 		public static IExcelDataReader CreateBinaryReader(Stream fileStream)
 		{
-			var reader = new ExcelBinaryReader(dataHelper);
+			var reader = new ExcelBinaryReader();
 			reader.Initialize(fileStream);
 			return reader;
 		}
@@ -52,7 +51,7 @@ namespace Excel
         /// <returns></returns>
         public static IExcelDataReader CreateBinaryReader(Stream fileStream, ReadOption option)
 		{
-            var reader = new ExcelBinaryReader(dataHelper);
+            var reader = new ExcelBinaryReader();
 			reader.ReadOption = option;
 			reader.Initialize(fileStream);
 			return reader;
@@ -66,7 +65,7 @@ namespace Excel
 	    /// <returns></returns>
 	    public static IExcelDataReader CreateBinaryReader(Stream fileStream, bool convertOADate)
 		{
-			var reader = new ExcelBinaryReader(dataHelper);
+			var reader = new ExcelBinaryReader();
 			reader.ConvertOaDate = convertOADate;
 			reader.Initialize(fileStream);
 			return reader;
@@ -81,7 +80,7 @@ namespace Excel
 		/// <returns></returns>
 		public static IExcelDataReader CreateBinaryReader(Stream fileStream, bool convertOADate, ReadOption readOption)
 		{
-			var reader = new ExcelBinaryReader(dataHelper);
+			var reader = new ExcelBinaryReader();
 			reader.ConvertOaDate = convertOADate;
 			reader.ReadOption = readOption;
 			reader.Initialize(fileStream);
@@ -95,7 +94,7 @@ namespace Excel
 		/// <returns></returns>
 		public static IExcelDataReader CreateOpenXmlReader(Stream fileStream)
 		{
-			var reader = new ExcelOpenXmlReader(dataHelper);
+			var reader = new ExcelOpenXmlReader();
 			reader.Initialize(fileStream);
 			return reader;
 		}

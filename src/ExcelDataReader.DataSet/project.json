@@ -1,5 +1,5 @@
 ﻿{
-  "title": "ExcelDataReader",
+  "title": "ExcelDataReader.DataSet",
   "version": "3.0.0.0-dev",
   "authors": [ "ExcelDataReader developers" ],
   "description": "Lightweight and fast library written in C# for reading Microsoft Excel files ('97-2007).",
@@ -9,36 +9,27 @@
     "iconUrl": "https://nugetgallery.blob.core.windows.net/icons/ExcelDataReader.2.1.png",
     "requireLicenseAcceptance": false,
     "summary": "Lightweight and fast library written in C# for reading Microsoft Excel files ('97-2007).",
-    "releaseNotes": "OpenXmlReader does not use temp files. Packages for .NET Core.",
+    "releaseNotes": "",
     "tags": [ "excel" ]
+  },
+  "dependencies" : {
+    "ExcelDataReader" : "3.0.0.0-dev"
   },
   "frameworks": {
     "net20": {
-      "buildOptions": {
-        "define": [
-          "LEGACY"
-        ]
-      },
-      "dependencies": {
-        "SharpZipLib": "0.86.0"
-      },
       "frameworkAssemblies": {
-        "System.Xml": "2.0.0.0"
+        "System.Data": "2.0.0.0"
       }
     },
     "net45": {
-      "buildOptions": {
-      },
       "frameworkAssemblies": {
-        "System.Xml": "4.0.0.0",
-        "System.IO.Compression": "4.0.0.0"
+        "System.Data": "4.0.0.0"
       }
+
     },
-    "netstandard1.1": {
-      "imports": "dnxcore50",
+    "netstandard1.2": {
       "dependencies": {
-        "NETStandard.Library": "1.6.0"/*,
-        "System.Data.Common": "4.1.0"*/
+        "System.Data.Common": "4.1.0"
       }
     }
   },

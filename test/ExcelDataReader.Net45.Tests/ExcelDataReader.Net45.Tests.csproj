@@ -34,6 +34,10 @@
       <HintPath>..\..\src\ExcelDataReader\bin\$(ConfigurationName)\net45\ExcelDataReader.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="ExcelDataReader.DataSet, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\src\ExcelDataReader.DataSet\bin\$(ConfigurationName)\net45\ExcelDataReader.DataSet.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
       <Private>True</Private>
@@ -77,14 +81,8 @@
     <Compile Include="..\ExcelDataReader.Tests\AppSettings.cs">
       <Link>Helper.cs</Link>
     </Compile>
-    <Compile Include="..\ExcelDataReader.Tests\IExcelDataReaderExtensions.cs">
-      <Link>IExcelDataReaderExtensions.cs</Link>
-    </Compile>
     <Compile Include="..\ExcelDataReader.Tests\SeekErrorMemoryStream.cs">
       <Link>SeekErrorMemoryStream.cs</Link>
-    </Compile>
-    <Compile Include="..\ExcelDataReader.Tests\Data\DatasetHelper.cs">
-      <Link>Data\DatasetHelper.cs</Link>
     </Compile>
     <Compile Include="..\ExcelDataReader.Tests\Log\Logger\Log4NetLog.cs">
       <Link>Log\Logger\Log4NetLog.cs</Link>

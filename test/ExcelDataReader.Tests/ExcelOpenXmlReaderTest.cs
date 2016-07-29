@@ -1,5 +1,7 @@
 using System;
+#if !NETCOREAPP1_0
 using System.Data;
+#endif
 using System.Globalization;
 using System.IO;
 using System.Threading;

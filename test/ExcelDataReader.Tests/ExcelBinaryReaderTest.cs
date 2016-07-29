@@ -1,5 +1,7 @@
 using System;
+#if !NETCOREAPP1_0
 using System.Data;
+#endif
 using System.Runtime.InteropServices.ComTypes;
 using Excel;
 using System.IO;
@@ -766,15 +768,13 @@ namespace ExcelDataReader.Tests
 
             excelReader.Read();
             Assert.AreEqual(6, excelReader.FieldCount);
-            Assert.AreEqual("column a", excelReader.GetString(0));
-            Assert.AreEqual(" column b", excelReader.GetString(1));
-            Assert.AreEqual(" column b", excelReader.GetString(2));
-            Assert.IsNull(excelReader.GetString(3));
-            Assert.AreEqual("column e", excelReader.GetString(4));
-            Assert.AreEqual(" column b", excelReader.GetString(5));
+            Assert.AreEqual("column a", excelReader.GetName(0));
+            Assert.AreEqual(" column b", excelReader.GetName(1));
+            Assert.AreEqual(" column b", excelReader.GetName(2));
+            Assert.IsNull(excelReader.GetName(3));
+            Assert.AreEqual("column e", excelReader.GetName(4));
+            Assert.AreEqual(" column b", excelReader.GetName(5));
 
-            excelReader.Read();
-            Assert.AreEqual(6, excelReader.FieldCount);
             Assert.AreEqual(2, excelReader.GetInt32(0));
             Assert.AreEqual("b", excelReader.GetString(1));
             Assert.AreEqual("c", excelReader.GetString(2));

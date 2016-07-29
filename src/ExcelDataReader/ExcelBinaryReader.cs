@@ -30,10 +30,10 @@ namespace Excel
 		private bool m_isClosed;
         private readonly Encoding m_Default_Encoding = Encoding.Unicode;
 		private string m_exceptionMessage;
+		private string[] m_cellsNames;
 		private object[] m_cellsValues;
 		private uint[] m_dbCellAddrs;
 		private int m_dbCellAddrsIndex;
-		private bool m_canRead;
 		private int m_SheetIndex;
 		private int m_depth;
 		private int m_cellOffset;
@@ -50,14 +50,12 @@ namespace Excel
 
 		private bool disposed;
 
-        private readonly IDataHelper dataHelper;
 	    private bool convertOaDate = true;
 
 	    #endregion
 
-		public ExcelBinaryReader(IDataHelper dataHelper)
+		public ExcelBinaryReader()
 		{
-		    this.dataHelper = dataHelper;
 		    m_encoding = m_Default_Encoding;
 			m_version = 0x0600;
 			m_isValid = true;
@@ -402,6 +400,7 @@ namespace Excel
 			m_stream.Seek(startPos, SeekOrigin.Begin);
 		}
 
+		/// <returns>true if row was read successfully</returns>
 		private bool readWorkSheetRow()
 		{
 			m_cellsValues = new object[m_maxCol];
@@ -411,7 +410,7 @@ namespace Excel
 				XlsBiffRecord rec = m_stream.ReadAt(m_cellOffset);
 				m_cellOffset += rec.Size;
 
-                if ((rec is XlsBiffDbCell) || (rec is XlsBiffMSODrawing)) { break; };
+				if ((rec is XlsBiffDbCell) || (rec is XlsBiffMSODrawing)) { break; };
 				if (rec is XlsBiffEOF) { return false; };
 
 				XlsBiffBlankCell cell = rec as XlsBiffBlankCell;
@@ -424,7 +423,7 @@ namespace Excel
 
 			m_depth++;
 
-			return m_depth < m_maxRow;
+			return m_cellOffset <= m_stream.Size;
 		}
 
 		
@@ -532,21 +531,18 @@ namespace Excel
 				m_dbCellAddrsIndex == m_dbCellAddrs.Length ||
 				m_depth == m_maxRow) return false;
 
-			m_canRead = readWorkSheetRow();
+			bool success = readWorkSheetRow();
 
-			//read last row
-			if (!m_canRead && m_depth > 0) m_canRead = true;
-
-			if (!m_canRead && m_dbCellAddrsIndex < (m_dbCellAddrs.Length - 1))
+			if (!success && m_dbCellAddrsIndex < (m_dbCellAddrs.Length - 1))
 			{
 				m_dbCellAddrsIndex++;
 				m_cellOffset = findFirstDataCellOffset((int)m_dbCellAddrs[m_dbCellAddrsIndex]);
 				if (m_cellOffset < 0)
 					return false;
-				m_canRead = readWorkSheetRow();
+				success = readWorkSheetRow();
 			}
 
-			return m_canRead;
+			return success;
 		}
 
 		private bool moveToNextRecordNoIndex()
@@ -600,7 +596,7 @@ namespace Excel
 			} while (cell == null);
 
 			m_cellOffset = cell.Offset;
-			m_canRead = readWorkSheetRow();
+			bool success = readWorkSheetRow();
 
 
 			//read last row
@@ -614,7 +610,7 @@ namespace Excel
 			//	m_canRead = readWorkSheetRow();
 			//}
 
-			return m_canRead;
+			return success;
 		}
 
 		private void initializeSheetRead()
@@ -808,6 +804,11 @@ namespace Excel
             m_SheetIndex = 0;
 		}
 
+		public void Reset() {
+			m_SheetIndex = 0;
+			m_IsFirstRead = true;
+		}
+
 		public string ExceptionMessage
 		{
 			get { return m_exceptionMessage; }
@@ -863,6 +864,7 @@ namespace Excel
 
 		public bool NextResult()
 		{
+			if (!m_isValid) return false;
 			if (m_SheetIndex >= (this.ResultsCount - 1)) return false;
 
 			m_SheetIndex++;
@@ -876,7 +878,26 @@ namespace Excel
 		{
 			if (!m_isValid) return false;
 
-			if (m_IsFirstRead) initializeSheetRead();
+			if (m_IsFirstRead) {
+				initializeSheetRead();
+				if (!m_isValid) return false;
+
+				if (IsFirstRowAsColumnNames) {
+					if (moveToNextRecord()) {
+						m_cellsNames = new string[m_cellsValues.Length];
+						for (var i = 0; i < m_cellsValues.Length; i++) {
+							var value = m_cellsValues[i]?.ToString();
+							if (value != null && value.Length > 0) { 
+								m_cellsNames[i] = value.ToString();
+							}
+						}
+					} else {
+						return false;
+					}
+				} else {
+					m_cellsNames = null; // no columns
+				}
+			}
 
 			return moveToNextRecord();
 		}
@@ -978,7 +999,7 @@ namespace Excel
 
 		public bool IsDBNull(int i)
 		{
-            return (null == m_cellsValues[i]) || (dataHelper.IsDBNull(m_cellsValues[i]));
+            return (null == m_cellsValues[i]);
 		}
 
 		public object this[int i]
@@ -1038,7 +1059,9 @@ namespace Excel
 
 		public Type GetFieldType(int i)
 		{
-			throw new NotSupportedException();
+			if (m_cellsValues[i] == null)
+				return null;
+			return m_cellsValues[i].GetType();
 		}
 
 		public Guid GetGuid(int i)
@@ -1048,7 +1071,9 @@ namespace Excel
 
 		public string GetName(int i)
 		{
-			throw new NotSupportedException();
+			if (m_cellsNames == null)
+				return null;
+			return m_cellsNames[i];
 		}
 
 		public int GetOrdinal(string name)
@@ -1096,172 +1121,6 @@ namespace Excel
 
 	    #endregion
 
-        #region Dataset
-
-        public void LoadDataSet(IDatasetHelper datasetHelper)
-        {
-            LoadDataSet(datasetHelper, true);
-        }
-
-        public void LoadDataSet(IDatasetHelper datasetHelper, bool convertOADateTime)
-        {
-            if (!m_isValid)
-            {
-                datasetHelper.IsValid = false;
-            }
-            datasetHelper.IsValid = true;
-
-            if (m_isClosed)
-            {
-				return;// NOTE: original looks wrong: await Task.FromResult(0);
-            }
-
-            ConvertOaDate = convertOADateTime;
-            datasetHelper.CreateNew();
-            //m_workbookData = new DataSet();
-
-            readAllSheets(datasetHelper);
-
-            m_file.Dispose();
-            m_isClosed = true;
-            datasetHelper.DatasetLoadComplete();
-
-        }
-
-	    private void readAllSheets(IDatasetHelper datasetHelper)
-	    {
-	        for (int index = 0; index < ResultsCount; index++)
-	        {
-	            readWholeWorkSheet(m_sheets[index], datasetHelper);
-	        }
-	    }
-
-	    private void readWholeWorkSheet(XlsWorksheet sheet, IDatasetHelper datasetHelper)
-        {
-            XlsBiffIndex idx;
-
-            if (!readWorkSheetGlobals(sheet, out idx, out m_currentRowRecord))
-            {
-                datasetHelper.IsValid = false;
-                return;
-            }
-
-            //DataTable table = new DataTable(sheet.Name);
-            datasetHelper.CreateNewTable(sheet.Name);
-            datasetHelper.AddExtendedPropertyToTable("visiblestate", sheet.VisibleState);
-
-            bool triggerCreateColumns = true;
-
-            if (idx != null)
-                readWholeWorkSheetWithIndex(idx, triggerCreateColumns, datasetHelper);
-            else
-                readWholeWorkSheetNoIndex(triggerCreateColumns, datasetHelper);
-
-            datasetHelper.EndLoadTable();
-        }
-
-        //TODO: quite a bit of duplication with the noindex version
-        private void readWholeWorkSheetWithIndex(XlsBiffIndex idx, bool triggerCreateColumns, IDatasetHelper datasetHelper)
-        {
-            m_dbCellAddrs = idx.DbCellAddresses;
-
-            for (int index = 0; index < m_dbCellAddrs.Length; index++)
-            {
-                if (m_depth == m_maxRow) break;
-
-                // init reading data
-                m_cellOffset = findFirstDataCellOffset((int)m_dbCellAddrs[index]);
-                if (m_cellOffset < 0)
-                    return;
-
-                //DataTable columns
-                if (triggerCreateColumns)
-                {
-                    if (IsFirstRowAsColumnNames && readWorkSheetRow() || (IsFirstRowAsColumnNames && m_maxRow == 1))
-                    {
-                        for (int i = 0; i < m_maxCol; i++)
-                        {
-                            if (m_cellsValues[i] != null && m_cellsValues[i].ToString().Length > 0)
-                                datasetHelper.AddColumn(m_cellsValues[i].ToString());
-                            else
-                                datasetHelper.AddColumn(string.Concat(COLUMN, i));
-                        }
-                    }
-                    else
-                    {
-                        for (int i = 0; i < m_maxCol; i++)
-                        {
-                            datasetHelper.AddColumn(null);
-                        }
-                    }
-
-                    triggerCreateColumns = false;
-
-                    datasetHelper.BeginLoadData();
-                    //table.BeginLoadData();
-                }
-
-                while (readWorkSheetRow())
-                {
-                    datasetHelper.AddRow(m_cellsValues);
-                    
-                }
-
-                //add the row
-                if (m_depth > 0 && !(IsFirstRowAsColumnNames && m_maxRow == 1))
-                {
-                    datasetHelper.AddRow(m_cellsValues);
-                }
-
-            }
-        }
-
-        private void readWholeWorkSheetNoIndex(bool triggerCreateColumns, IDatasetHelper datasetHelper)
-        {
-            while (Read())
-            {
-                if (m_depth == m_maxRow) break;
-
-                bool justAddedColumns = false;
-                //DataTable columns
-                if (triggerCreateColumns)
-                {
-                    if (IsFirstRowAsColumnNames || (IsFirstRowAsColumnNames && m_maxRow == 1))
-                    {
-                        for (int i = 0; i < m_maxCol; i++)
-                        {
-                            if (m_cellsValues[i] != null && m_cellsValues[i].ToString().Length > 0)
-                                datasetHelper.AddColumn(m_cellsValues[i].ToString());
-                            else
-                                datasetHelper.AddColumn(string.Concat(COLUMN, i));
-                        }
-                        justAddedColumns = true;
-                    }
-                    else
-                    {
-                        for (int i = 0; i < m_maxCol; i++)
-                        {
-                            datasetHelper.AddColumn(null);
-                        }
-                    }
-
-                    triggerCreateColumns = false;
-                    datasetHelper.BeginLoadData();
-                }
-
-                if (!justAddedColumns && m_depth > 0 && !(IsFirstRowAsColumnNames && m_maxRow == 1))
-                {
-                    datasetHelper.AddRow(m_cellsValues);
-                }
-            }
-
-            if (m_depth > 0 && !(IsFirstRowAsColumnNames && m_maxRow == 1))
-            {
-                datasetHelper.AddRow(m_cellsValues);
-            }
-        }
-
-        #endregion
     }
 
     internal class EncodingHelper
