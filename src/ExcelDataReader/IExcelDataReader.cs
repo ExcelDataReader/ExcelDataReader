@@ -1,8 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Data;
 using System.IO;
+using System.Text;
+using ExcelDataReader.Data;
 
 namespace Excel
 {
@@ -13,6 +11,19 @@ namespace Excel
 		/// </summary>
 		/// <param name="fileStream">The file stream.</param>
 		void Initialize(Stream fileStream);
+
+        ///// <summary>
+        ///// Read all data in to DataSet and return it
+        ///// </summary>
+        ///// <returns>The DataSet</returns>
+        void LoadDataSet(IDatasetHelper datasetHelper);
+
+        ///// <summary>
+        /////Read all data in to DataSet and return it
+        ///// </summary>
+        ///// <param name="convertOADateTime">if set to <c>true</c> [try auto convert OA date time format].</param>
+        ///// <returns>The DataSet</returns>
+        void LoadDataSet(IDatasetHelper datasetHelper, bool convertOADateTime);
 
 		/// <summary>
 		/// Gets a value indicating whether file stream is valid.
@@ -54,7 +65,13 @@ namespace Excel
 		/// </value>
 		bool IsFirstRowAsColumnNames { get;set;}
 
-        Encoding Encoding { get; }
-        Encoding DefaultEncoding { get; }
+        /// <summary>
+        /// Should OADates be converted to dates
+        /// </summary>
+        bool ConvertOaDate { get; set; }
+
+        ReadOption ReadOption { get; set;  }
+	    Encoding Encoding { get; }
+	    Encoding DefaultEncoding { get; }
 	}
 }

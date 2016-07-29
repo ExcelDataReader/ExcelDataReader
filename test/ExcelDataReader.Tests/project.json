@@ -1,0 +1,27 @@
+﻿{
+  "title": "ExcelDataReader.Tests",
+  "version": "1.0.0-*",
+  "authors": [ "ExcelDataReader developers" ],
+  "testRunner": "nunit",
+
+  "dependencies": {
+    "ExcelDataReader": "2.1.2.4-dev",
+    "dotnet-test-nunit": "3.4.0-beta-1",
+    "NUnit": "3.4.1"
+  },
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": [
+        "dnxcore50",
+        "portable-net45+win8"
+      ],
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "1.0.0",
+          "type": "platform"
+        },
+        "System.Text.Encoding.CodePages": "4.0.1"
+      }
+    }
+  }
+}

@@ -1,8 +1,6 @@
 using System;
 using System.IO;
-using ExcelDataReader.Portable.Async;
-using ExcelDataReader.Portable.Data;
-using ExcelDataReader.Portable.Misc;
+using ExcelDataReader.Data;
 
 namespace Excel
 {
@@ -19,24 +17,17 @@ namespace Excel
 		/// <returns></returns>
 		public static IExcelDataReader CreateBinaryReader(Stream fileStream)
 		{
-            var factory = CreateFactory();
-
-		    var reader = AsyncHelper.RunSync(() => factory.CreateBinaryReaderAsync(fileStream));
-
-            return new ExcelBinaryReader(reader);
+			var reader = new ExcelBinaryReader(dataHelper);
+			reader.Initialize(fileStream);
+			return reader;
 		}
 
-	    private static ExcelDataReader.Portable.ExcelReaderFactory CreateFactory()
-	    {
-	        return new ExcelDataReader.Portable.ExcelReaderFactory(dataHelper);
-	    }
-
-        /// <summary>
-        /// Creates an instance of <see cref="ExcelBinaryReader"/> or <see cref="ExcelOpenXmlReader"/>
-        /// </summary>
-        /// <param name="fileStream">The file stream.</param>
-        /// <returns></returns>
-        public static IExcelDataReader CreateReader(Stream fileStream)
+		/// <summary>
+		/// Creates an instance of <see cref="ExcelBinaryReader"/> or <see cref="ExcelOpenXmlReader"/>
+		/// </summary>
+		/// <param name="fileStream">The file stream.</param>
+		/// <returns></returns>
+		public static IExcelDataReader CreateReader(Stream fileStream)
         {
             const ulong xlsSignature = 0xE11AB1A1E011CFD0;
             var buf = new byte[512];
@@ -61,12 +52,10 @@ namespace Excel
         /// <returns></returns>
         public static IExcelDataReader CreateBinaryReader(Stream fileStream, ReadOption option)
 		{
-            var factory = CreateFactory();
-
-            var portableReadOption = (ExcelDataReader.Portable.ReadOption)option;
-            var reader = AsyncHelper.RunSync(() => factory.CreateBinaryReaderAsync(fileStream, portableReadOption));
-
-            return new ExcelBinaryReader(reader);
+            var reader = new ExcelBinaryReader(dataHelper);
+			reader.ReadOption = option;
+			reader.Initialize(fileStream);
+			return reader;
 		}
 
 	    /// <summary>
@@ -77,29 +66,26 @@ namespace Excel
 	    /// <returns></returns>
 	    public static IExcelDataReader CreateBinaryReader(Stream fileStream, bool convertOADate)
 		{
-            var factory = CreateFactory();
-
-            var reader = AsyncHelper.RunSync(() => factory.CreateBinaryReaderAsync(fileStream, convertOADate));
-
-            return new ExcelBinaryReader(reader);
-
+			var reader = new ExcelBinaryReader(dataHelper);
+			reader.ConvertOaDate = convertOADate;
+			reader.Initialize(fileStream);
+			return reader;
 		}
 
-	    /// <summary>
-	    /// Creates an instance of <see cref="ExcelBinaryReader"/>
-	    /// </summary>
-	    /// <param name="fileStream">The file stream.</param>
-	    /// <param name="convertOADate"></param>
-	    /// <param name="readOption"></param>
-	    /// <returns></returns>
-	    public static IExcelDataReader CreateBinaryReader(Stream fileStream, bool convertOADate, ReadOption readOption)
+		/// <summary>
+		/// Creates an instance of <see cref="ExcelBinaryReader"/>
+		/// </summary>
+		/// <param name="fileStream">The file stream.</param>
+		/// <param name="convertOADate"></param>
+		/// <param name="readOption"></param>
+		/// <returns></returns>
+		public static IExcelDataReader CreateBinaryReader(Stream fileStream, bool convertOADate, ReadOption readOption)
 		{
-            var factory = CreateFactory();
-
-            var portableReadOption = (ExcelDataReader.Portable.ReadOption)readOption;
-            var reader = AsyncHelper.RunSync(() => factory.CreateBinaryReaderAsync(fileStream, convertOADate, portableReadOption));
-
-            return new ExcelBinaryReader(reader);
+			var reader = new ExcelBinaryReader(dataHelper);
+			reader.ConvertOaDate = convertOADate;
+			reader.ReadOption = readOption;
+			reader.Initialize(fileStream);
+			return reader;
 		}
 
 		/// <summary>
@@ -109,11 +95,9 @@ namespace Excel
 		/// <returns></returns>
 		public static IExcelDataReader CreateOpenXmlReader(Stream fileStream)
 		{
-            var factory = CreateFactory();
-
-			var reader = AsyncHelper.RunSync(() => factory.CreateOpenXmlReader(fileStream));
-
-			return new ExcelOpenXmlReader(reader);
+			var reader = new ExcelOpenXmlReader(dataHelper);
+			reader.Initialize(fileStream);
+			return reader;
 		}
 	}
 }
