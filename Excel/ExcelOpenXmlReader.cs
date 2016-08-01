@@ -277,7 +277,14 @@ namespace Excel
                         {
                             XlsxXf xf = _workbook.Styles.CellXfs[int.Parse(a_s)];
                             if (o != null && o.ToString() != string.Empty && IsDateTimeStyle(xf.NumFmtId))
-                                o = Helpers.ConvertFromOATime(number);
+                                try
+                                {
+                                    o = Helpers.ConvertFromOATime(number);
+                                }
+                                catch (ArgumentException)
+                                {
+                                    o = o.ToString();
+                                }
                             else if (xf.NumFmtId == 49)
                                 o = o.ToString();
                         }

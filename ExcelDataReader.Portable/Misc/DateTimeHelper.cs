@@ -81,7 +81,8 @@ namespace ExcelDataReader.Portable.Misc
 
             millis += DoubleDateOffset / TicksPerMillisecond;
 
-            if (millis < 0 || millis >= MaxMillis) throw new ArgumentException("OA Date out of range");
+            if (millis < 0 || millis >= MaxMillis)
+                return 0;
             return millis * TicksPerMillisecond;
         }
     }
