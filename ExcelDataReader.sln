@@ -22,11 +22,13 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelDataReader.Net20.Tests", "test\ExcelDataReader.Net20.Tests\ExcelDataReader.Net20.Tests.csproj", "{A6631423-31BE-4D54-BFEB-0D3723BF8C96}"
 	ProjectSection(ProjectDependencies) = postProject
 		{627CD303-4CE5-4300-8BD1-0FCF143D4874} = {627CD303-4CE5-4300-8BD1-0FCF143D4874}
+		{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70} = {061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelDataReader.Net45.Tests", "test\ExcelDataReader.Net45.Tests\ExcelDataReader.Net45.Tests.csproj", "{7ABFA914-8980-4630-B7E5-92921E5D897D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{627CD303-4CE5-4300-8BD1-0FCF143D4874} = {627CD303-4CE5-4300-8BD1-0FCF143D4874}
+		{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70} = {061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}
 	EndProjectSection
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ExcelDataReader.DataSet", "src\ExcelDataReader.DataSet\ExcelDataReader.DataSet.xproj", "{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}"
