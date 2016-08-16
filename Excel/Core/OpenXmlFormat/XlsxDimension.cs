@@ -15,7 +15,9 @@ namespace ExcelDataReader.Portable.Core.OpenXmlFormat
 			this.LastRow = rows;
 			this.FirstCol = 1;
 			this.LastCol = cols;
-		}
+
+            IsRange = true;
+        }
 
 		private int _FirstRow;
 
@@ -49,7 +51,15 @@ namespace ExcelDataReader.Portable.Core.OpenXmlFormat
 			set { _LastCol = value; }
 		}
 
-		public void ParseDimensions(string value)
+        private bool _IsRange;
+
+        public bool IsRange
+        {
+            get { return _IsRange; }
+            set { _IsRange = value; }
+        }
+
+        public void ParseDimensions(string value)
 		{
 			string[] parts = value.Split(':');
 
@@ -62,7 +72,7 @@ namespace ExcelDataReader.Portable.Core.OpenXmlFormat
 
 			if (parts.Length == 1)
 			{
-				LastCol = FirstCol;
+                LastCol = FirstCol;
 				LastRow = FirstRow;
 			}
 			else
@@ -70,9 +80,11 @@ namespace ExcelDataReader.Portable.Core.OpenXmlFormat
 				XlsxDim(parts[1], out col, out row);
 				LastCol = col;
 				LastRow = row;
-			}
-			
-		}
+
+                IsRange = true;
+            }
+
+        }
 
 
 		/// <summary>

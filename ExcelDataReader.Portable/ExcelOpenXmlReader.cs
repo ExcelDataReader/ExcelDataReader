@@ -137,8 +137,12 @@ namespace ExcelDataReader.Portable
 				{
 					string dimValue = _xmlReader.GetAttribute(XlsxWorksheet.A_ref);
 
-					sheet.Dimension = new XlsxDimension(dimValue);
-					break;
+                    var dimension = new XlsxDimension(dimValue);
+				    if (dimension.IsRange)
+				    {
+				        sheet.Dimension = dimension;
+				        break;
+				    }
 				}
 
                 //removed: Do not use col to work out number of columns as this is really for defining formatting, so may not contain all columns

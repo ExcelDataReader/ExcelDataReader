@@ -924,7 +924,17 @@ namespace ExcelDataReader.Tests
             } while (excelReader.NextResult());
 
             excelReader.Close();
-        }        
+        }
 
+        [TestMethod]
+        public void Issue_Git_142()
+        {
+            IExcelDataReader excelReader =
+                ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("Test_git_Issue_142"));
+
+            var dataset = excelReader.AsDataSet();
+
+            Assert.AreEqual(4, dataset.Tables[0].Columns.Count);
+        }
     }
 }
