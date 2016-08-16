@@ -123,6 +123,8 @@ namespace ExcelDataReader.Portable
 			int rows = 0;
 			int cols = 0;
 
+		    bool foundDimension = false;
+
 			_namespaceUri = null;
 		    int biggestColumn = 0; //used when no col elements and no dimension
 			while (_xmlReader.Read())
@@ -141,7 +143,9 @@ namespace ExcelDataReader.Portable
 				    if (dimension.IsRange)
 				    {
 				        sheet.Dimension = dimension;
-				        break;
+				        foundDimension = true;
+
+                        break;
 				    }
 				}
 
@@ -154,7 +158,7 @@ namespace ExcelDataReader.Portable
 
                 //check cells so we can find size of sheet if can't work it out from dimension or col elements (dimension should have been set before the cells if it was available)
                 //ditto for cols
-                if (sheet.Dimension == null && cols == 0 && _xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_c)
+                if (cols == 0 && _xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_c)
                 {
                     var refAttribute = _xmlReader.GetAttribute(XlsxWorksheet.A_r);
 
@@ -170,7 +174,7 @@ namespace ExcelDataReader.Portable
 
 
 			//if we didn't get a dimension element then use the calculated rows/cols to create it
-			if (sheet.Dimension == null)
+			if (!foundDimension)
 			{
                 if (cols == 0)
                     cols = biggestColumn;
