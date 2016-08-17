@@ -401,6 +401,9 @@
       <Link>Resources\Test_Excel_OpenOffice.xlsx</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="..\Excel.Tests.4.5\Resources\Test_git_issue_145.xls">
+      <Link>Resources\Test_git_issue_145.xls</Link>
+    </None>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
