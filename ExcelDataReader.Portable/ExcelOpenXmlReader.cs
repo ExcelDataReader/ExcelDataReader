@@ -238,65 +238,71 @@ namespace ExcelDataReader.Portable
 				int col = 0;
 				int row = 0;
 
-                while (_xmlReader.Read())
-                {
-                    if (_xmlReader.Depth == 2) break;
+				try
+				{
+					while (_xmlReader.Read())
+					{
+						if (_xmlReader.Depth == 2) break;
 
-                    if (_xmlReader.NodeType == XmlNodeType.Element)
-                    {
-                        hasValue = false;
-
-                        if (_xmlReader.LocalName == XlsxWorksheet.N_c)
-                        {
-                            a_s = _xmlReader.GetAttribute(XlsxWorksheet.A_s);
-                            a_t = _xmlReader.GetAttribute(XlsxWorksheet.A_t);
-                            a_r = _xmlReader.GetAttribute(XlsxWorksheet.A_r);
-                            XlsxDimension.XlsxDim(a_r, out col, out row);
-                        }
-                        else if (_xmlReader.LocalName == XlsxWorksheet.N_v || _xmlReader.LocalName == XlsxWorksheet.N_t)
-                        {
-                            hasValue = true;
-                        }
-                    }
-
-                    if (_xmlReader.NodeType == XmlNodeType.Text && hasValue)
-                    {
-                    	double number;
-                        object o = _xmlReader.Value;
-
-	                    var style = NumberStyles.Any;
-						var culture = CultureInfo.InvariantCulture;
-                        
-                        if (double.TryParse(o.ToString(), style, culture, out number))
-                            o = number;
-                        	
-                        if (null != a_t && a_t == XlsxWorksheet.A_s) //if string
-                        {
-                            o = Helpers.ConvertEscapeChars(_workbook.SST[int.Parse(o.ToString())]);
-                        } // Requested change 4: missing (it appears that if should be else if)
-                        else if (null != a_t && a_t == XlsxWorksheet.N_inlineStr) //if string inline
-                        {
-                            o = Helpers.ConvertEscapeChars(o.ToString());
-                        }
-                        else if (a_t == "b") //boolean
+						if (_xmlReader.NodeType == XmlNodeType.Element)
 						{
-							o = _xmlReader.Value == "1";
-						}  
-                        else if (null != a_s) //if something else
-                        {
-                            XlsxXf xf = _workbook.Styles.CellXfs[int.Parse(a_s)];
-                            if (o != null && o.ToString() != string.Empty && IsDateTimeStyle(xf.NumFmtId))
-                                o = Helpers.ConvertFromOATime(number);
-                            else if (xf.NumFmtId == 49)
-                                o = o.ToString();
-                        }
-                                                
+							hasValue = false;
 
+							if (_xmlReader.LocalName == XlsxWorksheet.N_c)
+							{
+								a_s = _xmlReader.GetAttribute(XlsxWorksheet.A_s);
+								a_t = _xmlReader.GetAttribute(XlsxWorksheet.A_t);
+								a_r = _xmlReader.GetAttribute(XlsxWorksheet.A_r);
+								XlsxDimension.XlsxDim(a_r, out col, out row);
+							}
+							else if (_xmlReader.LocalName == XlsxWorksheet.N_v || _xmlReader.LocalName == XlsxWorksheet.N_t)
+							{
+								hasValue = true;
+							}
+						}
 
-                        if (col - 1 < _cellsValues.Length)
-                            _cellsValues[col - 1] = o;
-                    }
-                }
+						if (_xmlReader.NodeType == XmlNodeType.Text && hasValue)
+						{
+							double number;
+							object o = _xmlReader.Value;
+
+							var style = NumberStyles.Any;
+							var culture = CultureInfo.InvariantCulture;
+
+							if (double.TryParse(o.ToString(), style, culture, out number))
+								o = number;
+
+							if (null != a_t && a_t == XlsxWorksheet.A_s) //if string
+							{
+								o = Helpers.ConvertEscapeChars(_workbook.SST[int.Parse(o.ToString())]);
+							} // Requested change 4: missing (it appears that if should be else if)
+							else if (null != a_t && a_t == XlsxWorksheet.N_inlineStr) //if string inline
+							{
+								o = Helpers.ConvertEscapeChars(o.ToString());
+							}
+							else if (a_t == "b") //boolean
+							{
+								o = _xmlReader.Value == "1";
+							}
+							else if (null != a_s) //if something else
+							{
+								XlsxXf xf = _workbook.Styles.CellXfs[int.Parse(a_s)];
+								if (o != null && o.ToString() != string.Empty && IsDateTimeStyle(xf.NumFmtId))
+									o = Helpers.ConvertFromOATime(number);
+								else if (xf.NumFmtId == 49)
+									o = o.ToString();
+							}
+
+							if (col - 1 < _cellsValues.Length)
+								_cellsValues[col - 1] = o;
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					var msg = $"Row: {row}, Col: {col}, sheet.Name: {sheet.Name} \n {ex.Message}";
+					throw new ArgumentException(msg, ex);
+				}
 
 				if (_emptyRowCount > 0)
 				{
