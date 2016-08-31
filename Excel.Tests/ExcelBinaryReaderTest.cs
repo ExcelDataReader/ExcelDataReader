@@ -47,6 +47,19 @@ namespace ExcelDataReader.Tests
         }
 
         [TestMethod]
+        public void GitIssue_51_ReadCellLabel()
+        {
+            var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Git_Issue_51"), true);
+
+            var ds = excelReader.AsDataSet(true);
+            Assert.IsNotNull(ds);
+
+            var value = ds.Tables[0].Rows[0].ItemArray[1];
+
+            Assert.AreEqual("Monetary aggregates (R millions)", value);
+        }
+
+        [TestMethod]
         public void GitIssue_29_ReadSheetStatesReadsCorrectly()
         {
             IExcelDataReader excelReader =

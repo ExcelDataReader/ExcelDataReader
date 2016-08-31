@@ -17,7 +17,8 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 	        : base(bytes, offset, reader)
 	    {
 	        m_UseEncoding = reader.DefaultEncoding;
-            xlsString = XlsStringFactory.CreateXlsString(bytes, offset, reader);
+            // Label record consists of: record type (2 bytes)|record size (2 bytes)|Cell structure (6 bytes)|XLUnicodeString structure (variable)
+            xlsString = XlsStringFactory.CreateXlsString(bytes, offset + 10, reader);
 
 	    }
 
@@ -37,8 +38,7 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 		/// </summary>
 		public ushort Length
 		{
-            get { return base.ReadUInt16(0x6); }
-            //get { return xlsString.CharacterCount; }
+            get { return xlsString.CharacterCount; }
 		}
 
 		/// <summary>
@@ -48,22 +48,7 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 		{
 			get
 			{
-                //return xlsString.Value;
-
-			    byte[] bts;
-
-                if (reader.isV8())
-                {
-                    //issue 11636 - according to spec character data starts at byte 9 for biff8 (was using 8)
-                    bts = base.ReadArray(0x9, Length * (Helpers.IsSingleByteEncoding(xlsString.UseEncoding) ? 1 : 2));
-                }
-                else
-                { //biff 3-5
-                    bts = base.ReadArray(0x2, Length * (Helpers.IsSingleByteEncoding(xlsString.UseEncoding) ? 1 : 2));
-                }
-
-
-                return xlsString.UseEncoding.GetString(bts, 0, bts.Length);
+                return xlsString.Value;
 			}
 		}
 	}
