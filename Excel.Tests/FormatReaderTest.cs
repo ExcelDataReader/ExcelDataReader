@@ -13,7 +13,7 @@ namespace ExcelDataReader.Tests
 #endif
 {
 	[TestClass]
-	class FormatReaderTest
+	public class FormatReaderTest
 	{
 		[TestMethod]
 		public void Test_IsDateFormatString()
