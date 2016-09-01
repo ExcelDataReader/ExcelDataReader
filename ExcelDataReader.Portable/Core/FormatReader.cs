@@ -5,6 +5,7 @@ namespace ExcelDataReader.Portable.Core
 	public class FormatReader
 	{
 		private const char escapeChar = '\\';
+        private const char escapeCharacterWidth = '_';
 		public string FormatString { get; set; }
 		public FormatReader()
 		{
@@ -17,6 +18,7 @@ namespace ExcelDataReader.Portable.Core
 			//if the term is not contained in [ ] (i.e. a color) e.g. [Red] 
 			//or the term is not in quotes "d" (means display d)
 			//or the term is not preceded by a backslash e.g. \d (means display d)
+            //or the term is not preceded by a underscore e.g. _d (means display space as wide as the character d)
 
 			var dateChars = new char[] { 'y', 'm', 'd', 's', 'h', 'Y', 'M', 'D', 'S', 'H' };
 			if (FormatString.IndexOfAny(dateChars) >= 0)
@@ -32,7 +34,7 @@ namespace ExcelDataReader.Portable.Core
 
 						//could probably do this with regex...
 						if (!IsSurroundedByBracket(dateChar, pos) &&
-								!IsPrecededByBackSlash(dateChar, pos) &&
+								!IsPrecededBySingleCharacterEscape(dateChar, pos) &&
 								!IsSurroundedByQuotes(dateChar, pos))
 							return true;
 
@@ -61,14 +63,14 @@ namespace ExcelDataReader.Portable.Core
 
 		}
 
-		private bool IsPrecededByBackSlash(char dateChar, int pos)
+		private bool IsPrecededBySingleCharacterEscape(char dateChar, int pos)
 		{
 			if (pos == 0)
 				return false;
 
 
 			char lastChar = FormatString[pos - 1];
-			if (lastChar.CompareTo(escapeChar) == 0)
+			if (lastChar == escapeChar || lastChar == escapeCharacterWidth)
 				return true;
 
 			return false;
