@@ -404,7 +404,10 @@ namespace Excel
 
 		private bool readWorkSheetRow()
 		{
-			m_cellsValues = new object[m_maxCol];
+            if (m_depth >= m_maxRow)
+                return false;
+
+            m_cellsValues = new object[m_maxCol];
 
 			while (m_cellOffset < m_stream.Size)
 			{
@@ -412,9 +415,14 @@ namespace Excel
 				m_cellOffset += rec.Size;
 
 				if ((rec is XlsBiffDbCell) || (rec is XlsBiffMSODrawing)) { break; };//break;
-				if (rec is XlsBiffEOF) { return false; };
+                if (rec is XlsBiffEOF)
+                {
+                    bool hasRow = m_depth + 1 <= m_maxRow;
+                    m_depth = m_maxRow;
+                    return hasRow;
+                };
 
-				XlsBiffBlankCell cell = rec as XlsBiffBlankCell;
+                XlsBiffBlankCell cell = rec as XlsBiffBlankCell;
 
 				if ((null == cell) || (cell.ColumnIndex >= m_maxCol)) continue;
 				if (cell.RowIndex != m_depth) { m_cellOffset -= rec.Size; break; };
@@ -424,8 +432,8 @@ namespace Excel
 
 			m_depth++;
 
-			return m_depth < m_maxRow;
-		}
+            return m_depth <= m_maxRow;
+        }
 
 		private DataTable readWholeWorkSheet(XlsWorksheet sheet)
 		{
@@ -490,13 +498,6 @@ namespace Excel
 				{
 					table.Rows.Add(m_cellsValues);
 				}
-
-				//add the row
-				if (m_depth > 0 && !(_isFirstRowAsColumnNames && m_maxRow == 1))
-				{
-					table.Rows.Add(m_cellsValues);
-				}
-					
 			}
 		}
 
@@ -504,8 +505,6 @@ namespace Excel
 		{
 			while (Read())
 			{
-				if (m_depth == m_maxRow) break;
-
 				bool justAddedColumns = false;
 				//DataTable columns
 				if (triggerCreateColumns)
@@ -537,11 +536,6 @@ namespace Excel
 				{
 					table.Rows.Add(m_cellsValues);
 				}
-			}
-
-			if (m_depth > 0 && !(_isFirstRowAsColumnNames && m_maxRow == 1))
-			{
-				table.Rows.Add(m_cellsValues);
 			}
 		}
 
@@ -648,9 +642,6 @@ namespace Excel
 				m_depth == m_maxRow) return false;
 
 			m_canRead = readWorkSheetRow();
-
-			//read last row
-			if (!m_canRead && m_depth > 0) m_canRead = true;
 
 			if (!m_canRead && m_dbCellAddrsIndex < (m_dbCellAddrs.Length - 1))
 			{

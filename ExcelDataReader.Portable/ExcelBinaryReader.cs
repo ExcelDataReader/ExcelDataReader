@@ -36,7 +36,7 @@ namespace ExcelDataReader.Portable
 		private uint[] m_dbCellAddrs;
 		private int m_dbCellAddrsIndex;
 		private bool m_canRead;
-		private int m_SheetIndex;
+        private int m_SheetIndex;
 		private int m_depth;
 		private int m_cellOffset;
 		private int m_maxCol;
@@ -406,6 +406,9 @@ namespace ExcelDataReader.Portable
 
 		private bool readWorkSheetRow()
 		{
+		    if (m_depth >= m_maxRow)
+		        return false;
+
 			m_cellsValues = new object[m_maxCol];
 
 			while (m_cellOffset < m_stream.Size)
@@ -414,7 +417,12 @@ namespace ExcelDataReader.Portable
 				m_cellOffset += rec.Size;
 
                 if ((rec is XlsBiffDbCell) || (rec is XlsBiffMSODrawing)) { break; };
-				if (rec is XlsBiffEOF) { return false; };
+			    if (rec is XlsBiffEOF)
+			    {
+			        bool hasRow = m_depth + 1 <= m_maxRow;
+			        m_depth = m_maxRow;
+			        return hasRow;
+			    };
 
 				XlsBiffBlankCell cell = rec as XlsBiffBlankCell;
 
@@ -426,7 +434,7 @@ namespace ExcelDataReader.Portable
 
 			m_depth++;
 
-			return m_depth < m_maxRow;
+			return m_depth <= m_maxRow;
 		}
 
 		
@@ -535,9 +543,6 @@ namespace ExcelDataReader.Portable
 				m_depth == m_maxRow) return false;
 
 			m_canRead = readWorkSheetRow();
-
-			//read last row
-			if (!m_canRead && m_depth > 0) m_canRead = true;
 
 			if (!m_canRead && m_dbCellAddrsIndex < (m_dbCellAddrs.Length - 1))
 			{
@@ -1239,13 +1244,6 @@ namespace ExcelDataReader.Portable
                     datasetHelper.AddRow(m_cellsValues);
                     
                 }
-
-                //add the row
-                if (m_depth > 0 && !(IsFirstRowAsColumnNames && m_maxRow == 1))
-                {
-                    datasetHelper.AddRow(m_cellsValues);
-                }
-
             }
         }
 
@@ -1253,8 +1251,6 @@ namespace ExcelDataReader.Portable
         {
             while (Read())
             {
-                if (m_depth == m_maxRow) break;
-
                 bool justAddedColumns = false;
                 //DataTable columns
                 if (triggerCreateColumns)
@@ -1286,11 +1282,6 @@ namespace ExcelDataReader.Portable
                 {
                     datasetHelper.AddRow(m_cellsValues);
                 }
-            }
-
-            if (m_depth > 0 && !(IsFirstRowAsColumnNames && m_maxRow == 1))
-            {
-                datasetHelper.AddRow(m_cellsValues);
             }
         }
 
