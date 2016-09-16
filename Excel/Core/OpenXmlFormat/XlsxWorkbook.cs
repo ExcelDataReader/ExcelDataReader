@@ -162,7 +162,7 @@ namespace ExcelDataReader.Portable.Core.OpenXmlFormat
                             sStringItem += reader.ReadElementContentAsString();
                         }
                     }
-                    else if (reader.LocalName == "rPh")
+                    if (reader.LocalName == "rPh")
                     {
                         // Phonetic items represents pronunciation hints for some East Asian languages.
                         // In the file 'xl/sharedStrings.xml', the phonetic properties appear like:
