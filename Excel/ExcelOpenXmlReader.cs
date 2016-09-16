@@ -216,8 +216,11 @@ namespace Excel
 			{
 				_cellsValues = new object[sheet.ColumnsCount];
 
-				int rowIndex = int.Parse(_xmlReader.GetAttribute(XlsxWorksheet.A_r));
-				if (rowIndex != (_depth + 1))
+                int rowIndex;
+                if (!int.TryParse(_xmlReader.GetAttribute(XlsxWorksheet.A_r), out rowIndex))
+                    rowIndex = _depth + 1;
+
+                if (rowIndex != (_depth + 1))
 				if (rowIndex != (_depth + 1))
 				{
 					_emptyRowCount = rowIndex - _depth - 1;
@@ -227,7 +230,7 @@ namespace Excel
 				string a_t = String.Empty;
 				string a_r = String.Empty;
 				int col = 0;
-				int row = 0;
+				int row = rowIndex;
 
                 while (_xmlReader.Read())
                 {
@@ -242,7 +245,11 @@ namespace Excel
                             a_s = _xmlReader.GetAttribute(XlsxWorksheet.A_s);
                             a_t = _xmlReader.GetAttribute(XlsxWorksheet.A_t);
                             a_r = _xmlReader.GetAttribute(XlsxWorksheet.A_r);
-                            XlsxDimension.XlsxDim(a_r, out col, out row);
+
+                            if (a_r != null)
+                                XlsxDimension.XlsxDim(a_r, out col, out row);
+                            else
+                                ++col;
                         }
                         else if (_xmlReader.LocalName == XlsxWorksheet.N_v || _xmlReader.LocalName == XlsxWorksheet.N_t)
                         {
