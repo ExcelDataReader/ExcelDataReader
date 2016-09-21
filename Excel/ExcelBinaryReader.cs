@@ -791,9 +791,11 @@ namespace Excel
 
 		private  object tryConvertOADateTime(double value, ushort XFormat)
 		{
-		    ushort format = 0;
-            if (XFormat >= 0 && XFormat < m_globals.ExtendedFormats.Count)
+		    ushort format;
+            if (XFormat < m_globals.ExtendedFormats.Count)
             {
+                // If a cell XF record does not contain explicit attributes in a group (if the attribute group flag is not set), it repeats the attributes of its style XF record. 
+
                 var rec = m_globals.ExtendedFormats[XFormat];
                 switch (rec.ID)
                 {
@@ -801,20 +803,13 @@ namespace Excel
                         format = (ushort) (rec.ReadByte(2) & 0x3F);
                         break;
                     case BIFFRECORDTYPE.XF_V3:
-                          if ((rec.ReadByte(3) & 4) == 0)
-                            return value;
                         format = rec.ReadByte(1);
                         break;
                     case BIFFRECORDTYPE.XF_V4:
-                        if ((rec.ReadByte(5) & 4) == 0)
-                            return value;
                         format = rec.ReadByte(1);
                         break;
                     
                     default:
-                        if ((rec.ReadByte(m_globals.Sheets[m_globals.Sheets.Count-1].IsV8 ? 9 : 7) & 4) == 0)
-                            return value;
-                        
                         format = rec.ReadUInt16(2);
                         break;
                 }
