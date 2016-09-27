@@ -66,7 +66,7 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 					if (encoding == 0 && str.IsMultiByte)
 					{
 						len -= (last - prefix - offset) / 2;
-                        string temp = Encoding.Unicode.GetString(m_bytes,
+                        string temp = Encoding.UTF8.GetString(m_bytes,
 																 (int)contoffset + 5,
 																 (int)len);
 						byte[] tempbytes = Encoding.Unicode.GetBytes(temp);
@@ -80,7 +80,7 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 						string temp = Encoding.Unicode.GetString(m_bytes,
 																 (int)contoffset + 5,
 																 (int)(len + len));
-                        byte[] tempbytes = Encoding.Unicode.GetBytes(temp);
+                        byte[] tempbytes = Encoding.UTF8.GetBytes(temp);
 						Buffer.BlockCopy(tempbytes, 0, buff, (int)(last - offset), tempbytes.Length);
 						Buffer.BlockCopy(m_bytes, (int)(contoffset + 5 + len + len), buff, (int)(last - offset + len), (int)postfix);
 						offset = contoffset + 5 + len + len + postfix;
