@@ -108,10 +108,11 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 					return new XlsBiffBlankCell(bytes, offset, reader);
 				case BIFFRECORDTYPE.MULBLANK:
 					return new XlsBiffMulBlankCell(bytes, offset, reader);
-				case BIFFRECORDTYPE.LABEL:
-				case BIFFRECORDTYPE.LABEL_OLD:
-				case BIFFRECORDTYPE.RSTRING:
-					return new XlsBiffLabelCell(bytes, offset, reader);
+                case BIFFRECORDTYPE.LABEL_OLD:
+                    return new XlsBiffLabelCell(bytes, offset, 4 + 7, reader);
+                case BIFFRECORDTYPE.LABEL:
+                case BIFFRECORDTYPE.RSTRING:
+                    return new XlsBiffLabelCell(bytes, offset, 4 + 6, reader);
 				case BIFFRECORDTYPE.LABELSST:
 					return new XlsBiffLabelSSTCell(bytes, offset, reader);
 				case BIFFRECORDTYPE.INTEGER:

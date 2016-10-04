@@ -1099,6 +1099,29 @@ namespace ExcelDataReader.Tests
 
             excelReader.Close();
 		}
-        
+
+        [TestMethod]
+        public void Test_GitIssue_152_SheetName_UTF16LE_Compressed()
+        {
+            IExcelDataReader excelReader =
+                ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_152"));
+            var dataset = excelReader.AsDataSet();
+
+            Assert.AreEqual("והצס", dataset.Tables[0].TableName);
+
+            excelReader.Close();
+        }
+
+        [TestMethod]
+        public void Test_GitIssue_152_Cell_UTF16LE_Compressed()
+        {
+            IExcelDataReader excelReader =
+                ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_152"));
+            var dataset = excelReader.AsDataSet();
+
+            Assert.AreEqual("והצס", dataset.Tables[0].Rows[0][0]);
+
+            excelReader.Close();
+        }
     }
 }

@@ -65,25 +65,33 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 			get { return (SheetVisibility)base.ReadByte(0x4); }
 		}
 
-		/// <summary>
-		/// Name of worksheet
-		/// </summary>
-		public string SheetName
-		{
-			get
-			{
-				ushort len = base.ReadByte(0x6);
+        /// <summary>
+        /// Name of worksheet
+        /// </summary>
+        public string SheetName
+        {
+            get
+            {
+                ushort len = base.ReadByte(0x6);
 
-				int start = 0x8;
-				if (isV8)
-					if (base.ReadByte(0x7) == 0)
-                        return Encoding.UTF8.GetString(m_bytes, m_readoffset + start, len);
-					else
-                        return reader.Encoding.GetString(m_bytes, m_readoffset + start, Helpers.IsSingleByteEncoding(reader.Encoding) ? len : len * 2);
-				else
-                    return Encoding.UTF8.GetString(m_bytes, m_readoffset + start - 1, len);
-			}
-		}
+                int start = 0x8;
+                if (isV8)
+                    if (base.ReadByte(0x7) == 0)
+                    {
+                        byte[] bytes = new byte[len * 2];
+                        for (int i = 0; i < len; i++)
+                        {
+                            bytes[i * 2] = m_bytes[m_readoffset + start + i];
+                        }
+
+                        return Encoding.Unicode.GetString(bytes, 0, len * 2);
+                    }
+                    else
+                        return Encoding.Unicode.GetString(m_bytes, m_readoffset + start, len * 2);
+                else
+                    return reader.Encoding.GetString(m_bytes, m_readoffset + start, Helpers.IsSingleByteEncoding(reader.Encoding) ? len : len * 2);
+            }
+        }
 
         ///// <summary>
         ///// Encoding used to deal with strings
@@ -94,10 +102,10 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
         //    set { m_UseEncoding = value; }
         //}
 
-		/// <summary>
-		/// Specifies if BIFF8 format should be used
-		/// </summary>
-		public bool IsV8
+        /// <summary>
+        /// Specifies if BIFF8 format should be used
+        /// </summary>
+        public bool IsV8
 		{
 			get { return isV8; }
 			set { isV8 = value; }

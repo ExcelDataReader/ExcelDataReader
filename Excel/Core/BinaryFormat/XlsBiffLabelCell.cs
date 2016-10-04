@@ -10,15 +10,12 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 	internal class XlsBiffLabelCell : XlsBiffBlankCell
 	{
         //private Encoding m_UseEncoding = Encoding.Unicode;
-        private Encoding m_UseEncoding;
 	    private IXlsString xlsString;
 
-	    internal XlsBiffLabelCell(byte[] bytes, uint offset, ExcelBinaryReader reader)
+	    internal XlsBiffLabelCell(byte[] bytes, uint offset, uint stringOffset, ExcelBinaryReader reader)
 	        : base(bytes, offset, reader)
 	    {
-	        m_UseEncoding = reader.DefaultEncoding;
-            xlsString = XlsStringFactory.CreateXlsString(bytes, offset, reader);
-
+            xlsString = XlsStringFactory.CreateXlsString(bytes, offset + stringOffset, reader);
 	    }
 
 
@@ -48,22 +45,7 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 		{
 			get
 			{
-                //return xlsString.Value;
-
-			    byte[] bts;
-
-                if (reader.isV8())
-                {
-                    //issue 11636 - according to spec character data starts at byte 9 for biff8 (was using 8)
-                    bts = base.ReadArray(0x9, Length * (Helpers.IsSingleByteEncoding(xlsString.UseEncoding) ? 1 : 2));
-                }
-                else
-                { //biff 3-5
-                    bts = base.ReadArray(0x2, Length * (Helpers.IsSingleByteEncoding(xlsString.UseEncoding) ? 1 : 2));
-                }
-
-
-                return xlsString.UseEncoding.GetString(bts, 0, bts.Length);
+                return xlsString.Value;
 			}
 		}
 	}
