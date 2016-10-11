@@ -217,7 +217,9 @@ namespace ExcelDataReader.Portable
                         //set encoding based on code page name
                         //PCL does not supported codepage numbers
                         if (m_globals.CodePage.Value == 1200)
-                            m_encoding = EncodingHelper.GetEncoding(65001);
+                            //m_encoding = EncodingHelper.GetEncoding(65001);
+                            m_encoding = EncodingHelper.GetEncoding(1200);//If the codepage value is 1200, then the workbook should be opened with encoding corresponding to code 1200.
+                            //Otherwise, there will be a worksheet name reading problem, for example, with Cyrillic names.
                         else
                             m_encoding = EncodingHelper.GetEncoding(m_globals.CodePage.Value);
                         //note: the format spec states that for BIFF8 this is always UTF-16.

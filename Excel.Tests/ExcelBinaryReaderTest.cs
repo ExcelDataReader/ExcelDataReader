@@ -1099,6 +1099,22 @@ namespace ExcelDataReader.Tests
 
             excelReader.Close();
 		}
-        
+
+        /// <summary>
+        /// Incorrect encoding of Cyrillic worksheet names in XLS files (issue #170)
+        /// </summary>
+        [TestMethod]
+        public void Test_CyrillicWorksheetName()
+        {
+            IExcelDataReader excelReader =
+                ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_CyrillicWorksheetName"));
+            excelReader.IsFirstRowAsColumnNames = false;
+            var dataset = excelReader.AsDataSet();
+
+            Assert.AreEqual("Квадратичная функция", dataset.Tables[0].TableName);
+
+            excelReader.Close();
+        }
+
     }
 }
