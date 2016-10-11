@@ -355,15 +355,12 @@ namespace Excel
 					break;
 				rowRecord = thisRec as XlsBiffRow;
 
-			    if (m_ReadOption == ReadOption.Loose)
+			    XlsBiffBlankCell thisCell = thisRec as XlsBiffBlankCell;
+                if (thisCell != null)
 			    {
-			        XlsBiffBlankCell thisCell = thisRec as XlsBiffBlankCell;
-                    if (thisCell != null)
-			        {
-			            foundCell = true;
-			            cell = thisCell;
-                        break;
-			        }
+			        foundCell = true;
+			        cell = thisCell;
+                    break;
 			    }
 			}
 
