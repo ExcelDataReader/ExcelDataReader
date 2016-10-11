@@ -357,15 +357,12 @@ namespace ExcelDataReader.Portable
 					break;
 				rowRecord = thisRec as XlsBiffRow;
 
-                if (readOption == ReadOption.Loose)
+                XlsBiffBlankCell thisCell = thisRec as XlsBiffBlankCell;
+                if (thisCell != null)
                 {
-                    XlsBiffBlankCell thisCell = thisRec as XlsBiffBlankCell;
-                    if (thisCell != null)
-                    {
-                        foundCell = true;
-                        cell = thisCell;
-                        break;
-                    }
+                    foundCell = true;
+                    cell = thisCell;
+                    break;
                 }
             }
 
