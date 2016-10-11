@@ -1,8 +1,6 @@
 using System.IO;
 using System.Threading.Tasks;
 using ExcelDataReader.Portable.Data;
-using ExcelDataReader.Portable.IO;
-using PCLStorage;
 
 
 namespace ExcelDataReader.Portable
@@ -13,14 +11,10 @@ namespace ExcelDataReader.Portable
 	public class ExcelReaderFactory
 	{
 	    private readonly IDataHelper dataHelper;
-	    private readonly IFileHelper fileHelper;
-	    private readonly IFileSystem fileSystem;
 
-	    public ExcelReaderFactory(IDataHelper dataHelper, IFileHelper fileHelper, IFileSystem fileSystem)
+	    public ExcelReaderFactory(IDataHelper dataHelper)
 	    {
 	        this.dataHelper = dataHelper;
-	        this.fileHelper = fileHelper;
-	        this.fileSystem = fileSystem;
 	    }
 
 	    /// <summary>
@@ -83,7 +77,7 @@ namespace ExcelDataReader.Portable
 		/// <returns></returns>
         public async Task<IExcelDataReader> CreateOpenXmlReader(Stream fileStream)
 		{
-            IExcelDataReader reader = new ExcelOpenXmlReader(fileSystem, fileHelper, dataHelper);
+            IExcelDataReader reader = new ExcelOpenXmlReader(dataHelper);
 			await reader.InitializeAsync(fileStream);
 
 			return reader;
