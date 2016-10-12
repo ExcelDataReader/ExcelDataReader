@@ -8,13 +8,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{2BC6054F-0C85-4066-9DE2-1633B8DBE2B8}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
-EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ExcelDataReader", "src\ExcelDataReader\ExcelDataReader.xproj", "{627CD303-4CE5-4300-8BD1-0FCF143D4874}"
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ExcelDataReader.Tests", "test\ExcelDataReader.Tests\ExcelDataReader.Tests.xproj", "{A90F5580-605E-4DA6-8997-877EB8F7D024}"
