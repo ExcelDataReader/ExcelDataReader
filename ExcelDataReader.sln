@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelDataReader.Net45.Tests
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ExcelDataReader.DataSet", "src\ExcelDataReader.DataSet\ExcelDataReader.DataSet.xproj", "{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "TestApp", "src\TestApp\TestApp.xproj", "{BCE486DF-3DA2-42A2-BF38-376B17CEF434}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCE486DF-3DA2-42A2-BF38-376B17CEF434}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCE486DF-3DA2-42A2-BF38-376B17CEF434}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCE486DF-3DA2-42A2-BF38-376B17CEF434}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCE486DF-3DA2-42A2-BF38-376B17CEF434}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
