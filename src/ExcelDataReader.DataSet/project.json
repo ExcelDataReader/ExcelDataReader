@@ -15,6 +15,9 @@
   "dependencies" : {
     "ExcelDataReader" : "3.0.0.0-dev"
   },
+  "buildOptions": {
+    "keyFile": "ExcelDataReader.snk"
+  },
   "frameworks": {
     "net20": {
       "frameworkAssemblies": {

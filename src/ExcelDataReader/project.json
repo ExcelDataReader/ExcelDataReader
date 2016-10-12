@@ -15,6 +15,7 @@
   "frameworks": {
     "net20": {
       "buildOptions": {
+        "keyFile": "ExcelDataReader.snk",
         "define": [
           "LEGACY"
         ]
@@ -28,6 +29,7 @@
     },
     "net45": {
       "buildOptions": {
+        "keyFile": "ExcelDataReader.snk"
       },
       "frameworkAssemblies": {
         "System.Xml": "4.0.0.0",
