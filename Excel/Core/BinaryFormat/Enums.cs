@@ -21,7 +21,8 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 		FAT_EndOfChain = 0xFFFFFFFE,
 		FAT_FreeSpace = 0xFFFFFFFF,
 		FAT_FatSector = 0xFFFFFFFD,
-		FAT_DifSector = 0xFFFFFFFC
+		FAT_DifSector = 0xFFFFFFFC,
+		FAT_MaxRegSector = 0xFFFFFFFA
 	}
 
 	internal enum BIFFTYPE : ushort
