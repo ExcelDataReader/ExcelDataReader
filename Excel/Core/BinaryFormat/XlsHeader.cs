@@ -253,7 +253,7 @@ namespace ExcelDataReader.Portable.Core.BinaryFormat
 							break;
 						if ((difCount--) > 1)
 							difSector = value;
-						else
+						else if (value <= (uint)FATMARKERS.FAT_MaxRegSector)
 							sectors.Add(value);
 					}
 				}

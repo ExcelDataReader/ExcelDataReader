@@ -77,6 +77,22 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual("visible", dataset.Tables[1].ExtendedProperties["visiblestate"]);
             Assert.AreEqual("veryhidden", dataset.Tables[2].ExtendedProperties["visiblestate"]);
         }
+
+        [TestMethod]
+        public void GitIssue_184_ArgumentOutOfRangeException()
+        {
+            // The issue is only reproduced using a MemoryStream, so we can't use a FileStream directly
+            var stream = new MemoryStream(File.ReadAllBytes(Helper.GetTestWorkbookPath("Test_Git_Issue_184")));
+            var excelReader = ExcelReaderFactory.CreateBinaryReader(stream, true);
+
+            var ds = excelReader.AsDataSet(true);
+            Assert.IsNotNull(ds);
+            Assert.AreEqual(12, ds.Tables.Count, "Tables.Count");
+
+            var expectedRowCounts = new[] {1592, 5119, 5099, 4842, 5099, 5099, 4842, 5099, 5099, 5099, 5099, 6872};
+            for (int i=0; i<ds.Tables.Count; i++)
+                Assert.AreEqual(expectedRowCounts[i], ds.Tables[i].Rows.Count, "Tables[{0}].Rows.Count", i);
+        }
         
         [TestMethod]
         public void AsDataSet_Test()
