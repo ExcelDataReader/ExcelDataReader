@@ -57,6 +57,7 @@ namespace ExcelDataReader.Tests
 			{ "Test_Excel_OpenOffice", "Test_Excel_OpenOffice.xls" },
 			{ "Test_Git_Issue_70", "Test_git_issue_70_ExcelBinaryReader_tryConvertOADateTime _convert_dates.xls" },
             { "Test_git_issue_45", "Test_git_issue_45.xls" },
+            { "Test_Git_Issue_51", "Test_git_issue_51.xls" },
 
 			{ "xTestOpenXml", "TestOpenXml.xlsx" },
 			{ "xTest10x10", "Test10x10.xlsx" },
