@@ -71,7 +71,22 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual("visible", dataset.Tables[1].ExtendedProperties["visiblestate"]);
             Assert.AreEqual("veryhidden", dataset.Tables[2].ExtendedProperties["visiblestate"]);
         }
-        
+
+        [TestMethod]
+        public void GitIssue_45()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_45")))
+            {
+                do
+                {
+                    while (reader.Read())
+                    {
+                    }
+                }
+                while (reader.NextResult());
+            }
+        }
+
         [TestMethod]
         public void AsDataSet_Test()
         {
