@@ -2,13 +2,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Text;
 using System.Xml;
 using System.Globalization;
 using ExcelDataReader.Core;
 using ExcelDataReader.Core.OpenXmlFormat;
-using ExcelDataReader.Data;
 
 namespace Excel
 {
@@ -866,7 +866,13 @@ namespace Excel
 			get { throw new NotSupportedException(); }
 		}
 
-		#endregion
+	    /// <inheritdoc />
+	    public DataTable GetSchemaTable()
+	    {
+	        throw new NotSupportedException();
+	    }
+
+	    #endregion
 
 
 	}

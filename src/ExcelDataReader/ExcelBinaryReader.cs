@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Text;
 using ExcelDataReader.Core;
 using ExcelDataReader.Core.BinaryFormat;
-using ExcelDataReader.Data;
 using ExcelDataReader.Exceptions;
 using ExcelDataReader.Log;
 using ExcelDataReader.Misc;
@@ -1156,6 +1156,18 @@ namespace Excel
 	    public Encoding DefaultEncoding
 	    {
 	        get { return Encoding.UTF8; }
+	    }
+
+	    /// <inheritdoc />
+	    public IDataReader GetData(int i)
+	    {
+	        throw new NotSupportedException();
+	    }
+
+	    /// <inheritdoc />
+	    public DataTable GetSchemaTable()
+	    {
+	        throw new NotSupportedException();
 	    }
 
 	    #endregion

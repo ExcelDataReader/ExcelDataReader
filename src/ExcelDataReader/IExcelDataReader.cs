@@ -1,6 +1,6 @@
+using System.Data;
 using System.IO;
 using System.Text;
-using ExcelDataReader.Data;
 
 namespace Excel
 {
