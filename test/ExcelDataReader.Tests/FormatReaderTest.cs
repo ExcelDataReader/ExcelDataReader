@@ -9,7 +9,7 @@ using TestMethod = NUnit.Framework.TestAttribute;
 namespace ExcelDataReader.Tests
 {
 	[TestClass]
-	class FormatReaderTest
+	public class FormatReaderTest
 	{
 		[TestMethod]
 		public void Test_IsDateFormatString()
@@ -33,6 +33,7 @@ namespace ExcelDataReader.Tests
 			Assert.IsFalse(new FormatReader{FormatString = "0\"h\"" }.IsDateFormatString());
 			Assert.IsFalse(new FormatReader{FormatString = "0%" }.IsDateFormatString());
 			Assert.IsFalse(new FormatReader{FormatString = "General" }.IsDateFormatString());
+            Assert.IsFalse(new FormatReader{FormatString = @"_-* #,##0\ _P_t_s_-;\-* #,##0\ _P_t_s_-;_-* "" - ""??\ _P_t_s_-;_-@_- " }.IsDateFormatString());
 		}
 	}
 }
