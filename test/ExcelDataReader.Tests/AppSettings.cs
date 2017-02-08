@@ -63,6 +63,7 @@ namespace ExcelDataReader.Tests
             { "Test_Git_Issue_145", "Test_git_issue_145.xls" },
             { "Test_git_issue_152", "Test_git_issue_152.xls" },
             { "Test_git_issue_158", "Test_git_issue_158.xls" },
+            { "Test_git_issue_173", "Test_git_issue_173.xls" },
 
 			{ "xTestOpenXml", "TestOpenXml.xlsx" },
 			{ "xTest10x10", "Test10x10.xlsx" },

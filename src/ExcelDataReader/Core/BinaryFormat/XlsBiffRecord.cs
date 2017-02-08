@@ -166,27 +166,9 @@ namespace ExcelDataReader.Core.BinaryFormat
 			}
 		}
 
-		public bool IsCell
+		public virtual bool IsCell
 		{
-			get
-			{//FORMULA / Blank / MulBlank / RK / MulRk / BoolErr / Number / LabelSst
-				var isCell = false;
-				switch ((BIFFRECORDTYPE) ID)
-				{
-					case BIFFRECORDTYPE.FORMULA:
-					case BIFFRECORDTYPE.BLANK:
-					case BIFFRECORDTYPE.MULBLANK:
-					case BIFFRECORDTYPE.RK:
-					case BIFFRECORDTYPE.MULRK:
-					case BIFFRECORDTYPE.BOOLERR:
-					case BIFFRECORDTYPE.NUMBER:
-					case BIFFRECORDTYPE.LABELSST:
-						isCell = true;
-						break;
-				}
-
-				return isCell;
-			}
+		    get { return false; }
 		}
 
 		public byte ReadByte(int offset)

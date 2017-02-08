@@ -108,34 +108,27 @@ namespace Excel
 
 		private int findFirstDataCellOffset(int startOffset)
 		{
-			//seek to the first dbcell record
-			var record = m_stream.ReadAt(startOffset);
-			while (!(record is XlsBiffDbCell))
-			{
-				if (m_stream.Position >= m_stream.Size)
-					return -1;
+			// Check that the index actually points to the db cell record
+		    XlsBiffDbCell dbCell = m_stream.ReadAt(startOffset) as XlsBiffDbCell;
+		    if (dbCell == null)
+		        return -1;
 
-				if (record is XlsBiffEOF)
-					return -1;
+		    XlsBiffRow row = m_stream.ReadAt(dbCell.RowAddress) as XlsBiffRow;
+		    if (row == null)
+		        return -1;
 
-				record = m_stream.Read();
-			}
-
-			XlsBiffDbCell startCell = (XlsBiffDbCell)record;
-			XlsBiffRow row = null;
-
-			int offs = startCell.RowAddress;
-
+		    m_stream.Seek(dbCell.RowAddress, SeekOrigin.Begin);
+		    XlsBiffRecord record;
 			do
 			{
-				row = m_stream.ReadAt(offs) as XlsBiffRow;
-				if (row == null) break;
+			    record = m_stream.Read();
+                if (record == null)
+                    return -1;
+                if (record is XlsBiffEOF)
+                    return -1;
+            } while (record is XlsBiffRow);
 
-				offs += row.Size;
-
-			} while (null != row);
-
-			return offs;
+			return record.Offset;
 		}
 
 		private void readWorkBookGlobals()
@@ -580,17 +573,14 @@ namespace Excel
 
 			if (rowRecord == null)
 				return false;
-			
-			if (rowRecord.RowIndex < m_depth)
+
+            m_stream.Seek(rowRecord.Offset + rowRecord.Size, SeekOrigin.Begin);
+            if (rowRecord.RowIndex < m_depth)
 			{
-				m_stream.Seek(rowRecord.Offset + rowRecord.Size, SeekOrigin.Begin);
 				do
 				{
-					if (m_stream.Position >= m_stream.Size)
-						return false;
-
 					var record = m_stream.Read();
-					if (record is XlsBiffEOF)
+					if (record == null || record is XlsBiffEOF)
 						return false;
 
 					rowRecord = record as XlsBiffRow;
@@ -605,40 +595,29 @@ namespace Excel
 			XlsBiffBlankCell cell = null;
 			do
 			{
-				if (m_stream.Position >= m_stream.Size)
-					return false;
-
 				var record = m_stream.Read();
-				if (record is XlsBiffEOF)
+				if (record == null || record is XlsBiffEOF)
 					return false;
 
-				if (record.IsCell)
+				var candidateCell = record as XlsBiffBlankCell;
+				if (candidateCell != null)
 				{
-					var candidateCell = record as XlsBiffBlankCell;
-					if (candidateCell != null)
-					{
-						if (candidateCell.RowIndex == m_currentRowRecord.RowIndex)
-							cell = candidateCell;
-					}
+				    if (candidateCell.RowIndex > m_currentRowRecord.RowIndex)
+				    {
+                        m_cellsValues = new object[m_maxCol];
+				        m_depth++;
+				        return true;
+				    }
+
+				    if (candidateCell.RowIndex == m_currentRowRecord.RowIndex)
+						cell = candidateCell;
 				}
 			} while (cell == null);
 
 			m_cellOffset = cell.Offset;
 			bool success = readWorkSheetRow();
 
-
-			//read last row
-			//if (!m_canRead && m_depth > 0) m_canRead = true;
-
-			//if (!m_canRead && m_dbCellAddrsIndex < (m_dbCellAddrs.Length - 1))
-			//{
-			//	m_dbCellAddrsIndex++;
-			//	m_cellOffset = findFirstDataCellOffset((int)m_dbCellAddrs[m_dbCellAddrsIndex]);
-
-			//	m_canRead = readWorkSheetRow();
-			//}
-
-			return success;
+            return success;
 		}
 
         private bool moveToNextRecordNoIndexOrRow()
@@ -703,11 +682,18 @@ namespace Excel
 				m_cellOffset = findFirstDataCellOffset((int)m_dbCellAddrs[m_dbCellAddrsIndex]);
 				if (m_cellOffset < 0)
 				{
-					fail("Badly formed binary file. Has INDEX but no DBCELL");
-					return;
+				    if (m_currentRowRecord == null)
+				    {
+				        fail("Badly formed binary file. Has INDEX but no DBCELL.");
+				        return;
+				    }
+
+                    LogManager.Log(this).Debug("Badly formed binary file. Has INDEX but no DBCELL.");
+                    m_noIndex = true;
+				    m_dbCellAddrs = null;
 				}
-					
-			}
+
+            }
 			
 		}
 

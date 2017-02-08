@@ -1187,5 +1187,15 @@ namespace ExcelDataReader.Tests
 
             Assert.AreEqual(new DateTime(2016, 09, 10), date);
         }
+
+        [TestMethod]
+        public void GitIssue_173()
+        {
+            var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_173"), true, ReadOption.Loose);
+
+            var ds = excelReader.AsDataSet(true);
+            Assert.IsNotNull(ds);
+            Assert.AreEqual(40, ds.Tables.Count);
+        }
     }
 }

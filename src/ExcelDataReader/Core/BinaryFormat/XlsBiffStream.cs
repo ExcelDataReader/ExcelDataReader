@@ -91,7 +91,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             //add lock(this) as this is equivalent to [MethodImpl(MethodImplOptions.Synchronized)] on the method
             lock (this)
             {
-                if ((uint)m_offset >= bytes.Length)
+                // Minimum record size is 4
+                if ((uint)m_offset + 4 >= bytes.Length)
                     return null;
 
                 XlsBiffRecord rec = XlsBiffRecord.GetRecord(bytes, (uint)m_offset, reader);

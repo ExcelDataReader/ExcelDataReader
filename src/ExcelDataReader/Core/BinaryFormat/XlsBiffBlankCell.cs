@@ -36,5 +36,11 @@ namespace ExcelDataReader.Core.BinaryFormat
 		{
 			get { return base.ReadUInt16(0x4); }
 		}
+
+	    /// <inheritdoc />
+	    public override bool IsCell
+        {
+	        get { return true; }
+        }
 	}
 }
