@@ -27,7 +27,7 @@ namespace ExcelDataReader.Tests
 #endif
 		}
 
-		[TestMethod]
+        [TestMethod]
         public void GitIssue_70_ExcelBinaryReader_tryConvertOADateTime_forumla()
         {
             var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Git_Issue_70"), true);
@@ -1173,6 +1173,19 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual("והצס", dataset.Tables[0].Rows[0][0]);
 
             excelReader.Close();
+        }
+
+        [TestMethod]
+        public void GitIssue_158()
+        {
+            var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_158"), true);
+
+            var ds = excelReader.AsDataSet(true);
+            Assert.IsNotNull(ds);
+
+            var date = ds.Tables[0].Rows[3].ItemArray[2];
+
+            Assert.AreEqual(new DateTime(2016, 09, 10), date);
         }
     }
 }
