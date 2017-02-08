@@ -292,6 +292,8 @@ namespace Excel
 			int rows = 0;
 			int cols = 0;
 
+		    bool foundDimension = false;
+
 			_namespaceUri = null;
 		    int biggestColumn = 0; //used when no col elements and no dimension
 			while (_xmlReader.Read())
@@ -306,8 +308,14 @@ namespace Excel
 				{
 					string dimValue = _xmlReader.GetAttribute(XlsxWorksheet.A_ref);
 
-					sheet.Dimension = new XlsxDimension(dimValue);
-					break;
+                    var dimension = new XlsxDimension(dimValue);
+				    if (dimension.IsRange)
+				    {
+				        sheet.Dimension = dimension;
+				        foundDimension = true;
+
+                        break;
+				    }
 				}
 
                 //removed: Do not use col to work out number of columns as this is really for defining formatting, so may not contain all columns
@@ -319,7 +327,7 @@ namespace Excel
 
                 //check cells so we can find size of sheet if can't work it out from dimension or col elements (dimension should have been set before the cells if it was available)
                 //ditto for cols
-                if (sheet.Dimension == null && cols == 0 && _xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_c)
+                if (cols == 0 && _xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_c)
                 {
                     var refAttribute = _xmlReader.GetAttribute(XlsxWorksheet.A_r);
 
@@ -335,7 +343,7 @@ namespace Excel
 
 
 			//if we didn't get a dimension element then use the calculated rows/cols to create it
-			if (sheet.Dimension == null)
+			if (!foundDimension)
 			{
                 if (cols == 0)
                     cols = biggestColumn;
