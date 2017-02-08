@@ -28,13 +28,13 @@ namespace Excel
         private Encoding m_encoding;
 		private bool m_isValid;
 		private bool m_isClosed;
-        private readonly Encoding m_Default_Encoding = Encoding.Unicode;
+        private readonly Encoding m_defaultEncoding = Encoding.Unicode;
 		private string m_exceptionMessage;
 		private string[] m_cellsNames;
 		private object[] m_cellsValues;
 		private uint[] m_dbCellAddrs;
 		private int m_dbCellAddrsIndex;
-		private int m_SheetIndex;
+		private int m_sheetIndex;
 		private int m_depth;
 		private int m_cellOffset;
 		private int m_maxCol;
@@ -42,25 +42,25 @@ namespace Excel
 		private bool m_noIndex;
 		private XlsBiffRow m_currentRowRecord;
         private XlsBiffBlankCell m_currentCellRecord;
-        private ReadOption readOption = ReadOption.Strict;
-		private bool m_IsFirstRead;
+        private ReadOption m_readOption = ReadOption.Strict;
+		private bool m_isFirstRead;
         private bool m_noRow;
 
 	    private const string WORKBOOK = "Workbook";
 		private const string BOOK = "Book";
         private const string COLUMN = "Column";
 
-	    private bool convertOaDate = true;
+	    private bool m_convertOaDate = true;
 
 	    #endregion
 
 		public ExcelBinaryReader()
 		{
-		    m_encoding = m_Default_Encoding;
+		    m_encoding = m_defaultEncoding;
 			m_version = 0x0600;
 			m_isValid = true;
-			m_SheetIndex = -1;
-			m_IsFirstRead = true;
+			m_sheetIndex = -1;
+			m_isFirstRead = true;
 		}
 
 		#region IDisposable Members
@@ -87,7 +87,7 @@ namespace Excel
 
 		#region Private methods
 
-		private int findFirstDataCellOffset(int startOffset)
+		private int FindFirstDataCellOffset(int startOffset)
 		{
 			// Check that the index actually points to the db cell record
 		    XlsBiffDbCell dbCell = m_stream.ReadAt(startOffset) as XlsBiffDbCell;
@@ -112,7 +112,7 @@ namespace Excel
 			return record.Offset;
 		}
 
-		private void readWorkBookGlobals()
+		private void ReadWorkBookGlobals()
 		{
 			//Read Header
 			try
@@ -121,12 +121,12 @@ namespace Excel
 			}
 			catch (HeaderException ex)
 			{
-				fail(ex.Message);
+				Fail(ex.Message);
 				return;
 			}
 			catch (FormatException ex)
 			{
-				fail(ex.Message);
+				Fail(ex.Message);
 				return;
 			}
 
@@ -134,10 +134,10 @@ namespace Excel
 			XlsDirectoryEntry workbookEntry = dir.FindEntry(WORKBOOK) ?? dir.FindEntry(BOOK);
 
 			if (workbookEntry == null)
-			{ fail(Errors.ErrorStreamWorkbookNotFound); return; }
+			{ Fail(Errors.ErrorStreamWorkbookNotFound); return; }
 
 			if (workbookEntry.EntryType != STGTY.STGTY_STREAM)
-			{ fail(Errors.ErrorWorkbookIsNotStream); return; }
+			{ Fail(Errors.ErrorWorkbookIsNotStream); return; }
 
 			m_stream = new XlsBiffStream(m_hdr, workbookEntry.StreamFirstSector, workbookEntry.IsEntryMiniStream, dir, this);
 
@@ -149,7 +149,7 @@ namespace Excel
 			XlsBiffBOF bof = rec as XlsBiffBOF;
 
 			if (bof == null || bof.Type != BIFFTYPE.WorkbookGlobals)
-			{ fail(Errors.ErrorWorkbookGlobalsInvalidData); return; }
+			{ Fail(Errors.ErrorWorkbookGlobalsInvalidData); return; }
 
 			bool sst = false;
 
@@ -168,7 +168,7 @@ namespace Excel
 
 						if (sheet.Type != XlsBiffBoundSheet.SheetType.Worksheet) break;
 
-						sheet.IsV8 = isV8();
+						sheet.IsV8 = IsV8();
 						//sheet.UseEncoding = Encoding;
 						LogManager.Log(this).Debug("BOUNDSHEET IsV8={0}", sheet.IsV8);
 
@@ -256,7 +256,7 @@ namespace Excel
 			}
 		}
 
-        private bool readWorkSheetGlobals(XlsWorksheet sheet, out XlsBiffIndex idx, out XlsBiffRow row, out XlsBiffBlankCell cell)
+        private bool ReadWorkSheetGlobals(XlsWorksheet sheet, out XlsBiffIndex idx, out XlsBiffRow row, out XlsBiffBlankCell cell)
         {
 			idx = null;
 			row = null;
@@ -289,11 +289,9 @@ namespace Excel
 
 			if (idx != null)
 			{
-				idx.IsV8 = isV8();
+				idx.IsV8 = IsV8();
 				LogManager.Log(this).Debug("INDEX IsV8={0}", idx.IsV8);
 			}
-				
-
 
 			XlsBiffRecord trec;
 			XlsBiffDimensions dims = null;
@@ -307,9 +305,9 @@ namespace Excel
 					break;
 				}
 
-			} while (trec != null && trec.ID != BIFFRECORDTYPE.ROW);
+			} while (trec.ID != BIFFRECORDTYPE.ROW);
 
-			//if we are already on row record then set that as the row, otherwise step forward till we get to a row record
+			// If we are already on row record then set that as the row, otherwise step forward till we get to a row record
 			if (trec.ID == BIFFRECORDTYPE.ROW)
 				row = (XlsBiffRow)trec;
 
@@ -342,7 +340,7 @@ namespace Excel
 			row = rowRecord;
 
             if (dims != null) {
-                dims.IsV8 = isV8();
+                dims.IsV8 = IsV8();
 				LogManager.Log(this).Debug("dims IsV8={0}", dims.IsV8);
                 m_maxCol = dims.LastColumn - 1;
 
@@ -375,7 +373,7 @@ namespace Excel
 			return true;
 		}
 
-		private void DumpBiffRecords()
+		/*private void DumpBiffRecords()
 		{
 			XlsBiffRecord rec = null;
 			var startPos = m_stream.Position;
@@ -387,10 +385,10 @@ namespace Excel
 			} while (rec != null && m_stream.Position < m_stream.Size);
 
 			m_stream.Seek(startPos, SeekOrigin.Begin);
-		}
+		}*/
 
 		/// <returns>true if row was read successfully</returns>
-		private bool readWorkSheetRow()
+		private bool ReadWorkSheetRow()
 		{
 			m_cellsValues = new object[m_maxCol];
 
@@ -412,7 +410,7 @@ namespace Excel
 				if ((null == cell) || (cell.ColumnIndex >= m_maxCol)) continue;
 				if (cell.RowIndex != m_depth) { m_cellOffset -= rec.Size; break; };
 
-				pushCellValue(cell);
+				PushCellValue(cell);
 			    foundValue = true;
 			}
 
@@ -420,13 +418,11 @@ namespace Excel
 
 			return foundValue || m_cellOffset <= m_stream.Size;
 		}
-
-		
-		
-		private void pushCellValue(XlsBiffBlankCell cell)
+        
+		private void PushCellValue(XlsBiffBlankCell cell)
 		{
-			double _dValue;
-			LogManager.Log(this).Debug("pushCellValue {0}", cell.ID);
+			double doubleValue;
+			LogManager.Log(this).Debug("PushCellValue {0}", cell.ID);
 			switch (cell.ID)
 			{
                 case BIFFRECORDTYPE.BOOLERR:
@@ -444,12 +440,12 @@ namespace Excel
 				case BIFFRECORDTYPE.NUMBER:
 				case BIFFRECORDTYPE.NUMBER_OLD:
 
-					_dValue = ((XlsBiffNumberCell)cell).Value;
+					doubleValue = ((XlsBiffNumberCell)cell).Value;
 
 					m_cellsValues[cell.ColumnIndex] = !ConvertOaDate ?
-						_dValue : tryConvertOADateTime(_dValue, cell.XFormat);
+						doubleValue : TryConvertOADateTime(doubleValue, cell.XFormat);
 
-					LogManager.Log(this).Debug("VALUE: {0}", _dValue);
+					LogManager.Log(this).Debug("VALUE: {0}", doubleValue);
 					break;
 				case BIFFRECORDTYPE.LABEL:
 				case BIFFRECORDTYPE.LABEL_OLD:
@@ -466,21 +462,21 @@ namespace Excel
 					break;
 				case BIFFRECORDTYPE.RK:
 
-					_dValue = ((XlsBiffRKCell)cell).Value;
+					doubleValue = ((XlsBiffRKCell)cell).Value;
 
 					m_cellsValues[cell.ColumnIndex] = !ConvertOaDate ?
-						_dValue : tryConvertOADateTime(_dValue, cell.XFormat);
+						doubleValue : TryConvertOADateTime(doubleValue, cell.XFormat);
 
-					LogManager.Log(this).Debug("VALUE: {0}", _dValue);
+					LogManager.Log(this).Debug("VALUE: {0}", doubleValue);
 					break;
 				case BIFFRECORDTYPE.MULRK:
 
-					XlsBiffMulRKCell _rkCell = (XlsBiffMulRKCell)cell;
-					for (ushort j = cell.ColumnIndex; j <= _rkCell.LastColumnIndex; j++)
+					XlsBiffMulRKCell rkCell = (XlsBiffMulRKCell)cell;
+					for (ushort j = cell.ColumnIndex; j <= rkCell.LastColumnIndex; j++)
 					{
-                        _dValue = _rkCell.GetValue(j);
-						LogManager.Log(this).Debug("VALUE[{1}]: {0}", _dValue, j);
-                        m_cellsValues[j] = !ConvertOaDate ? _dValue : tryConvertOADateTime(_dValue, _rkCell.GetXF(j));
+                        doubleValue = rkCell.GetValue(j);
+						LogManager.Log(this).Debug("VALUE[{1}]: {0}", doubleValue, j);
+                        m_cellsValues[j] = !ConvertOaDate ? doubleValue : TryConvertOADateTime(doubleValue, rkCell.GetXF(j));
 					}
 
 					break;
@@ -493,26 +489,24 @@ namespace Excel
 				case BIFFRECORDTYPE.FORMULA:
 				case BIFFRECORDTYPE.FORMULA_OLD:
 
-					object _oValue = ((XlsBiffFormulaCell)cell).Value;
+					object objectValue = ((XlsBiffFormulaCell)cell).Value;
 
-					if (null != _oValue && _oValue is FORMULAERROR)
+					if (null != objectValue && objectValue is FORMULAERROR)
 					{
-						_oValue = null;
+						objectValue = null;
 					}
 					else
 					{
 						m_cellsValues[cell.ColumnIndex] = !ConvertOaDate ?
-							_oValue : tryConvertOADateTime(_oValue, (ushort)(cell.XFormat));//date time offset
+							objectValue : TryConvertOADateTime(objectValue, cell.XFormat);//date time offset
 					}
 
-					LogManager.Log(this).Debug("VALUE: {0}", _oValue);
-					break;
-				default:
+					LogManager.Log(this).Debug("VALUE: {0}", objectValue);
 					break;
 			}
 		}
 
-		private bool moveToNextRecord()
+		private bool MoveToNextRecord()
 		{
 			//if sheet has no index
 			if (m_noIndex)
@@ -520,11 +514,11 @@ namespace Excel
                 if (m_noRow)
                 {
                     LogManager.Log(this).Debug("No index and no row");
-                    return moveToNextRecordNoIndexOrRow();
+                    return MoveToNextRecordNoIndexOrRow();
                 }
 
                 LogManager.Log(this).Debug("No index");
-				return moveToNextRecordNoIndex();
+				return MoveToNextRecordNoIndex();
 			}
 
 			//if sheet has index
@@ -539,15 +533,15 @@ namespace Excel
                 m_dbCellAddrsIndex++;
 		        if (m_dbCellAddrsIndex >= m_dbCellAddrs.Length)
 		            return false;
-                m_cellOffset = findFirstDataCellOffset((int)m_dbCellAddrs[m_dbCellAddrsIndex]);
+                m_cellOffset = FindFirstDataCellOffset((int)m_dbCellAddrs[m_dbCellAddrsIndex]);
                 if (m_cellOffset < 0)
                     return false;
             }
 
-		    return readWorkSheetRow();
+		    return ReadWorkSheetRow();
 		}
 
-		private bool moveToNextRecordNoIndex()
+		private bool MoveToNextRecordNoIndex()
 		{
 			//seek from current row record to start of cell data where that cell relates to the next row record
 			XlsBiffRow rowRecord = m_currentRowRecord;
@@ -596,12 +590,12 @@ namespace Excel
 			} while (cell == null);
 
 			m_cellOffset = cell.Offset;
-			bool success = readWorkSheetRow();
+			bool success = ReadWorkSheetRow();
 
             return success;
 		}
 
-        private bool moveToNextRecordNoIndexOrRow()
+        private bool MoveToNextRecordNoIndexOrRow()
         {
             //seek from current row record to start of cell data where that cell relates to the next row record
             XlsBiffBlankCell currentCell = m_currentCellRecord;
@@ -628,26 +622,26 @@ namespace Excel
             m_currentCellRecord = currentCell;
 
             m_cellOffset = currentCell.Offset;
-            return readWorkSheetRow();
+            return ReadWorkSheetRow();
         }
 
-        private void initializeSheetRead()
+        private void InitializeSheetRead()
 		{
-			if (m_SheetIndex == ResultsCount) return;
+			if (m_sheetIndex == ResultsCount) return;
 
 			m_dbCellAddrs = null;
 
-			m_IsFirstRead = false;
+			m_isFirstRead = false;
 
-			if (m_SheetIndex == -1) m_SheetIndex = 0;
+			if (m_sheetIndex == -1) m_sheetIndex = 0;
 
 			XlsBiffIndex idx;
 
-			if (!readWorkSheetGlobals(m_sheets[m_SheetIndex], out idx, out m_currentRowRecord, out m_currentCellRecord))
+			if (!ReadWorkSheetGlobals(m_sheets[m_sheetIndex], out idx, out m_currentRowRecord, out m_currentCellRecord))
 			{
 				//read next sheet
-				m_SheetIndex++;
-				initializeSheetRead();
+				m_sheetIndex++;
+				InitializeSheetRead();
 				return;
 			};
 
@@ -660,12 +654,12 @@ namespace Excel
 			{
 				m_dbCellAddrs = idx.DbCellAddresses;
 				m_dbCellAddrsIndex = 0;
-				m_cellOffset = findFirstDataCellOffset((int)m_dbCellAddrs[m_dbCellAddrsIndex]);
+				m_cellOffset = FindFirstDataCellOffset((int)m_dbCellAddrs[m_dbCellAddrsIndex]);
 				if (m_cellOffset < 0)
 				{
 				    if (m_currentRowRecord == null)
 				    {
-				        fail("Badly formed binary file. Has INDEX but no DBCELL.");
+				        Fail("Badly formed binary file. Has INDEX but no DBCELL.");
 				        return;
 				    }
 
@@ -679,29 +673,22 @@ namespace Excel
 		}
 
 
-		private void fail(string message)
+		private void Fail(string message)
 		{
 			m_exceptionMessage = message;
 			m_isValid = false;
 
-			m_file.Dispose();
-			m_isClosed = true;
-
-			m_sheets = null;
-			m_stream = null;
-			m_globals = null;
-			m_encoding = null;
-			m_hdr = null;
+		    Close();
 		}
 
-		private  object tryConvertOADateTime(double value, ushort XFormat)
+		private object TryConvertOADateTime(double value, ushort xFormat)
 		{
             ushort format;
-            if (XFormat < m_globals.ExtendedFormats.Count)
+            if (xFormat < m_globals.ExtendedFormats.Count)
             {
                 // If a cell XF record does not contain explicit attributes in a group (if the attribute group flag is not set), it repeats the attributes of its style XF record. 
 
-                var rec = m_globals.ExtendedFormats[XFormat];
+                var rec = m_globals.ExtendedFormats[xFormat];
                 switch (rec.ID)
                 {
                     case BIFFRECORDTYPE.XF_V2:
@@ -721,10 +708,9 @@ namespace Excel
             }
             else
             {
-                format = XFormat;
+                format = xFormat;
             }
-
-
+            
             switch (format)
             {
                 // numeric built in formats
@@ -777,7 +763,7 @@ namespace Excel
                     if (m_globals.Formats.TryGetValue(format, out fmtString) )
                     {
                         var fmt = fmtString.Value;
-                    	var formatReader = new FormatReader() {FormatString = fmt};
+                    	var formatReader = new FormatReader {FormatString = fmt};
 						if (formatReader.IsDateFormatString())
                             return Helpers.ConvertFromOATime(value); 
 
@@ -791,21 +777,21 @@ namespace Excel
 		    
 		}
 
-	    private  object tryConvertOADateTime(object value, ushort XFormat)
+	    private object TryConvertOADateTime(object value, ushort xFormat)
 	    {
-	        double _dValue;
+	        double doubleValue;
 
 	        if (value == null)
 	            return null;
 
-			if (double.TryParse(value.ToString(), out _dValue))
-				return tryConvertOADateTime(_dValue, XFormat);
+			if (double.TryParse(value.ToString(), out doubleValue))
+				return TryConvertOADateTime(doubleValue, xFormat);
 
 			return value;
 
 	    }
 
-	    public bool isV8()
+	    public bool IsV8()
 		{
 			return m_version >= 0x600;
 		}
@@ -818,15 +804,15 @@ namespace Excel
 		{
 			m_file = fileStream;
 
-            readWorkBookGlobals();
+            ReadWorkBookGlobals();
 
             // set the sheet index to the index of the first sheet.. this is so that properties such as Name which use m_sheetIndex reflect the first sheet in the file without having to perform a read() operation
-            m_SheetIndex = 0;
+            m_sheetIndex = 0;
 		}
 
 		public void Reset() {
-			m_SheetIndex = 0;
-			m_IsFirstRead = true;
+			m_sheetIndex = 0;
+			m_isFirstRead = true;
 		}
 
 		public string ExceptionMessage
@@ -839,9 +825,9 @@ namespace Excel
 			get
 			{
 				if (null != m_sheets && m_sheets.Count > 0)
-					return m_sheets[m_SheetIndex].Name;
-				else
-					return null;
+					return m_sheets[m_sheetIndex].Name;
+				
+                return null;
 			}
 		}
 
@@ -850,9 +836,9 @@ namespace Excel
             get
             {
                 if (null != m_sheets && m_sheets.Count > 0)
-                    return m_sheets[m_SheetIndex].VisibleState;
-                else
-                    return null;
+                    return m_sheets[m_sheetIndex].VisibleState;
+
+                return null;
             }
         }
 
@@ -905,11 +891,11 @@ namespace Excel
 		public bool NextResult()
 		{
 			if (!m_isValid) return false;
-			if (m_SheetIndex >= (this.ResultsCount - 1)) return false;
+			if (m_sheetIndex >= ResultsCount - 1) return false;
 
-			m_SheetIndex++;
+			m_sheetIndex++;
 
-			m_IsFirstRead = true;
+			m_isFirstRead = true;
 
 			return true;
 		}
@@ -918,17 +904,17 @@ namespace Excel
 		{
 			if (!m_isValid) return false;
 
-			if (m_IsFirstRead) {
-				initializeSheetRead();
+			if (m_isFirstRead) {
+				InitializeSheetRead();
 				if (!m_isValid) return false;
 
 				if (IsFirstRowAsColumnNames) {
-					if (moveToNextRecord()) {
+					if (MoveToNextRecord()) {
 						m_cellsNames = new string[m_cellsValues.Length];
 						for (var i = 0; i < m_cellsValues.Length; i++) {
 							var value = m_cellsValues[i]?.ToString();
-							if (value != null && value.Length > 0) { 
-								m_cellsNames[i] = value.ToString();
+							if (!string.IsNullOrEmpty(value)) { 
+								m_cellsNames[i] = value;
 							}
 						}
 					} else {
@@ -939,7 +925,7 @@ namespace Excel
 				}
 			}
 
-			return moveToNextRecord();
+			return MoveToNextRecord();
 		}
 
 		public int FieldCount
@@ -1051,12 +1037,6 @@ namespace Excel
 
 		#region  Not Supported IDataReader Members
 
-
-        //public DataTable GetSchemaTable()
-        //{
-        //    throw new NotSupportedException();
-        //}
-
 		public int RecordsAffected
 		{
 			get { throw new NotSupportedException(); }
@@ -1086,11 +1066,6 @@ namespace Excel
 		{
 			throw new NotSupportedException();
 		}
-
-        //public IDataReader GetData(int i)
-        //{
-        //    throw new NotSupportedException();
-        //}
 
 		public string GetDataTypeName(int i)
 		{
@@ -1139,14 +1114,14 @@ namespace Excel
 
 	    public bool ConvertOaDate
 	    {
-	        get { return convertOaDate; }
-	        set { convertOaDate = value; }
+	        get { return m_convertOaDate; }
+	        set { m_convertOaDate = value; }
 	    }
 
 	    public ReadOption ReadOption
 		{
-			get { return readOption; }
-            set { readOption = value;  }
+			get { return m_readOption; }
+            set { m_readOption = value;  }
 		}
 
 	    public Encoding Encoding

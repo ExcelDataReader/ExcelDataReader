@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         public static IXlsString CreateXlsString(byte[] bytes, uint offset, ExcelBinaryReader reader)
         {
-            if (reader.isV8())
+            if (reader.IsV8())
                 //return new XlsFormattedUnicodeString(bytes, offset, reader.Encoding);
                 return new XlsFormattedUnicodeString(bytes, offset);
             else
