@@ -170,6 +170,7 @@
     <Compile Include="Core\OpenXmlFormat\XlsxXf.cs" />
     <Compile Include="Core\OpenXmlFormat\XmlReaderExtensions.cs" />
     <Compile Include="Core\ReferenceHelper.cs" />
+    <Compile Include="Core\SheetParameters.cs" />
     <Compile Include="Core\ZipWorker.cs" />
     <Compile Include="Exceptions\BiffRecordException.cs" />
     <Compile Include="Exceptions\HeaderException.cs" />
