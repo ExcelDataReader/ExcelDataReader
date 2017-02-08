@@ -50,8 +50,6 @@ namespace Excel
 		private const string BOOK = "Book";
         private const string COLUMN = "Column";
 
-		private bool disposed;
-
 	    private bool convertOaDate = true;
 
 	    #endregion
@@ -76,25 +74,8 @@ namespace Excel
 
 		private void Dispose(bool disposing)
 		{
-			// Check to see if Dispose has already been called.
-			if (!this.disposed)
-			{
-				if (disposing)
-				{
-                    //if (m_workbookData != null) m_workbookData.Dispose();
-
-					if (m_sheets != null) m_sheets.Clear();
-				}
-
-                //m_workbookData = null;
-				m_sheets = null;
-				m_stream = null;
-				m_globals = null;
-				m_encoding = null;
-				m_hdr = null;
-
-				disposed = true;
-			}
+		    if (disposing)
+		        Close();
 		}
 
 		~ExcelBinaryReader()
@@ -882,8 +863,28 @@ namespace Excel
 
 		public void Close()
 		{
-			m_file.Dispose();
-			m_isClosed = true;
+		    if (m_isClosed)
+		        return;
+
+		    if (m_sheets != null)
+		    {
+		        m_sheets.Clear();
+                m_sheets = null;
+            }
+
+            // m_workbookData = null;
+            m_stream = null;
+            m_globals = null;
+            m_encoding = null;
+            m_hdr = null;
+
+		    if (m_file != null)
+		    {
+		        m_file.Dispose();
+		        m_file = null;
+		    }
+
+		    m_isClosed = true;
 		}
 
 		public int Depth
