@@ -60,8 +60,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 		/// </summary>
 		public bool HasExtString
 		{
-			get { return false; }
-			// ((Flags & FormattedUnicodeStringFlags.HasExtendedString) == FormattedUnicodeStringFlags.HasExtendedString); }
+			get { return ((Flags & FormattedUnicodeStringFlags.HasExtendedString) == FormattedUnicodeStringFlags.HasExtendedString); }
 		}
 
 		/// <summary>

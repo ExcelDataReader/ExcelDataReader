@@ -1136,5 +1136,19 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(2015.0, dataset.Tables[0].Rows[7][0]);
             }
         }
+
+        [TestMethod]
+        public void Test_Git_Issue_145()
+        {
+            IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Git_Issue_145"), ReadOption.Loose);
+
+            excelReader.Read();
+            excelReader.Read();
+            excelReader.Read();
+
+            string value = excelReader.GetString(3);
+
+            Assert.AreEqual("Japanese Government Bonds held by the Bank of Japan", value);
+        }
     }
 }
