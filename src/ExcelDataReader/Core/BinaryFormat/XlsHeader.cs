@@ -168,13 +168,11 @@ namespace ExcelDataReader.Core.BinaryFormat
 		{
 			if (m_minifat != null)
 				return m_minifat;
-
+            
 			//if no minifat then return null
-			if (MiniFatSectorCount == 0 || MiniSectorSize == 0xFFFFFFFE)
+			if (MiniFatSectorCount == 0/* || MiniSectorSize == 0xFFFFFFFE*/)
 				return null;
 
-			uint value;
-			int miniSectorSize = MiniSectorSize;
 			List<uint> sectors = new List<uint>(MiniFatSectorCount);
 
 			//find the sector where the minifat starts
@@ -197,7 +195,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 			//	}
 			//}
 				
-			m_minifat = new XlsFat(this, sectors, this.MiniSectorSize, true, rootDir);
+			m_minifat = new XlsFat(this, sectors, MiniSectorSize, true, rootDir);
 			return m_minifat;
 
 		}

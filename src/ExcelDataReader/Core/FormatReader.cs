@@ -6,11 +6,8 @@ namespace ExcelDataReader.Core
 	{
 		private const char escapeChar = '\\';
         private const char escapeCharacterWidth = '_';
-		public string FormatString { get; set; }
-		public FormatReader()
-		{
-			
-		}
+
+        public string FormatString { get; set; }
 
 		public bool IsDateFormatString()
 		{
@@ -23,7 +20,6 @@ namespace ExcelDataReader.Core
 			var dateChars = new char[] { 'y', 'm', 'd', 's', 'h', 'Y', 'M', 'D', 'S', 'H' };
 			if (FormatString.IndexOfAny(dateChars) >= 0)
 			{
-				var isDate = false;
 				//it is a date candidate
 				foreach (var dateChar in dateChars)
 				{
@@ -33,9 +29,9 @@ namespace ExcelDataReader.Core
 					{
 
 						//could probably do this with regex...
-						if (!IsSurroundedByBracket(dateChar, pos) &&
-								!IsPrecededBySingleCharacterEscape(dateChar, pos) &&
-								!IsSurroundedByQuotes(dateChar, pos))
+						if (!IsSurroundedByBracket(pos) &&
+								!IsPrecededBySingleCharacterEscape(pos) &&
+								!IsSurroundedByQuotes(pos))
 							return true;
 
 						//get next occurance
@@ -48,7 +44,7 @@ namespace ExcelDataReader.Core
 			return false;
 		}
 
-		private bool IsSurroundedByQuotes(char dateChar, int pos)
+		private bool IsSurroundedByQuotes(int pos)
 		{
 			//char was at end then can't be surrounded
 			if (pos == FormatString.Length - 1)
@@ -60,10 +56,9 @@ namespace ExcelDataReader.Core
 			int numBefore = NumberOfUnescapedOccurances('"', FormatString.Substring(0, pos));
 
 			return numAfter % 2 == 1 && numBefore % 2 == 1;
-
 		}
 
-		private bool IsPrecededBySingleCharacterEscape(char dateChar, int pos)
+		private bool IsPrecededBySingleCharacterEscape(int pos)
 		{
 			if (pos == 0)
 				return false;
@@ -76,7 +71,7 @@ namespace ExcelDataReader.Core
 			return false;
 		}
 
-		private bool IsSurroundedByBracket(char dateChar, int pos)
+		private bool IsSurroundedByBracket(int pos)
 		{
 			//char was at end then can't be surrounded
 			if (pos == FormatString.Length - 1)
@@ -95,16 +90,16 @@ namespace ExcelDataReader.Core
 			return numOpenBefore % 2 == 1 && numClosedAfter % 2 == 1;
 		}
 
-		private int NumberOfUnescapedOccurances(char value, string src)
+		private static int NumberOfUnescapedOccurances(char value, string src)
 		{
 			var numOccurances = 0;
-			char lastChar = Char.MinValue;
+			char lastChar = char.MinValue;
 			foreach (char c in src)
 			{
 				if (c != value)
 					continue;
 
-				if (lastChar != Char.MinValue && lastChar.CompareTo(escapeChar) == 0) //ignore if escaped
+				if (lastChar != char.MinValue && lastChar.CompareTo(escapeChar) == 0) //ignore if escaped
 					continue;
 
 				numOccurances++;
