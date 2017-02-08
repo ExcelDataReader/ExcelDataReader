@@ -17,9 +17,5 @@ namespace ExcelDataReader.Core.BinaryFormat
         uint HeadSize { get;  }
         uint TailSize { get; }
         bool IsMultiByte { get; }
-
-        Encoding UseEncoding { //get { return IsMultiByte ? Encoding.Unicode : Encoding.UTF8; } 
-            //not sure this is a good assumption but it does work for every test case
-            get; }
     }
 }

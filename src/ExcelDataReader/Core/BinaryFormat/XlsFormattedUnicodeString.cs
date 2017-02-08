@@ -80,14 +80,6 @@ namespace ExcelDataReader.Core.BinaryFormat
 		}
 
 		/// <summary>
-		/// Returns length of string in bytes
-		/// </summary>
-		private uint ByteCount
-		{
-			get { return (uint)(CharacterCount * ((IsMultiByte) ? 2 : 1)); }
-		}
-
-		/// <summary>
 		/// Returns number of formats used for formatting (0 if string has no formatting)
 		/// </summary>
 		public ushort FormatCount
@@ -141,17 +133,23 @@ namespace ExcelDataReader.Core.BinaryFormat
 		{
 			get
 			{
-			    return
-                    UseEncoding.GetString(m_bytes, (int)(m_offset + HeadSize), (int)ByteCount);
+			    if (!IsMultiByte)
+			    {
+			        int len = CharacterCount;
+			        int start = (int)HeadSize;
+			        byte[] bytes = new byte[len * 2];
+			        for (int i = 0; i < len; i++)
+			        {
+			            bytes[i * 2] = m_bytes[m_offset + start + i];
+			        }
+
+			        return Encoding.Unicode.GetString(bytes, 0, len * 2);
+			    }
+			    else
+			    {
+                    return Encoding.Unicode.GetString(m_bytes, (int)(m_offset + HeadSize), CharacterCount * 2);
+                }
 			}
 		}
-
-        public Encoding UseEncoding
-        {
-            //get { return IsMultiByte ? Encoding.Unicode : Encoding.UTF8; } 
-            //not sure this is a good assumption but it does work for every test case
-            get { return IsMultiByte ? Encoding.Unicode : Encoding.GetEncoding("windows-1250"); }
-
-        }
 	}
 }
