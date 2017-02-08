@@ -406,7 +406,6 @@ namespace Excel
                 if (!int.TryParse(_xmlReader.GetAttribute(XlsxWorksheet.A_r), out rowIndex))
                     rowIndex = _depth + 1;
 
-                if (rowIndex != (_depth + 1))
 				if (rowIndex != (_depth + 1))
 				{
 					_emptyRowCount = rowIndex - _depth - 1;
