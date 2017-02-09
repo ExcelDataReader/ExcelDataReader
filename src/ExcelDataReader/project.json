@@ -1,6 +1,6 @@
 ﻿{
     "title": "ExcelDataReader",
-    "version": "3.0.0.0-dev",
+    "version": "2.5.0.0-dev",
     "authors": [ "ExcelDataReader developers" ],
     "description": "Lightweight and fast library written in C# for reading Microsoft Excel files ('97-2007).",
     "packOptions": {
