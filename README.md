@@ -1,7 +1,7 @@
 ExcelDataReader
 ===============
 
-Lightweight and fast library written in C# for reading Microsoft Excel files
+Lightweight and fast library written in C# for reading Microsoft Excel files (added methods for batch reading, row skipping, get schema, get top rows, get sheet names)
 
 This project has just migrated from CodePlex - as is.
 Please feel free to fork and submit pull requests.
@@ -77,8 +77,9 @@ excelReader.Close()
 * SQL reporting services. Set ReadOption.Loose in the CreateBinaryReader factory method to skip some bounds checking which was causing SSRS generated xls to fail. (Only on changeset >= 82970)
 
 ===============
+
 # ExcelDataReader - BatchRead
-Added excel file batch reading and row skipping support. Implemented GetSchema method. Added some utility methods.
+Added excel file batch reading and row skipping support. Implemented GetSchema method. Added utility methods such as GetTopRows and GetSheetNames.
 
 ## How to use
 ### C# code :
@@ -142,6 +143,3 @@ Added excel file batch reading and row skipping support. Implemented GetSchema m
 			}
 		}
 	}
-
-
-===============
