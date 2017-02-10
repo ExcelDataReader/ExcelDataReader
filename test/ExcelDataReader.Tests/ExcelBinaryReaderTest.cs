@@ -958,7 +958,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11636_BiffStream()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11636_BiffStream"), ReadOption.Loose))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11636_BiffStream")))
             {
                 excelReader.IsFirstRowAsColumnNames = false;
                 var dataset = excelReader.AsDataSet();
@@ -1022,7 +1022,7 @@ namespace ExcelDataReader.Tests
 #if !NETCOREAPP1_0
             ExcelDataReader.Log.Log.InitializeWith<Log.Logger.Log4NetLog>();
 #endif
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11818_OutOfRange"), ReadOption.Loose))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11818_OutOfRange")))
             {
                 excelReader.IsFirstRowAsColumnNames = false;
                 var dataset = excelReader.AsDataSet();
@@ -1034,7 +1034,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_Issue_111_NoRowRecords()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_111_NoRowRecords"), ReadOption.Loose))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_111_NoRowRecords")))
             {
                 var dataset = excelReader.AsDataSet();
 
@@ -1049,7 +1049,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_Git_Issue_145()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Git_Issue_145"), ReadOption.Loose))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Git_Issue_145")))
             {
                 excelReader.Read();
                 excelReader.Read();
@@ -1100,7 +1100,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void GitIssue_173()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_173"), true, ReadOption.Loose))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_173")))
             {
                 var ds = excelReader.AsDataSet();
                 Assert.IsNotNull(ds);
@@ -1112,7 +1112,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void ReadWriteProtectedStructureUsingStandardEncryption()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("protectedsheet-xxx"), true, ReadOption.Loose))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("protectedsheet-xxx")))
             {
                 var ds = excelReader.AsDataSet();
                 Assert.IsNotNull(ds);
@@ -1125,7 +1125,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void TestIncludeTableWithOnlyImage()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestTableOnlyImage_x01oct2016"), true, ReadOption.Loose))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestTableOnlyImage_x01oct2016")))
             {
                 var ds = excelReader.AsDataSet();
                 Assert.IsNotNull(ds);
@@ -1136,7 +1136,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void AllowFfffAsByteOrder()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_InvalidByteOrderValueInHeader"), true, ReadOption.Loose))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_InvalidByteOrderValueInHeader")))
             {
                 int tableCount = 0;
                 do
