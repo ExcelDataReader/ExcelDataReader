@@ -102,7 +102,8 @@ namespace ExcelDataReader.Tests
 			{ "xTest_Issue_12667_GoogleExport_MissingColumns", "Test_Issue_12667_GoogleExport_MissingColumns.xlsx" },
 			{ "xTest_Excel_OpenOffice", "Test_Excel_OpenOffice.xlsx" },
             { "Test_Issue_NoStyles_NoRAttribute", "Test_Issue_NoStyles_NoRAttribute.xlsx" },
-            { "protectedsheet-xxx", "protectedsheet-xxx.xls" }
+            { "protectedsheet-xxx", "protectedsheet-xxx.xls" },
+            { "TestTableOnlyImage_x01oct2016", "TestTableOnlyImage_x01oct2016.xls" }
 		};
 
 		public static Stream GetTestWorkbook(string key)

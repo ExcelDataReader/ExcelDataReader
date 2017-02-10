@@ -1210,5 +1210,15 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual(1.4, ds.Tables[0].Rows[1][0]);
         }
 #endif
+
+        [TestMethod]
+        public void TestIncludeTableWithOnlyImage()
+        {
+            var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestTableOnlyImage_x01oct2016"), true, ReadOption.Loose);
+
+            var ds = excelReader.AsDataSet(true);
+            Assert.IsNotNull(ds);
+            Assert.AreEqual(4, ds.Tables.Count);
+        }
     }
 }

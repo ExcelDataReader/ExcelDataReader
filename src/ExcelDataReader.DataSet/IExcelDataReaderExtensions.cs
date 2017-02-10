@@ -31,8 +31,7 @@ namespace Excel
 			var result = new DataSet();
 			do {
 				var table = AsDataTable(self);
-				if (table.Rows.Count > 0)
-					result.Tables.Add(table);
+				result.Tables.Add(table);
 			} while (self.NextResult());
 
 			result.AcceptChanges();

@@ -648,25 +648,21 @@ namespace Excel
             return ReadWorkSheetRow();
         }
 
-        private void InitializeSheetRead()
+        private bool InitializeSheetRead()
 		{
-			if (m_sheetIndex == ResultsCount) return;
-
 			m_dbCellAddrs = null;
 
 			m_isFirstRead = false;
 
-			if (m_sheetIndex == -1) m_sheetIndex = 0;
+			if (m_sheetIndex == -1)
+                m_sheetIndex = 0;
 
 			XlsBiffIndex idx;
 
 			if (!ReadWorkSheetGlobals(m_sheets[m_sheetIndex], out idx, out m_currentRowRecord, out m_currentCellRecord))
 			{
-				//read next sheet
-				m_sheetIndex++;
-				InitializeSheetRead();
-				return;
-			};
+			    return false;
+			}
 
 			if (idx == null)
 			{
@@ -683,7 +679,7 @@ namespace Excel
 				    if (m_currentRowRecord == null)
 				    {
 				        Fail("Badly formed binary file. Has INDEX but no DBCELL.");
-				        return;
+				        return false;
 				    }
 
                     LogManager.Log(this).Debug("Badly formed binary file. Has INDEX but no DBCELL.");
@@ -692,10 +688,10 @@ namespace Excel
 				}
 
             }
-			
+
+		    return true;
 		}
-
-
+        
 		private void Fail(string message)
 		{
 			ExceptionMessage = message;
@@ -898,8 +894,10 @@ namespace Excel
 
 	    public bool NextResult()
 		{
-			if (!IsValid) return false;
-			if (m_sheetIndex >= ResultsCount - 1) return false;
+			if (!IsValid)
+                return false;
+			if (m_sheetIndex >= ResultsCount - 1)
+                return false;
 
 			m_sheetIndex++;
 
@@ -910,25 +908,38 @@ namespace Excel
 
 		public bool Read()
 		{
-			if (!IsValid) return false;
+			if (!IsValid)
+                return false;
 
-			if (m_isFirstRead) {
-				InitializeSheetRead();
-				if (!IsValid) return false;
+			if (m_isFirstRead)
+			{
+			    if (!InitializeSheetRead())
+			        return false;
 
-				if (IsFirstRowAsColumnNames) {
-					if (MoveToNextRecord()) {
+				if (!IsValid)
+                    return false;
+
+				if (IsFirstRowAsColumnNames)
+                {
+					if (MoveToNextRecord())
+                    {
 						m_cellsNames = new string[m_cellsValues.Length];
-						for (var i = 0; i < m_cellsValues.Length; i++) {
+						for (var i = 0; i < m_cellsValues.Length; i++)
+                        {
 							var value = m_cellsValues[i]?.ToString();
-							if (!string.IsNullOrEmpty(value)) { 
+							if (!string.IsNullOrEmpty(value))
+                            { 
 								m_cellsNames[i] = value;
 							}
 						}
-					} else {
+					}
+                    else
+                    {
 						return false;
 					}
-				} else {
+				}
+                else
+                {
 					m_cellsNames = null; // no columns
 				}
 			}
