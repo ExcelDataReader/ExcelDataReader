@@ -22,43 +22,38 @@ namespace Excel
 		private XlsHeader m_hdr;
 		private List<XlsWorksheet> m_sheets;
 		private XlsBiffStream m_stream;
-        //private DataSet m_workbookData;
 		private XlsWorkbookGlobals m_globals;
 		private ushort m_version;
-        private Encoding m_encoding;
-		private bool m_isValid;
-		private bool m_isClosed;
-        private readonly Encoding m_defaultEncoding = Encoding.Unicode;
-		private string m_exceptionMessage;
-		private string[] m_cellsNames;
+
+	    private readonly Encoding m_defaultEncoding = Encoding.Unicode;
+
+	    private string[] m_cellsNames;
 		private object[] m_cellsValues;
 		private uint[] m_dbCellAddrs;
 		private int m_dbCellAddrsIndex;
 		private int m_sheetIndex;
-		private int m_depth;
-		private int m_cellOffset;
-		private int m_maxCol;
-		private int m_maxRow;
+
+	    private int m_cellOffset;
+
+	    private int m_maxRow;
 		private bool m_noIndex;
 		private XlsBiffRow m_currentRowRecord;
         private XlsBiffBlankCell m_currentCellRecord;
-        private ReadOption m_readOption = ReadOption.Strict;
-		private bool m_isFirstRead;
+
+	    private bool m_isFirstRead;
         private bool m_noRow;
 
-	    private const string WORKBOOK = "Workbook";
-		private const string BOOK = "Book";
-        private const string COLUMN = "Column";
-
-	    private bool m_convertOaDate = true;
+	    private const string Workbook = "Workbook";
+		private const string Book = "Book";
+        // private const string COLUMN = "Column";
 
 	    #endregion
 
 		public ExcelBinaryReader()
 		{
-		    m_encoding = m_defaultEncoding;
+		    Encoding = m_defaultEncoding;
 			m_version = 0x0600;
-			m_isValid = true;
+			IsValid = true;
 			m_sheetIndex = -1;
 			m_isFirstRead = true;
 		}
@@ -131,7 +126,7 @@ namespace Excel
 			}
 
 			XlsRootDirectory dir = new XlsRootDirectory(m_hdr);
-			XlsDirectoryEntry workbookEntry = dir.FindEntry(WORKBOOK) ?? dir.FindEntry(BOOK);
+			XlsDirectoryEntry workbookEntry = dir.FindEntry(Workbook) ?? dir.FindEntry(Book);
 
 			if (workbookEntry == null)
 			{ Fail(Errors.ErrorStreamWorkbookNotFound); return; }
@@ -197,9 +192,9 @@ namespace Excel
                         //set encoding based on code page name
                         //PCL does not supported codepage numbers
                         if (m_globals.CodePage.Value == 1200)
-                            m_encoding = EncodingHelper.GetEncoding(65001);
+                            Encoding = EncodingHelper.GetEncoding(65001);
                         else
-                            m_encoding = EncodingHelper.GetEncoding(m_globals.CodePage.Value);
+                            Encoding = EncodingHelper.GetEncoding(m_globals.CodePage.Value);
                         //note: the format spec states that for BIFF8 this is always UTF-16.
                         //as PCL does not supported codepage numbers, it is best to assume UTF-16 for encoding
                         //try
@@ -255,9 +250,8 @@ namespace Excel
 						//IsProtected
 						break;
 					case BIFFRECORDTYPE.EOF:
-						if (m_globals.SST != null)
-							m_globals.SST.ReadStrings();
-						return;
+				        m_globals.SST?.ReadStrings();
+				        return;
 
 					default:
 						continue;
@@ -351,18 +345,18 @@ namespace Excel
             if (dims != null) {
                 dims.IsV8 = IsV8();
 				LogManager.Log(this).Debug("dims IsV8={0}", dims.IsV8);
-                m_maxCol = dims.LastColumn - 1;
+                FieldCount = dims.LastColumn - 1;
 
 				//handle case where sheet reports last column is 1 but there are actually more
-				if (m_maxCol <= 0 && rowRecord != null)
+				if (FieldCount <= 0 && rowRecord != null)
 				{
-					m_maxCol = rowRecord.LastDefinedColumn;
+					FieldCount = rowRecord.LastDefinedColumn;
 				}
 				
                 m_maxRow = (int)dims.LastRow;
                 sheet.Dimensions = dims;
             } else {
-                m_maxCol = 256;
+                FieldCount = 256;
                 m_maxRow = (int)idx.LastExistingRow;
             }
 
@@ -377,7 +371,7 @@ namespace Excel
 			}
 
             m_noRow = foundCell;
-			m_depth = 0;
+			Depth = 0;
 
 			return true;
 		}
@@ -399,7 +393,7 @@ namespace Excel
 		/// <returns>true if row was read successfully</returns>
 		private bool ReadWorkSheetRow()
 		{
-			m_cellsValues = new object[m_maxCol];
+			m_cellsValues = new object[FieldCount];
 
 		    bool foundValue = false;
 			while (m_cellOffset < m_stream.Size)
@@ -407,23 +401,32 @@ namespace Excel
 				XlsBiffRecord rec = m_stream.ReadAt(m_cellOffset);
 				m_cellOffset += rec.Size;
 
-				if ((rec is XlsBiffDbCell) || (rec is XlsBiffMSODrawing)) { break; };
+			    if (rec is XlsBiffDbCell || rec is XlsBiffMSODrawing)
+			    {
+			        break;
+			    }
+
 			    if (rec is XlsBiffEOF)
 			    {
-			        m_depth++;
+			        Depth++;
                     return foundValue;
-			    };
+			    }
 
 				XlsBiffBlankCell cell = rec as XlsBiffBlankCell;
 
-				if ((null == cell) || (cell.ColumnIndex >= m_maxCol)) continue;
-				if (cell.RowIndex != m_depth) { m_cellOffset -= rec.Size; break; };
+				if (null == cell || cell.ColumnIndex >= FieldCount)
+                    continue;
+			    if (cell.RowIndex != Depth)
+			    {
+			        m_cellOffset -= rec.Size;
+                    break;
+			    }
 
 				PushCellValue(cell);
 			    foundValue = true;
 			}
 
-			m_depth++;
+			Depth++;
 
 			return foundValue || m_cellOffset <= m_stream.Size;
 		}
@@ -533,7 +536,7 @@ namespace Excel
 			//if sheet has index
 			if (null == m_dbCellAddrs ||
 				m_dbCellAddrsIndex == m_dbCellAddrs.Length ||
-				m_depth == m_maxRow) return false;
+				Depth == m_maxRow) return false;
 
             // Check if we've reached the end of the current row block
             XlsBiffDbCell dbCell = m_stream.ReadAt(m_cellOffset) as XlsBiffDbCell;
@@ -559,7 +562,7 @@ namespace Excel
 				return false;
 
             m_stream.Seek(rowRecord.Offset + rowRecord.Size, SeekOrigin.Begin);
-            if (rowRecord.RowIndex < m_depth)
+            if (rowRecord.RowIndex < Depth)
 			{
 				do
 				{
@@ -569,7 +572,7 @@ namespace Excel
 
 					rowRecord = record as XlsBiffRow;
 
-				} while (rowRecord == null || rowRecord.RowIndex < m_depth);
+				} while (rowRecord == null || rowRecord.RowIndex < Depth);
 			}
 
 			m_currentRowRecord = rowRecord;
@@ -588,8 +591,8 @@ namespace Excel
 				{
 				    if (candidateCell.RowIndex > m_currentRowRecord.RowIndex)
 				    {
-                        m_cellsValues = new object[m_maxCol];
-				        m_depth++;
+                        m_cellsValues = new object[FieldCount];
+				        Depth++;
 				        return true;
 				    }
 
@@ -612,7 +615,7 @@ namespace Excel
             if (currentCell == null)
                 return false;
 
-            if (currentCell.RowIndex < m_depth)
+            if (currentCell.RowIndex < Depth)
             {
                 do
                 {
@@ -625,7 +628,7 @@ namespace Excel
 
                     currentCell = record as XlsBiffBlankCell;
 
-                } while (currentCell == null || currentCell.RowIndex < m_depth);
+                } while (currentCell == null || currentCell.RowIndex < Depth);
             }
 
             m_currentCellRecord = currentCell;
@@ -684,8 +687,8 @@ namespace Excel
 
 		private void Fail(string message)
 		{
-			m_exceptionMessage = message;
-			m_isValid = false;
+			ExceptionMessage = message;
+			IsValid = false;
 
 		    Close();
 		}
@@ -824,12 +827,9 @@ namespace Excel
 			m_isFirstRead = true;
 		}
 
-		public string ExceptionMessage
-		{
-			get { return m_exceptionMessage; }
-		}
+		public string ExceptionMessage { get; private set; }
 
-		public string Name
+	    public string Name
 		{
 			get
 			{
@@ -851,14 +851,11 @@ namespace Excel
             }
         }
 
-		public bool IsValid
-		{
-			get { return m_isValid; }
-		}
+		public bool IsValid { get; private set; }
 
-		public void Close()
+	    public void Close()
 		{
-		    if (m_isClosed)
+		    if (IsClosed)
 		        return;
 
 		    if (m_sheets != null)
@@ -870,7 +867,7 @@ namespace Excel
             // m_workbookData = null;
             m_stream = null;
             m_globals = null;
-            m_encoding = null;
+            Encoding = null;
             m_hdr = null;
 
 		    if (m_file != null)
@@ -879,27 +876,18 @@ namespace Excel
 		        m_file = null;
 		    }
 
-		    m_isClosed = true;
+		    IsClosed = true;
 		}
 
-		public int Depth
-		{
-			get { return m_depth; }
-		}
+		public int Depth { get; private set; }
 
-		public int ResultsCount
-		{
-			get { return m_globals.Sheets.Count; }
-		}
+	    public int ResultsCount => m_globals.Sheets.Count;
 
-		public bool IsClosed
-		{
-			get { return m_isClosed; }
-		}
+	    public bool IsClosed { get; private set; }
 
-		public bool NextResult()
+	    public bool NextResult()
 		{
-			if (!m_isValid) return false;
+			if (!IsValid) return false;
 			if (m_sheetIndex >= ResultsCount - 1) return false;
 
 			m_sheetIndex++;
@@ -911,11 +899,11 @@ namespace Excel
 
 		public bool Read()
 		{
-			if (!m_isValid) return false;
+			if (!IsValid) return false;
 
 			if (m_isFirstRead) {
 				InitializeSheetRead();
-				if (!m_isValid) return false;
+				if (!IsValid) return false;
 
 				if (IsFirstRowAsColumnNames) {
 					if (MoveToNextRecord()) {
@@ -937,16 +925,11 @@ namespace Excel
 			return MoveToNextRecord();
 		}
 
-		public int FieldCount
-		{
-			get { return m_maxCol; }
-		}
+		public int FieldCount { get; private set; }
 
-		public bool GetBoolean(int i)
+	    public bool GetBoolean(int i)
 		{
-			if (IsDBNull(i)) return false;
-
-			return Boolean.Parse(m_cellsValues[i].ToString());
+		    return !IsDBNull(i) && bool.Parse(m_cellsValues[i].ToString());
 		}
 
 		public DateTime GetDateTime(int i)
@@ -980,51 +963,37 @@ namespace Excel
 
 		public decimal GetDecimal(int i)
 		{
-			if (IsDBNull(i)) return decimal.MinValue;
-
-			return decimal.Parse(m_cellsValues[i].ToString());
+		    return IsDBNull(i) ? decimal.MinValue : decimal.Parse(m_cellsValues[i].ToString());
 		}
 
 		public double GetDouble(int i)
 		{
-			if (IsDBNull(i)) return double.MinValue;
-
-			return double.Parse(m_cellsValues[i].ToString());
+		    return IsDBNull(i) ? double.MinValue : double.Parse(m_cellsValues[i].ToString());
 		}
 
 		public float GetFloat(int i)
 		{
-			if (IsDBNull(i)) return float.MinValue;
-
-			return float.Parse(m_cellsValues[i].ToString());
+		    return IsDBNull(i) ? float.MinValue : float.Parse(m_cellsValues[i].ToString());
 		}
 
 		public short GetInt16(int i)
 		{
-			if (IsDBNull(i)) return short.MinValue;
-
-			return short.Parse(m_cellsValues[i].ToString());
+		    return IsDBNull(i) ? short.MinValue : short.Parse(m_cellsValues[i].ToString());
 		}
 
 		public int GetInt32(int i)
 		{
-			if (IsDBNull(i)) return int.MinValue;
-
-			return int.Parse(m_cellsValues[i].ToString());
+		    return IsDBNull(i) ? int.MinValue : int.Parse(m_cellsValues[i].ToString());
 		}
 
 		public long GetInt64(int i)
 		{
-			if (IsDBNull(i)) return long.MinValue;
-
-			return long.Parse(m_cellsValues[i].ToString());
+		    return IsDBNull(i) ? long.MinValue : long.Parse(m_cellsValues[i].ToString());
 		}
 
 		public string GetString(int i)
 		{
-			if (IsDBNull(i)) return null;
-
-			return m_cellsValues[i].ToString();
+		    return IsDBNull(i) ? null : m_cellsValues[i].ToString();
 		}
 
 		public object GetValue(int i)
@@ -1034,15 +1003,12 @@ namespace Excel
 
 		public bool IsDBNull(int i)
 		{
-            return (null == m_cellsValues[i]);
+            return null == m_cellsValues[i];
 		}
 
-		public object this[int i]
-		{
-			get { return m_cellsValues[i]; }
-		}
+		public object this[int i] => m_cellsValues[i];
 
-		#endregion
+	    #endregion
 
 		#region  Not Supported IDataReader Members
 
@@ -1083,9 +1049,7 @@ namespace Excel
 
 		public Type GetFieldType(int i)
 		{
-			if (m_cellsValues[i] == null)
-				return null;
-			return m_cellsValues[i].GetType();
+		    return m_cellsValues[i] == null ? null : m_cellsValues[i].GetType();
 		}
 
 		public Guid GetGuid(int i)
@@ -1095,9 +1059,7 @@ namespace Excel
 
 		public string GetName(int i)
 		{
-			if (m_cellsNames == null)
-				return null;
-			return m_cellsNames[i];
+		    return m_cellsNames?[i];
 		}
 
 		public int GetOrdinal(string name)
@@ -1121,27 +1083,13 @@ namespace Excel
 
 	    public bool IsFirstRowAsColumnNames { get; set; }
 
-	    public bool ConvertOaDate
-	    {
-	        get { return m_convertOaDate; }
-	        set { m_convertOaDate = value; }
-	    }
+	    public bool ConvertOaDate { get; set; } = true;
 
-	    public ReadOption ReadOption
-		{
-			get { return m_readOption; }
-            set { m_readOption = value;  }
-		}
+	    public ReadOption ReadOption { get; set; } = ReadOption.Strict;
 
-	    public Encoding Encoding
-	    {
-	        get { return m_encoding; }
-	    }
+	    public Encoding Encoding { get; private set; }
 
-	    public Encoding DefaultEncoding
-	    {
-	        get { return Encoding.UTF8; }
-	    }
+	    public Encoding DefaultEncoding => Encoding.UTF8;
 
 	    /// <inheritdoc />
 	    public IDataReader GetData(int i)

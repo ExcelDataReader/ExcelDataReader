@@ -55,7 +55,7 @@ namespace Excel
 		/// <value>
 		/// 	<c>true</c> if the first row contains column names; otherwise, <c>false</c>.
 		/// </value>
-		bool IsFirstRowAsColumnNames { get;set;}
+		bool IsFirstRowAsColumnNames { get; set;}
 
         /// <summary>
         /// Should OADates be converted to dates
