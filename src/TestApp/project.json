@@ -5,11 +5,12 @@
   },
   "frameworks": {
     "net45": {
-      "frameworkAssemblies": {
-        "System.Windows.Forms": "4.0.0.0",
-        "System.Data": "4.0.0.0",
-        "System.Drawing": "4.0.0.0"
-      }
+        "frameworkAssemblies": {
+            "System.Windows.Forms": "4.0.0.0",
+            "System.Data": "4.0.0.0",
+            "System.Drawing": "4.0.0.0",
+            "System.IO": "4.0.0.0"
+        }
     }
   },
   "dependencies": {

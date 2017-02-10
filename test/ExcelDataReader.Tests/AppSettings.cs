@@ -103,7 +103,8 @@ namespace ExcelDataReader.Tests
 			{ "xTest_Excel_OpenOffice", "Test_Excel_OpenOffice.xlsx" },
             { "Test_Issue_NoStyles_NoRAttribute", "Test_Issue_NoStyles_NoRAttribute.xlsx" },
             { "protectedsheet-xxx", "protectedsheet-xxx.xls" },
-            { "TestTableOnlyImage_x01oct2016", "TestTableOnlyImage_x01oct2016.xls" }
+            { "TestTableOnlyImage_x01oct2016", "TestTableOnlyImage_x01oct2016.xls" },
+            { "Test_InvalidByteOrderValueInHeader", "Test_InvalidByteOrderValueInHeader.xls" }
 		};
 
 		public static Stream GetTestWorkbook(string key)

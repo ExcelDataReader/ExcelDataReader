@@ -1,5 +1,5 @@
+using System;
 using System.Data;
-using System.IO;
 using System.Text;
 
 namespace Excel
@@ -7,27 +7,9 @@ namespace Excel
 	public interface IExcelDataReader : IDataReader
 	{
 		/// <summary>
-		/// Initializes the instance with specified file stream.
-		/// </summary>
-		/// <param name="fileStream">The file stream.</param>
-		void Initialize(Stream fileStream);
-
-		/// <summary>
 		/// Seeks to the first result.
 		/// </summary>
 		void Reset();
-
-		/// <summary>
-		/// Gets a value indicating whether file stream is valid.
-		/// </summary>
-		/// <value><c>true</c> if file stream is valid; otherwise, <c>false</c>.</value>
-		bool IsValid { get;}
-
-		/// <summary>
-		/// Gets the exception message in case of error.
-		/// </summary>
-		/// <value>The exception message.</value>
-		string ExceptionMessage { get;}
 
 		/// <summary>
 		/// Gets the sheet name.
@@ -58,11 +40,11 @@ namespace Excel
 		bool IsFirstRowAsColumnNames { get; set;}
 
         /// <summary>
-        /// Should OADates be converted to dates
+        /// Gets a value indicating whether OA dates should be converted to <see cref="DateTime"/> or not.
         /// </summary>
-        bool ConvertOaDate { get; set; }
+        bool ConvertOaDate { get; }
 
-        ReadOption ReadOption { get; set;  }
+        ReadOption ReadOption { get; }
 
 	    Encoding Encoding { get; }
 	}

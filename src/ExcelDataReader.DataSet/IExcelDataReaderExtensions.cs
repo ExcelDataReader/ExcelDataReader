@@ -21,13 +21,6 @@ namespace Excel
 
 		public static DataSet AsDataSet(this IExcelDataReader self)
         {
-			return AsDataSet(self, false);
-		}
-
-		public static DataSet AsDataSet(this IExcelDataReader self, bool convertOADate)
-        {
-
-			self.ConvertOaDate = convertOADate;
 			self.Reset();
 
 			var result = new DataSet();

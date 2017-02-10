@@ -48,12 +48,28 @@ namespace Excel
 
         #endregion
 
-        public ExcelBinaryReader()
+        public ExcelBinaryReader(Stream stream)
+            : this(stream, true, ReadOption.Strict)
+        {
+        }
+
+        public ExcelBinaryReader(Stream stream, ReadOption readOption)
+            : this(stream, true, readOption)
+        {
+        }
+
+        public ExcelBinaryReader(Stream stream, bool convertOADate, ReadOption readOption)
         {
             m_version = 0x0600;
-            IsValid = true;
-            m_sheetIndex = -1;
             m_isFirstRead = true;
+            m_file = stream;
+            ReadOption = readOption;
+            ConvertOaDate = convertOADate;
+
+            ReadWorkBookGlobals();
+
+            // set the sheet index to the index of the first sheet.. this is so that properties such as Name which use m_sheetIndex reflect the first sheet in the file without having to perform a read() operation
+            m_sheetIndex = 0;
         }
 
         #region IDisposable Members
@@ -108,39 +124,22 @@ namespace Excel
         private void ReadWorkBookGlobals()
         {
             //Read Header
-            try
-            {
-                m_hdr = XlsHeader.ReadHeader(m_file);
-            }
-            catch (HeaderException ex)
-            {
-                Fail(ex.Message);
-                return;
-            }
-            catch (FormatException ex)
-            {
-                Fail(ex.Message);
-                return;
-            }
+            m_hdr = XlsHeader.ReadHeader(m_file);
 
             XlsRootDirectory dir = new XlsRootDirectory(m_hdr);
             XlsDirectoryEntry workbookEntry = dir.FindEntry(Workbook) ?? dir.FindEntry(Book);
 
             if (workbookEntry == null)
-            { Fail(Errors.ErrorStreamWorkbookNotFound); return; }
+            {
+                throw new ExcelReaderException(Errors.ErrorStreamWorkbookNotFound);
+            }
 
             if (workbookEntry.EntryType != STGTY.STGTY_STREAM)
-            { Fail(Errors.ErrorWorkbookIsNotStream); return; }
+            {
+                throw new ExcelReaderException(Errors.ErrorWorkbookIsNotStream); 
+            }
 
-            try
-            {
-                m_stream = new XlsBiffStream(m_hdr, workbookEntry.StreamFirstSector, workbookEntry.IsEntryMiniStream, dir, this);
-            }
-            catch (NotSupportedException e)
-            {
-                Fail(e.Message);
-                return;
-            }
+            m_stream = new XlsBiffStream(m_hdr, workbookEntry.StreamFirstSector, workbookEntry.IsEntryMiniStream, dir, this);
 
             m_globals = new XlsWorkbookGlobals();
 
@@ -150,7 +149,9 @@ namespace Excel
             XlsBiffBOF bof = rec as XlsBiffBOF;
 
             if (bof == null || bof.Type != BIFFTYPE.WorkbookGlobals)
-            { Fail(Errors.ErrorWorkbookGlobalsInvalidData); return; }
+            {
+                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData); 
+            }
 
             bool sst = false;
 
@@ -666,8 +667,7 @@ namespace Excel
                 {
                     if (m_currentRowRecord == null)
                     {
-                        Fail("Badly formed binary file. Has INDEX but no DBCELL.");
-                        return false;
+                        throw new BiffRecordException("Badly formed binary file. Has INDEX but no DBCELL.");
                     }
 
                     LogManager.Log(this).Debug("Badly formed binary file. Has INDEX but no DBCELL.");
@@ -678,14 +678,6 @@ namespace Excel
             }
 
             return true;
-        }
-
-        private void Fail(string message)
-        {
-            ExceptionMessage = message;
-            IsValid = false;
-
-            Close();
         }
 
         private object TryConvertOADateTime(double value, ushort xFormat)
@@ -801,24 +793,12 @@ namespace Excel
 
         #region IExcelDataReader Members
 
-        public void Initialize(Stream fileStream)
-        {
-            m_file = fileStream;
-
-            ReadWorkBookGlobals();
-
-            // set the sheet index to the index of the first sheet.. this is so that properties such as Name which use m_sheetIndex reflect the first sheet in the file without having to perform a read() operation
-            m_sheetIndex = 0;
-        }
-
         public void Reset()
         {
             m_sheetIndex = 0;
             m_isFirstRead = true;
         }
-
-        public string ExceptionMessage { get; private set; }
-
+        
         public string Name
         {
             get
@@ -840,8 +820,6 @@ namespace Excel
                 return null;
             }
         }
-
-        public bool IsValid { get; private set; }
 
         public void Close()
         {
@@ -877,8 +855,6 @@ namespace Excel
 
         public bool NextResult()
         {
-            if (!IsValid)
-                return false;
             if (m_sheetIndex >= ResultsCount - 1)
                 return false;
 
@@ -891,15 +867,9 @@ namespace Excel
 
         public bool Read()
         {
-            if (!IsValid)
-                return false;
-
             if (m_isFirstRead)
             {
                 if (!InitializeSheetRead())
-                    return false;
-
-                if (!IsValid)
                     return false;
 
                 if (IsFirstRowAsColumnNames)
@@ -1088,9 +1058,9 @@ namespace Excel
 
         public bool IsFirstRowAsColumnNames { get; set; }
 
-        public bool ConvertOaDate { get; set; } = true;
+        public bool ConvertOaDate { get; set; }
 
-        public ReadOption ReadOption { get; set; } = ReadOption.Strict;
+        public ReadOption ReadOption { get; }
 
         public Encoding Encoding { get; private set; }
 

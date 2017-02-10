@@ -15,59 +15,55 @@ namespace Excel
 	
 	public class ExcelOpenXmlReader : IExcelDataReader
 	{
-		private const string N_sheet = "sheet";
-		private const string N_t = "t";
-		private const string N_si = "si";
-		private const string N_cellXfs = "cellXfs";
-		private const string N_numFmts = "numFmts";
+		private const string ElementSheet = "sheet";
+		private const string ElementT = "t";
+		private const string ElementStringItem = "si";
+		private const string ElementCellCrossReference = "cellXfs";
+		private const string ElementNumberFormats = "numFmts";
 
-		private const string A_sheetId = "sheetId";
-		private const string A_visibleState = "state";
-		private const string A_name = "name";
-		private const string A_rid = "r:id";
+		private const string AttributeSheetId = "sheetId";
+		private const string AttributeVisibleState = "state";
+		private const string AttributeName = "name";
+		private const string AttributeRelationshipId = "r:id";
 
-		private const string N_rel = "Relationship";
-		private const string A_id = "Id";
-		private const string A_target = "Target";
+		private const string ElementRelationship = "Relationship";
+		private const string AttributeId = "Id";
+		private const string AttributeTarget = "Target";
 
 	    #region Members
 
-		private XlsxWorkbook _workbook;
-		private bool _isValid;
-		private bool _isClosed;
-		private bool _isFirstRead;
-		private string _exceptionMessage;
-		private int _depth;
-		private int _resultIndex;
-		private int _emptyRowCount;
-		private ZipWorker _zipWorker;
-		private XmlReader _xmlReader;
-		private Stream _sheetStream;
-		private string[] _cellsNames;
-		private object[] _cellsValues;
-		private object[] _savedCellsValues;
+		private XlsxWorkbook m_workbook;
 
-		private bool disposed;
-		private bool _isFirstRowAsColumnNames;
-		private const string COLUMN = "Column";
-		private string instanceId = Guid.NewGuid().ToString();
+	    private bool m_isFirstRead;
 
-		private List<int> _defaultDateTimeStyles;
-		private string _namespaceUri;
+	    private int m_resultIndex;
+		private int m_emptyRowCount;
+		private ZipWorker m_zipWorker;
+		private XmlReader m_xmlReader;
+		private Stream m_sheetStream;
+		private string[] m_cellsNames;
+		private object[] m_cellsValues;
+		private object[] m_savedCellsValues;
+
+	    private readonly List<int> m_defaultDateTimeStyles;
+		private string m_namespaceUri;
 
 		#endregion
 
-		public ExcelOpenXmlReader()
+		public ExcelOpenXmlReader(Stream stream)
 		{
-		    _isValid = true;
-			_isFirstRead = true;
+		    m_isFirstRead = true;
 
-			_defaultDateTimeStyles = new List<int>(new int[] 
+			m_defaultDateTimeStyles = new List<int>(new[] 
 			{
 				14, 15, 16, 17, 18, 19, 20, 21, 22, 45, 46, 47
 			});
 
-		}
+            m_zipWorker = new ZipWorker();
+            m_zipWorker.Open(stream);
+
+            ReadGlobals();
+        }
 
 		private void ReadGlobals()
 		{
@@ -75,37 +71,37 @@ namespace Excel
 			XlsxSST sst;
 			XlsxStyles styles;
 
-			using (var stream = _zipWorker.GetWorkbookStream()) {
+			using (var stream = m_zipWorker.GetWorkbookStream()) {
 				sheets = ReadWorkbook(stream);
 			}
-			using (var stream = _zipWorker.GetWorkbookRelsStream()) {
+			using (var stream = m_zipWorker.GetWorkbookRelsStream()) {
 				ReadWorkbookRels(stream, sheets);
 			}
 
-			using (var stream = _zipWorker.GetSharedStringsStream()) {
+			using (var stream = m_zipWorker.GetSharedStringsStream()) {
 				sst = ReadSharedStrings(stream);
 			}
 
-			using (var stream = _zipWorker.GetStylesStream()) {
+			using (var stream = m_zipWorker.GetStylesStream()) {
 				styles = ReadStyles(stream);
 			}
 
-			_workbook = new XlsxWorkbook(sheets, sst, styles);
+			m_workbook = new XlsxWorkbook(sheets, sst, styles);
 
-			CheckDateTimeNumFmts(_workbook.Styles.NumFmts);
+			CheckDateTimeNumFmts(m_workbook.Styles.NumFmts);
 
 		}
-		private List<XlsxWorksheet> ReadWorkbook(Stream xmlFileStream) {
+		private static List<XlsxWorksheet> ReadWorkbook(Stream xmlFileStream) {
 			var sheets = new List<XlsxWorksheet>();
 
 			using (XmlReader reader = XmlReader.Create(xmlFileStream)) {
 				while (reader.Read()) {
-					if (reader.NodeType == XmlNodeType.Element && reader.LocalName == N_sheet) {
+					if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementSheet) {
 						sheets.Add(new XlsxWorksheet(
-											   reader.GetAttribute(A_name),
-											   int.Parse(reader.GetAttribute(A_sheetId)),
-											   reader.GetAttribute(A_rid),
-											   reader.GetAttribute(A_visibleState)));
+											   reader.GetAttribute(AttributeName),
+											   int.Parse(reader.GetAttribute(AttributeSheetId)),
+											   reader.GetAttribute(AttributeRelationshipId),
+											   reader.GetAttribute(AttributeVisibleState)));
 					}
 
 				}
@@ -113,17 +109,17 @@ namespace Excel
 			return sheets;
 		}
 
-		private void ReadWorkbookRels(Stream xmlFileStream, List<XlsxWorksheet> sheets) {
+		private static void ReadWorkbookRels(Stream xmlFileStream, List<XlsxWorksheet> sheets) {
 			using (XmlReader reader = XmlReader.Create(xmlFileStream)) {
 				while (reader.Read()) {
-					if (reader.NodeType == XmlNodeType.Element && reader.LocalName == N_rel) {
-						string rid = reader.GetAttribute(A_id);
+					if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementRelationship) {
+						string rid = reader.GetAttribute(AttributeId);
 
 						for (int i = 0; i < sheets.Count; i++) {
 							XlsxWorksheet tempSheet = sheets[i];
 
 							if (tempSheet.RID == rid) {
-								tempSheet.Path = reader.GetAttribute(A_target);
+								tempSheet.Path = reader.GetAttribute(AttributeTarget);
 								sheets[i] = tempSheet;
 								break;
 							}
@@ -134,82 +130,93 @@ namespace Excel
 			}
 		}
 
-		private XlsxSST ReadSharedStrings(Stream xmlFileStream) {
+		private static XlsxSST ReadSharedStrings(Stream xmlFileStream) {
 			if (null == xmlFileStream)
 				return null;
 
-			var _SST = new XlsxSST();
+			var sst = new XlsxSST();
 
-			using (XmlReader reader = XmlReader.Create(xmlFileStream)) {
-				// Skip phonetic string data.
-				bool bSkipPhonetic = false;
-				// There are multiple <t> in a <si>. Concatenate <t> within an <si>.
-				bool bAddStringItem = false;
-				string sStringItem = "";
+            using (XmlReader reader = XmlReader.Create(xmlFileStream))
+            {
+                // Skip phonetic string data.
+                bool bSkipPhonetic = false;
+                // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
+                bool bAddStringItem = false;
+                string sStringItem = "";
 
-				while (reader.Read()) {
-					// There are multiple <t> in a <si>. Concatenate <t> within an <si>.
-					if (reader.NodeType == XmlNodeType.Element && reader.LocalName == N_si) {
-						// Do not add the string item until the next string item is read.
-						if (bAddStringItem) {
-							// Add the string item to XlsxSST.
-							_SST.Add(sStringItem);
-						} else {
-							// Add the string items from here on.
-							bAddStringItem = true;
-						}
+                while (reader.Read())
+                {
+                    // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
+                    if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementStringItem)
+                    {
+                        // Do not add the string item until the next string item is read.
+                        if (bAddStringItem)
+                        {
+                            // Add the string item to XlsxSST.
+                            sst.Add(sStringItem);
+                        }
+                        else
+                        {
+                            // Add the string items from here on.
+                            bAddStringItem = true;
+                        }
 
-						// Reset the string item.
-						sStringItem = "";
-					} else if (reader.NodeType == XmlNodeType.Element && reader.LocalName == N_t) {
-						// Skip phonetic string data.
-						if (!bSkipPhonetic) {
-							// Append to the string item.
-							sStringItem += reader.ReadElementContentAsString();
-						}
-					}
-					if (reader.LocalName == "rPh") {
-						// Phonetic items represents pronunciation hints for some East Asian languages.
-						// In the file 'xl/sharedStrings.xml', the phonetic properties appear like:
-						// <si>
-						//  <t>(a japanese text in KANJI)</t>
-						//  <rPh sb="0" eb="1">
-						//      <t>(its pronounciation in KATAKANA)</t>
-						//  </rPh>
-						// </si>
-						if (reader.NodeType == XmlNodeType.Element)
-							bSkipPhonetic = true;
-						else if (reader.NodeType == XmlNodeType.EndElement)
-							bSkipPhonetic = false;
-					}
-				}
-				// Do not add the last string item unless we have read previous string items.
-				if (bAddStringItem) {
-					// Add the string item to XlsxSST.
-					_SST.Add(sStringItem);
-				}
+                        // Reset the string item.
+                        sStringItem = "";
+                    }
+                    else if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementT)
+                    {
+                        // Skip phonetic string data.
+                        if (!bSkipPhonetic)
+                        {
+                            // Append to the string item.
+                            sStringItem += reader.ReadElementContentAsString();
+                        }
+                    }
+                    if (reader.LocalName == "rPh")
+                    {
+                        // Phonetic items represents pronunciation hints for some East Asian languages.
+                        // In the file 'xl/sharedStrings.xml', the phonetic properties appear like:
+                        // <si>
+                        //  <t>(a japanese text in KANJI)</t>
+                        //  <rPh sb="0" eb="1">
+                        //      <t>(its pronounciation in KATAKANA)</t>
+                        //  </rPh>
+                        // </si>
+                        if (reader.NodeType == XmlNodeType.Element)
+                            bSkipPhonetic = true;
+                        else if (reader.NodeType == XmlNodeType.EndElement)
+                            bSkipPhonetic = false;
+                    }
+                }
+                // Do not add the last string item unless we have read previous string items.
+                if (bAddStringItem)
+                {
+                    // Add the string item to XlsxSST.
+                    sst.Add(sStringItem);
+                }
 
-			}
-			return _SST;
+            }
+			return sst;
 		}
 
-		private XlsxStyles ReadStyles(Stream xmlFileStream) {
-			var _Styles = new XlsxStyles();
+		private static XlsxStyles ReadStyles(Stream xmlFileStream) {
+			var styles = new XlsxStyles();
 
 			if (null == xmlFileStream)
-				return _Styles;
+				return styles;
 
 			bool rXlsxNumFmt = false;
 
 			using (XmlReader reader = XmlReader.Create(xmlFileStream)) {
 				while (reader.Read()) {
-					if (!rXlsxNumFmt && reader.NodeType == XmlNodeType.Element && reader.LocalName == N_numFmts) {
+					if (!rXlsxNumFmt && reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementNumberFormats) {
 						while (reader.Read()) {
 							if (reader.NodeType == XmlNodeType.Element && reader.Depth == 1)
 								break;
 
 							if (reader.NodeType == XmlNodeType.Element && reader.LocalName == XlsxNumFmt.N_numFmt) {
-								_Styles.NumFmts.Add(
+								styles.NumFmts.Add(
 									new XlsxNumFmt(
 										int.Parse(reader.GetAttribute(XlsxNumFmt.A_numFmtId)),
 										reader.GetAttribute(XlsxNumFmt.A_formatCode)
@@ -220,7 +227,7 @@ namespace Excel
 						rXlsxNumFmt = true;
 					}
 
-					if (reader.NodeType == XmlNodeType.Element && reader.LocalName == N_cellXfs) {
+					if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementCellCrossReference) {
 						while (reader.Read()) {
 							if (reader.NodeType == XmlNodeType.Element && reader.Depth == 1)
 								break;
@@ -229,7 +236,7 @@ namespace Excel
 								var xfId = reader.GetAttribute(XlsxXf.A_xfId);
 								var numFmtId = reader.GetAttribute(XlsxXf.A_numFmtId);
 
-								_Styles.CellXfs.Add(
+								styles.CellXfs.Add(
 									new XlsxXf(
 										xfId == null ? -1 : int.Parse(xfId),
 										numFmtId == null ? -1 : int.Parse(numFmtId),
@@ -242,7 +249,7 @@ namespace Excel
 					}
 				}
 			}
-			return _Styles;
+			return styles;
 		}
 
 		private void CheckDateTimeNumFmts(List<XlsxNumFmt> list)
@@ -272,21 +279,22 @@ namespace Excel
 				var formatReader = new FormatReader() {FormatString = fc};
 				if (formatReader.IsDateFormatString())
 				{
-					_defaultDateTimeStyles.Add(numFmt.Id);
+					m_defaultDateTimeStyles.Add(numFmt.Id);
 				}
 			}
 		}
 
 		private void ReadSheetGlobals(XlsxWorksheet sheet)
 		{
-            if (_xmlReader != null) ((IDisposable)_xmlReader).Dispose();
-            if (_sheetStream != null) _sheetStream.Dispose();
+		    ((IDisposable)m_xmlReader)?.Dispose();
+		    m_sheetStream?.Dispose();
 
-            _sheetStream = _zipWorker.GetWorksheetStream(sheet.Path);
+		    m_sheetStream = m_zipWorker.GetWorksheetStream(sheet.Path);
 
-			if (null == _sheetStream) return;
+			if (null == m_sheetStream)
+                return;
 
-			_xmlReader = XmlReader.Create(_sheetStream);
+			m_xmlReader = XmlReader.Create(m_sheetStream);
 
 			//count rows and cols in case there is no dimension elements
 			int rows = 0;
@@ -294,19 +302,19 @@ namespace Excel
 
 		    bool foundDimension = false;
 
-			_namespaceUri = null;
+			m_namespaceUri = null;
 		    int biggestColumn = 0; //used when no col elements and no dimension
-			while (_xmlReader.Read())
+			while (m_xmlReader.Read())
 			{
-				if (_xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_worksheet)
+				if (m_xmlReader.NodeType == XmlNodeType.Element && m_xmlReader.LocalName == XlsxWorksheet.N_worksheet)
 				{
 					//grab the namespaceuri from the worksheet element
-					_namespaceUri = _xmlReader.NamespaceURI;
+					m_namespaceUri = m_xmlReader.NamespaceURI;
 				}
 				
-				if (_xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_dimension)
+				if (m_xmlReader.NodeType == XmlNodeType.Element && m_xmlReader.LocalName == XlsxWorksheet.N_dimension)
 				{
-					string dimValue = _xmlReader.GetAttribute(XlsxWorksheet.A_ref);
+					string dimValue = m_xmlReader.GetAttribute(XlsxWorksheet.A_ref);
 
                     var dimension = new XlsxDimension(dimValue);
 				    if (dimension.IsRange)
@@ -322,14 +330,14 @@ namespace Excel
                 //if (_xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_col)
                 //    cols++;
 
-				if (_xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_row)
+				if (m_xmlReader.NodeType == XmlNodeType.Element && m_xmlReader.LocalName == XlsxWorksheet.N_row)
                     rows++;
 
                 //check cells so we can find size of sheet if can't work it out from dimension or col elements (dimension should have been set before the cells if it was available)
                 //ditto for cols
-                if (cols == 0 && _xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_c)
+                if (cols == 0 && m_xmlReader.NodeType == XmlNodeType.Element && m_xmlReader.LocalName == XlsxWorksheet.N_c)
                 {
-                    var refAttribute = _xmlReader.GetAttribute(XlsxWorksheet.A_r);
+                    var refAttribute = m_xmlReader.GetAttribute(XlsxWorksheet.A_r);
 
                     if (refAttribute != null)
                     {
@@ -357,97 +365,98 @@ namespace Excel
 				sheet.Dimension = new XlsxDimension(rows, cols);
 
 				//we need to reset our position to sheet data
-				((IDisposable)_xmlReader).Dispose();
-                _sheetStream.Dispose();
-                _sheetStream = _zipWorker.GetWorksheetStream(sheet.Path);
-				_xmlReader = XmlReader.Create(_sheetStream);
+				((IDisposable)m_xmlReader).Dispose();
+                m_sheetStream.Dispose();
+                m_sheetStream = m_zipWorker.GetWorksheetStream(sheet.Path);
+				m_xmlReader = XmlReader.Create(m_sheetStream);
 
 			}
 
 			//read up to the sheetData element. if this element is empty then there aren't any rows and we need to null out dimension
 
-			_xmlReader.ReadToFollowing(XlsxWorksheet.N_sheetData, _namespaceUri);
-			if (_xmlReader.IsEmptyElement)
+			m_xmlReader.ReadToFollowing(XlsxWorksheet.N_sheetData, m_namespaceUri);
+			if (m_xmlReader.IsEmptyElement)
 			{
 				sheet.IsEmpty = true;
 			}
-
-			
 		}
 
 		private bool ReadSheetRow(XlsxWorksheet sheet)
 		{
-			if (null == _xmlReader) return false;
+			if (null == m_xmlReader)
+                return false;
 
-			if (_emptyRowCount != 0)
+			if (m_emptyRowCount != 0)
 			{
-				_cellsValues = new object[sheet.ColumnsCount];
-				_emptyRowCount--;
-				_depth++;
+				m_cellsValues = new object[sheet.ColumnsCount];
+				m_emptyRowCount--;
+				Depth++;
 
 				return true;
 			}
 
-			if (_savedCellsValues != null)
+			if (m_savedCellsValues != null)
 			{
-				_cellsValues = _savedCellsValues;
-				_savedCellsValues = null;
-				_depth++;
+				m_cellsValues = m_savedCellsValues;
+				m_savedCellsValues = null;
+				Depth++;
 
 				return true;
 			}
 
-            if ((_xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_row) ||
-                _xmlReader.ReadToFollowing(XlsxWorksheet.N_row, _namespaceUri))
+            if ((m_xmlReader.NodeType == XmlNodeType.Element && m_xmlReader.LocalName == XlsxWorksheet.N_row) ||
+                m_xmlReader.ReadToFollowing(XlsxWorksheet.N_row, m_namespaceUri))
 			{
-				_cellsValues = new object[sheet.ColumnsCount];
+				m_cellsValues = new object[sheet.ColumnsCount];
 
                 int rowIndex;
-                if (!int.TryParse(_xmlReader.GetAttribute(XlsxWorksheet.A_r), out rowIndex))
-                    rowIndex = _depth + 1;
+                if (!int.TryParse(m_xmlReader.GetAttribute(XlsxWorksheet.A_r), out rowIndex))
+                    rowIndex = Depth + 1;
 
-				if (rowIndex != (_depth + 1))
+				if (rowIndex != (Depth + 1))
 				{
-					_emptyRowCount = rowIndex - _depth - 1;
+					m_emptyRowCount = rowIndex - Depth - 1;
 				}
 				bool hasValue = false;
-				string a_s = String.Empty;
-				string a_t = String.Empty;
-				string a_r = String.Empty;
+				string a_s = string.Empty;
+				string a_t = string.Empty;
+				string a_r = string.Empty;
 				int col = 0;
-                int row = rowIndex;
 
-                while (_xmlReader.Read())
+			    while (m_xmlReader.Read())
                 {
-                    if (_xmlReader.Depth == 2) break;
+                    if (m_xmlReader.Depth == 2) break;
 
-                    if (_xmlReader.NodeType == XmlNodeType.Element)
+                    if (m_xmlReader.NodeType == XmlNodeType.Element)
                     {
                         hasValue = false;
 
-                        if (_xmlReader.LocalName == XlsxWorksheet.N_c)
+                        if (m_xmlReader.LocalName == XlsxWorksheet.N_c)
                         {
-                            a_s = _xmlReader.GetAttribute(XlsxWorksheet.A_s);
-                            a_t = _xmlReader.GetAttribute(XlsxWorksheet.A_t);
-                            a_r = _xmlReader.GetAttribute(XlsxWorksheet.A_r);
+                            a_s = m_xmlReader.GetAttribute(XlsxWorksheet.A_s);
+                            a_t = m_xmlReader.GetAttribute(XlsxWorksheet.A_t);
+                            a_r = m_xmlReader.GetAttribute(XlsxWorksheet.A_r);
 
                             if (a_r != null)
+                            {
+                                int row;
                                 XlsxDimension.XlsxDim(a_r, out col, out row);
+                            }
                             else
                                 ++col;
                         }
-                        else if (_xmlReader.LocalName == XlsxWorksheet.N_v || _xmlReader.LocalName == XlsxWorksheet.N_t)
+                        else if (m_xmlReader.LocalName == XlsxWorksheet.N_v || m_xmlReader.LocalName == XlsxWorksheet.N_t)
                         {
                             hasValue = true;
                         }
                     }
 
-                    if (_xmlReader.NodeType == XmlNodeType.Text && hasValue)
+                    if (m_xmlReader.NodeType == XmlNodeType.Text && hasValue)
                     {
                     	double number;
-                        object o = _xmlReader.Value;
+                        object o = m_xmlReader.Value;
 
-	                    var style = NumberStyles.Any;
+	                    const NumberStyles style = NumberStyles.Any;
 						var culture = CultureInfo.InvariantCulture;
                         
                         if (double.TryParse(o.ToString(), style, culture, out number))
@@ -455,7 +464,7 @@ namespace Excel
                         	
                         if (null != a_t && a_t == XlsxWorksheet.A_s) //if string
                         {
-                            o = Helpers.ConvertEscapeChars(_workbook.SST[int.Parse(o.ToString())]);
+                            o = Helpers.ConvertEscapeChars(m_workbook.SST[int.Parse(o.ToString())]);
                         } // Requested change 4: missing (it appears that if should be else if)
                         else if (null != a_t && a_t == XlsxWorksheet.N_inlineStr) //if string inline
                         {
@@ -463,11 +472,11 @@ namespace Excel
                         }
                         else if (a_t == "b") //boolean
 						{
-							o = _xmlReader.Value == "1";
+							o = m_xmlReader.Value == "1";
 						}  
                         else if (null != a_s) //if something else
                         {
-                            XlsxXf xf = _workbook.Styles.CellXfs[int.Parse(a_s)];
+                            XlsxXf xf = m_workbook.Styles.CellXfs[int.Parse(a_s)];
                             if (o != null && o.ToString() != string.Empty && IsDateTimeStyle(xf.NumFmtId))
                                 o = Helpers.ConvertFromOATime(number);
                             else if (xf.NumFmtId == 49)
@@ -476,196 +485,148 @@ namespace Excel
                                                 
 
 
-                        if (col - 1 < _cellsValues.Length)
-                            _cellsValues[col - 1] = o;
+                        if (col - 1 < m_cellsValues.Length)
+                            m_cellsValues[col - 1] = o;
                     }
                 }
 
-				if (_emptyRowCount > 0)
+				if (m_emptyRowCount > 0)
 				{
-					_savedCellsValues = _cellsValues;
+					m_savedCellsValues = m_cellsValues;
 					return ReadSheetRow(sheet);
 				}
-				_depth++;
+				Depth++;
 
 				return true;
 			}
 
-			((IDisposable)_xmlReader).Dispose();
-            if (_sheetStream != null) _sheetStream.Dispose();
+			((IDisposable)m_xmlReader).Dispose();
+		    m_sheetStream?.Dispose();
 
-			return false;
+		    return false;
 		}
 
 		private bool InitializeSheetRead()
 		{
 			if (ResultsCount <= 0) return false;
 
-			ReadSheetGlobals(_workbook.Sheets[_resultIndex]);
+			ReadSheetGlobals(m_workbook.Sheets[m_resultIndex]);
 
-			if (_workbook.Sheets[_resultIndex].Dimension == null) return false;
+			if (m_workbook.Sheets[m_resultIndex].Dimension == null) return false;
 
-			_isFirstRead = false;
+			m_isFirstRead = false;
 
-			_depth = 0;
-			_emptyRowCount = 0;
+			Depth = 0;
+			m_emptyRowCount = 0;
 
 			return true;
 		}
 
 		private bool IsDateTimeStyle(int styleId)
 		{
-			return _defaultDateTimeStyles.Contains(styleId);
+			return m_defaultDateTimeStyles.Contains(styleId);
 		}
 
 
 		#region IExcelDataReader Members
 
-		public void Initialize(System.IO.Stream fileStream)
-		{
-			try {
-				_zipWorker = new ZipWorker();
-				_zipWorker.Open(fileStream);
-
-				ReadGlobals();
-			} catch (Exception ex) {
-				_isValid = false;
-				_exceptionMessage = ex.Message;
-
-				Close();
-			}
-		}
-
 		public void Reset() {
-			_resultIndex = 0;
-			_isFirstRead = true;
-			_savedCellsValues = null;
+			m_resultIndex = 0;
+			m_isFirstRead = true;
+			m_savedCellsValues = null;
 		}
 
-		public bool IsFirstRowAsColumnNames
-		{
-			get
-			{
-				return _isFirstRowAsColumnNames;
-			}
-			set
-			{
-				_isFirstRowAsColumnNames = value;
-			}
-		}
+		public bool IsFirstRowAsColumnNames { get; set; }
 
 	    public bool ConvertOaDate { get; set; }
+
 	    public ReadOption ReadOption { get; set; }
 
-	    public Encoding Encoding
-	    {
-	        get { return null; }
-	    }
+	    public Encoding Encoding => null;
 
-	    public bool IsValid
+	    public string Name => m_resultIndex >= 0 && m_resultIndex < ResultsCount ? m_workbook.Sheets[m_resultIndex].Name : null;
+
+	    public string VisibleState => m_resultIndex >= 0 && m_resultIndex < ResultsCount ? m_workbook.Sheets[m_resultIndex].VisibleState : null;
+
+	    public void Close()
 		{
-			get { return _isValid; }
-		}
+            if (IsClosed)
+                return;
 
-		public string ExceptionMessage
-		{
-			get { return _exceptionMessage; }
-		}
+		    ((IDisposable)m_xmlReader)?.Dispose();
+		    m_sheetStream?.Dispose();
+		    m_zipWorker?.Dispose();
 
-		public string Name
-		{
-			get
-			{
-				return (_resultIndex >= 0 && _resultIndex < ResultsCount) ? _workbook.Sheets[_resultIndex].Name : null;
-			}
-		}
+            m_zipWorker = null;
+            m_xmlReader = null;
+            m_sheetStream = null;
 
-        public string VisibleState
-        {
-            get
-            {
-                return (_resultIndex >= 0 && _resultIndex < ResultsCount) ? _workbook.Sheets[_resultIndex].VisibleState : null;
-            }
+            m_workbook = null;
+            m_cellsValues = null;
+            m_savedCellsValues = null;
+
+            IsClosed = true;
         }
 
-		public void Close()
+        public int Depth { get; private set; }
+
+	    public int ResultsCount => m_workbook?.Sheets.Count ?? -1;
+
+	    public bool IsClosed { get; private set; }
+
+	    public bool NextResult()
 		{
-			_isClosed = true;
+			if (m_resultIndex >= ResultsCount - 1)
+                return false;
 
-			if (_xmlReader != null) ((IDisposable)_xmlReader).Dispose();
+			m_resultIndex++;
 
-            if (_sheetStream != null) _sheetStream.Dispose();
-
-			if (_zipWorker != null) _zipWorker.Dispose();
-		}
-
-		public int Depth
-		{
-			get { return _depth; }
-		}
-
-		public int ResultsCount
-		{
-			get { return _workbook == null ? -1 : _workbook.Sheets.Count; }
-		}
-
-		public bool IsClosed
-		{
-			get { return _isClosed; }
-		}
-
-		public bool NextResult()
-		{
-			if (_resultIndex >= (this.ResultsCount - 1)) return false;
-
-			_resultIndex++;
-
-			_isFirstRead = true;
-		    _savedCellsValues = null;
+			m_isFirstRead = true;
+		    m_savedCellsValues = null;
 
 			return true;
 		}
 
         public bool Read()
         {
-            if (!_isValid) return false;
-
-            if (_isFirstRead)
+            if (m_isFirstRead)
             {
                 var initializeSheetRead = InitializeSheetRead();
                 if (!initializeSheetRead)
                     return false;
 
-				if (IsFirstRowAsColumnNames) {
-					if (ReadSheetRow(_workbook.Sheets[_resultIndex])) {
-						_cellsNames = new string[_cellsValues.Length];
-						for (var i = 0; i < _cellsValues.Length; i++) {
-							var value = _cellsValues[i]?.ToString();
-							if (value != null && value.Length > 0)
-								_cellsNames[i] = value;
+				if (IsFirstRowAsColumnNames)
+                {
+					if (ReadSheetRow(m_workbook.Sheets[m_resultIndex]))
+                    {
+						m_cellsNames = new string[m_cellsValues.Length];
+						for (var i = 0; i < m_cellsValues.Length; i++)
+                        {
+							var value = m_cellsValues[i]?.ToString();
+							if (!string.IsNullOrEmpty(value))
+								m_cellsNames[i] = value;
 						}
-					} else {
+					}
+                    else
+                    {
 						return false;
 					}
-				} else {
-					_cellsNames = null;
+				}
+                else
+                {
+					m_cellsNames = null;
 				}
 
 			}
 
-            return ReadSheetRow(_workbook.Sheets[_resultIndex]);
+            return ReadSheetRow(m_workbook.Sheets[m_resultIndex]);
         }
 
-		public int FieldCount
-		{
-			get { return (_resultIndex >= 0 && _resultIndex < ResultsCount) ? _workbook.Sheets[_resultIndex].ColumnsCount : -1; }
-		}
+		public int FieldCount => m_resultIndex >= 0 && m_resultIndex < ResultsCount ? m_workbook.Sheets[m_resultIndex].ColumnsCount : -1;
 
-		public bool GetBoolean(int i)
+	    public bool GetBoolean(int i)
 		{
-			if (IsDBNull(i)) return false;
-
-			return Boolean.Parse(_cellsValues[i].ToString());
+		    return !IsDBNull(i) && bool.Parse(m_cellsValues[i].ToString());
 		}
 
 		public DateTime GetDateTime(int i)
@@ -674,80 +635,62 @@ namespace Excel
 
 			try
 			{
-				return (DateTime)_cellsValues[i];
+				return (DateTime)m_cellsValues[i];
 			}
 			catch (InvalidCastException)
 			{
 				return DateTime.MinValue;
 			}
-
 		}
 
 		public decimal GetDecimal(int i)
 		{
-			if (IsDBNull(i)) return decimal.MinValue;
-
-			return decimal.Parse(_cellsValues[i].ToString());
+		    return IsDBNull(i) ? decimal.MinValue : decimal.Parse(m_cellsValues[i].ToString());
 		}
 
 		public double GetDouble(int i)
 		{
-			if (IsDBNull(i)) return double.MinValue;
-
-			return double.Parse(_cellsValues[i].ToString());
+		    return IsDBNull(i) ? double.MinValue : double.Parse(m_cellsValues[i].ToString());
 		}
 
 		public float GetFloat(int i)
 		{
-			if (IsDBNull(i)) return float.MinValue;
-
-			return float.Parse(_cellsValues[i].ToString());
+		    return IsDBNull(i) ? float.MinValue : float.Parse(m_cellsValues[i].ToString());
 		}
 
 		public short GetInt16(int i)
 		{
-			if (IsDBNull(i)) return short.MinValue;
-
-			return short.Parse(_cellsValues[i].ToString());
+		    return IsDBNull(i) ? short.MinValue : short.Parse(m_cellsValues[i].ToString());
 		}
 
 		public int GetInt32(int i)
 		{
-			if (IsDBNull(i)) return int.MinValue;
-
-			return int.Parse(_cellsValues[i].ToString());
+		    return IsDBNull(i) ? int.MinValue : int.Parse(m_cellsValues[i].ToString());
 		}
 
 		public long GetInt64(int i)
 		{
-			if (IsDBNull(i)) return long.MinValue;
-
-			return long.Parse(_cellsValues[i].ToString());
+		    return IsDBNull(i) ? long.MinValue : long.Parse(m_cellsValues[i].ToString());
 		}
 
 		public string GetString(int i)
 		{
-			if (IsDBNull(i)) return null;
-
-			return _cellsValues[i].ToString();
+		    return IsDBNull(i) ? null : m_cellsValues[i].ToString();
 		}
 
 		public object GetValue(int i)
 		{
-			return _cellsValues[i];
+			return m_cellsValues[i];
 		}
 
 		public bool IsDBNull(int i)
 		{
-            return (null == _cellsValues[i]);
+            return null == m_cellsValues[i];
 		}
 
-		public object this[int i]
-		{
-			get { return _cellsValues[i]; }
-		}
+		public object this[int i] => m_cellsValues[i];
 
-		#endregion
+	    #endregion
 
 		#region IDisposable Members
 
@@ -760,27 +703,8 @@ namespace Excel
 
 		private void Dispose(bool disposing)
 		{
-			// Check to see if Dispose has already been called.
-
-			if (!this.disposed)
-			{
-				if (disposing)
-				{
-					if (_xmlReader != null) ((IDisposable) _xmlReader).Dispose();
-					if (_sheetStream != null) _sheetStream.Dispose();
-					if (_zipWorker != null) _zipWorker.Dispose();
-				}
-
-				_zipWorker = null;
-				_xmlReader = null;
-				_sheetStream = null;
-
-				_workbook = null;
-				_cellsValues = null;
-				_savedCellsValues = null;
-
-				disposed = true;
-			}
+		    if (disposing)
+		        Close();
 		}
 
 		~ExcelOpenXmlReader()
@@ -835,9 +759,9 @@ namespace Excel
 
 		public Type GetFieldType(int i)
 		{
-			if (_cellsValues[i] == null)
+			if (m_cellsValues[i] == null)
 				return null;
-			return _cellsValues[i].GetType();
+			return m_cellsValues[i].GetType();
 		}
 
 		public Guid GetGuid(int i)
@@ -847,9 +771,7 @@ namespace Excel
 
 		public string GetName(int i)
 		{
-			if (_cellsNames == null)
-				return null;
-			return _cellsNames[i];
+		    return m_cellsNames?[i];
 		}
 
 		public int GetOrdinal(string name)
