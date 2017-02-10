@@ -28,19 +28,12 @@ namespace Excel
 
         private string[] m_cellsNames;
         private object[] m_cellsValues;
-        private uint[] m_dbCellAddrs;
-        private int m_dbCellAddrsIndex;
         private int m_sheetIndex;
 
-        private int m_cellOffset;
-
-        private int m_maxRow;
-        private bool m_noIndex;
-        private XlsBiffRow m_currentRowRecord;
-        private XlsBiffBlankCell m_currentCellRecord;
-
         private bool m_isFirstRead;
-        private bool m_noRow;
+        private ushort m_largestObservedRow;
+
+        private bool m_lastReadResult = true;
 
         private const string Workbook = "Workbook";
         private const string Book = "Book";
@@ -95,31 +88,6 @@ namespace Excel
         #endregion
 
         #region Private methods
-
-        private int FindFirstDataCellOffset(int startOffset)
-        {
-            // Check that the index actually points to the db cell record
-            XlsBiffDbCell dbCell = m_stream.ReadAt(startOffset) as XlsBiffDbCell;
-            if (dbCell == null)
-                return -1;
-
-            XlsBiffRow row = m_stream.ReadAt(dbCell.RowAddress) as XlsBiffRow;
-            if (row == null)
-                return -1;
-
-            m_stream.Seek(dbCell.RowAddress, SeekOrigin.Begin);
-            XlsBiffRecord record;
-            do
-            {
-                record = m_stream.Read();
-                if (record == null)
-                    return -1;
-                if (record is XlsBiffEOF)
-                    return -1;
-            } while (record is XlsBiffRow);
-
-            return record.Offset;
-        }
 
         private void ReadWorkBookGlobals()
         {
@@ -185,7 +153,6 @@ namespace Excel
                         m_globals.Country = rec;
                         break;
                     case BIFFRECORDTYPE.CODEPAGE:
-
                         m_globals.CodePage = (XlsBiffSimpleValueRecord)rec;
 
                         //set encoding based on code page name
@@ -248,21 +215,22 @@ namespace Excel
             }
         }
 
-        private bool ReadWorkSheetGlobals(XlsWorksheet sheet, out XlsBiffIndex idx, out XlsBiffRow row, out XlsBiffBlankCell cell)
+        private bool ReadWorkSheetGlobals(XlsWorksheet sheet)
         {
-            idx = null;
-            row = null;
-            cell = null;
+            XlsBiffIndex idx = null;
 
             m_stream.Seek((int)sheet.DataOffset, SeekOrigin.Begin);
 
             XlsBiffBOF bof = m_stream.Read() as XlsBiffBOF;
-            if (bof == null || bof.Type != BIFFTYPE.Worksheet) return false;
+            if (bof == null || bof.Type != BIFFTYPE.Worksheet)
+                return false;
 
             //DumpBiffRecords();
 
             XlsBiffRecord rec = m_stream.Read();
-            if (rec == null) return false;
+            if (rec == null || rec is XlsBiffEOF)
+                return false;
+
             if (rec is XlsBiffIndex)
             {
                 idx = rec as XlsBiffIndex;
@@ -270,7 +238,11 @@ namespace Excel
             else if (rec is XlsBiffUncalced)
             {
                 // Sometimes this come before the index...
-                idx = m_stream.Read() as XlsBiffIndex;
+                rec = m_stream.Read();
+                if (rec == null || rec is XlsBiffEOF)
+                    return false;
+
+                idx = rec as XlsBiffIndex;
             }
 
             //if (null == idx)
@@ -281,83 +253,33 @@ namespace Excel
 
             if (idx != null)
             {
-                idx.IsV8 = IsV8();
                 LogManager.Log(this).Debug("INDEX IsV8={0}", idx.IsV8);
             }
 
-            XlsBiffRecord trec;
             XlsBiffDimensions dims = null;
 
-            do
+            while (rec.ID != BIFFRECORDTYPE.ROW && !rec.IsCell)
             {
-                trec = m_stream.Read();
-                if (trec.ID == BIFFRECORDTYPE.DIMENSIONS)
+                if (rec.ID == BIFFRECORDTYPE.DIMENSIONS)
                 {
-                    dims = (XlsBiffDimensions)trec;
+                    dims = (XlsBiffDimensions)rec;
                     break;
                 }
 
-            } while (trec.ID != BIFFRECORDTYPE.ROW);
-
-            bool foundCell = false;
-
-            // If we are already on row record then set that as the row, otherwise step forward till we get to a row record
-            if (trec.ID == BIFFRECORDTYPE.ROW)
-            {
-                row = (XlsBiffRow)trec;
+                rec = m_stream.Read();
             }
-            else
-            {
-                XlsBiffRow rowRecord = null;
-                while (rowRecord == null)
-                {
-                    var thisRec = m_stream.Read();
-                    if (thisRec == null)
-                        break;
-
-                    LogManager.Log(this).Debug("finding rowRecord offset {0}, rec: {1}", thisRec.Offset, thisRec.ID);
-                    if (thisRec is XlsBiffEOF)
-                        break;
-                    rowRecord = thisRec as XlsBiffRow;
-
-                    XlsBiffBlankCell thisCell = thisRec as XlsBiffBlankCell;
-                    if (thisCell != null)
-                    {
-                        foundCell = true;
-                        cell = thisCell;
-                        break;
-                    }
-                }
-
-                if (rowRecord != null)
-                    LogManager.Log(this).Debug("Got row {0}, rec: id={1},rowindex={2}, rowColumnStart={3}, rowColumnEnd={4}", rowRecord.Offset, rowRecord.ID, rowRecord.RowIndex, rowRecord.FirstDefinedColumn, rowRecord.LastDefinedColumn);
-
-                row = rowRecord;
-            }
-
+            
             if (dims != null)
             {
                 dims.IsV8 = IsV8();
                 LogManager.Log(this).Debug("dims IsV8={0}", dims.IsV8);
                 FieldCount = dims.LastColumn - 1;
 
-                //handle case where sheet reports last column is 1 but there are actually more
-                if (FieldCount <= 0 && row != null)
-                {
-                    FieldCount = row.LastDefinedColumn;
-                }
-
-                m_maxRow = (int)dims.LastRow;
                 sheet.Dimensions = dims;
-            }
-            else if (idx != null)
-            {
-                FieldCount = 256;
-                m_maxRow = (int)idx.LastExistingRow;
             }
             else
             {
-                return false;
+                FieldCount = 256;
             }
 
             if (idx != null && idx.LastExistingRow <= idx.FirstExistingRow)
@@ -365,12 +287,6 @@ namespace Excel
                 return false;
             }
 
-            if (row == null && !foundCell)
-            {
-                return false;
-            }
-
-            m_noRow = foundCell;
             Depth = 0;
 
             return true;
@@ -396,39 +312,67 @@ namespace Excel
             m_cellsValues = new object[FieldCount];
 
             bool foundValue = false;
-            while (m_cellOffset < m_stream.Size)
+
+            XlsBiffRecord rec = m_stream.LastRead;
+
+            while (true)
             {
-                XlsBiffRecord rec = m_stream.ReadAt(m_cellOffset);
-                m_cellOffset += rec.Size;
+                CheckLargestObservedRow(rec);
 
-                if (rec is XlsBiffDbCell || rec is XlsBiffMSODrawing)
-                {
+                if (rec == null || rec is XlsBiffMSODrawing || rec is XlsBiffEOF)
                     break;
-                }
 
-                if (rec is XlsBiffEOF)
+                var cell = rec as XlsBiffBlankCell;
+                if (null != cell && cell.ColumnIndex < FieldCount && !IsIgnoredCell(cell))
                 {
-                    Depth++;
-                    return foundValue;
+                    if (cell.RowIndex > Depth)
+                    {
+                        foundValue = true;
+                        break;
+                    }
+
+                    PushCellValue(cell);
+                    foundValue = true;
                 }
 
-                XlsBiffBlankCell cell = rec as XlsBiffBlankCell;
-
-                if (null == cell || cell.ColumnIndex >= FieldCount)
-                    continue;
-                if (cell.RowIndex != Depth)
-                {
-                    m_cellOffset -= rec.Size;
-                    break;
-                }
-
-                PushCellValue(cell);
-                foundValue = true;
+                rec = m_stream.Read();
             }
 
             Depth++;
 
-            return foundValue || m_cellOffset <= m_stream.Size;
+            return foundValue || Depth <= m_largestObservedRow;
+        }
+
+        private void CheckLargestObservedRow(XlsBiffRecord record)
+        {
+            if (record == null)
+                return;
+
+            var cell = record as XlsBiffBlankCell;
+            if (cell != null)
+            {
+                m_largestObservedRow = Math.Max(m_largestObservedRow, cell.RowIndex);
+                return;
+            }
+
+            var row = record as XlsBiffRow;
+            if (row != null)
+            {
+                m_largestObservedRow = Math.Max(m_largestObservedRow, row.RowIndex);
+            }
+        }
+
+        private static bool IsIgnoredCell(XlsBiffBlankCell cell)
+        {
+            switch (cell.ID)
+            {
+                case BIFFRECORDTYPE.BLANK:
+                case BIFFRECORDTYPE.BLANK_OLD:
+                case BIFFRECORDTYPE.MULBLANK:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private void PushCellValue(XlsBiffBlankCell cell)
@@ -518,163 +462,44 @@ namespace Excel
             }
         }
 
-        private bool MoveToNextRecord()
-        {
-            //if sheet has no index
-            if (m_noIndex)
-            {
-                if (m_noRow)
-                {
-                    LogManager.Log(this).Debug("No index and no row");
-                    return MoveToNextRecordNoIndexOrRow();
-                }
-
-                LogManager.Log(this).Debug("No index");
-                return MoveToNextRecordNoIndex();
-            }
-
-            //if sheet has index
-            if (null == m_dbCellAddrs ||
-                m_dbCellAddrsIndex == m_dbCellAddrs.Length ||
-                Depth == m_maxRow) return false;
-
-            // Check if we've reached the end of the current row block
-            XlsBiffDbCell dbCell = m_stream.ReadAt(m_cellOffset) as XlsBiffDbCell;
-            if (dbCell != null)
-            {
-                m_dbCellAddrsIndex++;
-                if (m_dbCellAddrsIndex >= m_dbCellAddrs.Length)
-                    return false;
-                m_cellOffset = FindFirstDataCellOffset((int)m_dbCellAddrs[m_dbCellAddrsIndex]);
-                if (m_cellOffset < 0)
-                    return false;
-            }
-
-            return ReadWorkSheetRow();
-        }
-
-        private bool MoveToNextRecordNoIndex()
-        {
-            //seek from current row record to start of cell data where that cell relates to the next row record
-            XlsBiffRow rowRecord = m_currentRowRecord;
-
-            if (rowRecord == null)
-                return false;
-
-            m_stream.Seek(rowRecord.Offset + rowRecord.Size, SeekOrigin.Begin);
-            if (rowRecord.RowIndex < Depth)
-            {
-                do
-                {
-                    var record = m_stream.Read();
-                    if (record == null || record is XlsBiffEOF)
-                        return false;
-
-                    rowRecord = record as XlsBiffRow;
-
-                } while (rowRecord == null || rowRecord.RowIndex < Depth);
-            }
-
-            m_currentRowRecord = rowRecord;
-            //m_depth = m_currentRowRecord.RowIndex;
-
-            //we have now found the row record for the new row, the we need to seek forward to the first cell record
-            XlsBiffBlankCell cell = null;
-            do
-            {
-                var record = m_stream.Read();
-                if (record == null || record is XlsBiffEOF)
-                    return false;
-
-                var candidateCell = record as XlsBiffBlankCell;
-                if (candidateCell != null)
-                {
-                    if (candidateCell.RowIndex > m_currentRowRecord.RowIndex)
-                    {
-                        m_cellsValues = new object[FieldCount];
-                        Depth++;
-                        return true;
-                    }
-
-                    if (candidateCell.RowIndex == m_currentRowRecord.RowIndex)
-                        cell = candidateCell;
-                }
-            } while (cell == null);
-
-            m_cellOffset = cell.Offset;
-            bool success = ReadWorkSheetRow();
-
-            return success;
-        }
-
-        private bool MoveToNextRecordNoIndexOrRow()
-        {
-            //seek from current row record to start of cell data where that cell relates to the next row record
-            XlsBiffBlankCell currentCell = m_currentCellRecord;
-
-            if (currentCell == null)
-                return false;
-
-            if (currentCell.RowIndex < Depth)
-            {
-                do
-                {
-                    if (m_stream.Position >= m_stream.Size)
-                        return false;
-
-                    var record = m_stream.Read();
-                    if (record is XlsBiffEOF)
-                        return false;
-
-                    currentCell = record as XlsBiffBlankCell;
-
-                } while (currentCell == null || currentCell.RowIndex < Depth);
-            }
-
-            m_currentCellRecord = currentCell;
-
-            m_cellOffset = currentCell.Offset;
-            return ReadWorkSheetRow();
-        }
-
         private bool InitializeSheetRead()
         {
-            m_dbCellAddrs = null;
-
             m_isFirstRead = false;
+            m_largestObservedRow = 0;
 
             if (m_sheetIndex == -1)
                 m_sheetIndex = 0;
 
-            XlsBiffIndex idx;
-
-            if (!ReadWorkSheetGlobals(m_sheets[m_sheetIndex], out idx, out m_currentRowRecord, out m_currentCellRecord))
+            if (!ReadWorkSheetGlobals(m_sheets[m_sheetIndex]))
             {
                 return false;
             }
 
-            if (idx == null)
+            //handle case where sheet reports last column is 1 but there are actually more
+            if (FieldCount <= 0)
             {
-                //no index, but should have the first row record
-                m_noIndex = true;
-            }
-            else
-            {
-                m_dbCellAddrs = idx.DbCellAddresses;
-                m_dbCellAddrsIndex = 0;
-                m_cellOffset = FindFirstDataCellOffset((int)m_dbCellAddrs[m_dbCellAddrsIndex]);
-                if (m_cellOffset < 0)
+                // Find first row after DIMENSIONS
+                XlsBiffRow row = null;
+                while (row == null)
                 {
-                    if (m_currentRowRecord == null)
+                    var thisRec = m_stream.Read();
+                    if (thisRec == null || thisRec is XlsBiffEOF)
+                        break;
+
+                    if (thisRec.IsCell)
                     {
-                        throw new BiffRecordException("Badly formed binary file. Has INDEX but no DBCELL.");
+                        // TODO: No fields and no rows, how do we handle that?
+                        return false;
                     }
 
-                    LogManager.Log(this).Debug("Badly formed binary file. Has INDEX but no DBCELL.");
-                    m_noIndex = true;
-                    m_dbCellAddrs = null;
+                    row = thisRec as XlsBiffRow;
                 }
 
+                if (row != null)
+                {
+                    LogManager.Log(this).Debug("Got row {0}, rec: id={1},rowindex={2}, rowColumnStart={3}, rowColumnEnd={4}", row.Offset, row.ID, row.RowIndex, row.FirstDefinedColumn, row.LastDefinedColumn);
+                    FieldCount = row.LastDefinedColumn;
+                }
             }
 
             return true;
@@ -797,6 +622,7 @@ namespace Excel
         {
             m_sheetIndex = 0;
             m_isFirstRead = true;
+            m_lastReadResult = true;
         }
         
         public string Name
@@ -860,12 +686,22 @@ namespace Excel
 
             m_sheetIndex++;
 
+            m_lastReadResult = true;
             m_isFirstRead = true;
 
             return true;
         }
 
         public bool Read()
+        {
+            if (!m_lastReadResult)
+                return false;
+
+            m_lastReadResult = ReadCore();
+            return m_lastReadResult;
+        }
+
+        private bool ReadCore()
         {
             if (m_isFirstRead)
             {
@@ -874,7 +710,7 @@ namespace Excel
 
                 if (IsFirstRowAsColumnNames)
                 {
-                    if (MoveToNextRecord())
+                    if (ReadWorkSheetRow())
                     {
                         m_cellsNames = new string[m_cellsValues.Length];
                         for (var i = 0; i < m_cellsValues.Length; i++)
@@ -897,7 +733,7 @@ namespace Excel
                 }
             }
 
-            return MoveToNextRecord();
+            return ReadWorkSheetRow();
         }
 
         public int FieldCount { get; private set; }
@@ -1082,7 +918,6 @@ namespace Excel
 
     internal class EncodingHelper
     {
-
         public static Encoding GetEncoding(ushort codePage)
         {
             var encoding = (Encoding)null;

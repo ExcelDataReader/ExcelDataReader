@@ -888,7 +888,6 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11545_NoIndex()
         {
-            Assert.Inconclusive("not fixed yet");
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11545_NoIndex")))
             {
                 excelReader.IsFirstRowAsColumnNames = true;
@@ -899,8 +898,7 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(new DateTime(2012, 03, 01), dataset.Tables[0].Rows[0][8]);
             }
         }
-
-
+        
         [TestMethod]
         public void Issue_11573_BlankValues()
         {

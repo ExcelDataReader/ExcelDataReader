@@ -16,6 +16,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 		private readonly ExcelBinaryReader m_reader;
 		private readonly byte[] m_bytes;
 
+	    private XlsBiffRecord m_lastRead;
+
 	    public XlsBiffStream(XlsHeader hdr, uint streamStart, bool isMini, XlsRootDirectory rootDir, ExcelBinaryReader reader)
 		{
 			m_reader = reader;
@@ -123,26 +125,41 @@ namespace ExcelDataReader.Core.BinaryFormat
 
 		}
 
-		/// <summary>
-		/// Reads record under cursor and advances cursor position to next record
-		/// </summary>
-		/// <returns></returns>
-		public XlsBiffRecord Read()
+	    public XlsBiffRecord LastRead
+	    {
+	        get
+	        {
+	            lock (this)
+	            {
+	                return m_lastRead;
+	            }
+	        }
+	    }
+
+	    /// <summary>
+        /// Reads record under cursor and advances cursor position to next record
+        /// </summary>
+        /// <returns></returns>
+        public XlsBiffRecord Read()
 		{
             //add lock(this) as this is equivalent to [MethodImpl(MethodImplOptions.Synchronized)] on the method
             lock (this)
             {
+                m_lastRead = null;
+
                 // Minimum record size is 4
                 if ((uint)Position + 4 >= m_bytes.Length)
                     return null;
 
-                XlsBiffRecord rec = XlsBiffRecord.GetRecord(m_bytes, (uint)Position, m_reader);
-                Position += rec.Size;
+                m_lastRead = XlsBiffRecord.GetRecord(m_bytes, (uint)Position, m_reader);
+                Position += m_lastRead.Size;
                 if (Position > Size)
-                    return null;
-                return rec;
-            }
+                {
+                    m_lastRead = null;
+                }
 
+                return m_lastRead;
+            }
 		}
 
 		/// <summary>
