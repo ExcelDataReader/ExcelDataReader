@@ -1197,5 +1197,18 @@ namespace ExcelDataReader.Tests
             Assert.IsNotNull(ds);
             Assert.AreEqual(40, ds.Tables.Count);
         }
+
+#if NET45 || NET20
+        [TestMethod]
+        public void ReadWriteProtectedStructureUsingStandardEncryption()
+        {
+            var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("protectedsheet-xxx"), true, ReadOption.Loose);
+
+            var ds = excelReader.AsDataSet(true);
+            Assert.IsNotNull(ds);
+            Assert.AreEqual("x", ds.Tables[0].Rows[0][0]);
+            Assert.AreEqual(1.4, ds.Tables[0].Rows[1][0]);
+        }
+#endif
     }
 }

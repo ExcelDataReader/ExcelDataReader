@@ -160,6 +160,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 					return new XlsBiffQuickTip(bytes, offset, reader);
 				case BIFFRECORDTYPE.MSODRAWING:
             		return new XlsBiffMSODrawing(bytes, offset, reader);
+                case BIFFRECORDTYPE.FILEPASS:
+			        return new XlsBiffFilePass(bytes, offset, reader);
 
 				default:
 					return new XlsBiffRecord(bytes, offset, reader);

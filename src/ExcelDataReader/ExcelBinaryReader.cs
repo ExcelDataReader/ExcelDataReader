@@ -139,9 +139,17 @@ namespace Excel
 			if (workbookEntry.EntryType != STGTY.STGTY_STREAM)
 			{ Fail(Errors.ErrorWorkbookIsNotStream); return; }
 
-			m_stream = new XlsBiffStream(m_hdr, workbookEntry.StreamFirstSector, workbookEntry.IsEntryMiniStream, dir, this);
+		    try
+		    {
+		        m_stream = new XlsBiffStream(m_hdr, workbookEntry.StreamFirstSector, workbookEntry.IsEntryMiniStream, dir, this);
+		    }
+		    catch (NotSupportedException e)
+		    {
+                Fail(e.Message);
+		        return;
+		    }
 
-			m_globals = new XlsWorkbookGlobals();
+		    m_globals = new XlsWorkbookGlobals();
 
 			m_stream.Seek(0, SeekOrigin.Begin);
 
@@ -160,7 +168,7 @@ namespace Excel
 			{
 				switch (rec.ID)
 				{
-					case BIFFRECORDTYPE.INTERFACEHDR:
+                    case BIFFRECORDTYPE.INTERFACEHDR:
 						m_globals.InterfaceHdr = (XlsBiffInterfaceHdr)rec;
 						break;
 					case BIFFRECORDTYPE.BOUNDSHEET:
@@ -240,8 +248,9 @@ namespace Excel
 						m_globals.ExtSST = rec;
 						sst = false;
 						break;
-					case BIFFRECORDTYPE.PROTECT:
-					case BIFFRECORDTYPE.PASSWORD:
+                    case BIFFRECORDTYPE.PASSWORD:
+				        break;
+                    case BIFFRECORDTYPE.PROTECT:
 					case BIFFRECORDTYPE.PROT4REVPASSWORD:
 						//IsProtected
 						break;
