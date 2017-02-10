@@ -39,13 +39,6 @@ namespace Excel
 		/// </value>
 		bool IsFirstRowAsColumnNames { get; set;}
 
-        /// <summary>
-        /// Gets a value indicating whether OA dates should be converted to <see cref="DateTime"/> or not.
-        /// </summary>
-        bool ConvertOaDate { get; }
-
-        ReadOption ReadOption { get; }
-
 	    Encoding Encoding { get; }
 	}
 }

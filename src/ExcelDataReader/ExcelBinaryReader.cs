@@ -894,7 +894,7 @@ namespace Excel
 
         public bool IsFirstRowAsColumnNames { get; set; }
 
-        public bool ConvertOaDate { get; set; }
+        private bool ConvertOaDate { get; }
 
         public ReadOption ReadOption { get; }
 

@@ -8,12 +8,14 @@ namespace Excel
 	/// </summary>
 	public static class ExcelReaderFactory
 	{
-        /// <summary>
-        /// Creates an instance of <see cref="ExcelBinaryReader"/> or <see cref="ExcelOpenXmlReader"/>
-        /// </summary>
-        /// <param name="fileStream">The file stream.</param>
-        /// <returns>The excel data reader.</returns>
-        public static IExcelDataReader CreateReader(Stream fileStream)
+	    /// <summary>
+	    /// Creates an instance of <see cref="ExcelBinaryReader"/> or <see cref="ExcelOpenXmlReader"/>
+	    /// </summary>
+	    /// <param name="fileStream">The file stream.</param>
+	    /// <param name="convertOADates">If <see langword="true"/> convert OA dates to <see cref="DateTime"/>. Only applicable to binary (xls) files.</param>
+	    /// <param name="readOption">The read option to use for binary (xls) files.</param>
+	    /// <returns>The excel data reader.</returns>
+	    public static IExcelDataReader CreateReader(Stream fileStream, bool convertOADates = true, ReadOption readOption = ReadOption.Strict)
         {
             const ulong xlsSignature = 0xE11AB1A1E011CFD0;
             var buf = new byte[512];
@@ -24,7 +26,7 @@ namespace Excel
             var hdr = BitConverter.ToUInt64(buf, 0x0);
 
             if (hdr == xlsSignature)
-                return CreateBinaryReader(fileStream);
+                return CreateBinaryReader(fileStream, convertOADates, readOption);
             return CreateOpenXmlReader(fileStream);
 
         }
