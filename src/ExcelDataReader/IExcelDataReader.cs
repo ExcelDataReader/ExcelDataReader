@@ -63,7 +63,7 @@ namespace Excel
         bool ConvertOaDate { get; set; }
 
         ReadOption ReadOption { get; set;  }
+
 	    Encoding Encoding { get; }
-	    Encoding DefaultEncoding { get; }
 	}
 }

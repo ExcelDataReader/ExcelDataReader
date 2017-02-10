@@ -562,11 +562,6 @@ namespace Excel
 	        get { return null; }
 	    }
 
-        public Encoding DefaultEncoding
-        {
-            get { return Encoding.UTF8; }
-        }
-
 	    public bool IsValid
 		{
 			get { return _isValid; }

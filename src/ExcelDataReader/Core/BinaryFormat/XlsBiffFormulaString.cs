@@ -9,43 +9,17 @@ namespace ExcelDataReader.Core.BinaryFormat
 	/// </summary>
 	internal class XlsBiffFormulaString : XlsBiffRecord
 	{
-	    private XlsFormattedUnicodeString unicodeString;
+	    private readonly XlsFormattedUnicodeString m_unicodeString;
 
 		internal XlsBiffFormulaString(byte[] bytes, uint offset, ExcelBinaryReader reader)
 			: base(bytes, offset, reader)
 		{
-            //unicodeString = new XlsFormattedUnicodeString(bytes, offset + 4, reader.Encoding); 
-		    unicodeString = new XlsFormattedUnicodeString(bytes, offset + 4); 
+		    m_unicodeString = new XlsFormattedUnicodeString(bytes, offset + 4); 
 		}
 
 	    /// <summary>
-		/// Encoding used to deal with strings
-		/// </summary>
-		public Encoding UseEncoding
-		{
-			get { return reader.Encoding; }
-		}
-
-		/// <summary>
-		/// Length of the string
-		/// </summary>
-		public uint Length
-		{
-            get
-            {
-                return unicodeString.CharacterCount;
-            }
-		}
-
-		/// <summary>
 		/// String text
 		/// </summary>
-		public string Value
-		{
-			get
-			{
-			    return unicodeString.Value;
-			}
-		}
+		public string Value => m_unicodeString.Value;
 	}
 }

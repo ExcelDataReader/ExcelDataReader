@@ -26,8 +26,6 @@ namespace Excel
         private XlsWorkbookGlobals m_globals;
         private ushort m_version;
 
-        private readonly Encoding m_defaultEncoding = Encoding.Unicode;
-
         private string[] m_cellsNames;
         private object[] m_cellsValues;
         private uint[] m_dbCellAddrs;
@@ -52,7 +50,6 @@ namespace Excel
 
         public ExcelBinaryReader()
         {
-            Encoding = m_defaultEncoding;
             m_version = 0x0600;
             IsValid = true;
             m_sheetIndex = -1;
@@ -197,15 +194,6 @@ namespace Excel
                         else
                             Encoding = EncodingHelper.GetEncoding(m_globals.CodePage.Value);
                         //note: the format spec states that for BIFF8 this is always UTF-16.
-                        //as PCL does not supported codepage numbers, it is best to assume UTF-16 for encoding
-                        //try
-                        //{
-                        //    m_encoding = Encoding.GetEncoding(m_globals.CodePage.Value);
-                        //}
-                        //catch (ArgumentException)
-                        //{
-                        //    // Warning - Password protection
-                        //}
 
                         break;
                     case BIFFRECORDTYPE.FONT:
@@ -215,7 +203,6 @@ namespace Excel
                     case BIFFRECORDTYPE.FORMAT_V23:
                         {
                             var fmt = (XlsBiffFormatString)rec;
-                            //fmt.UseEncoding = m_encoding;
                             m_globals.Formats.Add((ushort)m_globals.Formats.Count, fmt);
                         }
                         break;
@@ -1106,8 +1093,6 @@ namespace Excel
         public ReadOption ReadOption { get; set; } = ReadOption.Strict;
 
         public Encoding Encoding { get; private set; }
-
-        public Encoding DefaultEncoding => Encoding.UTF8;
 
         /// <inheritdoc />
         public IDataReader GetData(int i)

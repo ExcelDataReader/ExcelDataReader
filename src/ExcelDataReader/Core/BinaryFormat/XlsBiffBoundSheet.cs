@@ -32,81 +32,56 @@ namespace ExcelDataReader.Core.BinaryFormat
 
 		#endregion
 
-		private bool isV8 = true;
-        //private Encoding m_UseEncoding = Encoding.UTF8; 
-
-		internal XlsBiffBoundSheet(byte[] bytes, uint offset, ExcelBinaryReader reader)
+	    internal XlsBiffBoundSheet(byte[] bytes, uint offset, ExcelBinaryReader reader)
 			: base(bytes, offset, reader)
 		{
 		}
 		/// <summary>
 		/// Worksheet data start offset
 		/// </summary>
-		public uint StartOffset
-		{
-			get { return base.ReadUInt32(0x0); }
-		}
+		public uint StartOffset => ReadUInt32(0x0);
 
-		/// <summary>
+	    /// <summary>
 		/// Type of worksheet
 		/// </summary>
-		public SheetType Type
-		{
-			get { return (SheetType)base.ReadByte(0x5); }
-		}
+		public SheetType Type => (SheetType)ReadByte(0x5);
 
-		/// <summary>
+	    /// <summary>
 		/// Visibility of worksheet
 		/// </summary>
-		public SheetVisibility VisibleState
-		{
-			get { return (SheetVisibility)base.ReadByte(0x4); }
-		}
+		public SheetVisibility VisibleState => (SheetVisibility)ReadByte(0x4);
 
-        /// <summary>
+	    /// <summary>
         /// Name of worksheet
         /// </summary>
         public string SheetName
         {
             get
             {
-                ushort len = base.ReadByte(0x6);
+                ushort len = ReadByte(0x6);
 
-                int start = 0x8;
-                if (isV8)
-                    if (base.ReadByte(0x7) == 0)
-                    {
-                        byte[] bytes = new byte[len * 2];
-                        for (int i = 0; i < len; i++)
-                        {
-                            bytes[i * 2] = m_bytes[m_readoffset + start + i];
-                        }
-
-                        return Encoding.Unicode.GetString(bytes, 0, len * 2);
-                    }
-                    else
-                        return Encoding.Unicode.GetString(m_bytes, m_readoffset + start, len * 2);
-                else
+                const int start = 0x8;
+                if (!IsV8)
                     return reader.Encoding.GetString(m_bytes, m_readoffset + start, Helpers.IsSingleByteEncoding(reader.Encoding) ? len : len * 2);
+
+                if (ReadByte(0x7) == 0)
+                {
+                    byte[] bytes = new byte[len * 2];
+                    for (int i = 0; i < len; i++)
+                    {
+                        bytes[i * 2] = m_bytes[m_readoffset + start + i];
+                    }
+
+                    return Encoding.Unicode.GetString(bytes, 0, len * 2);
+                }
+
+                return Encoding.Unicode.GetString(m_bytes, m_readoffset + start, len * 2);
             }
         }
-
-        ///// <summary>
-        ///// Encoding used to deal with strings
-        ///// </summary>
-        //public Encoding UseEncoding
-        //{
-        //    get { return m_UseEncoding; }
-        //    set { m_UseEncoding = value; }
-        //}
 
         /// <summary>
         /// Specifies if BIFF8 format should be used
         /// </summary>
-        public bool IsV8
-		{
-			get { return isV8; }
-			set { isV8 = value; }
-		}
+        public bool IsV8 { get; set; } = true;
 	}
 }

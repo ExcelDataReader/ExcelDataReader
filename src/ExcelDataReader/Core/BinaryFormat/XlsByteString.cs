@@ -5,48 +5,27 @@ namespace ExcelDataReader.Core.BinaryFormat
 {
     internal class XlsByteString : IXlsString
     {
-        protected byte[] m_bytes;
-        protected uint m_offset;
-        private readonly Encoding encoding;
+        private readonly byte[] m_bytes;
+        private readonly uint m_offset;
+        private readonly Encoding m_encoding;
 
         public XlsByteString(byte[] bytes, uint offset, Encoding encoding)
         {
             m_bytes = bytes;
             m_offset = offset;
-            this.encoding = encoding;
+            m_encoding = encoding;
         }
-
-
+        
         /// <summary>
         /// Count of characters in string
         /// </summary>
-        public ushort CharacterCount
-        {
-            get { return BitConverter.ToUInt16(m_bytes, (int)m_offset); }
-        }
+        public ushort CharacterCount => BitConverter.ToUInt16(m_bytes, (int)m_offset);
 
-        public uint HeadSize
-        {
-            get { return 0; }
-        }
+        public uint HeadSize => 0;
 
-        public uint TailSize
-        {
-            get { return 0; }
-        }
+        public uint TailSize => 0;
 
-        public bool IsMultiByte
-        {
-            get { return !Helpers.IsSingleByteEncoding(encoding); }
-        }
-
-        public Encoding UseEncoding
-        {
-            get
-			{
-				return IsMultiByte ? Encoding.Unicode : Encoding.GetEncoding("windows-1250");
-            }
-        }
+        public bool IsMultiByte => !Helpers.IsSingleByteEncoding(m_encoding);
 
         /// <summary>
         /// Returns string represented by this instance
@@ -55,9 +34,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             get
             {
-                var bytes = 
-                    ReadArray(0x2, CharacterCount * (Helpers.IsSingleByteEncoding(encoding) ? 1 : 2));
-                return encoding.GetString(bytes, 0, bytes.Length);
+                var bytes = ReadArray(0x2, CharacterCount * (Helpers.IsSingleByteEncoding(m_encoding) ? 1 : 2));
+                return m_encoding.GetString(bytes, 0, bytes.Length);
             }
         }
 
