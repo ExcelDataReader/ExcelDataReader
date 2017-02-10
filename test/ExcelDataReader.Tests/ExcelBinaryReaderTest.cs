@@ -846,7 +846,7 @@ namespace ExcelDataReader.Tests
             //test dataset
 
             DataSet result = excelReader.AsDataSet(true);
-            Assert.AreEqual(1, result.Tables.Count);
+            Assert.AreEqual(3, result.Tables.Count);
             Assert.AreEqual(6, result.Tables[0].Columns.Count);
             Assert.AreEqual(33, result.Tables[0].Rows.Count);
 
