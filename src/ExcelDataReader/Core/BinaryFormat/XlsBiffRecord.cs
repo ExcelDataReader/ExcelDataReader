@@ -9,17 +9,15 @@ namespace ExcelDataReader.Core.BinaryFormat
 	/// </summary>
 	internal class XlsBiffRecord
 	{
-		protected byte[] m_bytes;
-		protected readonly ExcelBinaryReader reader;
-		protected int m_readoffset;
-
-		protected XlsBiffRecord(byte[] bytes, uint offset, ExcelBinaryReader reader)
+	    private const int ContentOffset = 4;
+	    
+	    protected XlsBiffRecord(byte[] bytes, uint offset, ExcelBinaryReader reader)
 		{
 			if (bytes.Length - offset < 4)
 				throw new ArgumentException(Errors.ErrorBIFFRecordSize);
-			m_bytes = bytes;
-			this.reader = reader;
-			m_readoffset = (int)(4 + offset);
+			Bytes = bytes;
+            Reader = reader;
+			RecordContentOffset = (int)(4 + offset);
 
 			//Set readOption to loose to not cause exception here (sql reporting services)
 			if (reader.ReadOption == ReadOption.Strict)
@@ -30,41 +28,30 @@ namespace ExcelDataReader.Core.BinaryFormat
 			
 		}
 
-		internal byte[] Bytes
-		{
-			get { return m_bytes; }
-		}
+        internal ExcelBinaryReader Reader { get; }
 
-		internal int Offset
-		{
-			get { return m_readoffset - 4; }
-		}
+		internal byte[] Bytes { get; }
 
-		/// <summary>
+	    internal int RecordContentOffset { get; }
+
+	    internal int Offset => RecordContentOffset - ContentOffset;
+
+	    /// <summary>
 		/// Returns type ID of this entry
 		/// </summary>
-		public BIFFRECORDTYPE ID
-		{
-			get { return (BIFFRECORDTYPE)BitConverter.ToUInt16(m_bytes, m_readoffset - 4); }
-		}
+		public BIFFRECORDTYPE ID => (BIFFRECORDTYPE)BitConverter.ToUInt16(Bytes, RecordContentOffset - ContentOffset);
 
-		/// <summary>
+	    /// <summary>
 		/// Returns data size of this entry
 		/// </summary>
-		public ushort RecordSize
-		{
-			get { return BitConverter.ToUInt16(m_bytes, m_readoffset - 2); }
-		}
+		public ushort RecordSize => BitConverter.ToUInt16(Bytes, RecordContentOffset - 2);
 
-		/// <summary>
+	    /// <summary>
 		/// Returns whole size of structure
 		/// </summary>
-		public int Size
-		{
-			get { return 4 + RecordSize; }
-		}
+		public int Size => ContentOffset + RecordSize;
 
-		/// <summary>
+	    /// <summary>
 		/// Returns record at specified offset
 		/// </summary>
 		/// <param name="bytes">byte array</param>
@@ -73,12 +60,12 @@ namespace ExcelDataReader.Core.BinaryFormat
 		/// <returns></returns>
 		public static XlsBiffRecord GetRecord(byte[] bytes, uint offset, ExcelBinaryReader reader)
 		{
-            if ((uint)offset >= bytes.Length)
+            if (offset >= bytes.Length)
                 return null;
 
-			uint ID = BitConverter.ToUInt16(bytes, (int)offset);
+			uint id = BitConverter.ToUInt16(bytes, (int)offset);
 			//Console.WriteLine("GetRecord {0}", (BIFFRECORDTYPE)ID);
-			switch ((BIFFRECORDTYPE)ID)
+			switch ((BIFFRECORDTYPE)id)
 			{
 				case BIFFRECORDTYPE.BOF_V2:
 				case BIFFRECORDTYPE.BOF_V3:
@@ -168,61 +155,58 @@ namespace ExcelDataReader.Core.BinaryFormat
 			}
 		}
 
-		public virtual bool IsCell
-		{
-		    get { return false; }
-		}
+		public virtual bool IsCell => false;
 
-		public byte ReadByte(int offset)
+	    public byte ReadByte(int offset)
 		{
-			return Buffer.GetByte(m_bytes, m_readoffset + offset);
+			return Buffer.GetByte(Bytes, RecordContentOffset + offset);
 		}
 
 		public ushort ReadUInt16(int offset)
 		{
-			return BitConverter.ToUInt16(m_bytes, m_readoffset + offset);
+			return BitConverter.ToUInt16(Bytes, RecordContentOffset + offset);
 		}
 
 		public uint ReadUInt32(int offset)
 		{
-			return BitConverter.ToUInt32(m_bytes, m_readoffset + offset);
+			return BitConverter.ToUInt32(Bytes, RecordContentOffset + offset);
 		}
 
 		public ulong ReadUInt64(int offset)
 		{
-			return BitConverter.ToUInt64(m_bytes, m_readoffset + offset);
+			return BitConverter.ToUInt64(Bytes, RecordContentOffset + offset);
 		}
 
 		public short ReadInt16(int offset)
 		{
-			return BitConverter.ToInt16(m_bytes, m_readoffset + offset);
+			return BitConverter.ToInt16(Bytes, RecordContentOffset + offset);
 		}
 
 		public int ReadInt32(int offset)
 		{
-			return BitConverter.ToInt32(m_bytes, m_readoffset + offset);
+			return BitConverter.ToInt32(Bytes, RecordContentOffset + offset);
 		}
 
 		public long ReadInt64(int offset)
 		{
-			return BitConverter.ToInt64(m_bytes, m_readoffset + offset);
+			return BitConverter.ToInt64(Bytes, RecordContentOffset + offset);
 		}
 
 		public byte[] ReadArray(int offset, int size)
 		{
 			byte[] tmp = new byte[size];
-			Buffer.BlockCopy(m_bytes, m_readoffset + offset, tmp, 0, size);
+			Buffer.BlockCopy(Bytes, RecordContentOffset + offset, tmp, 0, size);
 			return tmp;
 		}
 
 		public float ReadFloat(int offset)
 		{
-			return BitConverter.ToSingle(m_bytes, m_readoffset + offset);
+			return BitConverter.ToSingle(Bytes, RecordContentOffset + offset);
 		}
 
 		public double ReadDouble(int offset)
 		{
-			return BitConverter.ToDouble(m_bytes, m_readoffset + offset);
+			return BitConverter.ToDouble(Bytes, RecordContentOffset + offset);
 		}
 	}
 }

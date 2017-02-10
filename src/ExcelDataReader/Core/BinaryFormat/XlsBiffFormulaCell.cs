@@ -22,39 +22,22 @@ namespace ExcelDataReader.Core.BinaryFormat
 
 		#endregion
 
-		private Encoding m_UseEncoding = Encoding.Unicode;
-
 		internal XlsBiffFormulaCell(byte[] bytes, uint offset, ExcelBinaryReader reader)
 			: base(bytes, offset, reader)
 		{
 		}
 
-        ///// <summary>
-        ///// Encoding used to deal with strings
-        ///// </summary>
-        //public Encoding UseEncoding
-        //{
-        //    get { return m_UseEncoding; }
-        //    set { m_UseEncoding = value; }
-        //}
-
 		/// <summary>
 		/// Formula flags
 		/// </summary>
-		public FormulaFlags Flags
-		{
-			get { return (FormulaFlags)(base.ReadUInt16(0xE)); }
-		}
+		public FormulaFlags Flags => (FormulaFlags)ReadUInt16(0xE);
 
-		/// <summary>
+	    /// <summary>
 		/// Length of formula string
 		/// </summary>
-		public byte FormulaLength
-		{
-			get { return base.ReadByte(0xF); }
-		}
+		public byte FormulaLength => ReadByte(0xF);
 
-		/// <summary>
+	    /// <summary>
 		/// Returns type-dependent value of formula
 		/// </summary>
 		public new object Value
@@ -71,10 +54,10 @@ namespace ExcelDataReader.Core.BinaryFormat
 						case 0: // String
 
                             //////////////fix
-                            XlsBiffRecord rec = GetRecord(m_bytes, (uint)(Offset + Size), reader);
+                            XlsBiffRecord rec = GetRecord(Bytes, (uint)(Offset + Size), Reader);
                             XlsBiffFormulaString str;
                             if (rec.ID == BIFFRECORDTYPE.SHAREDFMLA)
-								str = GetRecord(m_bytes, (uint)(Offset + Size + rec.Size), reader) as XlsBiffFormulaString;
+								str = GetRecord(Bytes, (uint)(Offset + Size + rec.Size), Reader) as XlsBiffFormulaString;
                             else
                                 str = rec as XlsBiffFormulaString;
                             //////////////fix

@@ -15,7 +15,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 	    internal XlsBiffFormatString(byte[] bytes, uint offset, ExcelBinaryReader reader)
 			: base(bytes, offset, reader)
 	    {
-	        if (reader.IsV8())
+            if (reader.IsV8())
 	            m_string = new XlsFormattedUnicodeString(bytes, offset + 6);
 	        else
 	            m_string = new XlsByteString(bytes, offset + 4, reader.Encoding);

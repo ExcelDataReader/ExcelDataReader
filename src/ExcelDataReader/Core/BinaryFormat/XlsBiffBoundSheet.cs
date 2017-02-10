@@ -36,6 +36,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 			: base(bytes, offset, reader)
 		{
 		}
+
 		/// <summary>
 		/// Worksheet data start offset
 		/// </summary>
@@ -62,20 +63,20 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                 const int start = 0x8;
                 if (!IsV8)
-                    return reader.Encoding.GetString(m_bytes, m_readoffset + start, Helpers.IsSingleByteEncoding(reader.Encoding) ? len : len * 2);
+                    return Reader.Encoding.GetString(Bytes, RecordContentOffset + start, Helpers.IsSingleByteEncoding(Reader.Encoding) ? len : len * 2);
 
                 if (ReadByte(0x7) == 0)
                 {
                     byte[] bytes = new byte[len * 2];
                     for (int i = 0; i < len; i++)
                     {
-                        bytes[i * 2] = m_bytes[m_readoffset + start + i];
+                        bytes[i * 2] = Bytes[RecordContentOffset + start + i];
                     }
 
                     return Encoding.Unicode.GetString(bytes, 0, len * 2);
                 }
 
-                return Encoding.Unicode.GetString(m_bytes, m_readoffset + start, len * 2);
+                return Encoding.Unicode.GetString(Bytes, RecordContentOffset + start, len * 2);
             }
         }
 
