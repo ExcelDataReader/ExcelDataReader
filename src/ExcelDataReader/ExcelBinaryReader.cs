@@ -11,183 +11,183 @@ using ExcelDataReader.Misc;
 
 namespace Excel
 {
-	/// <summary>
-	/// ExcelDataReader Class
-	/// </summary>
-	public class ExcelBinaryReader : IExcelDataReader
-	{
-	    #region Members
+    /// <summary>
+    /// ExcelDataReader Class
+    /// </summary>
+    public class ExcelBinaryReader : IExcelDataReader
+    {
+        #region Members
 
-		private Stream m_file;
-		private XlsHeader m_hdr;
-		private List<XlsWorksheet> m_sheets;
-		private XlsBiffStream m_stream;
-		private XlsWorkbookGlobals m_globals;
-		private ushort m_version;
+        private Stream m_file;
+        private XlsHeader m_hdr;
+        private List<XlsWorksheet> m_sheets;
+        private XlsBiffStream m_stream;
+        private XlsWorkbookGlobals m_globals;
+        private ushort m_version;
 
-	    private readonly Encoding m_defaultEncoding = Encoding.Unicode;
+        private readonly Encoding m_defaultEncoding = Encoding.Unicode;
 
-	    private string[] m_cellsNames;
-		private object[] m_cellsValues;
-		private uint[] m_dbCellAddrs;
-		private int m_dbCellAddrsIndex;
-		private int m_sheetIndex;
+        private string[] m_cellsNames;
+        private object[] m_cellsValues;
+        private uint[] m_dbCellAddrs;
+        private int m_dbCellAddrsIndex;
+        private int m_sheetIndex;
 
-	    private int m_cellOffset;
+        private int m_cellOffset;
 
-	    private int m_maxRow;
-		private bool m_noIndex;
-		private XlsBiffRow m_currentRowRecord;
+        private int m_maxRow;
+        private bool m_noIndex;
+        private XlsBiffRow m_currentRowRecord;
         private XlsBiffBlankCell m_currentCellRecord;
 
-	    private bool m_isFirstRead;
+        private bool m_isFirstRead;
         private bool m_noRow;
 
-	    private const string Workbook = "Workbook";
-		private const string Book = "Book";
+        private const string Workbook = "Workbook";
+        private const string Book = "Book";
         // private const string COLUMN = "Column";
 
-	    #endregion
+        #endregion
 
-		public ExcelBinaryReader()
-		{
-		    Encoding = m_defaultEncoding;
-			m_version = 0x0600;
-			IsValid = true;
-			m_sheetIndex = -1;
-			m_isFirstRead = true;
-		}
+        public ExcelBinaryReader()
+        {
+            Encoding = m_defaultEncoding;
+            m_version = 0x0600;
+            IsValid = true;
+            m_sheetIndex = -1;
+            m_isFirstRead = true;
+        }
 
-		#region IDisposable Members
+        #region IDisposable Members
 
-		public void Dispose()
-		{
-			Dispose(true);
+        public void Dispose()
+        {
+            Dispose(true);
 
-			GC.SuppressFinalize(this);
-		}
+            GC.SuppressFinalize(this);
+        }
 
-		private void Dispose(bool disposing)
-		{
-		    if (disposing)
-		        Close();
-		}
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+                Close();
+        }
 
-		~ExcelBinaryReader()
-		{
-			Dispose(false);
-		}
+        ~ExcelBinaryReader()
+        {
+            Dispose(false);
+        }
 
-		#endregion
+        #endregion
 
-		#region Private methods
+        #region Private methods
 
-		private int FindFirstDataCellOffset(int startOffset)
-		{
-			// Check that the index actually points to the db cell record
-		    XlsBiffDbCell dbCell = m_stream.ReadAt(startOffset) as XlsBiffDbCell;
-		    if (dbCell == null)
-		        return -1;
+        private int FindFirstDataCellOffset(int startOffset)
+        {
+            // Check that the index actually points to the db cell record
+            XlsBiffDbCell dbCell = m_stream.ReadAt(startOffset) as XlsBiffDbCell;
+            if (dbCell == null)
+                return -1;
 
-		    XlsBiffRow row = m_stream.ReadAt(dbCell.RowAddress) as XlsBiffRow;
-		    if (row == null)
-		        return -1;
+            XlsBiffRow row = m_stream.ReadAt(dbCell.RowAddress) as XlsBiffRow;
+            if (row == null)
+                return -1;
 
-		    m_stream.Seek(dbCell.RowAddress, SeekOrigin.Begin);
-		    XlsBiffRecord record;
-			do
-			{
-			    record = m_stream.Read();
+            m_stream.Seek(dbCell.RowAddress, SeekOrigin.Begin);
+            XlsBiffRecord record;
+            do
+            {
+                record = m_stream.Read();
                 if (record == null)
                     return -1;
                 if (record is XlsBiffEOF)
                     return -1;
             } while (record is XlsBiffRow);
 
-			return record.Offset;
-		}
+            return record.Offset;
+        }
 
-		private void ReadWorkBookGlobals()
-		{
-			//Read Header
-			try
-			{
-				m_hdr = XlsHeader.ReadHeader(m_file);
-			}
-			catch (HeaderException ex)
-			{
-				Fail(ex.Message);
-				return;
-			}
-			catch (FormatException ex)
-			{
-				Fail(ex.Message);
-				return;
-			}
+        private void ReadWorkBookGlobals()
+        {
+            //Read Header
+            try
+            {
+                m_hdr = XlsHeader.ReadHeader(m_file);
+            }
+            catch (HeaderException ex)
+            {
+                Fail(ex.Message);
+                return;
+            }
+            catch (FormatException ex)
+            {
+                Fail(ex.Message);
+                return;
+            }
 
-			XlsRootDirectory dir = new XlsRootDirectory(m_hdr);
-			XlsDirectoryEntry workbookEntry = dir.FindEntry(Workbook) ?? dir.FindEntry(Book);
+            XlsRootDirectory dir = new XlsRootDirectory(m_hdr);
+            XlsDirectoryEntry workbookEntry = dir.FindEntry(Workbook) ?? dir.FindEntry(Book);
 
-			if (workbookEntry == null)
-			{ Fail(Errors.ErrorStreamWorkbookNotFound); return; }
+            if (workbookEntry == null)
+            { Fail(Errors.ErrorStreamWorkbookNotFound); return; }
 
-			if (workbookEntry.EntryType != STGTY.STGTY_STREAM)
-			{ Fail(Errors.ErrorWorkbookIsNotStream); return; }
+            if (workbookEntry.EntryType != STGTY.STGTY_STREAM)
+            { Fail(Errors.ErrorWorkbookIsNotStream); return; }
 
-		    try
-		    {
-		        m_stream = new XlsBiffStream(m_hdr, workbookEntry.StreamFirstSector, workbookEntry.IsEntryMiniStream, dir, this);
-		    }
-		    catch (NotSupportedException e)
-		    {
+            try
+            {
+                m_stream = new XlsBiffStream(m_hdr, workbookEntry.StreamFirstSector, workbookEntry.IsEntryMiniStream, dir, this);
+            }
+            catch (NotSupportedException e)
+            {
                 Fail(e.Message);
-		        return;
-		    }
+                return;
+            }
 
-		    m_globals = new XlsWorkbookGlobals();
+            m_globals = new XlsWorkbookGlobals();
 
-			m_stream.Seek(0, SeekOrigin.Begin);
+            m_stream.Seek(0, SeekOrigin.Begin);
 
-			XlsBiffRecord rec = m_stream.Read();
-			XlsBiffBOF bof = rec as XlsBiffBOF;
+            XlsBiffRecord rec = m_stream.Read();
+            XlsBiffBOF bof = rec as XlsBiffBOF;
 
-			if (bof == null || bof.Type != BIFFTYPE.WorkbookGlobals)
-			{ Fail(Errors.ErrorWorkbookGlobalsInvalidData); return; }
+            if (bof == null || bof.Type != BIFFTYPE.WorkbookGlobals)
+            { Fail(Errors.ErrorWorkbookGlobalsInvalidData); return; }
 
-			bool sst = false;
+            bool sst = false;
 
-			m_version = bof.Version;
-			m_sheets = new List<XlsWorksheet>();
+            m_version = bof.Version;
+            m_sheets = new List<XlsWorksheet>();
 
-			while (null != (rec = m_stream.Read()))
-			{
-				switch (rec.ID)
-				{
+            while (null != (rec = m_stream.Read()))
+            {
+                switch (rec.ID)
+                {
                     case BIFFRECORDTYPE.INTERFACEHDR:
-						m_globals.InterfaceHdr = (XlsBiffInterfaceHdr)rec;
-						break;
-					case BIFFRECORDTYPE.BOUNDSHEET:
-						XlsBiffBoundSheet sheet = (XlsBiffBoundSheet)rec;
+                        m_globals.InterfaceHdr = (XlsBiffInterfaceHdr)rec;
+                        break;
+                    case BIFFRECORDTYPE.BOUNDSHEET:
+                        XlsBiffBoundSheet sheet = (XlsBiffBoundSheet)rec;
 
-						if (sheet.Type != XlsBiffBoundSheet.SheetType.Worksheet) break;
+                        if (sheet.Type != XlsBiffBoundSheet.SheetType.Worksheet) break;
 
-						sheet.IsV8 = IsV8();
-						//sheet.UseEncoding = Encoding;
-						LogManager.Log(this).Debug("BOUNDSHEET IsV8={0}", sheet.IsV8);
+                        sheet.IsV8 = IsV8();
+                        //sheet.UseEncoding = Encoding;
+                        LogManager.Log(this).Debug("BOUNDSHEET IsV8={0}", sheet.IsV8);
 
-						m_sheets.Add(new XlsWorksheet(m_globals.Sheets.Count, sheet));
-						m_globals.Sheets.Add(sheet);
+                        m_sheets.Add(new XlsWorksheet(m_globals.Sheets.Count, sheet));
+                        m_globals.Sheets.Add(sheet);
 
-						break;
-					case BIFFRECORDTYPE.MMS:
-						m_globals.MMS = rec;
-						break;
-					case BIFFRECORDTYPE.COUNTRY:
-						m_globals.Country = rec;
-						break;
-					case BIFFRECORDTYPE.CODEPAGE:
+                        break;
+                    case BIFFRECORDTYPE.MMS:
+                        m_globals.MMS = rec;
+                        break;
+                    case BIFFRECORDTYPE.COUNTRY:
+                        m_globals.Country = rec;
+                        break;
+                    case BIFFRECORDTYPE.CODEPAGE:
 
-						m_globals.CodePage = (XlsBiffSimpleValueRecord)rec;
+                        m_globals.CodePage = (XlsBiffSimpleValueRecord)rec;
 
                         //set encoding based on code page name
                         //PCL does not supported codepage numbers
@@ -206,109 +206,109 @@ namespace Excel
                         //    // Warning - Password protection
                         //}
 
-						break;
-					case BIFFRECORDTYPE.FONT:
-					case BIFFRECORDTYPE.FONT_V34:
-						m_globals.Fonts.Add(rec);
-						break;
+                        break;
+                    case BIFFRECORDTYPE.FONT:
+                    case BIFFRECORDTYPE.FONT_V34:
+                        m_globals.Fonts.Add(rec);
+                        break;
                     case BIFFRECORDTYPE.FORMAT_V23:
-				        {
-				            var fmt = (XlsBiffFormatString) rec;
+                        {
+                            var fmt = (XlsBiffFormatString)rec;
                             //fmt.UseEncoding = m_encoding;
-				            m_globals.Formats.Add((ushort) m_globals.Formats.Count, fmt);
-				        }
+                            m_globals.Formats.Add((ushort)m_globals.Formats.Count, fmt);
+                        }
                         break;
                     case BIFFRECORDTYPE.FORMAT:
-				        {
-				            var fmt = (XlsBiffFormatString) rec;
+                        {
+                            var fmt = (XlsBiffFormatString)rec;
                             m_globals.Formats.Add(fmt.Index, fmt);
-				        }
-				        break;
-					case BIFFRECORDTYPE.XF:
-					case BIFFRECORDTYPE.XF_V4:
-					case BIFFRECORDTYPE.XF_V3:
-					case BIFFRECORDTYPE.XF_V2:
-						m_globals.ExtendedFormats.Add(rec);
-						break;
-					case BIFFRECORDTYPE.SST:
-						m_globals.SST = (XlsBiffSST)rec;
-						sst = true;
-						break;
-					case BIFFRECORDTYPE.CONTINUE:
-						if (!sst) break;
-						XlsBiffContinue contSST = (XlsBiffContinue)rec;
-						m_globals.SST.Append(contSST);
-						break;
-					case BIFFRECORDTYPE.EXTSST:
-						m_globals.ExtSST = rec;
-						sst = false;
-						break;
+                        }
+                        break;
+                    case BIFFRECORDTYPE.XF:
+                    case BIFFRECORDTYPE.XF_V4:
+                    case BIFFRECORDTYPE.XF_V3:
+                    case BIFFRECORDTYPE.XF_V2:
+                        m_globals.ExtendedFormats.Add(rec);
+                        break;
+                    case BIFFRECORDTYPE.SST:
+                        m_globals.SST = (XlsBiffSST)rec;
+                        sst = true;
+                        break;
+                    case BIFFRECORDTYPE.CONTINUE:
+                        if (!sst) break;
+                        XlsBiffContinue contSST = (XlsBiffContinue)rec;
+                        m_globals.SST.Append(contSST);
+                        break;
+                    case BIFFRECORDTYPE.EXTSST:
+                        m_globals.ExtSST = rec;
+                        sst = false;
+                        break;
                     case BIFFRECORDTYPE.PASSWORD:
-				        break;
+                        break;
                     case BIFFRECORDTYPE.PROTECT:
-					case BIFFRECORDTYPE.PROT4REVPASSWORD:
-						//IsProtected
-						break;
-					case BIFFRECORDTYPE.EOF:
-				        m_globals.SST?.ReadStrings();
-				        return;
+                    case BIFFRECORDTYPE.PROT4REVPASSWORD:
+                        //IsProtected
+                        break;
+                    case BIFFRECORDTYPE.EOF:
+                        m_globals.SST?.ReadStrings();
+                        return;
 
-					default:
-						continue;
-				}
-			}
-		}
+                    default:
+                        continue;
+                }
+            }
+        }
 
         private bool ReadWorkSheetGlobals(XlsWorksheet sheet, out XlsBiffIndex idx, out XlsBiffRow row, out XlsBiffBlankCell cell)
         {
-			idx = null;
-			row = null;
+            idx = null;
+            row = null;
             cell = null;
 
             m_stream.Seek((int)sheet.DataOffset, SeekOrigin.Begin);
 
-			XlsBiffBOF bof = m_stream.Read() as XlsBiffBOF;
-			if (bof == null || bof.Type != BIFFTYPE.Worksheet) return false;
+            XlsBiffBOF bof = m_stream.Read() as XlsBiffBOF;
+            if (bof == null || bof.Type != BIFFTYPE.Worksheet) return false;
 
-			//DumpBiffRecords();
+            //DumpBiffRecords();
 
-			XlsBiffRecord rec = m_stream.Read();
-			if (rec == null) return false;
-			if (rec is XlsBiffIndex)
-			{
-				idx = rec as XlsBiffIndex;
-			}
-			else if (rec is XlsBiffUncalced)
-			{
-				// Sometimes this come before the index...
-				idx = m_stream.Read() as XlsBiffIndex;
-			}
+            XlsBiffRecord rec = m_stream.Read();
+            if (rec == null) return false;
+            if (rec is XlsBiffIndex)
+            {
+                idx = rec as XlsBiffIndex;
+            }
+            else if (rec is XlsBiffUncalced)
+            {
+                // Sometimes this come before the index...
+                idx = m_stream.Read() as XlsBiffIndex;
+            }
 
-			//if (null == idx)
-			//{
-			//	// There is a record before the index! Chech his type and see the MS Biff Documentation
-			//	return false;
-			//}
+            //if (null == idx)
+            //{
+            //	// There is a record before the index! Chech his type and see the MS Biff Documentation
+            //	return false;
+            //}
 
-			if (idx != null)
-			{
-				idx.IsV8 = IsV8();
-				LogManager.Log(this).Debug("INDEX IsV8={0}", idx.IsV8);
-			}
+            if (idx != null)
+            {
+                idx.IsV8 = IsV8();
+                LogManager.Log(this).Debug("INDEX IsV8={0}", idx.IsV8);
+            }
 
-			XlsBiffRecord trec;
-			XlsBiffDimensions dims = null;
+            XlsBiffRecord trec;
+            XlsBiffDimensions dims = null;
 
-			do
-			{
-				trec = m_stream.Read();
-				if (trec.ID == BIFFRECORDTYPE.DIMENSIONS)
-				{
-					dims = (XlsBiffDimensions)trec;
-					break;
-				}
+            do
+            {
+                trec = m_stream.Read();
+                if (trec.ID == BIFFRECORDTYPE.DIMENSIONS)
+                {
+                    dims = (XlsBiffDimensions)trec;
+                    break;
+                }
 
-			} while (trec.ID != BIFFRECORDTYPE.ROW);
+            } while (trec.ID != BIFFRECORDTYPE.ROW);
 
             bool foundCell = false;
 
@@ -349,15 +349,15 @@ namespace Excel
             if (dims != null)
             {
                 dims.IsV8 = IsV8();
-				LogManager.Log(this).Debug("dims IsV8={0}", dims.IsV8);
+                LogManager.Log(this).Debug("dims IsV8={0}", dims.IsV8);
                 FieldCount = dims.LastColumn - 1;
 
-				//handle case where sheet reports last column is 1 but there are actually more
-				if (FieldCount <= 0 && row != null)
-				{
-					FieldCount = row.LastDefinedColumn;
-				}
-				
+                //handle case where sheet reports last column is 1 but there are actually more
+                if (FieldCount <= 0 && row != null)
+                {
+                    FieldCount = row.LastDefinedColumn;
+                }
+
                 m_maxRow = (int)dims.LastRow;
                 sheet.Dimensions = dims;
             }
@@ -371,23 +371,23 @@ namespace Excel
                 return false;
             }
 
-			if (idx != null && idx.LastExistingRow <= idx.FirstExistingRow)
-			{
-				return false;
-			}
+            if (idx != null && idx.LastExistingRow <= idx.FirstExistingRow)
+            {
+                return false;
+            }
 
             if (row == null && !foundCell)
-			{
-				return false;
-			}
+            {
+                return false;
+            }
 
             m_noRow = foundCell;
-			Depth = 0;
+            Depth = 0;
 
-			return true;
-		}
+            return true;
+        }
 
-		/*private void DumpBiffRecords()
+        /*private void DumpBiffRecords()
 		{
 			XlsBiffRecord rec = null;
 			var startPos = m_stream.Position;
@@ -401,53 +401,53 @@ namespace Excel
 			m_stream.Seek(startPos, SeekOrigin.Begin);
 		}*/
 
-		/// <returns>true if row was read successfully</returns>
-		private bool ReadWorkSheetRow()
-		{
-			m_cellsValues = new object[FieldCount];
+        /// <returns>true if row was read successfully</returns>
+        private bool ReadWorkSheetRow()
+        {
+            m_cellsValues = new object[FieldCount];
 
-		    bool foundValue = false;
-			while (m_cellOffset < m_stream.Size)
-			{
-				XlsBiffRecord rec = m_stream.ReadAt(m_cellOffset);
-				m_cellOffset += rec.Size;
+            bool foundValue = false;
+            while (m_cellOffset < m_stream.Size)
+            {
+                XlsBiffRecord rec = m_stream.ReadAt(m_cellOffset);
+                m_cellOffset += rec.Size;
 
-			    if (rec is XlsBiffDbCell || rec is XlsBiffMSODrawing)
-			    {
-			        break;
-			    }
-
-			    if (rec is XlsBiffEOF)
-			    {
-			        Depth++;
-                    return foundValue;
-			    }
-
-				XlsBiffBlankCell cell = rec as XlsBiffBlankCell;
-
-				if (null == cell || cell.ColumnIndex >= FieldCount)
-                    continue;
-			    if (cell.RowIndex != Depth)
-			    {
-			        m_cellOffset -= rec.Size;
+                if (rec is XlsBiffDbCell || rec is XlsBiffMSODrawing)
+                {
                     break;
-			    }
+                }
 
-				PushCellValue(cell);
-			    foundValue = true;
-			}
+                if (rec is XlsBiffEOF)
+                {
+                    Depth++;
+                    return foundValue;
+                }
 
-			Depth++;
+                XlsBiffBlankCell cell = rec as XlsBiffBlankCell;
 
-			return foundValue || m_cellOffset <= m_stream.Size;
-		}
-        
-		private void PushCellValue(XlsBiffBlankCell cell)
-		{
-			double doubleValue;
-			LogManager.Log(this).Debug("PushCellValue {0}", cell.ID);
-			switch (cell.ID)
-			{
+                if (null == cell || cell.ColumnIndex >= FieldCount)
+                    continue;
+                if (cell.RowIndex != Depth)
+                {
+                    m_cellOffset -= rec.Size;
+                    break;
+                }
+
+                PushCellValue(cell);
+                foundValue = true;
+            }
+
+            Depth++;
+
+            return foundValue || m_cellOffset <= m_stream.Size;
+        }
+
+        private void PushCellValue(XlsBiffBlankCell cell)
+        {
+            double doubleValue;
+            LogManager.Log(this).Debug("PushCellValue {0}", cell.ID);
+            switch (cell.ID)
+            {
                 case BIFFRECORDTYPE.BOOLERR:
                     if (cell.ReadByte(7) == 0)
                         m_cellsValues[cell.ColumnIndex] = cell.ReadByte(6) != 0;
@@ -456,84 +456,84 @@ namespace Excel
                     if (cell.ReadByte(8) == 0)
                         m_cellsValues[cell.ColumnIndex] = cell.ReadByte(7) != 0;
                     break;
-				case BIFFRECORDTYPE.INTEGER:
-				case BIFFRECORDTYPE.INTEGER_OLD:
-					m_cellsValues[cell.ColumnIndex] = ((XlsBiffIntegerCell)cell).Value;
-					break;
-				case BIFFRECORDTYPE.NUMBER:
-				case BIFFRECORDTYPE.NUMBER_OLD:
+                case BIFFRECORDTYPE.INTEGER:
+                case BIFFRECORDTYPE.INTEGER_OLD:
+                    m_cellsValues[cell.ColumnIndex] = ((XlsBiffIntegerCell)cell).Value;
+                    break;
+                case BIFFRECORDTYPE.NUMBER:
+                case BIFFRECORDTYPE.NUMBER_OLD:
 
-					doubleValue = ((XlsBiffNumberCell)cell).Value;
+                    doubleValue = ((XlsBiffNumberCell)cell).Value;
 
-					m_cellsValues[cell.ColumnIndex] = !ConvertOaDate ?
-						doubleValue : TryConvertOADateTime(doubleValue, cell.XFormat);
+                    m_cellsValues[cell.ColumnIndex] = !ConvertOaDate ?
+                        doubleValue : TryConvertOADateTime(doubleValue, cell.XFormat);
 
-					LogManager.Log(this).Debug("VALUE: {0}", doubleValue);
-					break;
-				case BIFFRECORDTYPE.LABEL:
-				case BIFFRECORDTYPE.LABEL_OLD:
-				case BIFFRECORDTYPE.RSTRING:
-					
-					m_cellsValues[cell.ColumnIndex] = ((XlsBiffLabelCell)cell).Value;
+                    LogManager.Log(this).Debug("VALUE: {0}", doubleValue);
+                    break;
+                case BIFFRECORDTYPE.LABEL:
+                case BIFFRECORDTYPE.LABEL_OLD:
+                case BIFFRECORDTYPE.RSTRING:
 
-					LogManager.Log(this).Debug("VALUE: {0}", m_cellsValues[cell.ColumnIndex]);
-					break;
-				case BIFFRECORDTYPE.LABELSST:
-					string tmp = m_globals.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex);
-					LogManager.Log(this).Debug("VALUE: {0}", tmp);
-					m_cellsValues[cell.ColumnIndex] = tmp;
-					break;
-				case BIFFRECORDTYPE.RK:
+                    m_cellsValues[cell.ColumnIndex] = ((XlsBiffLabelCell)cell).Value;
 
-					doubleValue = ((XlsBiffRKCell)cell).Value;
+                    LogManager.Log(this).Debug("VALUE: {0}", m_cellsValues[cell.ColumnIndex]);
+                    break;
+                case BIFFRECORDTYPE.LABELSST:
+                    string tmp = m_globals.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex);
+                    LogManager.Log(this).Debug("VALUE: {0}", tmp);
+                    m_cellsValues[cell.ColumnIndex] = tmp;
+                    break;
+                case BIFFRECORDTYPE.RK:
 
-					m_cellsValues[cell.ColumnIndex] = !ConvertOaDate ?
-						doubleValue : TryConvertOADateTime(doubleValue, cell.XFormat);
+                    doubleValue = ((XlsBiffRKCell)cell).Value;
 
-					LogManager.Log(this).Debug("VALUE: {0}", doubleValue);
-					break;
-				case BIFFRECORDTYPE.MULRK:
+                    m_cellsValues[cell.ColumnIndex] = !ConvertOaDate ?
+                        doubleValue : TryConvertOADateTime(doubleValue, cell.XFormat);
 
-					XlsBiffMulRKCell rkCell = (XlsBiffMulRKCell)cell;
-					for (ushort j = cell.ColumnIndex; j <= rkCell.LastColumnIndex; j++)
-					{
+                    LogManager.Log(this).Debug("VALUE: {0}", doubleValue);
+                    break;
+                case BIFFRECORDTYPE.MULRK:
+
+                    XlsBiffMulRKCell rkCell = (XlsBiffMulRKCell)cell;
+                    for (ushort j = cell.ColumnIndex; j <= rkCell.LastColumnIndex; j++)
+                    {
                         doubleValue = rkCell.GetValue(j);
-						LogManager.Log(this).Debug("VALUE[{1}]: {0}", doubleValue, j);
+                        LogManager.Log(this).Debug("VALUE[{1}]: {0}", doubleValue, j);
                         m_cellsValues[j] = !ConvertOaDate ? doubleValue : TryConvertOADateTime(doubleValue, rkCell.GetXF(j));
-					}
+                    }
 
-					break;
-				case BIFFRECORDTYPE.BLANK:
-				case BIFFRECORDTYPE.BLANK_OLD:
-				case BIFFRECORDTYPE.MULBLANK:
-					// Skip blank cells
+                    break;
+                case BIFFRECORDTYPE.BLANK:
+                case BIFFRECORDTYPE.BLANK_OLD:
+                case BIFFRECORDTYPE.MULBLANK:
+                    // Skip blank cells
 
-					break;
-				case BIFFRECORDTYPE.FORMULA:
-				case BIFFRECORDTYPE.FORMULA_OLD:
+                    break;
+                case BIFFRECORDTYPE.FORMULA:
+                case BIFFRECORDTYPE.FORMULA_OLD:
 
-					object objectValue = ((XlsBiffFormulaCell)cell).Value;
+                    object objectValue = ((XlsBiffFormulaCell)cell).Value;
 
-					if (objectValue is FORMULAERROR)
-					{
-						objectValue = null;
-					}
-					else
-					{
-						m_cellsValues[cell.ColumnIndex] = !ConvertOaDate ?
-							objectValue : TryConvertOADateTime(objectValue, cell.XFormat);//date time offset
-					}
+                    if (objectValue is FORMULAERROR)
+                    {
+                        objectValue = null;
+                    }
+                    else
+                    {
+                        m_cellsValues[cell.ColumnIndex] = !ConvertOaDate ?
+                            objectValue : TryConvertOADateTime(objectValue, cell.XFormat);//date time offset
+                    }
 
-					LogManager.Log(this).Debug("VALUE: {0}", objectValue);
-					break;
-			}
-		}
+                    LogManager.Log(this).Debug("VALUE: {0}", objectValue);
+                    break;
+            }
+        }
 
-		private bool MoveToNextRecord()
-		{
-			//if sheet has no index
-			if (m_noIndex)
-			{
+        private bool MoveToNextRecord()
+        {
+            //if sheet has no index
+            if (m_noIndex)
+            {
                 if (m_noRow)
                 {
                     LogManager.Log(this).Debug("No index and no row");
@@ -541,82 +541,82 @@ namespace Excel
                 }
 
                 LogManager.Log(this).Debug("No index");
-				return MoveToNextRecordNoIndex();
-			}
+                return MoveToNextRecordNoIndex();
+            }
 
-			//if sheet has index
-			if (null == m_dbCellAddrs ||
-				m_dbCellAddrsIndex == m_dbCellAddrs.Length ||
-				Depth == m_maxRow) return false;
+            //if sheet has index
+            if (null == m_dbCellAddrs ||
+                m_dbCellAddrsIndex == m_dbCellAddrs.Length ||
+                Depth == m_maxRow) return false;
 
             // Check if we've reached the end of the current row block
             XlsBiffDbCell dbCell = m_stream.ReadAt(m_cellOffset) as XlsBiffDbCell;
-		    if (dbCell != null)
-		    {
+            if (dbCell != null)
+            {
                 m_dbCellAddrsIndex++;
-		        if (m_dbCellAddrsIndex >= m_dbCellAddrs.Length)
-		            return false;
+                if (m_dbCellAddrsIndex >= m_dbCellAddrs.Length)
+                    return false;
                 m_cellOffset = FindFirstDataCellOffset((int)m_dbCellAddrs[m_dbCellAddrsIndex]);
                 if (m_cellOffset < 0)
                     return false;
             }
 
-		    return ReadWorkSheetRow();
-		}
+            return ReadWorkSheetRow();
+        }
 
-		private bool MoveToNextRecordNoIndex()
-		{
-			//seek from current row record to start of cell data where that cell relates to the next row record
-			XlsBiffRow rowRecord = m_currentRowRecord;
+        private bool MoveToNextRecordNoIndex()
+        {
+            //seek from current row record to start of cell data where that cell relates to the next row record
+            XlsBiffRow rowRecord = m_currentRowRecord;
 
-			if (rowRecord == null)
-				return false;
+            if (rowRecord == null)
+                return false;
 
             m_stream.Seek(rowRecord.Offset + rowRecord.Size, SeekOrigin.Begin);
             if (rowRecord.RowIndex < Depth)
-			{
-				do
-				{
-					var record = m_stream.Read();
-					if (record == null || record is XlsBiffEOF)
-						return false;
+            {
+                do
+                {
+                    var record = m_stream.Read();
+                    if (record == null || record is XlsBiffEOF)
+                        return false;
 
-					rowRecord = record as XlsBiffRow;
+                    rowRecord = record as XlsBiffRow;
 
-				} while (rowRecord == null || rowRecord.RowIndex < Depth);
-			}
+                } while (rowRecord == null || rowRecord.RowIndex < Depth);
+            }
 
-			m_currentRowRecord = rowRecord;
-			//m_depth = m_currentRowRecord.RowIndex;
+            m_currentRowRecord = rowRecord;
+            //m_depth = m_currentRowRecord.RowIndex;
 
-			//we have now found the row record for the new row, the we need to seek forward to the first cell record
-			XlsBiffBlankCell cell = null;
-			do
-			{
-				var record = m_stream.Read();
-				if (record == null || record is XlsBiffEOF)
-					return false;
+            //we have now found the row record for the new row, the we need to seek forward to the first cell record
+            XlsBiffBlankCell cell = null;
+            do
+            {
+                var record = m_stream.Read();
+                if (record == null || record is XlsBiffEOF)
+                    return false;
 
-				var candidateCell = record as XlsBiffBlankCell;
-				if (candidateCell != null)
-				{
-				    if (candidateCell.RowIndex > m_currentRowRecord.RowIndex)
-				    {
+                var candidateCell = record as XlsBiffBlankCell;
+                if (candidateCell != null)
+                {
+                    if (candidateCell.RowIndex > m_currentRowRecord.RowIndex)
+                    {
                         m_cellsValues = new object[FieldCount];
-				        Depth++;
-				        return true;
-				    }
+                        Depth++;
+                        return true;
+                    }
 
-				    if (candidateCell.RowIndex == m_currentRowRecord.RowIndex)
-						cell = candidateCell;
-				}
-			} while (cell == null);
+                    if (candidateCell.RowIndex == m_currentRowRecord.RowIndex)
+                        cell = candidateCell;
+                }
+            } while (cell == null);
 
-			m_cellOffset = cell.Offset;
-			bool success = ReadWorkSheetRow();
+            m_cellOffset = cell.Offset;
+            bool success = ReadWorkSheetRow();
 
             return success;
-		}
+        }
 
         private bool MoveToNextRecordNoIndexOrRow()
         {
@@ -649,59 +649,59 @@ namespace Excel
         }
 
         private bool InitializeSheetRead()
-		{
-			m_dbCellAddrs = null;
+        {
+            m_dbCellAddrs = null;
 
-			m_isFirstRead = false;
+            m_isFirstRead = false;
 
-			if (m_sheetIndex == -1)
+            if (m_sheetIndex == -1)
                 m_sheetIndex = 0;
 
-			XlsBiffIndex idx;
+            XlsBiffIndex idx;
 
-			if (!ReadWorkSheetGlobals(m_sheets[m_sheetIndex], out idx, out m_currentRowRecord, out m_currentCellRecord))
-			{
-			    return false;
-			}
+            if (!ReadWorkSheetGlobals(m_sheets[m_sheetIndex], out idx, out m_currentRowRecord, out m_currentCellRecord))
+            {
+                return false;
+            }
 
-			if (idx == null)
-			{
-				//no index, but should have the first row record
-				m_noIndex = true;
-			}
-			else			
-			{
-				m_dbCellAddrs = idx.DbCellAddresses;
-				m_dbCellAddrsIndex = 0;
-				m_cellOffset = FindFirstDataCellOffset((int)m_dbCellAddrs[m_dbCellAddrsIndex]);
-				if (m_cellOffset < 0)
-				{
-				    if (m_currentRowRecord == null)
-				    {
-				        Fail("Badly formed binary file. Has INDEX but no DBCELL.");
-				        return false;
-				    }
+            if (idx == null)
+            {
+                //no index, but should have the first row record
+                m_noIndex = true;
+            }
+            else
+            {
+                m_dbCellAddrs = idx.DbCellAddresses;
+                m_dbCellAddrsIndex = 0;
+                m_cellOffset = FindFirstDataCellOffset((int)m_dbCellAddrs[m_dbCellAddrsIndex]);
+                if (m_cellOffset < 0)
+                {
+                    if (m_currentRowRecord == null)
+                    {
+                        Fail("Badly formed binary file. Has INDEX but no DBCELL.");
+                        return false;
+                    }
 
                     LogManager.Log(this).Debug("Badly formed binary file. Has INDEX but no DBCELL.");
                     m_noIndex = true;
-				    m_dbCellAddrs = null;
-				}
+                    m_dbCellAddrs = null;
+                }
 
             }
 
-		    return true;
-		}
-        
-		private void Fail(string message)
-		{
-			ExceptionMessage = message;
-			IsValid = false;
+            return true;
+        }
 
-		    Close();
-		}
+        private void Fail(string message)
+        {
+            ExceptionMessage = message;
+            IsValid = false;
 
-		private object TryConvertOADateTime(double value, ushort xFormat)
-		{
+            Close();
+        }
+
+        private object TryConvertOADateTime(double value, ushort xFormat)
+        {
             ushort format;
             if (xFormat < m_globals.ExtendedFormats.Count)
             {
@@ -729,7 +729,7 @@ namespace Excel
             {
                 format = xFormat;
             }
-            
+
             switch (format)
             {
                 // numeric built in formats
@@ -748,7 +748,7 @@ namespace Excel
                 case 12: //"# ?/?";
                 case 13: //"# ??/??";
                 case 0x30:// "##0.0E+0";
-               
+
                 case 0x25:// "_(#,##0_);(#,##0)";
                 case 0x26:// "_(#,##0_);[Red](#,##0)";
                 case 0x27:// "_(#,##0.00_);(#,##0.00)";
@@ -759,7 +759,7 @@ namespace Excel
                 case 0x2c:// "_(* #,##0.00_);_(* (#,##0.00);_(* \"-\"??_);_(@_)";
                     return value;
 
-                    // date formats
+                // date formats
                 case 14: //this.GetDefaultDateFormat();
                 case 15: //"D-MM-YY";
                 case 0x10: // "D-MMM";
@@ -769,83 +769,78 @@ namespace Excel
                 case 20: // "h:mm";
                 case 0x15: // "h:mm:ss";
                 case 0x16: // string.Format("{0} {1}", this.GetDefaultDateFormat(), this.GetDefaultTimeFormat());
-                   
+
                 case 0x2d: // "mm:ss";
                 case 0x2e: // "[h]:mm:ss";
                 case 0x2f: // "mm:ss.0";
                     return Helpers.ConvertFromOATime(value);
-                 case 0x31:// "@";
+                case 0x31:// "@";
                     return value.ToString();
 
                 default:
                     XlsBiffFormatString fmtString;
-                    if (m_globals.Formats.TryGetValue(format, out fmtString) )
+                    if (m_globals.Formats.TryGetValue(format, out fmtString))
                     {
                         var fmt = fmtString.Value;
-                    	var formatReader = new FormatReader {FormatString = fmt};
-						if (formatReader.IsDateFormatString())
-                            return Helpers.ConvertFromOATime(value); 
-
+                        var formatReader = new FormatReader { FormatString = fmt };
+                        if (formatReader.IsDateFormatString())
+                            return Helpers.ConvertFromOATime(value);
                     }
+
                     return value;
-
-
-
             }
+        }
 
-		    
-		}
+        private object TryConvertOADateTime(object value, ushort xFormat)
+        {
+            double doubleValue;
 
-	    private object TryConvertOADateTime(object value, ushort xFormat)
-	    {
-	        double doubleValue;
+            if (value == null)
+                return null;
 
-	        if (value == null)
-	            return null;
+            if (double.TryParse(value.ToString(), out doubleValue))
+                return TryConvertOADateTime(doubleValue, xFormat);
 
-			if (double.TryParse(value.ToString(), out doubleValue))
-				return TryConvertOADateTime(doubleValue, xFormat);
+            return value;
+        }
 
-			return value;
+        public bool IsV8()
+        {
+            return m_version >= 0x600;
+        }
 
-	    }
+        #endregion
 
-	    public bool IsV8()
-		{
-			return m_version >= 0x600;
-		}
+        #region IExcelDataReader Members
 
-		#endregion
-
-		#region IExcelDataReader Members
-
-		public void Initialize(Stream fileStream)
-		{
-			m_file = fileStream;
+        public void Initialize(Stream fileStream)
+        {
+            m_file = fileStream;
 
             ReadWorkBookGlobals();
 
             // set the sheet index to the index of the first sheet.. this is so that properties such as Name which use m_sheetIndex reflect the first sheet in the file without having to perform a read() operation
             m_sheetIndex = 0;
-		}
+        }
 
-		public void Reset() {
-			m_sheetIndex = 0;
-			m_isFirstRead = true;
-		}
+        public void Reset()
+        {
+            m_sheetIndex = 0;
+            m_isFirstRead = true;
+        }
 
-		public string ExceptionMessage { get; private set; }
+        public string ExceptionMessage { get; private set; }
 
-	    public string Name
-		{
-			get
-			{
-				if (null != m_sheets && m_sheets.Count > 0)
-					return m_sheets[m_sheetIndex].Name;
-				
+        public string Name
+        {
+            get
+            {
+                if (null != m_sheets && m_sheets.Count > 0)
+                    return m_sheets[m_sheetIndex].Name;
+
                 return null;
-			}
-		}
+            }
+        }
 
         public string VisibleState
         {
@@ -858,16 +853,16 @@ namespace Excel
             }
         }
 
-		public bool IsValid { get; private set; }
+        public bool IsValid { get; private set; }
 
-	    public void Close()
-		{
-		    if (IsClosed)
-		        return;
+        public void Close()
+        {
+            if (IsClosed)
+                return;
 
-		    if (m_sheets != null)
-		    {
-		        m_sheets.Clear();
+            if (m_sheets != null)
+            {
+                m_sheets.Clear();
                 m_sheets = null;
             }
 
@@ -877,89 +872,89 @@ namespace Excel
             Encoding = null;
             m_hdr = null;
 
-		    if (m_file != null)
-		    {
-		        m_file.Dispose();
-		        m_file = null;
-		    }
+            if (m_file != null)
+            {
+                m_file.Dispose();
+                m_file = null;
+            }
 
-		    IsClosed = true;
-		}
+            IsClosed = true;
+        }
 
-		public int Depth { get; private set; }
+        public int Depth { get; private set; }
 
-	    public int ResultsCount => m_globals.Sheets.Count;
+        public int ResultsCount => m_globals.Sheets.Count;
 
-	    public bool IsClosed { get; private set; }
+        public bool IsClosed { get; private set; }
 
-	    public bool NextResult()
-		{
-			if (!IsValid)
+        public bool NextResult()
+        {
+            if (!IsValid)
                 return false;
-			if (m_sheetIndex >= ResultsCount - 1)
-                return false;
-
-			m_sheetIndex++;
-
-			m_isFirstRead = true;
-
-			return true;
-		}
-
-		public bool Read()
-		{
-			if (!IsValid)
+            if (m_sheetIndex >= ResultsCount - 1)
                 return false;
 
-			if (m_isFirstRead)
-			{
-			    if (!InitializeSheetRead())
-			        return false;
+            m_sheetIndex++;
 
-				if (!IsValid)
+            m_isFirstRead = true;
+
+            return true;
+        }
+
+        public bool Read()
+        {
+            if (!IsValid)
+                return false;
+
+            if (m_isFirstRead)
+            {
+                if (!InitializeSheetRead())
                     return false;
 
-				if (IsFirstRowAsColumnNames)
+                if (!IsValid)
+                    return false;
+
+                if (IsFirstRowAsColumnNames)
                 {
-					if (MoveToNextRecord())
+                    if (MoveToNextRecord())
                     {
-						m_cellsNames = new string[m_cellsValues.Length];
-						for (var i = 0; i < m_cellsValues.Length; i++)
+                        m_cellsNames = new string[m_cellsValues.Length];
+                        for (var i = 0; i < m_cellsValues.Length; i++)
                         {
-							var value = m_cellsValues[i]?.ToString();
-							if (!string.IsNullOrEmpty(value))
-                            { 
-								m_cellsNames[i] = value;
-							}
-						}
-					}
+                            var value = m_cellsValues[i]?.ToString();
+                            if (!string.IsNullOrEmpty(value))
+                            {
+                                m_cellsNames[i] = value;
+                            }
+                        }
+                    }
                     else
                     {
-						return false;
-					}
-				}
+                        return false;
+                    }
+                }
                 else
                 {
-					m_cellsNames = null; // no columns
-				}
-			}
+                    m_cellsNames = null; // no columns
+                }
+            }
 
-			return MoveToNextRecord();
-		}
+            return MoveToNextRecord();
+        }
 
-		public int FieldCount { get; private set; }
+        public int FieldCount { get; private set; }
 
-	    public bool GetBoolean(int i)
-		{
-		    return !IsDBNull(i) && bool.Parse(m_cellsValues[i].ToString());
-		}
+        public bool GetBoolean(int i)
+        {
+            return !IsDBNull(i) && bool.Parse(m_cellsValues[i].ToString());
+        }
 
-		public DateTime GetDateTime(int i)
-		{
-			if (IsDBNull(i)) return DateTime.MinValue;
+        public DateTime GetDateTime(int i)
+        {
+            if (IsDBNull(i)) return DateTime.MinValue;
 
             // requested change: 3
-			object val = m_cellsValues[i];
+            object val = m_cellsValues[i];
 
             if (val is DateTime)
             {
@@ -971,161 +966,161 @@ namespace Excel
             string valString = val.ToString();
             double dVal;
 
-			try
-			{
+            try
+            {
                 dVal = double.Parse(valString);
-			}
-			catch (FormatException)
-			{
+            }
+            catch (FormatException)
+            {
                 return DateTime.Parse(valString);
-			}
+            }
 
-			return DateTimeHelper.FromOADate(dVal);
-		}
+            return DateTimeHelper.FromOADate(dVal);
+        }
 
-		public decimal GetDecimal(int i)
-		{
-		    return IsDBNull(i) ? decimal.MinValue : decimal.Parse(m_cellsValues[i].ToString());
-		}
+        public decimal GetDecimal(int i)
+        {
+            return IsDBNull(i) ? decimal.MinValue : decimal.Parse(m_cellsValues[i].ToString());
+        }
 
-		public double GetDouble(int i)
-		{
-		    return IsDBNull(i) ? double.MinValue : double.Parse(m_cellsValues[i].ToString());
-		}
+        public double GetDouble(int i)
+        {
+            return IsDBNull(i) ? double.MinValue : double.Parse(m_cellsValues[i].ToString());
+        }
 
-		public float GetFloat(int i)
-		{
-		    return IsDBNull(i) ? float.MinValue : float.Parse(m_cellsValues[i].ToString());
-		}
+        public float GetFloat(int i)
+        {
+            return IsDBNull(i) ? float.MinValue : float.Parse(m_cellsValues[i].ToString());
+        }
 
-		public short GetInt16(int i)
-		{
-		    return IsDBNull(i) ? short.MinValue : short.Parse(m_cellsValues[i].ToString());
-		}
+        public short GetInt16(int i)
+        {
+            return IsDBNull(i) ? short.MinValue : short.Parse(m_cellsValues[i].ToString());
+        }
 
-		public int GetInt32(int i)
-		{
-		    return IsDBNull(i) ? int.MinValue : int.Parse(m_cellsValues[i].ToString());
-		}
+        public int GetInt32(int i)
+        {
+            return IsDBNull(i) ? int.MinValue : int.Parse(m_cellsValues[i].ToString());
+        }
 
-		public long GetInt64(int i)
-		{
-		    return IsDBNull(i) ? long.MinValue : long.Parse(m_cellsValues[i].ToString());
-		}
+        public long GetInt64(int i)
+        {
+            return IsDBNull(i) ? long.MinValue : long.Parse(m_cellsValues[i].ToString());
+        }
 
-		public string GetString(int i)
-		{
-		    return IsDBNull(i) ? null : m_cellsValues[i].ToString();
-		}
+        public string GetString(int i)
+        {
+            return IsDBNull(i) ? null : m_cellsValues[i].ToString();
+        }
 
-		public object GetValue(int i)
-		{
-			return m_cellsValues[i];
-		}
+        public object GetValue(int i)
+        {
+            return m_cellsValues[i];
+        }
 
-		public bool IsDBNull(int i)
-		{
+        public bool IsDBNull(int i)
+        {
             return null == m_cellsValues[i];
-		}
+        }
 
-		public object this[int i] => m_cellsValues[i];
+        public object this[int i] => m_cellsValues[i];
 
-	    #endregion
+        #endregion
 
-		#region  Not Supported IDataReader Members
+        #region  Not Supported IDataReader Members
 
-		public int RecordsAffected
-		{
-			get { throw new NotSupportedException(); }
-		}
+        public int RecordsAffected
+        {
+            get { throw new NotSupportedException(); }
+        }
 
-		#endregion
+        #endregion
 
-		#region Not Supported IDataRecord Members
+        #region Not Supported IDataRecord Members
 
 
-		public byte GetByte(int i)
-		{
-			throw new NotSupportedException();
-		}
+        public byte GetByte(int i)
+        {
+            throw new NotSupportedException();
+        }
 
-		public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
-		{
-			throw new NotSupportedException();
-		}
+        public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
+        {
+            throw new NotSupportedException();
+        }
 
-		public char GetChar(int i)
-		{
-			throw new NotSupportedException();
-		}
+        public char GetChar(int i)
+        {
+            throw new NotSupportedException();
+        }
 
-		public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
-		{
-			throw new NotSupportedException();
-		}
+        public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
+        {
+            throw new NotSupportedException();
+        }
 
-		public string GetDataTypeName(int i)
-		{
-			throw new NotSupportedException();
-		}
+        public string GetDataTypeName(int i)
+        {
+            throw new NotSupportedException();
+        }
 
-		public Type GetFieldType(int i)
-		{
-		    return m_cellsValues[i] == null ? null : m_cellsValues[i].GetType();
-		}
+        public Type GetFieldType(int i)
+        {
+            return m_cellsValues[i] == null ? null : m_cellsValues[i].GetType();
+        }
 
-		public Guid GetGuid(int i)
-		{
-			throw new NotSupportedException();
-		}
+        public Guid GetGuid(int i)
+        {
+            throw new NotSupportedException();
+        }
 
-		public string GetName(int i)
-		{
-		    return m_cellsNames?[i];
-		}
+        public string GetName(int i)
+        {
+            return m_cellsNames?[i];
+        }
 
-		public int GetOrdinal(string name)
-		{
-			throw new NotSupportedException();
-		}
+        public int GetOrdinal(string name)
+        {
+            throw new NotSupportedException();
+        }
 
-		public int GetValues(object[] values)
-		{
-			throw new NotSupportedException();
-		}
+        public int GetValues(object[] values)
+        {
+            throw new NotSupportedException();
+        }
 
-		public object this[string name]
-		{
-			get { throw new NotSupportedException(); }
-		}
+        public object this[string name]
+        {
+            get { throw new NotSupportedException(); }
+        }
 
-		#endregion
+        #endregion
 
-		#region IExcelDataReader Members
+        #region IExcelDataReader Members
 
-	    public bool IsFirstRowAsColumnNames { get; set; }
+        public bool IsFirstRowAsColumnNames { get; set; }
 
-	    public bool ConvertOaDate { get; set; } = true;
+        public bool ConvertOaDate { get; set; } = true;
 
-	    public ReadOption ReadOption { get; set; } = ReadOption.Strict;
+        public ReadOption ReadOption { get; set; } = ReadOption.Strict;
 
-	    public Encoding Encoding { get; private set; }
+        public Encoding Encoding { get; private set; }
 
-	    public Encoding DefaultEncoding => Encoding.UTF8;
+        public Encoding DefaultEncoding => Encoding.UTF8;
 
-	    /// <inheritdoc />
-	    public IDataReader GetData(int i)
-	    {
-	        throw new NotSupportedException();
-	    }
+        /// <inheritdoc />
+        public IDataReader GetData(int i)
+        {
+            throw new NotSupportedException();
+        }
 
-	    /// <inheritdoc />
-	    public DataTable GetSchemaTable()
-	    {
-	        throw new NotSupportedException();
-	    }
+        /// <inheritdoc />
+        public DataTable GetSchemaTable()
+        {
+            throw new NotSupportedException();
+        }
 
-	    #endregion
+        #endregion
 
     }
 
@@ -1299,8 +1294,8 @@ namespace Excel
 	/// Strict is as normal, Loose is more forgiving and will not cause an exception if a record size takes it beyond the end of the file. It will be trunacted in this case (SQl Reporting Services)
 	/// </summary>
 	public enum ReadOption
-	{
-		Strict,
-		Loose
-	}
+    {
+        Strict,
+        Loose
+    }
 }

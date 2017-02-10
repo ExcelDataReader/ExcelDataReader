@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Collections;
 using System.Collections.Generic;
 
 #if NET20
@@ -16,14 +15,17 @@ namespace System.Runtime.CompilerServices {
 
 namespace Excel
 {
-    public static class IExcelDataReaderExtensions {
-		private const string COLUMN = "Column";
+    public static class IExcelDataReaderExtensions
+    {
+		private const string Column = "Column";
 
-		public static DataSet AsDataSet(this IExcelDataReader self) {
+		public static DataSet AsDataSet(this IExcelDataReader self)
+        {
 			return AsDataSet(self, false);
 		}
 
-		public static DataSet AsDataSet(this IExcelDataReader self, bool convertOADate) {
+		public static DataSet AsDataSet(this IExcelDataReader self, bool convertOADate)
+        {
 
 			self.ConvertOaDate = convertOADate;
 			self.Reset();
@@ -53,23 +55,18 @@ namespace Excel
 		}
 
 		static DataTable AsDataTable(IExcelDataReader self) {
-			var result = new DataTable();
-			result.TableName = self.Name;
-			result.ExtendedProperties.Add("visiblestate", self.VisibleState);
+		    var result = new DataTable { TableName = self.Name };
+		    result.ExtendedProperties.Add("visiblestate", self.VisibleState);
 			bool first = true;
 			while (self.Read()) {
 				if (first) {
 					for (var i = 0; i < self.FieldCount; i++) {
-						var name = self.GetName(i);
-						if (name == null) {
-							name = COLUMN + i.ToString();
-						}
+						var name = self.GetName(i) ?? Column + i;
 
-						//if a column already exists with the name append _i to the duplicates
+					    //if a column already exists with the name append _i to the duplicates
 						var columnName = GetUniqueColumnName(result, name);
-						var column = new DataColumn(columnName, typeof(Object));
-						column.Caption = name;
-						result.Columns.Add(column);
+					    var column = new DataColumn(columnName, typeof(object)) { Caption = name };
+					    result.Columns.Add(column);
 					}
 					result.BeginLoadData();
 					first = false;
@@ -77,8 +74,9 @@ namespace Excel
 
 				var row = result.NewRow();
 
-				for (var i = 0; i < self.FieldCount; i++) {
-					var name = self.GetName(i);
+				for (var i = 0; i < self.FieldCount; i++)
+                {
+					// var name = self.GetName(i);
 					var value = self.GetValue(i);
 					row[i] = value;
 				}
@@ -90,19 +88,25 @@ namespace Excel
 			return result;
 		}
 
-		internal static void FixDataTypes(DataSet dataset) {
+		internal static void FixDataTypes(DataSet dataset)
+        {
 			var tables = new List<DataTable>(dataset.Tables.Count);
 			bool convert = false;
-			foreach (DataTable table in dataset.Tables) {
+			foreach (DataTable table in dataset.Tables)
+            {
 
-				if (table.Rows.Count == 0) {
+				if (table.Rows.Count == 0)
+                {
 					tables.Add(table);
 					continue;
 				}
+
 				DataTable newTable = null;
-				for (int i = 0; i < table.Columns.Count; i++) {
+				for (int i = 0; i < table.Columns.Count; i++)
+                {
 					Type type = null;
-					foreach (DataRow row in table.Rows) {
+					foreach (DataRow row in table.Rows)
+                    {
 						if (row.IsNull(i))
 							continue;
 						var curType = row[i].GetType();
@@ -115,27 +119,35 @@ namespace Excel
 							}
 						}
 					}
-					if (type != null) {
-						convert = true;
-						if (newTable == null)
-							newTable = table.Clone();
-						newTable.Columns[i].DataType = type;
 
-					}
-				}
-				if (newTable != null) {
-					newTable.BeginLoadData();
-					foreach (DataRow row in table.Rows) {
-						newTable.ImportRow(row);
-					}
+                    if (type == null)
+                        continue;
+                    convert = true;
+                    if (newTable == null)
+                        newTable = table.Clone();
+                    newTable.Columns[i].DataType = type;
+                }
 
-					newTable.EndLoadData();
-					tables.Add(newTable);
+                if (newTable != null)
+                {
+                    newTable.BeginLoadData();
+                    foreach (DataRow row in table.Rows)
+                    {
+                        newTable.ImportRow(row);
+                    }
 
-				} else
-					tables.Add(table);
-			}
-			if (convert) {
+                    newTable.EndLoadData();
+                    tables.Add(newTable);
+
+                }
+                else
+                {
+                    tables.Add(table);
+                }
+            }
+
+			if (convert)
+            {
 				dataset.Tables.Clear();
 				dataset.Tables.AddRange(tables.ToArray());
 			}
