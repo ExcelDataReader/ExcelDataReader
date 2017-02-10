@@ -1001,16 +1001,18 @@ namespace ExcelDataReader.Tests
         /// which is probably not good for performance
         /// </summary>
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
         public void Issue_12556_corrupt()
         {
-            //Excel.Log.Log.InitializeWith<Log4NetLog>();
-            using (var forwardStream = Helper.GetTestWorkbook("Test_Issue_12556_corrupt"))
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(forwardStream))
+            Assert.Throws<InvalidOperationException>(() =>
             {
-                excelReader.IsFirstRowAsColumnNames = false;
-                var dataset = excelReader.AsDataSet();
-            }
+                //Excel.Log.Log.InitializeWith<Log4NetLog>();
+                using (var forwardStream = Helper.GetTestWorkbook("Test_Issue_12556_corrupt"))
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(forwardStream))
+                {
+                    excelReader.IsFirstRowAsColumnNames = false;
+                    var dataset = excelReader.AsDataSet();
+                }
+            });
         }
 
         /// <summary>
@@ -1130,6 +1132,26 @@ namespace ExcelDataReader.Tests
                 var ds = excelReader.AsDataSet();
                 Assert.IsNotNull(ds);
                 Assert.AreEqual(4, ds.Tables.Count);
+            }
+        }
+
+        [TestMethod]
+        public void AllowFfffAsByteOrder()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_InvalidByteOrderValueInHeader"), true, ReadOption.Loose))
+            {
+                int tableCount = 0;
+                do
+                {
+                    while (excelReader.Read())
+                    {
+                    }
+
+                    tableCount++;
+                }
+                while (excelReader.NextResult());
+
+                Assert.AreEqual(454, tableCount);
             }
         }
     }

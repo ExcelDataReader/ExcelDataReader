@@ -272,8 +272,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 			}
 			if (!hdr.IsSignatureValid)
 				throw new HeaderException(Errors.ErrorHeaderSignature);
-			if (hdr.ByteOrder != 0xFFFE)
-				throw new FormatException(Errors.ErrorHeaderOrder);
+			if (hdr.ByteOrder != 0xFFFE && hdr.ByteOrder != 0xFFFF) // Some broken xls files uses 0xFFFF
+                throw new FormatException(Errors.ErrorHeaderOrder);
 			return hdr;
 		}
 	}

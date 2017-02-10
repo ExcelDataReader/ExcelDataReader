@@ -6,22 +6,27 @@ using NUnit.Framework;
 namespace ExcelDataReader.Tests {
 	internal static class Helper {
 
-		public static Stream GetTestWorkbook(string key) {
+		public static Stream GetTestWorkbook(string key)
+        {
 			var fileName = GetTestWorkbookPath(key);
 			return new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 		}
 
-		public static string GetKey(string key) {
+		public static string GetKey(string key)
+        {
 			string pathFile = Configuration.AppSettings[key];
 			Debug.WriteLine(pathFile);
 			return pathFile;
 		}
 
-		public static string GetTestWorkbookPath(string key) {
-			var fileName = Path.Combine("../../../Resources", GetKey(key));
-			//string fileName = Path.Combine(GetKey("basePath"), GetKey(key));
-			fileName = Path.GetFullPath(fileName);
-			Assert.IsTrue(File.Exists(fileName), string.Format("By the key '{0}' the file '{1}' could not be found. Inside the Excel.Tests App.config file, edit the key basePath to be the folder where the test workbooks are located. If this is fine, check the filename that is related to the key.", key, fileName));
+		public static string GetTestWorkbookPath(string key)
+        {
+            var resources = Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../Resources");
+            var fileName = Path.Combine(resources, GetKey(key));
+
+            //string fileName = Path.Combine(GetKey("basePath"), GetKey(key));
+            fileName = Path.GetFullPath(fileName);
+			Assert.IsTrue(File.Exists(fileName), string.Format("By the key '{0}' the file '{1}' could not be found. ", key, fileName));
 			return fileName;
 		}
 
