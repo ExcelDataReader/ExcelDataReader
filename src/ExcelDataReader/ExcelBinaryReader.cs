@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using ExcelDataReader.Core;
@@ -775,7 +776,7 @@ namespace Excel
                 case 0x2f: // "mm:ss.0";
                     return Helpers.ConvertFromOATime(value);
                 case 0x31:// "@";
-                    return value.ToString();
+                    return value.ToString(CultureInfo.CurrentCulture); // TODO: What is the exepcted culture here?
 
                 default:
                     XlsBiffFormatString fmtString;
