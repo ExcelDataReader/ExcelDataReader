@@ -942,7 +942,7 @@ namespace ExcelDataReader.Tests
         public void Issue_NoStyles_NoRAttribute()
         {
             using (IExcelDataReader excelReader =
-                ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Issue_NoStyles_NoRAttribute")))
+                ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("Test_Issue_NoStyles_NoRAttribute")))
             {
                 excelReader.IsFirstRowAsColumnNames = false;
                 DataSet result = excelReader.AsDataSet();
