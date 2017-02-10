@@ -310,54 +310,65 @@ namespace Excel
 
 			} while (trec.ID != BIFFRECORDTYPE.ROW);
 
-			// If we are already on row record then set that as the row, otherwise step forward till we get to a row record
-			if (trec.ID == BIFFRECORDTYPE.ROW)
-				row = (XlsBiffRow)trec;
-
             bool foundCell = false;
 
-            XlsBiffRow rowRecord = null;
-			while (rowRecord == null)
-			{
-				if (m_stream.Position >= m_stream.Size)
-					break;
-				var thisRec = m_stream.Read();
-
-				LogManager.Log(this).Debug("finding rowRecord offset {0}, rec: {1}", thisRec.Offset, thisRec.ID);
-				if (thisRec is XlsBiffEOF)
-					break;
-				rowRecord = thisRec as XlsBiffRow;
-
-                XlsBiffBlankCell thisCell = thisRec as XlsBiffBlankCell;
-                if (thisCell != null)
+            // If we are already on row record then set that as the row, otherwise step forward till we get to a row record
+            if (trec.ID == BIFFRECORDTYPE.ROW)
+            {
+                row = (XlsBiffRow)trec;
+            }
+            else
+            {
+                XlsBiffRow rowRecord = null;
+                while (rowRecord == null)
                 {
-                    foundCell = true;
-                    cell = thisCell;
-                    break;
+                    var thisRec = m_stream.Read();
+                    if (thisRec == null)
+                        break;
+
+                    LogManager.Log(this).Debug("finding rowRecord offset {0}, rec: {1}", thisRec.Offset, thisRec.ID);
+                    if (thisRec is XlsBiffEOF)
+                        break;
+                    rowRecord = thisRec as XlsBiffRow;
+
+                    XlsBiffBlankCell thisCell = thisRec as XlsBiffBlankCell;
+                    if (thisCell != null)
+                    {
+                        foundCell = true;
+                        cell = thisCell;
+                        break;
+                    }
                 }
+
+                if (rowRecord != null)
+                    LogManager.Log(this).Debug("Got row {0}, rec: id={1},rowindex={2}, rowColumnStart={3}, rowColumnEnd={4}", rowRecord.Offset, rowRecord.ID, rowRecord.RowIndex, rowRecord.FirstDefinedColumn, rowRecord.LastDefinedColumn);
+
+                row = rowRecord;
             }
 
-			if (rowRecord != null)
-				LogManager.Log(this).Debug("Got row {0}, rec: id={1},rowindex={2}, rowColumnStart={3}, rowColumnEnd={4}", rowRecord.Offset, rowRecord.ID, rowRecord.RowIndex, rowRecord.FirstDefinedColumn, rowRecord.LastDefinedColumn);
-
-			row = rowRecord;
-
-            if (dims != null) {
+            if (dims != null)
+            {
                 dims.IsV8 = IsV8();
 				LogManager.Log(this).Debug("dims IsV8={0}", dims.IsV8);
                 FieldCount = dims.LastColumn - 1;
 
 				//handle case where sheet reports last column is 1 but there are actually more
-				if (FieldCount <= 0 && rowRecord != null)
+				if (FieldCount <= 0 && row != null)
 				{
-					FieldCount = rowRecord.LastDefinedColumn;
+					FieldCount = row.LastDefinedColumn;
 				}
 				
                 m_maxRow = (int)dims.LastRow;
                 sheet.Dimensions = dims;
-            } else {
+            }
+            else if (idx != null)
+            {
                 FieldCount = 256;
                 m_maxRow = (int)idx.LastExistingRow;
+            }
+            else
+            {
+                return false;
             }
 
 			if (idx != null && idx.LastExistingRow <= idx.FirstExistingRow)
@@ -503,7 +514,7 @@ namespace Excel
 
 					object objectValue = ((XlsBiffFormulaCell)cell).Value;
 
-					if (null != objectValue && objectValue is FORMULAERROR)
+					if (objectValue is FORMULAERROR)
 					{
 						objectValue = null;
 					}
