@@ -31,9 +31,10 @@ namespace Excel
         private int m_sheetIndex;
 
         private bool m_isFirstRead;
-        private ushort m_largestObservedRow;
+        private int m_largestObservedRow = -1;
 
-        private bool m_lastReadResult = true;
+        private readonly Dictionary<int, object[]> m_currentRows = new Dictionary<int, object[]>();
+        private bool m_reachedEndOfSheet;
 
         private const string Workbook = "Workbook";
         private const string Book = "Book";
@@ -306,41 +307,69 @@ namespace Excel
 			m_stream.Seek(startPos, SeekOrigin.Begin);
 		}*/
 
-        /// <returns>true if row was read successfully</returns>
-        private bool ReadWorkSheetRow()
+        private void ReadNextBlock()
         {
-            m_cellsValues = new object[FieldCount];
+            if (m_reachedEndOfSheet)
+                return;
 
-            bool foundValue = false;
+            m_currentRows.Clear();
 
-            XlsBiffRecord rec = m_stream.LastRead;
+            int currentRow = -1;
+
+            object[] cellValues = null;
 
             while (true)
             {
+                var rec = m_stream.Read();
+
                 CheckLargestObservedRow(rec);
 
-                if (rec == null || rec is XlsBiffMSODrawing || rec is XlsBiffEOF)
+                if (rec == null || rec is XlsBiffEOF)
+                {
+                    m_reachedEndOfSheet = true;
+                    break;
+                }
+
+                if (rec is XlsBiffMSODrawing || rec is XlsBiffDbCell)
                     break;
 
                 var cell = rec as XlsBiffBlankCell;
-                if (null != cell && cell.ColumnIndex < FieldCount && !IsIgnoredCell(cell))
+                if (cell != null)
                 {
-                    if (cell.RowIndex > Depth)
+                    // In most cases cells are grouped by row
+                    if (currentRow != cell.RowIndex)
                     {
-                        foundValue = true;
-                        break;
+                        if (!m_currentRows.TryGetValue(cell.RowIndex, out cellValues))
+                        {
+                            cellValues = new object[FieldCount];
+                            m_currentRows.Add(cell.RowIndex, cellValues);
+                        }
+
+                        currentRow = cell.RowIndex;
                     }
 
-                    PushCellValue(cell);
-                    foundValue = true;
+                    PushCellValue(cellValues, cell);
                 }
+            }
+        }
 
-                rec = m_stream.Read();
+        /// <returns>true if row was read successfully</returns>
+        private bool ReadWorkSheetRow()
+        {
+            if (m_currentRows.Count == 0 || Depth > m_largestObservedRow)
+            {
+                ReadNextBlock();
             }
 
-            Depth++;
+            if (Depth <= m_largestObservedRow)
+            {
+                if (!m_currentRows.TryGetValue(Depth, out m_cellsValues))
+                    m_cellsValues = new object[FieldCount];
+                Depth++;
+                return true;
+            }
 
-            return foundValue || Depth <= m_largestObservedRow;
+            return false;
         }
 
         private void CheckLargestObservedRow(XlsBiffRecord record)
@@ -362,20 +391,7 @@ namespace Excel
             }
         }
 
-        private static bool IsIgnoredCell(XlsBiffBlankCell cell)
-        {
-            switch (cell.ID)
-            {
-                case BIFFRECORDTYPE.BLANK:
-                case BIFFRECORDTYPE.BLANK_OLD:
-                case BIFFRECORDTYPE.MULBLANK:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        private void PushCellValue(XlsBiffBlankCell cell)
+        private void PushCellValue(object[] cellValues, XlsBiffBlankCell cell)
         {
             double doubleValue;
             LogManager.Log(this).Debug("PushCellValue {0}", cell.ID);
@@ -383,22 +399,22 @@ namespace Excel
             {
                 case BIFFRECORDTYPE.BOOLERR:
                     if (cell.ReadByte(7) == 0)
-                        m_cellsValues[cell.ColumnIndex] = cell.ReadByte(6) != 0;
+                        cellValues[cell.ColumnIndex] = cell.ReadByte(6) != 0;
                     break;
                 case BIFFRECORDTYPE.BOOLERR_OLD:
                     if (cell.ReadByte(8) == 0)
-                        m_cellsValues[cell.ColumnIndex] = cell.ReadByte(7) != 0;
+                        cellValues[cell.ColumnIndex] = cell.ReadByte(7) != 0;
                     break;
                 case BIFFRECORDTYPE.INTEGER:
                 case BIFFRECORDTYPE.INTEGER_OLD:
-                    m_cellsValues[cell.ColumnIndex] = ((XlsBiffIntegerCell)cell).Value;
+                    cellValues[cell.ColumnIndex] = ((XlsBiffIntegerCell)cell).Value;
                     break;
                 case BIFFRECORDTYPE.NUMBER:
                 case BIFFRECORDTYPE.NUMBER_OLD:
 
                     doubleValue = ((XlsBiffNumberCell)cell).Value;
 
-                    m_cellsValues[cell.ColumnIndex] = !ConvertOaDate ?
+                    cellValues[cell.ColumnIndex] = !ConvertOaDate ?
                         doubleValue : TryConvertOADateTime(doubleValue, cell.XFormat);
 
                     LogManager.Log(this).Debug("VALUE: {0}", doubleValue);
@@ -407,20 +423,20 @@ namespace Excel
                 case BIFFRECORDTYPE.LABEL_OLD:
                 case BIFFRECORDTYPE.RSTRING:
 
-                    m_cellsValues[cell.ColumnIndex] = ((XlsBiffLabelCell)cell).Value;
+                    cellValues[cell.ColumnIndex] = ((XlsBiffLabelCell)cell).Value;
 
-                    LogManager.Log(this).Debug("VALUE: {0}", m_cellsValues[cell.ColumnIndex]);
+                    LogManager.Log(this).Debug("VALUE: {0}", cellValues[cell.ColumnIndex]);
                     break;
                 case BIFFRECORDTYPE.LABELSST:
                     string tmp = m_globals.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex);
                     LogManager.Log(this).Debug("VALUE: {0}", tmp);
-                    m_cellsValues[cell.ColumnIndex] = tmp;
+                    cellValues[cell.ColumnIndex] = tmp;
                     break;
                 case BIFFRECORDTYPE.RK:
 
                     doubleValue = ((XlsBiffRKCell)cell).Value;
 
-                    m_cellsValues[cell.ColumnIndex] = !ConvertOaDate ?
+                    cellValues[cell.ColumnIndex] = !ConvertOaDate ?
                         doubleValue : TryConvertOADateTime(doubleValue, cell.XFormat);
 
                     LogManager.Log(this).Debug("VALUE: {0}", doubleValue);
@@ -432,7 +448,7 @@ namespace Excel
                     {
                         doubleValue = rkCell.GetValue(j);
                         LogManager.Log(this).Debug("VALUE[{1}]: {0}", doubleValue, j);
-                        m_cellsValues[j] = !ConvertOaDate ? doubleValue : TryConvertOADateTime(doubleValue, rkCell.GetXF(j));
+                        cellValues[j] = !ConvertOaDate ? doubleValue : TryConvertOADateTime(doubleValue, rkCell.GetXF(j));
                     }
 
                     break;
@@ -453,7 +469,7 @@ namespace Excel
                     }
                     else
                     {
-                        m_cellsValues[cell.ColumnIndex] = !ConvertOaDate ?
+                        cellValues[cell.ColumnIndex] = !ConvertOaDate ?
                             objectValue : TryConvertOADateTime(objectValue, cell.XFormat);//date time offset
                     }
 
@@ -464,9 +480,6 @@ namespace Excel
 
         private bool InitializeSheetRead()
         {
-            m_isFirstRead = false;
-            m_largestObservedRow = 0;
-
             if (m_sheetIndex == -1)
                 m_sheetIndex = 0;
 
@@ -621,8 +634,8 @@ namespace Excel
         public void Reset()
         {
             m_sheetIndex = 0;
-            m_isFirstRead = true;
-            m_lastReadResult = true;
+
+            ResetSheetData();
         }
         
         public string Name
@@ -686,25 +699,24 @@ namespace Excel
 
             m_sheetIndex++;
 
-            m_lastReadResult = true;
-            m_isFirstRead = true;
+            ResetSheetData();
 
             return true;
         }
 
-        public bool Read()
+        private void ResetSheetData()
         {
-            if (!m_lastReadResult)
-                return false;
-
-            m_lastReadResult = ReadCore();
-            return m_lastReadResult;
+            m_isFirstRead = true;
+            m_reachedEndOfSheet = false;
+            m_currentRows.Clear();
+            m_largestObservedRow = -1;
         }
 
-        private bool ReadCore()
+        public bool Read()
         {
             if (m_isFirstRead)
             {
+                m_isFirstRead = false;
                 if (!InitializeSheetRead())
                     return false;
 

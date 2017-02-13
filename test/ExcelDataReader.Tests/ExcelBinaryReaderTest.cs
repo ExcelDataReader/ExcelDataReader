@@ -1152,5 +1152,19 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(454, tableCount);
             }
         }
+
+        [TestMethod]
+        public void HandleRowBlocksWithOutOfOrderCells()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("AllColumnsNotReadInHiddenTable")))
+            {
+                var ds = excelReader.AsDataSet();
+
+                object[] expected = { "21/09/2015", 1187.5282349881188, 650.8582749049624, 1361.7209439645526, 321.74647548613916, 369.48879457369037 };
+
+                Assert.AreEqual(51, ds.Tables[1].Rows.Count);
+                Assert.AreEqual(expected, ds.Tables[1].Rows[1].ItemArray);
+            }
+        }
     }
 }
