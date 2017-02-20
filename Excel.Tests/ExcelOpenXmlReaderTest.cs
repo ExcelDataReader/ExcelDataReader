@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using Excel.Core;
+using System.Collections.Generic;
 #if MSTEST_DEBUG || MSTEST_RELEASE
 using Excel.Tests.Log.Logger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -646,6 +647,142 @@ namespace Excel.Tests
             Assert.AreEqual("2", result.Tables["Sheet1"].Rows[11][3].ToString());
             Assert.AreEqual("3", result.Tables["Sheet3"].Rows[4][1].ToString());
         }
+
+        #region Methods for batch support test
+        [TestMethod]
+        public void GetSheetNamesTest()
+        {
+            List<string> sheetNames = null;
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTestMultiSheet")))
+            {
+                if (!excelReader.IsValid) { throw new Exception(excelReader.ExceptionMessage); }
+                sheetNames = excelReader.GetSheetNames();
+            }
+            Assert.AreEqual(true, sheetNames.Contains("Sheet2"));
+            Assert.AreEqual(true, sheetNames.Contains("Sheet1"));
+            Assert.AreEqual(true, sheetNames.Contains("Sheet3"));
+        }
+        [TestMethod]
+        public void GetTopRowsTest()
+        {
+            DataTable dataTable = null;
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTestMultiSheet")))
+            {
+                if (!excelReader.IsValid) { throw new Exception(excelReader.ExceptionMessage); }
+                dataTable = excelReader.GetTopRows(5, new SheetParameters("Sheet2", false));
+            }
+            Assert.AreEqual(5, dataTable.Rows.Count);
+        }
+        [TestMethod]
+        public void GetSchemaTest_OneSheet()
+        {
+            DataTable datatable = null;
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTestMultiSheet")))
+            {
+                if (!excelReader.IsValid) { throw new Exception(excelReader.ExceptionMessage); }
+                datatable = excelReader.GetSchema(new SheetParameters("Sheet2", false));
+            }
+            Assert.AreEqual(4, datatable.Columns.Count);
+            foreach (DataColumn dc in datatable.Columns)
+            { Assert.AreEqual(typeof(double), dc.DataType); }
+        }
+        [TestMethod]
+        public void GetSchemaTest_MoreThanOneSheet()
+        {
+            DataSet dataset = null;
+            List<SheetParameters> sheetParamList = new List<SheetParameters>(2);
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTestMultiSheet")))
+            {
+                if (!excelReader.IsValid) { throw new Exception(excelReader.ExceptionMessage); }
+                sheetParamList.Add(new SheetParameters("Sheet2", false));
+                sheetParamList.Add(new SheetParameters("Sheet1", false));
+                dataset = excelReader.GetSchema(sheetParamList);
+            }
+            Assert.AreEqual(4, dataset.Tables["Sheet2"].Columns.Count);
+            foreach (DataColumn dc in dataset.Tables["Sheet2"].Columns)
+            { Assert.AreEqual(typeof(double), dc.DataType); }
+
+            Assert.AreEqual(4, dataset.Tables["Sheet1"].Columns.Count);
+            foreach (DataColumn dc in dataset.Tables["Sheet1"].Columns)
+            { Assert.AreEqual(typeof(double), dc.DataType); }
+        }
+        [TestMethod]
+        public void GetSchemaTest_AllSheet()
+        {
+            DataSet dataset = null;
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTestMultiSheet")))
+            {
+                if (!excelReader.IsValid) { throw new Exception(excelReader.ExceptionMessage); }
+                dataset = excelReader.GetSchema();
+            }
+            Assert.AreEqual(4, dataset.Tables["Sheet2"].Columns.Count);
+            foreach (DataColumn dc in dataset.Tables["Sheet2"].Columns)
+            { Assert.AreEqual(typeof(double), dc.DataType); }
+
+            Assert.AreEqual(4, dataset.Tables["Sheet1"].Columns.Count);
+            foreach (DataColumn dc in dataset.Tables["Sheet1"].Columns)
+            { Assert.AreEqual(typeof(double), dc.DataType); }
+
+            Assert.AreEqual(2, dataset.Tables["Sheet3"].Columns.Count);
+            foreach (DataColumn dc in dataset.Tables["Sheet3"].Columns)
+            { Assert.AreEqual(typeof(double), dc.DataType); }
+        }
+        [TestMethod]
+        public void ReadBatchTest_OneSheet()
+        {
+            DataTable dataTable = null;
+            int rowCount = 0;
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTestMultiSheet")))
+            {
+                if (!excelReader.IsValid) { throw new Exception(excelReader.ExceptionMessage); }
+                // Read one sheet of excel in batch
+                excelReader.SheetName = "Sheet2";
+                excelReader.IsFirstRowAsColumnNames = false; // default is true
+                excelReader.SkipRows = 0; // default is 0
+                excelReader.BatchSize = 5;
+                while (excelReader.ReadBatch())
+                {
+                    dataTable = excelReader.GetCurrentBatch();
+                    rowCount += dataTable.Rows.Count;
+                    if (rowCount == excelReader.BatchSize)
+                    {
+                        Assert.AreEqual(5, rowCount);
+                    }
+                }
+            }
+            Assert.AreEqual(12, rowCount);
+        }
+        [TestMethod]
+        public void ReadBatchTest_AllSheet()
+        {
+            DataSet dataSet = null;
+            DataTable dataTable = null;
+            int rowCount = 0;
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTestMultiSheet")))
+            {
+                if (!excelReader.IsValid) { throw new Exception(excelReader.ExceptionMessage); }
+                dataSet = excelReader.GetSchema();
+                excelReader.BatchSize = 5; // Modify as per need, default is 1000
+                foreach (DataTable dt in dataSet.Tables)
+                {
+                    excelReader.SheetName = dt.TableName;
+                    excelReader.IsFirstRowAsColumnNames = Convert.ToBoolean(dt.ExtendedProperties["IsFirstRowAsColumnNames"]);
+                    excelReader.SkipRows = Convert.ToInt32(dt.ExtendedProperties["SkipRows"]);
+                    rowCount = 0;
+                    while (excelReader.ReadBatch())
+                    {
+                        dataTable = excelReader.GetCurrentBatch();
+                        rowCount += dataTable.Rows.Count;
+                        if (rowCount == excelReader.BatchSize)
+                        {
+                            Assert.AreEqual(5, rowCount);
+                        }
+                    }
+                }
+            }
+        }
+
+        #endregion
 
 
         [TestMethod]

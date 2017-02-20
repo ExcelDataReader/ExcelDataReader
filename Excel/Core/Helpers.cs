@@ -127,7 +127,57 @@ namespace Excel.Core
             }
         }
 
-		public static void AddColumnHandleDuplicate(DataTable table, string columnName)
+        internal static DataTable FixDataTypes(DataTable table)
+        {
+            bool convert = false;
+
+            DataTable newTable = null;
+            for (int i = 0; i < table.Columns.Count; i++)
+            {
+                Type type = null;
+                foreach (DataRow row in table.Rows)
+                {
+                    if (row.IsNull(i))
+                        continue;
+                    var curType = row[i].GetType();
+                    if (curType != type)
+                    {
+                        if (type == null)
+                            type = curType;
+                        else
+                        {
+                            type = null;
+                            break;
+                        }
+                    }
+                }
+                if (type != null)
+                {
+                    convert = true;
+                    if (newTable == null)
+                        newTable = table.Clone();
+                    newTable.Columns[i].DataType = type;
+
+                }
+            }
+            if (newTable != null)
+            {
+                newTable.BeginLoadData();
+                foreach (DataRow row in table.Rows)
+                {
+                    newTable.ImportRow(row);
+                }
+                newTable.EndLoadData();
+            }
+
+            if (convert)
+            {
+                table = newTable;
+            }
+            return table;
+        }
+
+        public static void AddColumnHandleDuplicate(DataTable table, string columnName)
 		{
 			//if a colum  already exists with the name append _i to the duplicates
 			var adjustedColumnName = columnName;
