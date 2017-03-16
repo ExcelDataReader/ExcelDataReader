@@ -14,7 +14,7 @@
     }
   },
   "dependencies": {
-    "ExcelDataReader": "2.5.0.0-dev",
-    "ExcelDataReader.DataSet": "2.5.0.0-dev"
+    "ExcelDataReader": "2.5.0.1-dev",
+    "ExcelDataReader.DataSet": "2.5.0.1-dev"
   }
 }

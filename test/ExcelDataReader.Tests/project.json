@@ -5,8 +5,8 @@
   "testRunner": "nunit",
 
   "dependencies": {
-    "ExcelDataReader": "2.5.0.0-dev",
-    "ExcelDataReader.DataSet": "2.5.0.0-dev",
+    "ExcelDataReader": "2.5.0.1-dev",
+    "ExcelDataReader.DataSet": "2.5.0.1-dev",
     "dotnet-test-nunit": "3.4.0-beta-3",
     "NUnit": "3.6.0"
   },
