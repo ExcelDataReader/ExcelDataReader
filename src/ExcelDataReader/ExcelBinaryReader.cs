@@ -491,28 +491,31 @@ namespace Excel
             //handle case where sheet reports last column is 1 but there are actually more
             if (FieldCount <= 0)
             {
-                // Find first row after DIMENSIONS
-                XlsBiffRow row = null;
-                while (row == null)
+                int offset = m_stream.Position;
+
+                int lastDefinedColumn = 0;
+
+                var thisRec = m_stream.LastRead;
+
+                // Check all rows
+                while (true)
                 {
-                    var thisRec = m_stream.Read();
                     if (thisRec == null || thisRec is XlsBiffEOF)
                         break;
 
-                    if (thisRec.IsCell)
+                    var row = thisRec as XlsBiffRow;
+
+                    if (row != null)
                     {
-                        // TODO: No fields and no rows, how do we handle that?
-                        return false;
+                        lastDefinedColumn = Math.Max(lastDefinedColumn, row.LastDefinedColumn);
                     }
 
-                    row = thisRec as XlsBiffRow;
+                    thisRec = m_stream.Read();
                 }
 
-                if (row != null)
-                {
-                    LogManager.Log(this).Debug("Got row {0}, rec: id={1},rowindex={2}, rowColumnStart={3}, rowColumnEnd={4}", row.Offset, row.ID, row.RowIndex, row.FirstDefinedColumn, row.LastDefinedColumn);
-                    FieldCount = row.LastDefinedColumn;
-                }
+                FieldCount = lastDefinedColumn;
+
+                m_stream.Seek(offset, SeekOrigin.Begin);
             }
 
             return true;

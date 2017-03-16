@@ -1166,5 +1166,17 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(expected, ds.Tables[1].Rows[1].ItemArray);
             }
         }
+
+        [TestMethod]
+        public void HandleRowBlocksWithDifferentNumberOfColumnsAndInvalidDimensions()
+        {
+            // http://www.ine.cl/canales/chile_estadistico/estadisticas_economicas/edificacion/archivos/xls/edificacion_totalpais_seriehistorica_enero_2017.xls
+
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("RowWithDifferentNumberOfColumns")))
+            {
+                var ds = excelReader.AsDataSet();
+                Assert.AreEqual(256, ds.Tables[0].Columns.Count);
+            }
+        }
     }
 }

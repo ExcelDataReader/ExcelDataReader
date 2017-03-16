@@ -105,7 +105,8 @@ namespace ExcelDataReader.Tests
             { "protectedsheet-xxx", "protectedsheet-xxx.xls" },
             { "TestTableOnlyImage_x01oct2016", "TestTableOnlyImage_x01oct2016.xls" },
             { "Test_InvalidByteOrderValueInHeader", "Test_InvalidByteOrderValueInHeader.xls" },
-            { "AllColumnsNotReadInHiddenTable", "AllColumnsNotReadInHiddenTable.xls" }
+            { "AllColumnsNotReadInHiddenTable", "AllColumnsNotReadInHiddenTable.xls" },
+            { "RowWithDifferentNumberOfColumns", "RowWithDifferentNumberOfColumns.xls" }
 		};
 
 		public static Stream GetTestWorkbook(string key)
