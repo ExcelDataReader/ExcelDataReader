@@ -106,7 +106,8 @@ namespace ExcelDataReader.Tests
             { "TestTableOnlyImage_x01oct2016", "TestTableOnlyImage_x01oct2016.xls" },
             { "Test_InvalidByteOrderValueInHeader", "Test_InvalidByteOrderValueInHeader.xls" },
             { "AllColumnsNotReadInHiddenTable", "AllColumnsNotReadInHiddenTable.xls" },
-            { "RowWithDifferentNumberOfColumns", "RowWithDifferentNumberOfColumns.xls" }
+            { "RowWithDifferentNumberOfColumns", "RowWithDifferentNumberOfColumns.xls" },
+            { "NoDimensionOrCellReferenceAttribute", "NoDimensionOrCellReferenceAttribute.xlsx" }
 		};
 
 		public static Stream GetTestWorkbook(string key)

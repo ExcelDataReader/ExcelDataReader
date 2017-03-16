@@ -866,5 +866,22 @@ namespace ExcelDataReader.Tests
                 excelReader.Close();
             }
         }
+
+        [TestMethod]
+        public void NoDimensionOrCellReferenceAttribute()
+        {
+            // 20170306_Daily Package GPR 250 Index EUR Overview.xlsx
+
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("NoDimensionOrCellReferenceAttribute")))
+            {
+                DataSet result = excelReader.AsDataSet();
+                Assert.AreEqual(2, result.Tables.Count);
+                Assert.AreEqual(8, result.Tables[0].Columns.Count, "Sheet0 Columns");
+                Assert.AreEqual(7, result.Tables[0].Rows.Count, "Sheet0 Rows");
+
+                Assert.AreEqual(8, result.Tables[1].Columns.Count, "Sheet1 Columns");
+                Assert.AreEqual(20, result.Tables[1].Rows.Count, "Sheet1 Rows");
+            }
+        }
     }
 }

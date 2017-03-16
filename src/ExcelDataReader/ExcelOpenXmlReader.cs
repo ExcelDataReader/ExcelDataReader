@@ -304,6 +304,7 @@ namespace Excel
 
 			m_namespaceUri = null;
 		    int biggestColumn = 0; //used when no col elements and no dimension
+		    int cellElementsInRow = 0;
 			while (m_xmlReader.Read())
 			{
 				if (m_xmlReader.NodeType == XmlNodeType.Element && m_xmlReader.LocalName == XlsxWorksheet.N_worksheet)
@@ -330,13 +331,19 @@ namespace Excel
                 //if (_xmlReader.NodeType == XmlNodeType.Element && _xmlReader.LocalName == XlsxWorksheet.N_col)
                 //    cols++;
 
-				if (m_xmlReader.NodeType == XmlNodeType.Element && m_xmlReader.LocalName == XlsxWorksheet.N_row)
+			    if (m_xmlReader.NodeType == XmlNodeType.Element && m_xmlReader.LocalName == XlsxWorksheet.N_row)
+			    {
+			        biggestColumn = Math.Max(biggestColumn, cellElementsInRow);
+			        cellElementsInRow = 0;
                     rows++;
+			    }
 
-                //check cells so we can find size of sheet if can't work it out from dimension or col elements (dimension should have been set before the cells if it was available)
+			    //check cells so we can find size of sheet if can't work it out from dimension or col elements (dimension should have been set before the cells if it was available)
                 //ditto for cols
                 if (cols == 0 && m_xmlReader.NodeType == XmlNodeType.Element && m_xmlReader.LocalName == XlsxWorksheet.N_c)
                 {
+                    cellElementsInRow++; 
+
                     var refAttribute = m_xmlReader.GetAttribute(XlsxWorksheet.A_r);
 
                     if (refAttribute != null)
@@ -346,12 +353,12 @@ namespace Excel
                             biggestColumn = thisRef[1];
                     }
                 }
-					
 			}
 
+            biggestColumn = Math.Max(biggestColumn, cellElementsInRow);
 
-			//if we didn't get a dimension element then use the calculated rows/cols to create it
-			if (!foundDimension)
+            //if we didn't get a dimension element then use the calculated rows/cols to create it
+            if (!foundDimension)
 			{
                 if (cols == 0)
                     cols = biggestColumn;
