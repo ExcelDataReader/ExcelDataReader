@@ -378,7 +378,7 @@ namespace ExcelDataReader.Tests
                 }
             });
 
-            Assert.AreEqual("Error: Invalid file signature.", exception.Message);
+            Assert.AreEqual("Invalid file signature.", exception.Message);
         }
 
 
