@@ -493,27 +493,26 @@ namespace Excel
             {
                 int offset = m_stream.Position;
 
-                int lastDefinedColumn = 0;
+                int maxReferenceColumn = 0;
 
                 var thisRec = m_stream.LastRead;
 
-                // Check all rows
+                // Check all cells
                 while (true)
                 {
                     if (thisRec == null || thisRec is XlsBiffEOF)
                         break;
 
-                    var row = thisRec as XlsBiffRow;
-
-                    if (row != null)
+                    XlsBiffBlankCell cell = thisRec as XlsBiffBlankCell;
+                    if (cell != null)
                     {
-                        lastDefinedColumn = Math.Max(lastDefinedColumn, row.LastDefinedColumn);
+                        maxReferenceColumn = Math.Max(maxReferenceColumn, cell.ColumnIndex + 1);
                     }
 
                     thisRec = m_stream.Read();
                 }
 
-                FieldCount = lastDefinedColumn;
+                FieldCount = maxReferenceColumn;
 
                 m_stream.Seek(offset, SeekOrigin.Begin);
             }

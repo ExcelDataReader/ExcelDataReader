@@ -1178,5 +1178,16 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(256, ds.Tables[0].Columns.Count);
             }
         }
+
+        [TestMethod]
+        public void IfNoDimensionDetermineFieldCountByProcessingAllCellColumnIndexes()
+        {
+            // This xls file has a row record with 256 columns but only values for 6.
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Git_Issue_145")))
+            {
+                var ds = excelReader.AsDataSet();
+                Assert.AreEqual(6, ds.Tables[0].Columns.Count);
+            }
+        }
     }
 }
