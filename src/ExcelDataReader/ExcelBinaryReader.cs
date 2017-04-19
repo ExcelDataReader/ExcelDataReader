@@ -322,8 +322,6 @@ namespace Excel
             {
                 var rec = m_stream.Read();
 
-                CheckLargestObservedRow(rec);
-
                 if (rec == null || rec is XlsBiffEOF)
                 {
                     m_reachedEndOfSheet = true;
@@ -336,6 +334,8 @@ namespace Excel
                 var cell = rec as XlsBiffBlankCell;
                 if (cell != null)
                 {
+                    m_largestObservedRow = Math.Max(m_largestObservedRow, cell.RowIndex);
+
                     // In most cases cells are grouped by row
                     if (currentRow != cell.RowIndex)
                     {
@@ -370,25 +370,6 @@ namespace Excel
             }
 
             return false;
-        }
-
-        private void CheckLargestObservedRow(XlsBiffRecord record)
-        {
-            if (record == null)
-                return;
-
-            var cell = record as XlsBiffBlankCell;
-            if (cell != null)
-            {
-                m_largestObservedRow = Math.Max(m_largestObservedRow, cell.RowIndex);
-                return;
-            }
-
-            var row = record as XlsBiffRow;
-            if (row != null)
-            {
-                m_largestObservedRow = Math.Max(m_largestObservedRow, row.RowIndex);
-            }
         }
 
         private void PushCellValue(object[] cellValues, XlsBiffBlankCell cell)

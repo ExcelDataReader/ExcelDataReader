@@ -1189,5 +1189,15 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(6, ds.Tables[0].Columns.Count);
             }
         }
+
+        [TestMethod]
+        public void Row1217NotRead()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Row1217NotRead")))
+            {
+                var ds = excelReader.AsDataSet();
+                CollectionAssert.AreEqual(new object[] { DBNull.Value, "Año", "Mes", DBNull.Value, "Índice", "Variación Mensual", "Variación Acumulada", "Variación en 12 Meses", "Incidencia Mensual", "Incidencia Acumulada", "Incidencia a 12 Meses", DBNull.Value, DBNull.Value }, ds.Tables[0].Rows[1216].ItemArray);
+            }
+        }
     }
 }
