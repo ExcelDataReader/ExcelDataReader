@@ -348,6 +348,12 @@
     <Content Include="Resources\Test_Excel_OpenOffice.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\Test_EmptySheets.xls">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Test_EmptySheets.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\Test_git_issue_70_ExcelBinaryReader_tryConvertOADateTime _convert_dates.xls">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

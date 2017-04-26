@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Runtime.InteropServices.ComTypes;
 using Excel;
@@ -1099,6 +1100,50 @@ namespace ExcelDataReader.Tests
 
             excelReader.Close();
 		}
-        
+
+        /// <summary>
+        /// Makes sure that we can read empty sheets.
+        /// </summary>
+        [TestMethod]
+        public void ReadEmptySheets()
+        {
+            // IsFirstRowAsColumnNames, DoAllowEmptyTables, Tables.Count, TablesTables[i].Rows.Count/TablesTables[i]Columns.Count
+            var values = new List<int?[]>
+            {
+                {new int?[] {0 /*false*/, 0 /*false*/, 1, 1, 4, null, null, null, null}},
+                {new int?[] {0 /*false*/, 1 /*false*/, 3, 0, 0, 1, 4, 0, 0}},
+                {new int?[] {1 /*true*/, 0 /*false*/, 1, 0, 4, null, null, null, null}},
+                {new int?[] {1 /*true*/, 1 /*false*/, 3, 0, 0, 0, 4, 0, 0}},
+            };
+
+            values.ForEach(val =>
+            {
+                IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_EmptySheets"));
+                excelReader.IsFirstRowAsColumnNames = (val[0] != 0);
+                excelReader.DoAllowEmptyTables = (val[1] != 0);
+
+                var dataset = excelReader.AsDataSet();
+
+                Assert.AreEqual(val[2], dataset.Tables.Count);
+                if (val[3] != null)
+                {
+                    Assert.AreEqual(val[3], dataset.Tables[0].Rows.Count);
+                    Assert.AreEqual(val[4], dataset.Tables[0].Columns.Count);
+                }
+                if (val[5] != null)
+                {
+                    Assert.AreEqual(val[5], dataset.Tables[1].Rows.Count);
+                    Assert.AreEqual(val[6], dataset.Tables[1].Columns.Count);
+                }
+                if (val[7] != null)
+                {
+                    Assert.AreEqual(val[7], dataset.Tables[2].Rows.Count);
+                    Assert.AreEqual(val[8], dataset.Tables[2].Columns.Count);
+                }
+
+                excelReader.Close();
+            });
+        }
+
     }
 }
