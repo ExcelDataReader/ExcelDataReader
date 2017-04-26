@@ -401,6 +401,14 @@
       <Link>Resources\Test_Excel_OpenOffice.xlsx</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\Excel.Tests.4.5\Resources\Test_EmptySheets.xls">
+      <Link>Resources\Test_EmptySheets.xls</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Excel.Tests.4.5\Resources\Test_EmptySheets.xlsx">
+      <Link>Resources\Test_EmptySheets.xlsx</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
