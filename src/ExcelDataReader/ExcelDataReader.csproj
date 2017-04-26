@@ -27,16 +27,14 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.1'">
+    <PackageReference Include="System.Data.Common">
+      <Version>4.3.0</Version>
+    </PackageReference>
+  </ItemGroup>
+
   <Target Name="PostcompileScript" AfterTargets="Build" Condition=" '$(IsCrossTargetingBuild)' != 'true' ">
     <Exec Command="dotnet pack --no-build --configuration $(Configuration)" />
   </Target>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.1' ">
-    <PackageReference Include="System.Data.Common" Version="4.1.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Data.Common" Version="4.3.0" />
-  </ItemGroup>
 
 </Project>

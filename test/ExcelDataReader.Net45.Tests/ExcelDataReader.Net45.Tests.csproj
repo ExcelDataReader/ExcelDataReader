@@ -30,14 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ExcelDataReader, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\src\ExcelDataReader\bin\$(ConfigurationName)\net45\ExcelDataReader.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ExcelDataReader.DataSet, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\src\ExcelDataReader.DataSet\bin\$(ConfigurationName)\net45\ExcelDataReader.DataSet.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
     </Reference>
@@ -75,6 +67,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj">
+      <Project>{061f5e1d-23a7-4744-bf2a-54aafc5efe70}</Project>
+      <Name>ExcelDataReader.DataSet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\ExcelDataReader\ExcelDataReader.csproj">
+      <Project>{627cd303-4ce5-4300-8bd1-0fcf143d4874}</Project>
+      <Name>ExcelDataReader</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

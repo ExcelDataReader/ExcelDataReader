@@ -17,10 +17,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Data.Common" Version="4.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\ExcelDataReader\ExcelDataReader.csproj" />
   </ItemGroup>
 
@@ -33,9 +29,5 @@
   <Target Name="PostcompileScript" AfterTargets="Build" Condition=" '$(IsCrossTargetingBuild)' != 'true' ">
     <Exec Command="dotnet pack --no-build --configuration $(Configuration)" />
   </Target>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.2' ">
-    <PackageReference Include="System.Data.Common" Version="4.1.0" />
-  </ItemGroup>
 
 </Project>
