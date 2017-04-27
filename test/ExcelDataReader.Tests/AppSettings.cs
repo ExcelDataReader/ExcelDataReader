@@ -108,7 +108,8 @@ namespace ExcelDataReader.Tests
             { "AllColumnsNotReadInHiddenTable", "AllColumnsNotReadInHiddenTable.xls" },
             { "RowWithDifferentNumberOfColumns", "RowWithDifferentNumberOfColumns.xls" },
             { "NoDimensionOrCellReferenceAttribute", "NoDimensionOrCellReferenceAttribute.xlsx" },
-            { "Test_Row1217NotRead", "Test_Row1217NotRead.xls" }
+            { "Test_Row1217NotRead", "Test_Row1217NotRead.xls" },
+            { "StringContinuationAfterCharacterData", "StringContinuationAfterCharacterData.xls" }
 		};
 
 		public static Stream GetTestWorkbook(string key)

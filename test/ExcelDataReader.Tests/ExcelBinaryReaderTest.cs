@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 #if !NETCOREAPP1_0
 using System.Data;
 #endif
@@ -563,8 +563,8 @@ namespace ExcelDataReader.Tests
                 val2 = dataSet.Tables[0].Rows[1][0].ToString();
                 Assert.AreEqual(val1, val2);
 
-                //librement r�utilisable
-                val1 = "librement r�utilisable";
+                //librement réutilisable
+                val1 = "librement réutilisable";
                 val2 = dataSet.Tables[0].Rows[7][0].ToString();
                 Assert.AreEqual(val1, val2);
 
@@ -1068,7 +1068,7 @@ namespace ExcelDataReader.Tests
             {
                 var dataset = excelReader.AsDataSet();
 
-                Assert.AreEqual("����", dataset.Tables[0].TableName);
+                Assert.AreEqual("åäöñ", dataset.Tables[0].TableName);
             }
         }
 
@@ -1079,7 +1079,7 @@ namespace ExcelDataReader.Tests
             {
                 var dataset = excelReader.AsDataSet();
 
-                Assert.AreEqual("����", dataset.Tables[0].Rows[0][0]);
+                Assert.AreEqual("åäöñ", dataset.Tables[0].Rows[0][0]);
             }
         }
 
@@ -1196,7 +1196,19 @@ namespace ExcelDataReader.Tests
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Row1217NotRead")))
             {
                 var ds = excelReader.AsDataSet();
-                CollectionAssert.AreEqual(new object[] { DBNull.Value, "A�o", "Mes", DBNull.Value, "�ndice", "Variaci�n Mensual", "Variaci�n Acumulada", "Variaci�n en 12 Meses", "Incidencia Mensual", "Incidencia Acumulada", "Incidencia a 12 Meses", DBNull.Value, DBNull.Value }, ds.Tables[0].Rows[1216].ItemArray);
+                CollectionAssert.AreEqual(new object[] { DBNull.Value, "Año", "Mes", DBNull.Value, "Índice", "Variación Mensual", "Variación Acumulada", "Variación en 12 Meses", "Incidencia Mensual", "Incidencia Acumulada", "Incidencia a 12 Meses", DBNull.Value, DBNull.Value }, ds.Tables[0].Rows[1216].ItemArray);
+            }
+        }
+
+        [TestMethod]
+        public void StringContinuationAfterCharacterData()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("StringContinuationAfterCharacterData")))
+            {
+                var ds = excelReader.AsDataSet();
+                Assert.AreEqual("商業動態統計速報-平成29年2月分-  統計表", ds.Tables[0].Rows[3][2]);
+                Assert.AreEqual("Preliminary Report on the Current Survey of Commerce  ( February,2017 )　Statistics Tables", ds.Tables[0].Rows[4][2]);
+                Assert.AreEqual("\nWholesale", ds.Tables[1].Rows[18][9]);
             }
         }
     }

@@ -50,46 +50,58 @@ namespace ExcelDataReader.Core.BinaryFormat
                     if (lastcontinue >= m_continues.Count)
                         break;
                     uint contoffset = m_continues[lastcontinue];
-                    byte encoding = Buffer.GetByte(Bytes, (int)contoffset + 4);
+
                     byte[] buff = new byte[size * 2];
                     Buffer.BlockCopy(Bytes, (int)offset, buff, 0, (int)(last - offset));
-                    if (encoding == 0 && str.IsMultiByte)
+
+                    // If we're past the string data then we won't have a unicode string option flags.
+                    if (offset + prefix + len + (str.IsMultiByte ? len : 0) <= last)
                     {
-                        len -= (last - prefix - offset) / 2;
-                        byte[] tempbytes = new byte[len * 2];
-                        for (int i = 0; i < len; i++)
-                        {
-                            tempbytes[i * 2] = Bytes[contoffset + 5 + i];
-                        }
-
-                        Buffer.BlockCopy(tempbytes, 0, buff, (int)(last - offset), tempbytes.Length);
-                        Buffer.BlockCopy(Bytes, (int)(contoffset + 5 + len), buff, (int)(last - offset + tempbytes.Length), (int)postfix);
-                        offset = contoffset + 5 + len + postfix;
-                    }
-                    else if (encoding == 1 && str.IsMultiByte == false)
-                    {
-                        len -= (last - offset - prefix);
-
-                        int templen = (int)(last - offset - prefix);
-                        byte[] tempbytes = new byte[templen * 2];
-                        for (int i = 0; i < templen; i++)
-                        {
-                            tempbytes[i * 2] = Bytes[offset + prefix + i];
-                        }
-
-                        Buffer.BlockCopy(tempbytes, 0, buff, (int)prefix, tempbytes.Length);
-                        int buffOffset = (int)(prefix + tempbytes.Length);
-
-                        Buffer.BlockCopy(Bytes, (int)(contoffset + 5), buff, buffOffset, (int)(len + len));
-                        Buffer.BlockCopy(Bytes, (int)(contoffset + 5 + len + len), buff, (int)(buffOffset + len + len), (int)postfix);
-                        buff[2] = (byte)((XlsFormattedUnicodeString.FormattedUnicodeStringFlags)buff[2] | XlsFormattedUnicodeString.FormattedUnicodeStringFlags.MultiByte);
-                        offset = contoffset + 5 + len + len + postfix;
+                        Buffer.BlockCopy(Bytes, (int)contoffset + 4, buff, (int)(last - offset), (int)(size - last + offset));
+                        offset = contoffset + 4 + size - last + offset;
                     }
                     else
                     {
-                        Buffer.BlockCopy(Bytes, (int)contoffset + 5, buff, (int)(last - offset), (int)(size - last + offset));
-                        offset = contoffset + 5 + size - last + offset;
+                        bool isMultiByte = (Buffer.GetByte(Bytes, (int)contoffset + 4) & 0x1) == 1;
+                        if (!isMultiByte && str.IsMultiByte)
+                        {
+                            len -= (last - prefix - offset) / 2;
+                            byte[] tempbytes = new byte[len * 2];
+                            for (int i = 0; i < len; i++)
+                            {
+                                tempbytes[i * 2] = Bytes[contoffset + 5 + i];
+                            }
+
+                            Buffer.BlockCopy(tempbytes, 0, buff, (int)(last - offset), tempbytes.Length);
+                            Buffer.BlockCopy(Bytes, (int)(contoffset + 5 + len), buff, (int)(last - offset + tempbytes.Length), (int)postfix);
+                            offset = contoffset + 5 + len + postfix;
+                        }
+                        else if (isMultiByte && !str.IsMultiByte)
+                        {
+                            len -= (last - offset - prefix);
+
+                            int templen = (int)(last - offset - prefix);
+                            byte[] tempbytes = new byte[templen * 2];
+                            for (int i = 0; i < templen; i++)
+                            {
+                                tempbytes[i * 2] = Bytes[offset + prefix + i];
+                            }
+
+                            Buffer.BlockCopy(tempbytes, 0, buff, (int)prefix, tempbytes.Length);
+                            int buffOffset = (int)(prefix + tempbytes.Length);
+
+                            Buffer.BlockCopy(Bytes, (int)(contoffset + 5), buff, buffOffset, (int)(len + len));
+                            Buffer.BlockCopy(Bytes, (int)(contoffset + 5 + len + len), buff, (int)(buffOffset + len + len), (int)postfix);
+                            buff[2] = (byte)((XlsFormattedUnicodeString.FormattedUnicodeStringFlags)buff[2] | XlsFormattedUnicodeString.FormattedUnicodeStringFlags.MultiByte);
+                            offset = contoffset + 5 + len + len + postfix;
+                        }
+                        else
+                        {
+                            Buffer.BlockCopy(Bytes, (int)contoffset + 5, buff, (int)(last - offset), (int)(size - last + offset));
+                            offset = contoffset + 5 + size - last + offset;
+                        }
                     }
+
                     last = contoffset + 4 + BitConverter.ToUInt16(Bytes, (int)contoffset + 2);
                     lastcontinue++;
 
