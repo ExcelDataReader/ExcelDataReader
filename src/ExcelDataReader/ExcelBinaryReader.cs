@@ -579,8 +579,7 @@ namespace Excel
                     return value.ToString(CultureInfo.CurrentCulture); // TODO: What is the exepcted culture here?
 
                 default:
-                    XlsBiffFormatString fmtString;
-                    if (m_globals.Formats.TryGetValue(format, out fmtString))
+                    if (m_globals.Formats.TryGetValue(format, out XlsBiffFormatString fmtString))
                     {
                         var fmt = fmtString.Value;
                         var formatReader = new FormatReader { FormatString = fmt };
@@ -818,10 +817,7 @@ namespace Excel
 
         #region  Not Supported IDataReader Members
 
-        public int RecordsAffected
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public int RecordsAffected => throw new NotSupportedException();
 
         #endregion
 
