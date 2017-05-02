@@ -348,9 +348,10 @@ namespace Excel
 
                     if (refAttribute != null)
                     {
-                        var thisRef = ReferenceHelper.ReferenceToColumnAndRow(refAttribute);
-                        if (thisRef[1] > biggestColumn)
-                            biggestColumn = thisRef[1];
+                        int column;
+                        ReferenceHelper.ParseReference(refAttribute, out column);
+                        if (column > biggestColumn)
+                            biggestColumn = column;
                     }
                 }
 			}
@@ -446,8 +447,7 @@ namespace Excel
 
                             if (a_r != null)
                             {
-                                int row;
-                                XlsxDimension.XlsxDim(a_r, out col, out row);
+                                ReferenceHelper.ParseReference(a_r, out col);
                             }
                             else
                                 ++col;

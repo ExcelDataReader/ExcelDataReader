@@ -59,14 +59,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             set { _IsRange = value; }
         }
 
-        public void ParseDimensions(string value)
+        private void ParseDimensions(string value)
 		{
 			string[] parts = value.Split(':');
 
 			int col;
 			int row;
 
-			XlsxDim(parts[0], out col, out row);
+			ReferenceHelper.ParseReference(parts[0], out col, out row);
 			FirstCol = col;
 			FirstRow = row;
 
@@ -77,7 +77,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 			}
 			else
 			{
-				XlsxDim(parts[1], out col, out row);
+			    ReferenceHelper.ParseReference(parts[1], out col, out row);
 				LastCol = col;
 				LastRow = row;
 
@@ -85,33 +85,5 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
 
         }
-
-
-		/// <summary>
-		/// Logic for the Excel dimensions. Ex: A15
-		/// </summary>
-		/// <param name="value">The value.</param>
-		/// <param name="val1">out val1.</param>
-		/// <param name="val2">out val2.</param>
-		public static void XlsxDim(string value, out int val1, out int val2)
-		{//INFO: Check for a simple Solution
-			int index = 0;
-			val1 = 0;
-			int[] arr = new int[value.Length - 1];
-
-			while (index < value.Length)
-			{
-				if (char.IsDigit(value[index])) break;
-				arr[index] = value[index] - 'A' + 1;
-				index++;
-			}
-
-			for (int i = 0; i < index; i++)
-			{
-				val1 += (int)(arr[i] * Math.Pow(26, index - i - 1));
-			}
-
-			val2 = int.Parse(value.Substring(index));
-		}
-	}
+    }
 }
