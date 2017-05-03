@@ -43,7 +43,7 @@ namespace ExcelDataReader.Tests
             IExcelDataReader excelReader =
                 ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Decimal_Locale"));
 
-            var dataSet = excelReader.AsDataSet(true);
+            var dataSet = excelReader.AsDataSet();
 
             excelReader.Close();
 

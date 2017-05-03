@@ -3,7 +3,7 @@ using ExcelDataReader.Log;
 using log4net.Config;
 
 [assembly: XmlConfigurator(Watch = true)]
-namespace ExcelDataReader.Tests.Log.Logger
+namespace ExcelDataReader.Tests
 {
 	/// <summary>
 	/// Log4net logger implementing special ILog class

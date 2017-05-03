@@ -12,15 +12,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDataReader", "src\Exce
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDataReader.Tests", "test\ExcelDataReader.Tests\ExcelDataReader.Tests.csproj", "{A90F5580-605E-4DA6-8997-877EB8F7D024}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelDataReader.Net45.Tests", "test\ExcelDataReader.Net45.Tests\ExcelDataReader.Net45.Tests.csproj", "{7ABFA914-8980-4630-B7E5-92921E5D897D}"
-	ProjectSection(ProjectDependencies) = postProject
-		{627CD303-4CE5-4300-8BD1-0FCF143D4874} = {627CD303-4CE5-4300-8BD1-0FCF143D4874}
-		{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70} = {061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDataReader.DataSet", "src\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj", "{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestApp", "src\TestApp\TestApp.csproj", "{BCE486DF-3DA2-42A2-BF38-376B17CEF434}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelDataReader.Net45.Tests", "test\ExcelDataReader.Net45.Tests\ExcelDataReader.Net45.Tests.csproj", "{7ABFA914-8980-4630-B7E5-92921E5D897D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelDataReader.Net20.Tests", "test\ExcelDataReader.Net20.Tests\ExcelDataReader.Net20.Tests.csproj", "{C2D80729-09EE-4E17-869D-2C9075E0ED29}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,10 +34,6 @@ Global
 		{A90F5580-605E-4DA6-8997-877EB8F7D024}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A90F5580-605E-4DA6-8997-877EB8F7D024}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A90F5580-605E-4DA6-8997-877EB8F7D024}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7ABFA914-8980-4630-B7E5-92921E5D897D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7ABFA914-8980-4630-B7E5-92921E5D897D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7ABFA914-8980-4630-B7E5-92921E5D897D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7ABFA914-8980-4630-B7E5-92921E5D897D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -48,6 +42,14 @@ Global
 		{BCE486DF-3DA2-42A2-BF38-376B17CEF434}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCE486DF-3DA2-42A2-BF38-376B17CEF434}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BCE486DF-3DA2-42A2-BF38-376B17CEF434}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7ABFA914-8980-4630-B7E5-92921E5D897D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7ABFA914-8980-4630-B7E5-92921E5D897D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7ABFA914-8980-4630-B7E5-92921E5D897D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7ABFA914-8980-4630-B7E5-92921E5D897D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2D80729-09EE-4E17-869D-2C9075E0ED29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2D80729-09EE-4E17-869D-2C9075E0ED29}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2D80729-09EE-4E17-869D-2C9075E0ED29}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2D80729-09EE-4E17-869D-2C9075E0ED29}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

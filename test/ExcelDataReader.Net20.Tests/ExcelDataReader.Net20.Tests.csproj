@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyTitle>ExcelDataReader.Net45.Tests</AssemblyTitle>
+    <AssemblyTitle>ExcelDataReader.Net20.Tests</AssemblyTitle>
     <Authors>ExcelDataReader developers</Authors>
-    <TargetFramework>net45</TargetFramework>
-    <AssemblyName>ExcelDataReader.Net45.Tests</AssemblyName>
-    <PackageId>ExcelDataReader.Net45.Tests</PackageId>
+    <TargetFramework>net20</TargetFramework>
+    <AssemblyName>ExcelDataReader.Net20.Tests</AssemblyName>
+    <PackageId>ExcelDataReader.Net20.Tests</PackageId>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\ExcelDataReader.Tests\AppSettings.cs" Link="AppSettings.cs" />

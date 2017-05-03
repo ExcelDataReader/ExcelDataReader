@@ -8,7 +8,7 @@ namespace System.Runtime.CompilerServices {
 	/// 
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-	public class ExtensionAttribute : Attribute {
+	internal class ExtensionAttribute : Attribute {
 	}
 }
 #endif

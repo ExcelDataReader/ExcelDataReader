@@ -2,7 +2,6 @@
 #if !NETCOREAPP1_0
 using System.Data;
 #endif
-using System.Runtime.InteropServices.ComTypes;
 using Excel;
 using System.IO;
 
@@ -1020,7 +1019,7 @@ namespace ExcelDataReader.Tests
         public void Test_Issue_11818_OutOfRange()
         {
 #if !NETCOREAPP1_0
-            ExcelDataReader.Log.Log.InitializeWith<Log.Logger.Log4NetLog>();
+            ExcelDataReader.Log.Log.InitializeWith<Log4NetLog>();
 #endif
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11818_OutOfRange")))
             {
