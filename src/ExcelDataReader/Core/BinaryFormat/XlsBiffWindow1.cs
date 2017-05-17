@@ -3,104 +3,73 @@ using Excel;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
-	/// <summary>
-	/// Represents Workbook's global window description
-	/// </summary>
-	internal class XlsBiffWindow1 : XlsBiffRecord
-	{
-		#region Window1Flags enum
+    /// <summary>
+    /// Represents Workbook's global window description
+    /// </summary>
+    internal class XlsBiffWindow1 : XlsBiffRecord
+    {
+        internal XlsBiffWindow1(byte[] bytes, uint offset, ExcelBinaryReader reader)
+            : base(bytes, offset, reader)
+        {
+        }
 
-		[Flags]
-		public enum Window1Flags : ushort
-		{
-			Hidden = 0x1,
-			Minimized = 0x2,
-			//(Reserved) = 0x4,
+        [Flags]
+        public enum Window1Flags : ushort
+        {
+            Hidden = 0x1,
+            Minimized = 0x2,
+            
+            // (Reserved) = 0x4,
+            HScrollVisible = 0x8,
+            VScrollVisible = 0x10,
+            WorkbookTabs = 0x20
+            
+            // (Other bits are reserved)
+        }
 
-			HScrollVisible = 0x8,
-			VScrollVisible = 0x10,
-			WorkbookTabs = 0x20
-			//(Other bits are reserved)
-		}
+        /// <summary>
+        /// Gets the X position of a window
+        /// </summary>
+        public ushort Left => ReadUInt16(0x0);
 
-		#endregion
+        /// <summary>
+        /// Gets the Y position of a window
+        /// </summary>
+        public ushort Top => ReadUInt16(0x2);
 
-		internal XlsBiffWindow1(byte[] bytes, uint offset, ExcelBinaryReader reader)
-			: base(bytes, offset, reader)
-		{
-		}
+        /// <summary>
+        /// Gets the width of the window
+        /// </summary>
+        public ushort Width => ReadUInt16(0x4);
 
+        /// <summary>
+        /// Gets the height of the window
+        /// </summary>
+        public ushort Height => ReadUInt16(0x6);
 
-		/// <summary>
-		/// Returns X position of a window
-		/// </summary>
-		public ushort Left
-		{
-			get { return base.ReadUInt16(0x0); }
-		}
+        /// <summary>
+        /// Gets the window flags
+        /// </summary>
+        public Window1Flags Flags => (Window1Flags)ReadUInt16(0x8);
 
-		/// <summary>
-		/// Returns Y position of a window
-		/// </summary>
-		public ushort Top
-		{
-			get { return base.ReadUInt16(0x2); }
-		}
+        /// <summary>
+        /// Gets the active workbook tab (zero-based)
+        /// </summary>
+        public ushort ActiveTab => ReadUInt16(0xA);
 
-		/// <summary>
-		/// Returns width of a window
-		/// </summary>
-		public ushort Width
-		{
-			get { return base.ReadUInt16(0x4); }
-		}
+        /// <summary>
+        /// Gets the first visible workbook tab (zero-based)
+        /// </summary>
+        public ushort FirstVisibleTab => ReadUInt16(0xC);
 
-		/// <summary>
-		/// Returns height of a window
-		/// </summary>
-		public ushort Height
-		{
-			get { return base.ReadUInt16(0x6); }
-		}
+        /// <summary>
+        /// Gets the number of selected workbook tabs
+        /// </summary>
+        public ushort SelectedTabCount => ReadUInt16(0xE);
 
-		/// <summary>
-		/// Returns window flags
-		/// </summary>
-		public Window1Flags Flags
-		{
-			get { return (Window1Flags) base.ReadUInt16(0x8); }
-		}
-
-		/// <summary>
-		/// Returns active workbook tab (zero-based)
-		/// </summary>
-		public ushort ActiveTab
-		{
-			get { return base.ReadUInt16(0xA); }
-		}
-
-		/// <summary>
-		/// Returns first visible workbook tab (zero-based)
-		/// </summary>
-		public ushort FirstVisibleTab
-		{
-			get { return base.ReadUInt16(0xC); }
-		}
-
-		/// <summary>
-		/// Returns number of selected workbook tabs
-		/// </summary>
-		public ushort SelectedTabCount
-		{
-			get { return base.ReadUInt16(0xE); }
-		}
-
-		/// <summary>
-		/// Returns workbook tab width to horizontal scrollbar width
-		/// </summary>
-		public ushort TabRatio
-		{
-			get { return base.ReadUInt16(0x10); }
-		}
-	}
+        /// <summary>
+        /// Gets the workbook tab width to horizontal scrollbar width
+        /// </summary>
+        public ushort TabRatio => ReadUInt16(0x10);
+    }
 }

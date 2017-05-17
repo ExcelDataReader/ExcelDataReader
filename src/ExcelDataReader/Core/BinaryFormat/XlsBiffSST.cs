@@ -10,22 +10,22 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffSST : XlsBiffRecord
     {
-        private readonly List<uint> m_continues = new List<uint>();
-        private readonly List<string> m_strings;
+        private readonly List<uint> _continues = new List<uint>();
+        private readonly List<string> _strings;
 
         internal XlsBiffSST(byte[] bytes, uint offset, ExcelBinaryReader reader)
             : base(bytes, offset, reader)
         {
-            m_strings = new List<string>();
+            _strings = new List<string>();
         }
 
         /// <summary>
-        /// Returns count of strings in SST
+        /// Gets the number of strings in SST
         /// </summary>
         public uint Count => ReadUInt32(0x0);
 
         /// <summary>
-        /// Returns count of unique strings in SST
+        /// Gets the count of unique strings in SST
         /// </summary>
         public uint UniqueCount => ReadUInt32(0x4);
 
@@ -47,9 +47,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                 uint size = prefix + postfix + len + (str.IsMultiByte ? len : 0);
                 if (offset + size > last)
                 {
-                    if (lastcontinue >= m_continues.Count)
+                    if (lastcontinue >= _continues.Count)
                         break;
-                    uint contoffset = m_continues[lastcontinue];
+                    uint contoffset = _continues[lastcontinue];
 
                     byte[] buff = new byte[size * 2];
                     Buffer.BlockCopy(Bytes, (int)offset, buff, 0, (int)(last - offset));
@@ -78,7 +78,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         }
                         else if (isMultiByte && !str.IsMultiByte)
                         {
-                            len -= (last - offset - prefix);
+                            len -= last - offset - prefix;
 
                             int templen = (int)(last - offset - prefix);
                             byte[] tempbytes = new byte[templen * 2];
@@ -112,18 +112,21 @@ namespace ExcelDataReader.Core.BinaryFormat
                     offset += size;
                     if (offset == last)
                     {
-                        if (lastcontinue < m_continues.Count)
+                        if (lastcontinue < _continues.Count)
                         {
-                            uint contoffset = m_continues[lastcontinue];
+                            uint contoffset = _continues[lastcontinue];
                             offset = contoffset + 4;
                             last = offset + BitConverter.ToUInt16(Bytes, (int)contoffset + 2);
                             lastcontinue++;
                         }
                         else
+                        {
                             count = 1;
+                        }
                     }
                 }
-                m_strings.Add(str.Value);
+
+                _strings.Add(str.Value);
                 count--;
                 if (count == 0)
                     break;
@@ -137,10 +140,9 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <returns>string value if it was found, empty string otherwise</returns>
         public string GetString(uint sstIndex)
         {
-            if (sstIndex < m_strings.Count)
-                return m_strings[(int)sstIndex];
-
-
+            if (sstIndex < _strings.Count)
+                return _strings[(int)sstIndex];
+            
             return string.Empty;
         }
 
@@ -150,7 +152,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <param name="fragment">Continue record</param>
         public void Append(XlsBiffContinue fragment)
         {
-            m_continues.Add((uint)fragment.Offset);
+            _continues.Add((uint)fragment.Offset);
         }
     }
 }

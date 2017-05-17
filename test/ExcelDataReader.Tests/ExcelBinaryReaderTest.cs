@@ -2,20 +2,19 @@
 #if !NETCOREAPP1_0
 using System.Data;
 #endif
-using Excel;
 using System.IO;
-
+using Excel;
 using ExcelDataReader.Exceptions;
 
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
-using TestInitialize = NUnit.Framework.SetUpAttribute;
 using TestCleanup = NUnit.Framework.TearDownAttribute;
+using TestInitialize = NUnit.Framework.SetUpAttribute;
 using TestMethod = NUnit.Framework.TestAttribute;
 
+// ReSharper disable InconsistentNaming
 namespace ExcelDataReader.Tests
 {
-
     [TestClass]
 
     public class ExcelBinaryReaderTest
@@ -24,14 +23,14 @@ namespace ExcelDataReader.Tests
         public void TestInitialize()
         {
 #if NETCOREAPP1_0
-			System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 #endif
         }
 
         [TestMethod]
         public void GitIssue_70_ExcelBinaryReader_tryConvertOADateTime_forumla()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Git_Issue_70")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Git_Issue_70")))
             {
                 var ds = excelReader.AsDataSet();
                 Assert.IsNotNull(ds);
@@ -45,7 +44,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void GitIssue_51_ReadCellLabel()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Git_Issue_51")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Git_Issue_51")))
             {
                 var ds = excelReader.AsDataSet();
                 Assert.IsNotNull(ds);
@@ -59,7 +58,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void GitIssue_29_ReadSheetStatesReadsCorrectly()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Excel_Dataset")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Excel_Dataset")))
             {
                 Assert.AreEqual("hidden", excelReader.VisibleState);
 
@@ -74,7 +73,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void GitIssue_29_AsDataSetProvidesCorrectSheetVisibleState()
         {
-            using (IExcelDataReader reader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Excel_Dataset")))
+            using (IExcelDataReader reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Excel_Dataset")))
             {
                 var dataset = reader.AsDataSet();
 
@@ -89,7 +88,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void GitIssue_45()
         {
-            using (var reader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_45")))
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_45")))
             {
                 do
                 {
@@ -104,7 +103,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void AsDataSet_Test()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestChess")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("TestChess")))
             {
                 DataSet result = excelReader.AsDataSet();
 
@@ -118,7 +117,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void AsDataSet_Test_Row_Count()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestChess")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("TestChess")))
             {
                 excelReader.IsFirstRowAsColumnNames = false;
                 var result = excelReader.AsDataSet();
@@ -130,7 +129,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void AsDataSet_Test_Row_Count_FirstRowAsColumnNames()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestChess")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("TestChess")))
             {
                 excelReader.IsFirstRowAsColumnNames = true;
                 var result = excelReader.AsDataSet();
@@ -142,60 +141,56 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11553_11570_FATIssue_Offset()
         {
+            void DoTestFATStreamIssue(string sheetId)
+            {
+                string filePath;
+                using (var excelReader1 = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook(sheetId))) // Works.
+                {
+                    filePath = Configuration.GetTestWorkbookPath(sheetId);
+                    Assert.IsNotNull(excelReader1);
+                }
+
+                using (var ms1 = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var excelReader2 = ExcelReaderFactory.CreateBinaryReader(ms1)) // Works!
+                    Assert.IsNotNull(excelReader2);
+
+                var bytes = File.ReadAllBytes(filePath);
+                using (var ms2 = new MemoryStream(bytes))
+                using (var excelReader3 = ExcelReaderFactory.CreateBinaryReader(ms2)) // Did not work, but does now
+                    Assert.IsNotNull(excelReader3);
+            }
+
+            void DoTestFATStreamIssueType2(string sheetId)
+            {
+                var filePath = Configuration.GetTestWorkbookPath(sheetId);
+
+                using (Stream stream = new MemoryStream(File.ReadAllBytes(filePath)))
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(stream))
+                {
+                    // Options
+                    excelReader.IsFirstRowAsColumnNames = true;
+                    // ReSharper disable once AccessToDisposedClosure
+                    Assert.DoesNotThrow(() => excelReader.AsDataSet());
+                }
+            }
+
             DoTestFATStreamIssue("Test_Issue_11553_FAT");
             DoTestFATStreamIssueType2("Test_Issue_11570_FAT_1");
             DoTestFATStreamIssueType2("Test_Issue_11570_FAT_2");
         }
 
-        private static void DoTestFATStreamIssue(string sheetId)
+        /*[TestMethod]
+        public void Test_SSRS()
         {
-            string filePath;
-            using (var excelReader1 = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook(sheetId))) // Works.
-            {
-                filePath = Helper.GetTestWorkbookPath(sheetId);
-                Assert.IsNotNull(excelReader1);
-            }
-
-            using (var ms1 = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var excelReader2 = ExcelReaderFactory.CreateBinaryReader(ms1)) // Works!
-                Assert.IsNotNull(excelReader2);
-
-            var bytes = File.ReadAllBytes(filePath);
-            using (var ms2 = new MemoryStream(bytes))
-            using (var excelReader3 = ExcelReaderFactory.CreateBinaryReader(ms2)) // Did not work, but does now
-                Assert.IsNotNull(excelReader3);
-        }
-
-        private static void DoTestFATStreamIssueType2(string sheetId)
-        {
-            var filePath = Helper.GetTestWorkbookPath(sheetId);
-
-            using (Stream stream = new MemoryStream(File.ReadAllBytes(filePath)))
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(stream))
-            {
-                //Options
-                excelReader.IsFirstRowAsColumnNames = true;
-                DataSet result = excelReader.AsDataSet();
-            }
-        }
-
-        //[TestMethod]
-        //public void Test_SSRS()
-        //{
-        //	IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_SSRS"));
-
-        //	DataSet result = excelReader.AsDataSet();
-
-
-
-        //	excelReader.Close();
-        //}
-
+            IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_SSRS"));
+            DataSet result = excelReader.AsDataSet();
+            excelReader.Close();
+        }*/
 
         [TestMethod]
         public void ChessTest()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestChess")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("TestChess")))
             {
                 DataTable result = excelReader.AsDataSet().Tables[0];
 
@@ -209,7 +204,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void DataReader_NextResult_Test()
         {
-            using (IExcelDataReader r = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestMultiSheet")))
+            using (IExcelDataReader r = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("TestMultiSheet")))
             {
                 Assert.AreEqual(3, r.ResultsCount);
 
@@ -231,7 +226,6 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(4, fieldCount);
                 Assert.AreEqual(1, table.Rows[11][3]);
 
-
                 r.NextResult();
                 table.Rows.Clear();
 
@@ -244,7 +238,6 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(12, table.Rows.Count);
                 Assert.AreEqual(4, fieldCount);
                 Assert.AreEqual(2, table.Rows[11][3]);
-
 
                 r.NextResult();
                 table.Rows.Clear();
@@ -266,7 +259,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void DataReader_Read_Test()
         {
-            using (IExcelDataReader r = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_num_double_date_bool_string")))
+            using (IExcelDataReader r = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_num_double_date_bool_string")))
             {
                 var table = new DataTable();
                 table.Columns.Add(new DataColumn("num_col", typeof(int)));
@@ -289,12 +282,12 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(1, int.Parse(table.Rows[0][0].ToString()));
                 Assert.AreEqual(1346269, int.Parse(table.Rows[29][0].ToString()));
 
-                //double + Formula
+                // double + Formula
                 Assert.AreEqual(1.02, double.Parse(table.Rows[0][1].ToString()));
                 Assert.AreEqual(4.08, double.Parse(table.Rows[2][1].ToString()));
                 Assert.AreEqual(547608330.24, double.Parse(table.Rows[29][1].ToString()));
 
-                //Date + Formula
+                // Date + Formula
                 Assert.AreEqual(new DateTime(2009, 5, 11).ToShortDateString(), DateTime.Parse(table.Rows[0][2].ToString()).ToShortDateString());
                 Assert.AreEqual(new DateTime(2009, 11, 30).ToShortDateString(), DateTime.Parse(table.Rows[29][2].ToString()).ToShortDateString());
             }
@@ -303,7 +296,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Dimension10x10000Test()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test10x10000")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test10x10000")))
             {
                 DataTable result = excelReader.AsDataSet().Tables[0];
 
@@ -319,7 +312,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Dimension10x10Test()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test10x10")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test10x10")))
             {
                 DataTable result = excelReader.AsDataSet().Tables[0];
 
@@ -333,7 +326,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Dimension255x10Test()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test255x10")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test255x10")))
             {
                 DataTable result = excelReader.AsDataSet().Tables[0];
 
@@ -347,7 +340,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void DoublePrecisionTest()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestDoublePrecision")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("TestDoublePrecision")))
             {
                 DataTable result = excelReader.AsDataSet().Tables[0];
 
@@ -359,7 +352,7 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(+excelPi * 1.0e-300, result.Rows[4][1]);
                 Assert.AreEqual(-excelPi * 1.0e-300, result.Rows[5][1]);
 
-                Assert.AreEqual(+excelPi * 1.0e300, (double)result.Rows[6][1], 1e286); //only accurate to 1e286 because excel only has 15 digits precision
+                Assert.AreEqual(+excelPi * 1.0e300, (double)result.Rows[6][1], 1e286); // only accurate to 1e286 because excel only has 15 digits precision
                 Assert.AreEqual(-excelPi * 1.0e300, (double)result.Rows[7][1], 1e286);
 
                 Assert.AreEqual(+excelPi * 1.0e14, result.Rows[8][1]);
@@ -372,7 +365,7 @@ namespace ExcelDataReader.Tests
         {
             var exception = Assert.Throws<HeaderException>(() =>
             {
-                using (ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestFail_Binary")))
+                using (ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("TestFail_Binary")))
                 {
                 }
             });
@@ -380,11 +373,10 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual("Invalid file signature.", exception.Message);
         }
 
-
         [TestMethod]
         public void Issue_Date_and_Time_1468_Test()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Encoding_1520")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Encoding_1520")))
             {
                 DataSet dataSet = excelReader.AsDataSet();
 
@@ -403,36 +395,36 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_8536_Test()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_8536")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_8536")))
             {
                 DataSet dataSet = excelReader.AsDataSet();
 
-                //date
+                // date
                 var date1900 = dataSet.Tables[0].Rows[7][1];
                 Assert.AreEqual(typeof(DateTime), date1900.GetType());
                 Assert.AreEqual(new DateTime(1900, 1, 1), date1900);
 
-                //xml encoded chars
+                // xml encoded chars
                 var xmlChar1 = dataSet.Tables[0].Rows[6][1];
                 Assert.AreEqual(typeof(string), xmlChar1.GetType());
                 Assert.AreEqual("&#x26; ", xmlChar1);
 
-                //number but matches a date serial
+                // number but matches a date serial
                 var datenum1 = dataSet.Tables[0].Rows[5][1];
                 Assert.AreEqual(typeof(double), datenum1.GetType());
                 Assert.AreEqual(41244, double.Parse(datenum1.ToString()));
 
-                //date
+                // date
                 var date1 = dataSet.Tables[0].Rows[4][1];
                 Assert.AreEqual(typeof(DateTime), date1.GetType());
                 Assert.AreEqual(new DateTime(2012, 12, 1), date1);
 
-                //double
+                // double
                 var num1 = dataSet.Tables[0].Rows[3][1];
                 Assert.AreEqual(typeof(double), num1.GetType());
                 Assert.AreEqual(12345, double.Parse(num1.ToString()));
 
-                //boolean issue
+                // boolean issue
                 var val2 = dataSet.Tables[0].Rows[2][1];
                 Assert.AreEqual(typeof(bool), val2.GetType());
                 Assert.IsTrue((bool)val2);
@@ -442,23 +434,22 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11397_Currency_Test()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11397")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11397")))
             {
                 DataSet dataSet = excelReader.AsDataSet();
 
-                Assert.AreEqual("$44.99", dataSet.Tables[0].Rows[1][0].ToString()); //general in spreadsheet so should be a string including the $
-                Assert.AreEqual(44.99, double.Parse(dataSet.Tables[0].Rows[2][0].ToString())); //currency euros in spreadsheet so should be a currency
-                Assert.AreEqual(44.99, double.Parse(dataSet.Tables[0].Rows[3][0].ToString())); //currency pounds in spreadsheet so should be a currency
+                Assert.AreEqual("$44.99", dataSet.Tables[0].Rows[1][0].ToString()); // general in spreadsheet so should be a string including the $
+                Assert.AreEqual(44.99, double.Parse(dataSet.Tables[0].Rows[2][0].ToString())); // currency euros in spreadsheet so should be a currency
+                Assert.AreEqual(44.99, double.Parse(dataSet.Tables[0].Rows[3][0].ToString())); // currency pounds in spreadsheet so should be a currency
             }
         }
 
         [TestMethod]
         public void Issue_4031_NullColumn()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_4031_NullColumn")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_4031_NullColumn")))
             {
-                //DataSet dataSet = excelReader.AsDataSet(true);
-
+                // DataSet dataSet = excelReader.AsDataSet(true);
                 excelReader.Read();
                 Assert.IsNull(excelReader.GetValue(0));
                 Assert.AreEqual("a", excelReader.GetString(1));
@@ -478,7 +469,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_10725()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_10725")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_10725")))
             {
                 excelReader.Read();
                 Assert.AreEqual(8.8, excelReader.GetValue(0));
@@ -492,7 +483,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11435_Colors()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11435_Colors")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11435_Colors")))
             {
                 DataSet dataSet = excelReader.AsDataSet();
 
@@ -511,7 +502,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_7433_IllegalOleAutDate()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_7433_IllegalOleAutDate")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_7433_IllegalOleAutDate")))
             {
                 DataSet dataSet = excelReader.AsDataSet();
 
@@ -524,7 +515,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_BoolFormula()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_BoolFormula")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_BoolFormula")))
             {
                 DataSet dataSet = excelReader.AsDataSet();
 
@@ -535,7 +526,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_Decimal_1109_Test()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Decimal_1109")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Decimal_1109")))
             {
                 DataSet dataSet = excelReader.AsDataSet();
 
@@ -550,7 +541,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_Encoding_1520_Test()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Encoding_1520")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Encoding_1520")))
             {
                 DataSet dataSet = excelReader.AsDataSet();
 
@@ -562,7 +553,7 @@ namespace ExcelDataReader.Tests
                 val2 = dataSet.Tables[0].Rows[1][0].ToString();
                 Assert.AreEqual(val1, val2);
 
-                //librement réutilisable
+                // librement réutilisable
                 val1 = "librement réutilisable";
                 val2 = dataSet.Tables[0].Rows[7][0].ToString();
                 Assert.AreEqual(val1, val2);
@@ -575,7 +566,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void MultiSheetTest()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestMultiSheet")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("TestMultiSheet")))
             {
                 DataSet result = excelReader.AsDataSet();
 
@@ -597,7 +588,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_num_double_date_bool_string()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_num_double_date_bool_string")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_num_double_date_bool_string")))
             {
                 DataSet dataSet = excelReader.AsDataSet();
 
@@ -607,26 +598,26 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(1, int.Parse(dataSet.Tables[0].Rows[0][0].ToString()));
                 Assert.AreEqual(1346269, int.Parse(dataSet.Tables[0].Rows[29][0].ToString()));
 
-                //bool
+                // bool
                 Assert.IsNotNull(dataSet.Tables[0].Rows[22][3].ToString());
                 Assert.AreEqual(dataSet.Tables[0].Rows[22][3], true);
 
-                //double + Formula
+                // double + Formula
                 Assert.AreEqual(1.02, double.Parse(dataSet.Tables[0].Rows[0][1].ToString()));
                 Assert.AreEqual(4.08, double.Parse(dataSet.Tables[0].Rows[2][1].ToString()));
                 Assert.AreEqual(547608330.24, double.Parse(dataSet.Tables[0].Rows[29][1].ToString()));
 
-                //Date + Formula
+                // Date + Formula
                 Assert.AreEqual(new DateTime(2009, 5, 11), dataSet.Tables[0].Rows[0][2]);
                 Assert.AreEqual(new DateTime(2009, 11, 30), dataSet.Tables[0].Rows[29][2]);
 
-                //Custom Date Time + Formula
+                // Custom Date Time + Formula
                 var s = dataSet.Tables[0].Rows[0][5].ToString();
                 Assert.AreEqual(new DateTime(2009, 5, 7, 11, 1, 2), DateTime.Parse(s));
                 s = dataSet.Tables[0].Rows[1][5].ToString();
                 Assert.AreEqual(new DateTime(2009, 5, 8, 11, 1, 2), DateTime.Parse(s));
 
-                //DBNull value
+                // DBNull value
                 Assert.AreEqual(DBNull.Value, dataSet.Tables[0].Rows[1][4]);
             }
         }
@@ -634,10 +625,9 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11479_BlankSheet()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Issue_11479_BlankSheet")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Issue_11479_BlankSheet")))
             {
-                //DataSet result = excelReader.AsDataSet(true);
-
+                // DataSet result = excelReader.AsDataSet(true);
                 excelReader.Read();
                 Assert.AreEqual(5, excelReader.FieldCount);
                 excelReader.NextResult();
@@ -653,7 +643,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_BlankHeader()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_BlankHeader")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_BlankHeader")))
             {
                 excelReader.Read();
                 Assert.AreEqual(6, excelReader.FieldCount);
@@ -668,11 +658,11 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_OpenOffice()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_OpenOffice")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_OpenOffice")))
             {
                 excelReader.IsFirstRowAsColumnNames = true;
 
-                DoOpenOfficeTest(excelReader);
+                AssertUtilities.DoOpenOfficeTest(excelReader);
             }
         }
 
@@ -682,7 +672,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void GitIssue_11_OpenOffice_Row_Count()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_OpenOffice")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_OpenOffice")))
             {
                 excelReader.IsFirstRowAsColumnNames = false;
 
@@ -697,18 +687,18 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_OpenOffice_SavedInExcel()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Excel_OpenOffice")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Excel_OpenOffice")))
             {
                 excelReader.IsFirstRowAsColumnNames = true;
 
-                DoOpenOfficeTest(excelReader);
+                AssertUtilities.DoOpenOfficeTest(excelReader);
             }
         }
 
         [TestMethod]
         public void Test_Issue_11601_ReadSheetnames()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Excel_Dataset")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Excel_Dataset")))
             {
                 Assert.AreEqual("test.csv", excelReader.Name);
 
@@ -720,103 +710,10 @@ namespace ExcelDataReader.Tests
             }
         }
 
-        public static void DoOpenOfficeTest(IExcelDataReader excelReader)
-        {
-            excelReader.Read();
-            Assert.AreEqual(6, excelReader.FieldCount);
-            Assert.AreEqual("column a", excelReader.GetName(0));
-            Assert.AreEqual(" column b", excelReader.GetName(1));
-            Assert.AreEqual(" column b", excelReader.GetName(2));
-            Assert.IsNull(excelReader.GetName(3));
-            Assert.AreEqual("column e", excelReader.GetName(4));
-            Assert.AreEqual(" column b", excelReader.GetName(5));
-
-            Assert.AreEqual(2, excelReader.GetInt32(0));
-            Assert.AreEqual("b", excelReader.GetString(1));
-            Assert.AreEqual("c", excelReader.GetString(2));
-            Assert.AreEqual("d", excelReader.GetString(3));
-            Assert.AreEqual(" e ", excelReader.GetString(4));
-
-            excelReader.Read();
-            Assert.AreEqual(6, excelReader.FieldCount);
-            Assert.AreEqual(3, excelReader.GetInt32(0));
-            Assert.AreEqual(2, excelReader.GetInt32(1));
-            Assert.AreEqual(3, excelReader.GetInt32(2));
-            Assert.AreEqual(4, excelReader.GetInt32(3));
-            Assert.AreEqual(5, excelReader.GetInt32(4));
-
-            excelReader.Read();
-            Assert.AreEqual(6, excelReader.FieldCount);
-            Assert.AreEqual(4, excelReader.GetInt32(0));
-            Assert.AreEqual(new DateTime(2012, 10, 13), excelReader.GetDateTime(1));
-            Assert.AreEqual(new DateTime(2012, 10, 14), excelReader.GetDateTime(2));
-            Assert.AreEqual(new DateTime(2012, 10, 15), excelReader.GetDateTime(3));
-            Assert.AreEqual(new DateTime(2012, 10, 16), excelReader.GetDateTime(4));
-
-            for (int i = 4; i < 34; i++)
-            {
-                excelReader.Read();
-                Assert.AreEqual(i + 1, excelReader.GetInt32(0));
-                Assert.AreEqual(i + 2, excelReader.GetInt32(1));
-                Assert.AreEqual(i + 3, excelReader.GetInt32(2));
-                Assert.AreEqual(i + 4, excelReader.GetInt32(3));
-                Assert.AreEqual(i + 5, excelReader.GetInt32(4));
-            }
-
-            excelReader.NextResult();
-            excelReader.Read();
-            Assert.AreEqual(0, excelReader.FieldCount);
-
-            excelReader.NextResult();
-            excelReader.Read();
-            Assert.AreEqual(0, excelReader.FieldCount);
-
-            //test dataset
-
-            DataSet result = excelReader.AsDataSet();
-            Assert.AreEqual(3, result.Tables.Count);
-            Assert.AreEqual(6, result.Tables[0].Columns.Count);
-            Assert.AreEqual(33, result.Tables[0].Rows.Count);
-
-            Assert.AreEqual("column a", result.Tables[0].Columns[0].ColumnName);
-            Assert.AreEqual(" column b", result.Tables[0].Columns[1].ColumnName);
-            Assert.AreEqual(" column b_1", result.Tables[0].Columns[2].ColumnName);
-            Assert.AreEqual("Column3", result.Tables[0].Columns[3].ColumnName);
-            Assert.AreEqual("column e", result.Tables[0].Columns[4].ColumnName);
-            Assert.AreEqual(" column b_2", result.Tables[0].Columns[5].ColumnName);
-
-            Assert.AreEqual(2, Convert.ToInt32(result.Tables[0].Rows[0][0]));
-            Assert.AreEqual("b", result.Tables[0].Rows[0][1]);
-            Assert.AreEqual("c", result.Tables[0].Rows[0][2]);
-            Assert.AreEqual("d", result.Tables[0].Rows[0][3]);
-            Assert.AreEqual(" e ", result.Tables[0].Rows[0][4]);
-
-            Assert.AreEqual(3, Convert.ToInt32(result.Tables[0].Rows[1][0]));
-            Assert.AreEqual(2, Convert.ToInt32(result.Tables[0].Rows[1][1]));
-            Assert.AreEqual(3, Convert.ToInt32(result.Tables[0].Rows[1][2]));
-            Assert.AreEqual(4, Convert.ToInt32(result.Tables[0].Rows[1][3]));
-            Assert.AreEqual(5, Convert.ToInt32(result.Tables[0].Rows[1][4]));
-
-            Assert.AreEqual(4, Convert.ToInt32(result.Tables[0].Rows[2][0]));
-            Assert.AreEqual(new DateTime(2012, 10, 13), result.Tables[0].Rows[2][1]);
-            Assert.AreEqual(new DateTime(2012, 10, 14), result.Tables[0].Rows[2][2]);
-            Assert.AreEqual(new DateTime(2012, 10, 15), result.Tables[0].Rows[2][3]);
-            Assert.AreEqual(new DateTime(2012, 10, 16), result.Tables[0].Rows[2][4]);
-
-            for (int i = 4; i < 33; i++)
-            {
-                Assert.AreEqual(i + 2, Convert.ToInt32(result.Tables[0].Rows[i][0]));
-                Assert.AreEqual(i + 3, Convert.ToInt32(result.Tables[0].Rows[i][1]));
-                Assert.AreEqual(i + 4, Convert.ToInt32(result.Tables[0].Rows[i][2]));
-                Assert.AreEqual(i + 5, Convert.ToInt32(result.Tables[0].Rows[i][3]));
-                Assert.AreEqual(i + 6, Convert.ToInt32(result.Tables[0].Rows[i][4]));
-            }
-        }
-
         [TestMethod]
         public void UnicodeCharsTest()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestUnicodeChars")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("TestUnicodeChars")))
             {
                 DataTable result = excelReader.AsDataSet().Tables[0];
 
@@ -829,7 +726,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void UncalculatedTest()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Uncalculated")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Uncalculated")))
             {
                 var dataset = excelReader.AsDataSet();
                 Assert.IsNotNull(dataset);
@@ -846,7 +743,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11570_Excel2013()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11570_Excel2013")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11570_Excel2013")))
             {
                 var dataset = excelReader.AsDataSet();
 
@@ -871,13 +768,14 @@ namespace ExcelDataReader.Tests
         }
 
         [TestMethod]
-        //"Issue will mot be resolved as codepage 27651 is not supported in .net \"System.NotSupportedException : No data is available for encoding 27651.\"")]
+
+        // "Issue will mot be resolved as codepage 27651 is not supported in .net \"System.NotSupportedException : No data is available for encoding 27651.\"")]
         [Ignore("codepage 27651 is not supported in .net")]
         public void Issue_11572_CodePage()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11572_CodePage")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11572_CodePage")))
             {
-                var dataset = excelReader.AsDataSet();
+                Assert.DoesNotThrow(() => excelReader.AsDataSet());
             }
         }
 
@@ -887,7 +785,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11545_NoIndex()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11545_NoIndex")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11545_NoIndex")))
             {
                 excelReader.IsFirstRowAsColumnNames = true;
                 var dataset = excelReader.AsDataSet();
@@ -897,11 +795,11 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(new DateTime(2012, 03, 01), dataset.Tables[0].Rows[0][8]);
             }
         }
-        
+
         [TestMethod]
         public void Issue_11573_BlankValues()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11573_BlankValues"), false))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11573_BlankValues"), false))
             {
                 excelReader.IsFirstRowAsColumnNames = false;
                 var dataset = excelReader.AsDataSet();
@@ -914,9 +812,9 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_DateFormatButNotDate()
         {
-            //we want to make sure that if a cell is formatted as a date but it's contents are not a date then
-            //the output is not a date
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_DateFormatButNotDate")))
+            // we want to make sure that if a cell is formatted as a date but it's contents are not a date then
+            // the output is not a date
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_DateFormatButNotDate")))
             {
                 excelReader.Read();
                 Assert.AreEqual("columna", excelReader.GetValue(0));
@@ -941,9 +839,8 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11642_ValuesNotLoaded()
         {
-            //Excel.Log.Log.InitializeWith<Log4NetLog>();
-
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11642_ValuesNotLoaded")))
+            // Excel.Log.Log.InitializeWith<Log4NetLog>();
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11642_ValuesNotLoaded")))
             {
                 excelReader.IsFirstRowAsColumnNames = false;
                 var dataset = excelReader.AsDataSet();
@@ -957,12 +854,12 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11636_BiffStream()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11636_BiffStream")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11636_BiffStream")))
             {
                 excelReader.IsFirstRowAsColumnNames = false;
                 var dataset = excelReader.AsDataSet();
 
-                //check a couple of values
+                // check a couple of values
                 Assert.AreEqual("SP011", dataset.Tables[0].Rows[9][0]);
                 Assert.AreEqual(9.9, dataset.Tables[0].Rows[32][11]);
                 Assert.AreEqual(78624.44, dataset.Tables[1].Rows[27][12]);
@@ -976,17 +873,17 @@ namespace ExcelDataReader.Tests
         /// which is probably not good for performance
         /// </summary>
         [TestMethod]
+        [Ignore("Not fixed yet")]
         public void Issue_11639_11644_ForwardOnlyStream()
         {
-            Assert.Inconclusive("Not fixed yet");
-            //Excel.Log.Log.InitializeWith<Log4NetLog>();
-            using (var stream = Helper.GetTestWorkbook("Test_OpenOffice"))
+            // Excel.Log.Log.InitializeWith<Log4NetLog>();
+            using (var stream = Configuration.GetTestWorkbook("Test_OpenOffice"))
             {
                 using (var forwardStream = SeekErrorMemoryStream.CreateFromStream(stream))
                 using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(forwardStream))
                 {
                     excelReader.IsFirstRowAsColumnNames = false;
-                    var dataset = excelReader.AsDataSet();
+                    Assert.DoesNotThrow(() => excelReader.AsDataSet());
                 }
             }
         }
@@ -1002,12 +899,12 @@ namespace ExcelDataReader.Tests
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
-                //Excel.Log.Log.InitializeWith<Log4NetLog>();
-                using (var forwardStream = Helper.GetTestWorkbook("Test_Issue_12556_corrupt"))
+                // Excel.Log.Log.InitializeWith<Log4NetLog>();
+                using (var forwardStream = Configuration.GetTestWorkbook("Test_Issue_12556_corrupt"))
                 using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(forwardStream))
                 {
                     excelReader.IsFirstRowAsColumnNames = false;
-                    var dataset = excelReader.AsDataSet();
+                    Assert.DoesNotThrow(() => excelReader.AsDataSet());
                 }
             });
         }
@@ -1021,7 +918,7 @@ namespace ExcelDataReader.Tests
 #if !NETCOREAPP1_0
             ExcelDataReader.Log.Log.InitializeWith<Log4NetLog>();
 #endif
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Issue_11818_OutOfRange")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11818_OutOfRange")))
             {
                 excelReader.IsFirstRowAsColumnNames = false;
                 var dataset = excelReader.AsDataSet();
@@ -1033,7 +930,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_Issue_111_NoRowRecords()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_111_NoRowRecords")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_111_NoRowRecords")))
             {
                 var dataset = excelReader.AsDataSet();
 
@@ -1048,7 +945,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_Git_Issue_145()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Git_Issue_145")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Git_Issue_145")))
             {
                 excelReader.Read();
                 excelReader.Read();
@@ -1063,7 +960,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_GitIssue_152_SheetName_UTF16LE_Compressed()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_152")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_152")))
             {
                 var dataset = excelReader.AsDataSet();
 
@@ -1074,7 +971,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_GitIssue_152_Cell_UTF16LE_Compressed()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_152")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_152")))
             {
                 var dataset = excelReader.AsDataSet();
 
@@ -1085,7 +982,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void GitIssue_158()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_158")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_158")))
             {
                 var ds = excelReader.AsDataSet();
                 Assert.IsNotNull(ds);
@@ -1099,7 +996,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void GitIssue_173()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_git_issue_173")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_173")))
             {
                 var ds = excelReader.AsDataSet();
                 Assert.IsNotNull(ds);
@@ -1111,7 +1008,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void ReadWriteProtectedStructureUsingStandardEncryption()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("protectedsheet-xxx")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("protectedsheet-xxx")))
             {
                 var ds = excelReader.AsDataSet();
                 Assert.IsNotNull(ds);
@@ -1124,7 +1021,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void TestIncludeTableWithOnlyImage()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("TestTableOnlyImage_x01oct2016")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("TestTableOnlyImage_x01oct2016")))
             {
                 var ds = excelReader.AsDataSet();
                 Assert.IsNotNull(ds);
@@ -1135,7 +1032,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void AllowFfffAsByteOrder()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_InvalidByteOrderValueInHeader")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_InvalidByteOrderValueInHeader")))
             {
                 int tableCount = 0;
                 do
@@ -1155,7 +1052,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void HandleRowBlocksWithOutOfOrderCells()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("AllColumnsNotReadInHiddenTable")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("AllColumnsNotReadInHiddenTable")))
             {
                 var ds = excelReader.AsDataSet();
 
@@ -1170,8 +1067,7 @@ namespace ExcelDataReader.Tests
         public void HandleRowBlocksWithDifferentNumberOfColumnsAndInvalidDimensions()
         {
             // http://www.ine.cl/canales/chile_estadistico/estadisticas_economicas/edificacion/archivos/xls/edificacion_totalpais_seriehistorica_enero_2017.xls
-
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("RowWithDifferentNumberOfColumns")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("RowWithDifferentNumberOfColumns")))
             {
                 var ds = excelReader.AsDataSet();
                 Assert.AreEqual(256, ds.Tables[0].Columns.Count);
@@ -1182,7 +1078,7 @@ namespace ExcelDataReader.Tests
         public void IfNoDimensionDetermineFieldCountByProcessingAllCellColumnIndexes()
         {
             // This xls file has a row record with 256 columns but only values for 6.
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Git_Issue_145")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Git_Issue_145")))
             {
                 var ds = excelReader.AsDataSet();
                 Assert.AreEqual(6, ds.Tables[0].Columns.Count);
@@ -1192,7 +1088,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Row1217NotRead()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("Test_Row1217NotRead")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Row1217NotRead")))
             {
                 var ds = excelReader.AsDataSet();
                 CollectionAssert.AreEqual(new object[] { DBNull.Value, "Año", "Mes", DBNull.Value, "Índice", "Variación Mensual", "Variación Acumulada", "Variación en 12 Meses", "Incidencia Mensual", "Incidencia Acumulada", "Incidencia a 12 Meses", DBNull.Value, DBNull.Value }, ds.Tables[0].Rows[1216].ItemArray);
@@ -1202,7 +1098,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void StringContinuationAfterCharacterData()
         {
-            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Helper.GetTestWorkbook("StringContinuationAfterCharacterData")))
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("StringContinuationAfterCharacterData")))
             {
                 var ds = excelReader.AsDataSet();
                 Assert.AreEqual("商業動態統計速報-平成29年2月分-  統計表", ds.Tables[0].Rows[3][2]);

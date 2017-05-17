@@ -2,88 +2,54 @@ using System;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
-	internal class XlsxDimension
-	{
-		public XlsxDimension(string value)
-		{
-			ParseDimensions(value);
-		}
+    internal class XlsxDimension
+    {
+        public XlsxDimension(string value)
+        {
+            ParseDimensions(value);
+        }
 
-		public XlsxDimension(int rows, int cols)
-		{
-			this.FirstRow = 1;
-			this.LastRow = rows;
-			this.FirstCol = 1;
-			this.LastCol = cols;
+        public XlsxDimension(int rows, int cols)
+        {
+            FirstRow = 1;
+            LastRow = rows;
+            FirstCol = 1;
+            LastCol = cols;
 
             IsRange = true;
         }
 
-		private int _FirstRow;
+        public int FirstRow { get; set; }
 
-		public int FirstRow
-		{
-			get { return _FirstRow; }
-			set { _FirstRow = value; }
-		}
+        public int LastRow { get; set; }
 
-		private int _LastRow;
+        public int FirstCol { get; set; }
 
-		public int LastRow
-		{
-			get { return _LastRow; }
-			set { _LastRow = value; }
-		}
+        public int LastCol { get; set; }
 
-		private int _FirstCol;
-
-		public int FirstCol
-		{
-			get { return _FirstCol; }
-			set { _FirstCol = value; }
-		}
-
-		private int _LastCol;
-
-		public int LastCol
-		{
-			get { return _LastCol; }
-			set { _LastCol = value; }
-		}
-
-        private bool _IsRange;
-
-        public bool IsRange
-        {
-            get { return _IsRange; }
-            set { _IsRange = value; }
-        }
+        public bool IsRange { get; set; }
 
         private void ParseDimensions(string value)
-		{
-			string[] parts = value.Split(':');
+        {
+            string[] parts = value.Split(':');
 
-			int col;
-			int row;
+            ReferenceHelper.ParseReference(parts[0], out int col, out int row);
+            FirstCol = col;
+            FirstRow = row;
 
-			ReferenceHelper.ParseReference(parts[0], out col, out row);
-			FirstCol = col;
-			FirstRow = row;
-
-			if (parts.Length == 1)
-			{
+            if (parts.Length == 1)
+            {
                 LastCol = FirstCol;
-				LastRow = FirstRow;
-			}
-			else
-			{
-			    ReferenceHelper.ParseReference(parts[1], out col, out row);
-				LastCol = col;
-				LastRow = row;
+                LastRow = FirstRow;
+            }
+            else
+            {
+                ReferenceHelper.ParseReference(parts[1], out col, out row);
+                LastCol = col;
+                LastRow = row;
 
                 IsRange = true;
             }
-
         }
     }
 }

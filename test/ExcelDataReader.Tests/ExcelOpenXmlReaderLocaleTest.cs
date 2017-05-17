@@ -1,14 +1,12 @@
-﻿using System.Globalization;
+﻿#if NET20 || NET45
+using System.Globalization;
 using System.Threading;
-using System;
-using System.IO;
+using Excel;
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
-using TestInitialize = NUnit.Framework.SetUpAttribute;
-using TestCleanup = NUnit.Framework.TearDownAttribute;
 using TestMethod = NUnit.Framework.TestAttribute;
-using Excel;
 
+// ReSharper disable InconsistentNaming
 namespace ExcelDataReader.Tests
 {
     [TestClass]
@@ -17,10 +15,9 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Time_is_readable_for_polish_locale_issue_xxx()
         {
-#if NET20 || NET45
-			Thread.CurrentThread.CurrentCulture = new CultureInfo("pl-PL", false);
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("pl-PL", false);
 
-            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Issue_xxx_LocaleTime")))
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Issue_xxx_LocaleTime")))
             {
                 var dataset = reader.AsDataSet();
 
@@ -30,18 +27,16 @@ namespace ExcelDataReader.Tests
 
                 reader.Close();
             }
-#endif
-		}
+        }
 
-		[TestMethod]
+        [TestMethod]
         public void Test_Decimal_Locale()
         {
-#if NET20 || NET45
-			//change culture to german. this will expect commas instead of decimal points
+            // change culture to german. this will expect commas instead of decimal points
             Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE", false);
 
             IExcelDataReader excelReader =
-                ExcelReaderFactory.CreateOpenXmlReader(Helper.GetTestWorkbook("xTest_Decimal_Locale"));
+                ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Decimal_Locale"));
 
             var dataSet = excelReader.AsDataSet();
 
@@ -51,7 +46,7 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual(0.0001, dataSet.Tables[0].Rows[1][0]);
             Assert.AreEqual(0.123456789, dataSet.Tables[0].Rows[2][0]);
             Assert.AreEqual(0.00000000001, dataSet.Tables[0].Rows[3][0]);
-#endif
-		}
-	}
+        }
+    }
 }
+#endif

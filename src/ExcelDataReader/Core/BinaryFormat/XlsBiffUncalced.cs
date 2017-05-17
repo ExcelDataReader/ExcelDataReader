@@ -12,6 +12,5 @@ namespace ExcelDataReader.Core.BinaryFormat
             : base(bytes, offset, reader)
         {
         }
-
     }
 }

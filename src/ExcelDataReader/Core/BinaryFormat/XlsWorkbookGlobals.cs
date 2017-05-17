@@ -2,110 +2,40 @@ using System.Collections.Generic;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
-	/// <summary>
-	/// Represents Globals section of workbook
-	/// </summary>
-	internal class XlsWorkbookGlobals
-	{
-		private readonly List<XlsBiffRecord> m_ExtendedFormats = new List<XlsBiffRecord>();
-		private readonly List<XlsBiffRecord> m_Fonts = new List<XlsBiffRecord>();
-        private readonly Dictionary<ushort, XlsBiffFormatString> m_Formats = new Dictionary<ushort, XlsBiffFormatString>();
-		private readonly List<XlsBiffBoundSheet> m_Sheets = new List<XlsBiffBoundSheet>();
-		private readonly List<XlsBiffRecord> m_Styles = new List<XlsBiffRecord>();
-		private XlsBiffSimpleValueRecord m_Backup;
-		private XlsBiffSimpleValueRecord m_CodePage;
-		private XlsBiffRecord m_Country;
-		private XlsBiffRecord m_DSF;
-		private XlsBiffRecord m_ExtSST;
-		private XlsBiffInterfaceHdr m_InterfaceHdr;
+    /// <summary>
+    /// Represents Globals section of workbook
+    /// </summary>
+    internal class XlsWorkbookGlobals
+    {
+        public XlsBiffInterfaceHdr InterfaceHdr { get; set; }
 
-		private XlsBiffRecord m_MMS;
-		private XlsBiffSST m_SST;
+        public XlsBiffRecord Mms { get; set; }
 
-		private XlsBiffRecord m_WriteAccess;
+        public XlsBiffRecord WriteAccess { get; set; }
 
-		public XlsBiffInterfaceHdr InterfaceHdr
-		{
-			get { return m_InterfaceHdr; }
-			set { m_InterfaceHdr = value; }
-		}
+        public XlsBiffSimpleValueRecord CodePage { get; set; }
 
-		public XlsBiffRecord MMS
-		{
-			get { return m_MMS; }
-			set { m_MMS = value; }
-		}
+        public XlsBiffRecord Dsf { get; set; }
 
-		public XlsBiffRecord WriteAccess
-		{
-			get { return m_WriteAccess; }
-			set { m_WriteAccess = value; }
-		}
+        public XlsBiffRecord Country { get; set; }
 
-		public XlsBiffSimpleValueRecord CodePage
-		{
-			get { return m_CodePage; }
-			set { m_CodePage = value; }
-		}
+        public XlsBiffSimpleValueRecord Backup { get; set; }
 
-		public XlsBiffRecord DSF
-		{
-			get { return m_DSF; }
-			set { m_DSF = value; }
-		}
+        public List<XlsBiffRecord> Fonts { get; } = new List<XlsBiffRecord>();
 
-		public XlsBiffRecord Country
-		{
-			get { return m_Country; }
-			set { m_Country = value; }
-		}
+        public Dictionary<ushort, XlsBiffFormatString> Formats { get; } = new Dictionary<ushort, XlsBiffFormatString>();
 
-		public XlsBiffSimpleValueRecord Backup
-		{
-			get { return m_Backup; }
-			set { m_Backup = value; }
-		}
+        public List<XlsBiffRecord> ExtendedFormats { get; } = new List<XlsBiffRecord>();
 
-		public List<XlsBiffRecord> Fonts
-		{
-			get { return m_Fonts; }
-		}
+        public List<XlsBiffRecord> Styles { get; } = new List<XlsBiffRecord>();
 
-        public Dictionary<ushort, XlsBiffFormatString> Formats
-		{
-			get { return m_Formats; }
-		}
+        public List<XlsBiffBoundSheet> Sheets { get; } = new List<XlsBiffBoundSheet>();
 
-        
+        /// <summary>
+        /// Gets or sets the Shared String Table of workbook
+        /// </summary>
+        public XlsBiffSST SST { get; set; }
 
-		public List<XlsBiffRecord> ExtendedFormats
-		{
-			get { return m_ExtendedFormats; }
-		}
-
-		public List<XlsBiffRecord> Styles
-		{
-			get { return m_Styles; }
-		}
-
-		public List<XlsBiffBoundSheet> Sheets
-		{
-			get { return m_Sheets; }
-		}
-
-		/// <summary>
-		/// Shared String Table of workbook
-		/// </summary>
-		public XlsBiffSST SST
-		{
-			get { return m_SST; }
-			set { m_SST = value; }
-		}
-
-		public XlsBiffRecord ExtSST
-		{
-			get { return m_ExtSST; }
-			set { m_ExtSST = value; }
-		}
-	}
+        public XlsBiffRecord ExtSST { get; set; }
+    }
 }

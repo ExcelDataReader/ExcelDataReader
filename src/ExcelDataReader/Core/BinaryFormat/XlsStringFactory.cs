@@ -12,4 +12,4 @@ namespace ExcelDataReader.Core.BinaryFormat
             return new XlsByteString(bytes, offset, reader.Encoding);
         }
     }
-}   
+}

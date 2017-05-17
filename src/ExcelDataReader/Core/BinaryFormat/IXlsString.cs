@@ -5,17 +5,19 @@ namespace ExcelDataReader.Core.BinaryFormat
     internal interface IXlsString
     {
         /// <summary>
-        /// Returns string represented by this instance
+        /// Gets the string value.
         /// </summary>
         string Value { get; }
 
         /// <summary>
-        /// Count of characters in string
+        /// Gets the nubmer of characters in the string.
         /// </summary>
         ushort CharacterCount { get; }
 
         uint HeadSize { get;  }
+
         uint TailSize { get; }
+
         bool IsMultiByte { get; }
     }
 }

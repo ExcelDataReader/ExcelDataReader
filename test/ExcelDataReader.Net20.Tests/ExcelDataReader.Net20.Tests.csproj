@@ -5,15 +5,16 @@
     <TargetFramework>net20</TargetFramework>
     <AssemblyName>ExcelDataReader.Net20.Tests</AssemblyName>
     <PackageId>ExcelDataReader.Net20.Tests</PackageId>
+    <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\ExcelDataReader.Tests\AppSettings.cs" Link="AppSettings.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\AssertUtilities.cs" Link="AssertUtilities.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\Configuration.cs" Link="Configuration.cs" />
     <Compile Include="..\ExcelDataReader.Tests\DateTimeExtensions.cs" Link="DateTimeExtensions.cs" />
     <Compile Include="..\ExcelDataReader.Tests\ExcelBinaryReaderTest.cs" Link="ExcelBinaryReaderTest.cs" />
     <Compile Include="..\ExcelDataReader.Tests\ExcelOpenXmlReaderLocaleTest.cs" Link="ExcelOpenXmlReaderLocaleTest.cs" />
     <Compile Include="..\ExcelDataReader.Tests\ExcelOpenXmlReaderTest.cs" Link="ExcelOpenXmlReaderTest.cs" />
     <Compile Include="..\ExcelDataReader.Tests\FormatReaderTest.cs" Link="FormatReaderTest.cs" />
-    <Compile Include="..\ExcelDataReader.Tests\Helper.cs" Link="Helper.cs" />
     <Compile Include="..\ExcelDataReader.Tests\Log4NetLog.cs" Link="Log4NetLog.cs" />
     <Compile Include="..\ExcelDataReader.Tests\SeekErrorMemoryStream.cs" Link="SeekErrorMemoryStream.cs" />
   </ItemGroup>
@@ -29,6 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Properties\" />
+    <AdditionalFiles Include="..\..\stylecop.json" Link="stylecop.json" />
   </ItemGroup>
 </Project>

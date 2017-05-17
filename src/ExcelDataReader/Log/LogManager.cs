@@ -11,14 +11,14 @@ namespace ExcelDataReader.Log
         /// <summary>
         /// Dictionary that ensures only one instance of a logger for a type.
         /// </summary>
-        private static readonly Dictionary<string, ILog> _dictionary = new Dictionary<string, ILog>();
+        private static readonly Dictionary<string, ILog> Dictionary = new Dictionary<string, ILog>();
 
-        private static readonly object _sync = new object();
+        private static readonly object Sync = new object();
 
         /// <summary>
         /// Gets the logger for <see cref="T"/>.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">The type to fetch a logger for.</typeparam>
         /// <param name="type">The type to get the logger for.</param>
         /// <returns>Instance of a logger for the object.</returns>
         /// <remarks>This method is thread safe.</remarks>
@@ -36,19 +36,18 @@ namespace ExcelDataReader.Log
         /// <remarks>This method is thread safe.</remarks>
         public static ILog Log(string objectName)
         {
-            lock (_sync)
+            lock (Sync)
             {
                 ILog result;
-                if (_dictionary.TryGetValue(objectName, out result))
+                if (Dictionary.TryGetValue(objectName, out result))
                     return result;
 
-                // The logger does not exist. Create it and add it to the dictionary.
+                // The logger does not exist. Create it and add it to the Dictionary.
                 result = ExcelDataReader.Log.Log.GetLoggerFor(objectName);
-                _dictionary.Add(objectName, result);
+                Dictionary.Add(objectName, result);
 
                 return result;
             }
         }
     }
 }
-

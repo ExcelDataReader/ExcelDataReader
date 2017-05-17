@@ -1,5 +1,4 @@
-﻿
-using System.Globalization;
+﻿using System.Globalization;
 
 namespace ExcelDataReader.Core
 {
@@ -12,7 +11,8 @@ namespace ExcelDataReader.Core
         /// <param name="column">The column, 1-based.</param>
         /// <param name="row">The row, 1-based.</param>
         public static void ParseReference(string value, out int column, out int row)
-        {//INFO: Check for a simple Solution
+        {
+            // INFO: Check for a simple Solution
             int index = ParseReference(value, out column);
 
             row = int.Parse(value.Substring(index), NumberStyles.None, CultureInfo.InvariantCulture);
@@ -34,7 +34,8 @@ namespace ExcelDataReader.Core
             for (; index < value.Length; index++)
             {
                 char c = value[index];
-                if (char.IsDigit(c)) break;
+                if (char.IsDigit(c))
+                    break;
                 column *= 26;
                 column += c - offset;
             }

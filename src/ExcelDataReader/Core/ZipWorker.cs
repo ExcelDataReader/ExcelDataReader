@@ -6,127 +6,131 @@ using System.IO.Compression;
 
 namespace ExcelDataReader.Core
 {
-	public class ZipWorker : IDisposable
-	{
-#region Members and Properties
+    public partial class ZipWorker : IDisposable
+    {
+        private const string FileSharedStrings = "xl/sharedStrings.{0}";
+        private const string FileStyles = "xl/styles.{0}";
+        private const string FileWorkbook = "xl/workbook.{0}";
+        private const string FileSheet = "xl/worksheets/sheet{0}.{1}";
+        private const string FileRels = "xl/_rels/workbook.{0}.rels";
 
-		private bool disposed;
-		private const string FILE_sharedStrings = "xl/sharedStrings.{0}";
-		private const string FILE_styles = "xl/styles.{0}";
-		private const string FILE_workbook = "xl/workbook.{0}";
-		private const string FILE_sheet = "xl/worksheets/sheet{0}.{1}";
-		private const string FILE_rels = "xl/_rels/workbook.{0}.rels";
-		private string _format = "xml";
-		private Stream zipStream;
-		private ZipArchive zipFile;
+        private const string Format = "xml";
 
-#endregion
+        private bool _disposed;
+        private Stream _zipStream;
+        private ZipArchive _zipFile;
 
-		public ZipWorker() {
-		}
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ZipWorker"/> class. 
+        /// </summary>
+        /// <param name="fileStream">The zip file stream.</param>
+        public ZipWorker(Stream fileStream)
+        {
+            _zipStream = fileStream ?? throw new ArgumentNullException(nameof(fileStream));
+            _zipFile = new ZipArchive(fileStream);
+        }
 
-		/// <summary>
-		/// Extracts the specified zip file stream.
-		/// </summary>
-		/// <param name="fileStream">The zip file stream.</param>
-		/// <returns></returns>
-		public bool Open(Stream fileStream) {
-			if (null == fileStream)
-				return false;
-			zipStream = fileStream;
-			zipFile = new ZipArchive(fileStream);
-			return true;
-		}
+        /// <summary>
+        /// Gets the shared strings stream.
+        /// </summary>
+        /// <returns>The shared strings stream.</returns>
+        public Stream GetSharedStringsStream()
+        {
+            var zipEntry = _zipFile.GetEntry(string.Format(FileSharedStrings, Format));
+            return zipEntry?.Open();
+        }
 
-		/// <summary>
-		/// Gets the shared strings stream.
-		/// </summary>
-		/// <returns></returns>
-		public Stream GetSharedStringsStream() {
-			var zipEntry = zipFile.GetEntry(string.Format(FILE_sharedStrings, _format));
-			return zipEntry != null ? zipEntry.Open() : null;
-		}
+        /// <summary>
+        /// Gets the styles stream.
+        /// </summary>
+        /// <returns>The styles stream.</returns>
+        public Stream GetStylesStream()
+        {
+            var zipEntry = _zipFile.GetEntry(string.Format(FileStyles, Format));
+            return zipEntry?.Open();
+        }
 
-		/// <summary>
-		/// Gets the styles stream.
-		/// </summary>
-		/// <returns></returns>
-		public Stream GetStylesStream() {
-			var zipEntry = zipFile.GetEntry(string.Format(FILE_styles, _format));
-			return zipEntry != null ? zipEntry.Open() : null;
-		}
+        /// <summary>
+        /// Gets the workbook stream.
+        /// </summary>
+        /// <returns>The workbook stream.</returns>
+        public Stream GetWorkbookStream()
+        {
+            var zipEntry = _zipFile.GetEntry(string.Format(FileWorkbook, Format));
+            return zipEntry.Open();
+        }
 
-		/// <summary>
-		/// Gets the workbook stream.
-		/// </summary>
-		/// <returns></returns>
-		public Stream GetWorkbookStream() {
-			var zipEntry = zipFile.GetEntry(string.Format(FILE_workbook, _format));
-			return zipEntry.Open();
-		}
+        /// <summary>
+        /// Gets the worksheet stream.
+        /// </summary>
+        /// <param name="sheetId">The sheet id.</param>
+        /// <returns>The worksheet stream.</returns>
+        public Stream GetWorksheetStream(int sheetId)
+        {
+            var zipEntry = _zipFile.GetEntry(string.Format(FileSheet, sheetId, Format));
+            return zipEntry.Open();
+        }
 
-		/// <summary>
-		/// Gets the worksheet stream.
-		/// </summary>
-		/// <param name="sheetId">The sheet id.</param>
-		/// <returns></returns>
-		public Stream GetWorksheetStream(int sheetId) {
-			var zipEntry = zipFile.GetEntry(string.Format(FILE_sheet, sheetId, _format));
-			return zipEntry.Open();
-		}
+        public Stream GetWorksheetStream(string sheetPath)
+        {
+            // its possible sheetPath starts with /xl. in this case trim the /
+            // see the test "Issue_11522_OpenXml"
+            if (sheetPath.StartsWith("/xl/", StringComparison.Ordinal))
+                sheetPath = sheetPath.Substring(1);
+            else
+                sheetPath = "xl/" + sheetPath;
 
-		public Stream GetWorksheetStream(string sheetPath) {
-			// its possible sheetPath starts with /xl. in this case trim the /
-			// see the test "Issue_11522_OpenXml"
-			if (sheetPath.StartsWith("/xl/"))
-				sheetPath = sheetPath.Substring(1);
-			else
-				sheetPath = "xl/" + sheetPath;
+            var zipEntry = _zipFile.GetEntry(sheetPath);
+            return zipEntry.Open();
+        }
 
-			var zipEntry = zipFile.GetEntry(sheetPath);
-			return zipEntry.Open();
-		}
+        /// <summary>
+        /// Gets the workbook rels stream.
+        /// </summary>
+        /// <returns>The rels stream.</returns>
+        public Stream GetWorkbookRelsStream()
+        {
+            var zipEntry = _zipFile.GetEntry(string.Format(FileRels, Format));
+            return zipEntry.Open();
+        }
+    }
 
+    public partial class ZipWorker
+    {
+        ~ZipWorker()
+        {
+            Dispose(false);
+        }
 
-		/// <summary>
-		/// Gets the workbook rels stream.
-		/// </summary>
-		/// <returns></returns>
-		public Stream GetWorkbookRelsStream() {
-			var zipEntry = zipFile.GetEntry(string.Format(FILE_rels, _format));
-			return zipEntry.Open();
-		}
+        public void Dispose()
+        {
+            Dispose(true);
 
-#region IDisposable Members
+            GC.SuppressFinalize(this);
+        }
 
-		public void Dispose() {
-			Dispose(true);
+        private void Dispose(bool disposing)
+        {
+            // Check to see if Dispose has already been called.
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    if (_zipFile != null)
+                    {
+                        _zipFile.Dispose();
+                        _zipFile = null;
+                    }
 
-			GC.SuppressFinalize(this);
-		}
+                    if (_zipStream != null)
+                    {
+                        _zipStream.Dispose();
+                        _zipStream = null;
+                    }
+                }
 
-		private void Dispose(bool disposing) {
-			// Check to see if Dispose has already been called.
-			if (!this.disposed) {
-				if (disposing) {
-					if (zipFile != null) {
-						zipFile.Dispose();
-						zipFile = null;
-					}
-					if (zipStream != null) {
-						zipStream.Dispose();
-						zipStream = null;
-					}
-				}
-
-				disposed = true;
-			}
-		}
-
-		~ZipWorker() {
-			Dispose(false);
-		}
-
-#endregion
-	}
+                _disposed = true;
+            }
+        }
+    }
 }
