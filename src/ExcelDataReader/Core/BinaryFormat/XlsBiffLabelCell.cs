@@ -5,26 +5,26 @@ using Excel;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-	/// Represents a string (max 255 bytes)
-	/// </summary>
-	internal class XlsBiffLabelCell : XlsBiffBlankCell
-	{
-	    private readonly IXlsString m_xlsString;
+    /// Represents a string (max 255 bytes)
+    /// </summary>
+    internal class XlsBiffLabelCell : XlsBiffBlankCell
+    {
+        private readonly IXlsString _xlsString;
 
-	    internal XlsBiffLabelCell(byte[] bytes, uint offset, uint stringOffset, ExcelBinaryReader reader)
-	        : base(bytes, offset, reader)
-	    {
-            m_xlsString = XlsStringFactory.CreateXlsString(bytes, offset + stringOffset, reader);
-	    }
+        internal XlsBiffLabelCell(byte[] bytes, uint offset, uint stringOffset, ExcelBinaryReader reader)
+            : base(bytes, offset, reader)
+        {
+            _xlsString = XlsStringFactory.CreateXlsString(bytes, offset + stringOffset, reader);
+        }
 
-		/// <summary>
-		/// Length of string value
-		/// </summary>
-		public ushort Length => m_xlsString.CharacterCount;
+        /// <summary>
+        /// Gets the length of string value
+        /// </summary>
+        public ushort Length => _xlsString.CharacterCount;
 
-	    /// <summary>
-		/// Returns value of this cell
-		/// </summary>
-		public string Value => m_xlsString.Value;
-	}
+        /// <summary>
+        /// Gets the cell value.
+        /// </summary>
+        public string Value => _xlsString.Value;
+    }
 }

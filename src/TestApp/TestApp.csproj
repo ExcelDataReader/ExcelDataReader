@@ -5,6 +5,7 @@
     <AssemblyName>TestApp</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>TestApp</PackageId>
+    <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,6 +33,13 @@
     <Compile Update="Form1.Designer.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="Form2.cs">
+      <SubType>Form</SubType>
+    </Compile>
   </ItemGroup>
 
+  <ItemGroup>
+    <AdditionalFiles Include="..\..\stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+  
 </Project>

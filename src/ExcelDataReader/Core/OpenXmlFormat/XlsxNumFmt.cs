@@ -1,31 +1,19 @@
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
-	internal class XlsxNumFmt
-	{
-		public const string N_numFmt = "numFmt";
-		public const string A_numFmtId = "numFmtId";
-		public const string A_formatCode = "formatCode";
+    internal class XlsxNumFmt
+    {
+        public const string NNumFmt = "numFmt";
+        public const string ANumFmtId = "numFmtId";
+        public const string AFormatCode = "formatCode";
 
-		private int _Id;
+        public XlsxNumFmt(int id, string formatCode)
+        {
+            Id = id;
+            FormatCode = formatCode;
+        }
 
-		public int Id
-		{
-			get { return _Id; }
-			set { _Id = value; }
-		}
+        public int Id { get; set; }
 
-		private string _FormatCode;
-
-		public string FormatCode
-		{
-			get { return _FormatCode; }
-			set { _FormatCode = value; }
-		}
-
-		public XlsxNumFmt(int id, string formatCode)
-		{
-			_Id = id;
-			_FormatCode = formatCode;
-		}
-	}
+        public string FormatCode { get; set; }
+    }
 }

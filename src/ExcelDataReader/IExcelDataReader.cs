@@ -4,18 +4,13 @@ using System.Text;
 
 namespace Excel
 {
-	public interface IExcelDataReader : IDataReader
-	{
-		/// <summary>
-		/// Seeks to the first result.
-		/// </summary>
-		void Reset();
-
-		/// <summary>
-		/// Gets the sheet name.
-		/// </summary>
-		/// <value>The sheet name.</value>
-		string Name { get;}
+    public interface IExcelDataReader : IDataReader
+    {
+        /// <summary>
+        /// Gets the sheet name.
+        /// </summary>
+        /// <value>The sheet name.</value>
+        string Name { get; }
 
         /// <summary>
         /// Gets the state of the visible.
@@ -25,20 +20,25 @@ namespace Excel
         /// </value>
         string VisibleState { get; }
 
-		/// <summary>
-		/// Gets the number of results (workbooks).
-		/// </summary>
-		/// <value>The results count.</value>
-		int ResultsCount { get;}
+        /// <summary>
+        /// Gets the number of results (workbooks).
+        /// </summary>
+        /// <value>The results count.</value>
+        int ResultsCount { get; }
 
-		/// <summary>
-		/// Gets or sets a value indicating whether the first row contains the column names.
-		/// </summary>
-		/// <value>
-		/// 	<c>true</c> if the first row contains column names; otherwise, <c>false</c>.
-		/// </value>
-		bool IsFirstRowAsColumnNames { get; set;}
+        /// <summary>
+        /// Gets or sets a value indicating whether the first row contains the column names.
+        /// </summary>
+        /// <value>
+        ///     <c>true</c> if the first row contains column names; otherwise, <c>false</c>.
+        /// </value>
+        bool IsFirstRowAsColumnNames { get; set; }
 
-	    Encoding Encoding { get; }
-	}
+        Encoding Encoding { get; }
+
+        /// <summary>
+        /// Seeks to the first result.
+        /// </summary>
+        void Reset();
+    }
 }

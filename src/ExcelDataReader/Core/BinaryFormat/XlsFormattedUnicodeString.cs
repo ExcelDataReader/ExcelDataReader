@@ -4,111 +4,107 @@ using System.Text;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-	/// Represents formatted unicode string in SST
-	/// </summary>
-	internal class XlsFormattedUnicodeString : IXlsString
+    /// Represents formatted unicode string in SST
+    /// </summary>
+    internal class XlsFormattedUnicodeString : IXlsString
     {
-		#region FormattedUnicodeStringFlags enum
-
-		[Flags]
-		public enum FormattedUnicodeStringFlags : byte
-		{
-			MultiByte = 0x01,
-			HasExtendedString = 0x04,
-			HasFormatting = 0x08,
-		}
-
-		#endregion
-
-		private readonly byte[] m_bytes;
-        private readonly uint m_offset;
+        private readonly byte[] _bytes;
+        private readonly uint _offset;
 
         public XlsFormattedUnicodeString(byte[] bytes, uint offset)
         {
-            m_bytes = bytes;
-            m_offset = offset;
+            _bytes = bytes;
+            _offset = offset;
         }
 
-		/// <summary>
-		/// Count of characters in string
-		/// </summary>
-		public ushort CharacterCount => BitConverter.ToUInt16(m_bytes, (int)m_offset);
+        [Flags]
+        public enum FormattedUnicodeStringFlags : byte
+        {
+            MultiByte = 0x01,
+            HasExtendedString = 0x04,
+            HasFormatting = 0x08,
+        }
 
         /// <summary>
-		/// String flags
-		/// </summary>
-		public FormattedUnicodeStringFlags Flags => (FormattedUnicodeStringFlags)Buffer.GetByte(m_bytes, (int)m_offset + 2);
+        /// Gets the number of characters in the string.
+        /// </summary>
+        public ushort CharacterCount => BitConverter.ToUInt16(_bytes, (int)_offset);
 
         /// <summary>
-		/// Checks if string has Extended record
-		/// </summary>
-		public bool HasExtString => (Flags & FormattedUnicodeStringFlags.HasExtendedString) == FormattedUnicodeStringFlags.HasExtendedString;
+        /// Gets the flags.
+        /// </summary>
+        public FormattedUnicodeStringFlags Flags => (FormattedUnicodeStringFlags)Buffer.GetByte(_bytes, (int)_offset + 2);
 
         /// <summary>
-		/// Checks if string has formatting
-		/// </summary>
-		public bool HasFormatting => (Flags & FormattedUnicodeStringFlags.HasFormatting) == FormattedUnicodeStringFlags.HasFormatting;
+        /// Gets a value indicating whether the string has an extended record. 
+        /// </summary>
+        public bool HasExtString => (Flags & FormattedUnicodeStringFlags.HasExtendedString) == FormattedUnicodeStringFlags.HasExtendedString;
 
         /// <summary>
-		/// Checks if string is unicode
-		/// </summary>
-		public bool IsMultiByte => (Flags & FormattedUnicodeStringFlags.MultiByte) == FormattedUnicodeStringFlags.MultiByte;
+        /// Gets a value indicating whether the string has a formatting record.
+        /// </summary>
+        public bool HasFormatting => (Flags & FormattedUnicodeStringFlags.HasFormatting) == FormattedUnicodeStringFlags.HasFormatting;
 
         /// <summary>
-		/// Returns number of formats used for formatting (0 if string has no formatting)
-		/// </summary>
-		public ushort FormatCount => HasFormatting ? BitConverter.ToUInt16(m_bytes, (int)m_offset + 3) : (ushort)0;
+        /// Gets a value indicating whether the string is a multibyte string or not.
+        /// </summary>
+        public bool IsMultiByte => (Flags & FormattedUnicodeStringFlags.MultiByte) == FormattedUnicodeStringFlags.MultiByte;
 
         /// <summary>
-		/// Returns size of extended string in bytes, 0 if there is no one
-		/// </summary>
-		public uint ExtendedStringSize => HasExtString ? (uint)BitConverter.ToUInt16(m_bytes, (int)m_offset + ((HasFormatting) ? 5 : 3)) : 0;
+        /// Gets the number of formats used for formatting (0 if string has no formatting)
+        /// </summary>
+        public ushort FormatCount => HasFormatting ? BitConverter.ToUInt16(_bytes, (int)_offset + 3) : (ushort)0;
 
         /// <summary>
-		/// Returns head (before string data) size in bytes
-		/// </summary>
-		public uint HeadSize => (uint)(HasFormatting ? 2 : 0) + (uint)(HasExtString ? 4 : 0) + 3;
+        /// Gets the size of extended string in bytes, 0 if there is no one
+        /// </summary>
+        public uint ExtendedStringSize => HasExtString ? (uint)BitConverter.ToUInt16(_bytes, (int)_offset + (HasFormatting ? 5 : 3)) : 0;
 
         /// <summary>
-		/// Returns tail (after string data) size in bytes
-		/// </summary>
-		public uint TailSize => (uint)(HasFormatting ? 4 * FormatCount : 0) + (HasExtString ? ExtendedStringSize : 0);
+        /// Gets the head (before string data) size in bytes
+        /// </summary>
+        public uint HeadSize => (uint)(HasFormatting ? 2 : 0) + (uint)(HasExtString ? 4 : 0) + 3;
 
         /// <summary>
-		/// Returns size of whole record in bytes
-		/// </summary>
-		public uint Size
-		{
-			get
-			{
-				uint extraSize = (uint)(HasFormatting ? 2 + FormatCount * 4 : 0) +
-								 (HasExtString ? 4 + ExtendedStringSize : 0) + 3;
-				if (!IsMultiByte)
-					return extraSize + CharacterCount;
-				return extraSize + (uint)CharacterCount * 2;
-			}
-		}
+        /// Gets the tail (after string data) size in bytes
+        /// </summary>
+        public uint TailSize => (uint)(HasFormatting ? 4 * FormatCount : 0) + (HasExtString ? ExtendedStringSize : 0);
 
-		/// <summary>
-		/// Returns string represented by this instance
-		/// </summary>
-		public string Value
-		{
-			get
-			{
-			    if (IsMultiByte)
-			        return Encoding.Unicode.GetString(m_bytes, (int)(m_offset + HeadSize), CharacterCount * 2);
+        /// <summary>
+        /// Gets the size of whole record in bytes
+        /// </summary>
+        public uint Size
+        {
+            get
+            {
+                uint extraSize = (uint)(HasFormatting ? 2 + FormatCount * 4 : 0) +
+                                 (HasExtString ? 4 + ExtendedStringSize : 0) + 3;
+                if (!IsMultiByte)
+                    return extraSize + CharacterCount;
+                return extraSize + (uint)CharacterCount * 2;
+            }
+        }
 
-			    int len = CharacterCount;
-			    int start = (int)HeadSize;
-			    byte[] bytes = new byte[len * 2];
-			    for (int i = 0; i < len; i++)
-			    {
-			        bytes[i * 2] = m_bytes[m_offset + start + i];
-			    }
+        /// <summary>
+        /// Gets the value.
+        /// </summary>
+        public string Value
+        {
+            get
+            {
+                if (IsMultiByte)
+                    return Encoding.Unicode.GetString(_bytes, (int)(_offset + HeadSize), CharacterCount * 2);
 
-			    return Encoding.Unicode.GetString(bytes, 0, len * 2);
-			}
-		}
-	}
+                int len = CharacterCount;
+                int start = (int)HeadSize;
+                byte[] bytes = new byte[len * 2];
+                for (int i = 0; i < len; i++)
+                {
+                    bytes[i * 2] = _bytes[_offset + start + i];
+                }
+
+                return Encoding.Unicode.GetString(bytes, 0, len * 2);
+            }
+        }
+    }
 }

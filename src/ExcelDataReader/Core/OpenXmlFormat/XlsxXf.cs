@@ -1,41 +1,24 @@
+// ReSharper disable InconsistentNaming
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
-	internal class XlsxXf
-	{
-		public const string N_xf = "xf";
-		public const string A_numFmtId = "numFmtId";
-		public const string A_xfId = "xfId";
-		public const string A_applyNumberFormat = "applyNumberFormat";
+    internal class XlsxXf
+    {
+        public const string NXF = "xf";
+        public const string ANumFmtId = "numFmtId";
+        public const string AXFId = "xfId";
+        public const string AApplyNumberFormat = "applyNumberFormat";
 
-		private int _Id;
+        public XlsxXf(int id, int numFmtId, string applyNumberFormat)
+        {
+            Id = id;
+            NumFmtId = numFmtId;
+            ApplyNumberFormat = applyNumberFormat != null && applyNumberFormat == "1";
+        }
 
-		public int Id
-		{
-			get { return _Id; }
-			set { _Id = value; }
-		}
+        public int Id { get; set; }
 
-		private int _numFmtId;
+        public int NumFmtId { get; set; }
 
-		public int NumFmtId
-		{
-			get { return _numFmtId; }
-			set { _numFmtId = value; }
-		}
-
-		private bool _applyNumberFormat;
-
-		public bool ApplyNumberFormat
-		{
-			get { return _applyNumberFormat; }
-			set { _applyNumberFormat = value; }
-		}
-
-		public XlsxXf(int id, int numFmtId, string applyNumberFormat)
-		{
-			_Id = id;
-			_numFmtId = numFmtId;
-			_applyNumberFormat = null != applyNumberFormat && applyNumberFormat == "1";
-		}
-	}
+        public bool ApplyNumberFormat { get; set; }
+    }
 }

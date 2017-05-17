@@ -4,56 +4,51 @@ using Excel;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
-	/// <summary>
-	/// Represents Sheet record in Workbook Globals
-	/// </summary>
-	internal class XlsBiffBoundSheet : XlsBiffRecord
-	{
-		#region SheetType enum
+    /// <summary>
+    /// Represents Sheet record in Workbook Globals
+    /// </summary>
+    internal class XlsBiffBoundSheet : XlsBiffRecord
+    {
+        internal XlsBiffBoundSheet(byte[] bytes, uint offset, ExcelBinaryReader reader)
+            : base(bytes, offset, reader)
+        {
+            IsV8 = reader.IsV8();
+        }
 
-		public enum SheetType : byte
-		{
-			Worksheet = 0x0,
-			MacroSheet = 0x1,
-			Chart = 0x2,
-			VBModule = 0x6
-		}
+        public enum SheetType : byte
+        {
+            Worksheet = 0x0,
+            MacroSheet = 0x1,
+            Chart = 0x2,
 
-		#endregion
+            // ReSharper disable once InconsistentNaming
+            VBModule = 0x6
+        }
 
-		#region SheetVisibility enum
+        public enum SheetVisibility : byte
+        {
+            Visible = 0x0,
+            Hidden = 0x1,
+            VeryHidden = 0x2
+        }
 
-		public enum SheetVisibility : byte
-		{
-			Visible = 0x0,
-			Hidden = 0x1,
-			VeryHidden = 0x2
-		}
+        /// <summary>
+        /// Gets the worksheet data start offset.
+        /// </summary>
+        public uint StartOffset => ReadUInt32(0x0);
 
-		#endregion
+        /// <summary>
+        /// Gets the worksheet type.
+        /// </summary>
+        public SheetType Type => (SheetType)ReadByte(0x5);
 
-	    internal XlsBiffBoundSheet(byte[] bytes, uint offset, ExcelBinaryReader reader)
-			: base(bytes, offset, reader)
-		{
-		}
+        /// <summary>
+        /// Gets the visibility of the worksheet.
+        /// </summary>
+        public SheetVisibility VisibleState => (SheetVisibility)ReadByte(0x4);
 
-		/// <summary>
-		/// Worksheet data start offset
-		/// </summary>
-		public uint StartOffset => ReadUInt32(0x0);
-
-	    /// <summary>
-		/// Type of worksheet
-		/// </summary>
-		public SheetType Type => (SheetType)ReadByte(0x5);
-
-	    /// <summary>
-		/// Visibility of worksheet
-		/// </summary>
-		public SheetVisibility VisibleState => (SheetVisibility)ReadByte(0x4);
-
-	    /// <summary>
-        /// Name of worksheet
+        /// <summary>
+        /// Gets the name of the worksheet.
         /// </summary>
         public string SheetName
         {
@@ -81,8 +76,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Specifies if BIFF8 format should be used
+        /// Gets a value indicating whether this is a BIFF8 file or not.
         /// </summary>
-        public bool IsV8 { get; set; } = true;
-	}
+        public bool IsV8 { get; }
+    }
 }

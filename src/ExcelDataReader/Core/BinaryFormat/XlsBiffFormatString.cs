@@ -5,32 +5,32 @@ using Excel;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
-	/// <summary>
-	/// Represents a string value of format
-	/// </summary>
-	internal class XlsBiffFormatString : XlsBiffRecord
-	{
-	    private readonly IXlsString m_string;
+    /// <summary>
+    /// Represents a string value of format
+    /// </summary>
+    internal class XlsBiffFormatString : XlsBiffRecord
+    {
+        private readonly IXlsString _string;
 
-	    internal XlsBiffFormatString(byte[] bytes, uint offset, ExcelBinaryReader reader)
-			: base(bytes, offset, reader)
-	    {
+        internal XlsBiffFormatString(byte[] bytes, uint offset, ExcelBinaryReader reader)
+            : base(bytes, offset, reader)
+        {
             if (reader.IsV8())
-	            m_string = new XlsFormattedUnicodeString(bytes, offset + 6);
-	        else
-	            m_string = new XlsByteString(bytes, offset + 4, reader.Encoding);
-	    }
+                _string = new XlsFormattedUnicodeString(bytes, offset + 6);
+            else
+                _string = new XlsByteString(bytes, offset + 4, reader.Encoding);
+        }
 
-		/// <summary>
-		/// String text
-		/// </summary>
-        public string Value => m_string.Value;
+        /// <summary>
+        /// Gets the string value.
+        /// </summary>
+        public string Value => _string.Value;
 
-	    public ushort Index
+        public ushort Index
         {
             get
             {
-                switch (ID)
+                switch (Id)
                 {
                     case BIFFRECORDTYPE.FORMAT_V23:
                         throw new NotSupportedException("Index is not available for BIFF2 and BIFF3 FORMAT records.");
@@ -39,5 +39,5 @@ namespace ExcelDataReader.Core.BinaryFormat
                 }
             }
         }
-	}
+    }
 }

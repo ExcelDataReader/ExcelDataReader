@@ -8,60 +8,60 @@ using Excel;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
-	/// <summary>
-	/// Represents a BIFF stream
-	/// </summary>
-	internal class XlsBiffStream
-	{
-		private readonly ExcelBinaryReader m_reader;
-		private readonly byte[] m_bytes;
+    /// <summary>
+    /// Represents a BIFF stream
+    /// </summary>
+    internal class XlsBiffStream
+    {
+        private readonly ExcelBinaryReader _reader;
+        private readonly byte[] _bytes;
 
-	    private XlsBiffRecord m_lastRead;
+        private XlsBiffRecord _lastRead;
 
-	    public XlsBiffStream(XlsHeader hdr, uint streamStart, bool isMini, XlsRootDirectory rootDir, ExcelBinaryReader reader)
-		{
-			m_reader = reader;
-		    var xlsStream = new XlsStream(hdr, streamStart, isMini, rootDir);
-            m_bytes = xlsStream.ReadStream();
+        public XlsBiffStream(XlsHeader hdr, uint streamStart, bool isMini, XlsRootDirectory rootDir, ExcelBinaryReader reader)
+        {
+            this._reader = reader;
+            var xlsStream = new XlsStream(hdr, streamStart, isMini, rootDir);
+            _bytes = xlsStream.ReadStream();
 
 #if NET45 || NET20
-            XlsBiffRecord rec = XlsBiffRecord.GetRecord(m_bytes, 0, m_reader);
-		    XlsBiffRecord rec2 = XlsBiffRecord.GetRecord(m_bytes, (uint)rec.Size, reader);
+            XlsBiffRecord rec = XlsBiffRecord.GetRecord(_bytes, 0, this._reader);
+            XlsBiffRecord rec2 = XlsBiffRecord.GetRecord(_bytes, (uint)rec.Size, reader);
             XlsBiffFilePass filePass = rec2 as XlsBiffFilePass;
-		    if (filePass == null)
-		    {
-                XlsBiffRecord rec3 = XlsBiffRecord.GetRecord(m_bytes, (uint)(rec.Size + rec2.Size), reader);
+            if (filePass == null)
+            {
+                XlsBiffRecord rec3 = XlsBiffRecord.GetRecord(_bytes, (uint)(rec.Size + rec2.Size), reader);
                 filePass = rec3 as XlsBiffFilePass;
-		    }
+            }
 
-		    if (filePass != null)
-		    {
-		        RC4Key key = new RC4Key("VelvetSweatshop", filePass.Salt);
+            if (filePass != null)
+            {
+                RC4Key key = new RC4Key("VelvetSweatshop", filePass.Salt);
 
-		        int blockNumber = 0;
-		        RC4 rc4 = key.Create(blockNumber);
+                int blockNumber = 0;
+                RC4 rc4 = key.Create(blockNumber);
 
-		        int position = 0;
-		        while (position < m_bytes.Length - 4)
-		        {
-                    uint id = BitConverter.ToUInt16(m_bytes, position);
-		            int length = BitConverter.ToUInt16(m_bytes, position + 2) + 4;
+                int position = 0;
+                while (position < _bytes.Length - 4)
+                {
+                    uint id = BitConverter.ToUInt16(_bytes, position);
+                    int length = BitConverter.ToUInt16(_bytes, position + 2) + 4;
 
-		            int startDecrypt = 4;
-		            switch ((BIFFRECORDTYPE)id)
-		            {
+                    int startDecrypt = 4;
+                    switch ((BIFFRECORDTYPE)id)
+                    {
                         case BIFFRECORDTYPE.BOF:
                         case BIFFRECORDTYPE.FILEPASS:
                         case BIFFRECORDTYPE.INTERFACEHDR:
-		                    startDecrypt = length;
+                            startDecrypt = length;
                             break;
                         case BIFFRECORDTYPE.BOUNDSHEET:
-		                    startDecrypt += 4; // For some reason the sheet offset is not encrypted
-		                    break;
-		            }
+                            startDecrypt += 4; // For some reason the sheet offset is not encrypted
+                            break;
+                    }
 
-		            for (int i = 0; i < length; i++)
-		            {
+                    for (int i = 0; i < length; i++)
+                    {
                         int currentBlock = position / 1024;
                         if (blockNumber != currentBlock)
                         {
@@ -70,39 +70,50 @@ namespace ExcelDataReader.Core.BinaryFormat
                         }
 
                         byte mask = rc4.Output();
-		                if (i >= startDecrypt)
-		                {
-		                    m_bytes[position] = (byte)(m_bytes[position] ^ mask);
-		                }
+                        if (i >= startDecrypt)
+                        {
+                            _bytes[position] = (byte)(_bytes[position] ^ mask);
+                        }
 
-		                position++;
-		            }
-		        }
-		    }
+                        position++;
+                    }
+                }
+            }
 #endif
 
-            Size = m_bytes.Length;
-			Position = 0;
-		}
+            Size = _bytes.Length;
+            Position = 0;
+        }
 
-		/// <summary>
-		/// Returns size of BIFF stream in bytes
-		/// </summary>
-		public int Size { get; }
+        /// <summary>
+        /// Gets the size of BIFF stream in bytes
+        /// </summary>
+        public int Size { get; }
 
-	    /// <summary>
-		/// Returns current position in BIFF stream
-		/// </summary>
-		public int Position { get; private set; }
+        /// <summary>
+        /// Gets the current position in BIFF stream
+        /// </summary>
+        public int Position { get; private set; }
 
-	    /// <summary>
-		/// Sets stream pointer to the specified offset
-		/// </summary>
-		/// <param name="offset">Offset value</param>
-		/// <param name="origin">Offset origin</param>
-		public void Seek(int offset, SeekOrigin origin)
-		{
-            //add lock(this) as this is equivalent to [MethodImpl(MethodImplOptions.Synchronized)] on the method
+        public XlsBiffRecord LastRead
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _lastRead;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets stream pointer to the specified offset
+        /// </summary>
+        /// <param name="offset">Offset value</param>
+        /// <param name="origin">Offset origin</param>
+        public void Seek(int offset, SeekOrigin origin)
+        {
+            // add lock(this) as this is equivalent to [MethodImpl(MethodImplOptions.Synchronized)] on the method
             lock (this)
             {
                 switch (origin)
@@ -117,80 +128,69 @@ namespace ExcelDataReader.Core.BinaryFormat
                         Position = Size - offset;
                         break;
                 }
+
                 if (Position < 0)
-                    throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBIFFIlegalBefore, offset));
+                    throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalBefore, offset));
                 if (Position > Size)
-                    throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBIFFIlegalAfter, offset));
+                    throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalAfter, offset));
             }
+        }
 
-		}
-
-	    public XlsBiffRecord LastRead
-	    {
-	        get
-	        {
-	            lock (this)
-	            {
-	                return m_lastRead;
-	            }
-	        }
-	    }
-
-	    /// <summary>
+        /// <summary>
         /// Reads record under cursor and advances cursor position to next record
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The record -or- null.</returns>
         public XlsBiffRecord Read()
-		{
-            //add lock(this) as this is equivalent to [MethodImpl(MethodImplOptions.Synchronized)] on the method
+        {
+            // add lock(this) as this is equivalent to [MethodImpl(MethodImplOptions.Synchronized)] on the method
             lock (this)
             {
-                m_lastRead = null;
+                _lastRead = null;
 
                 // Minimum record size is 4
-                if ((uint)Position + 4 >= m_bytes.Length)
+                if ((uint)Position + 4 >= _bytes.Length)
                     return null;
 
-                m_lastRead = XlsBiffRecord.GetRecord(m_bytes, (uint)Position, m_reader);
-                Position += m_lastRead.Size;
+                _lastRead = XlsBiffRecord.GetRecord(_bytes, (uint)Position, _reader);
+                Position += _lastRead.Size;
                 if (Position > Size)
                 {
-                    m_lastRead = null;
+                    _lastRead = null;
                 }
 
-                return m_lastRead;
+                return _lastRead;
             }
-		}
+        }
 
-		/// <summary>
-		/// Reads record at specified offset, does not change cursor position
-		/// </summary>
-		/// <param name="offset"></param>
-		/// <returns></returns>
-		public XlsBiffRecord ReadAt(int offset)
-		{
-            if ((uint)offset >= m_bytes.Length)
+        /// <summary>
+        /// Reads record at specified offset, does not change cursor position
+        /// </summary>
+        /// <param name="offset">The offset.</param>
+        /// <returns>The record.</returns>
+        public XlsBiffRecord ReadAt(int offset)
+        {
+            if ((uint)offset >= _bytes.Length)
                 return null;
 
-			XlsBiffRecord rec = XlsBiffRecord.GetRecord(m_bytes, (uint)offset, m_reader);
+            XlsBiffRecord rec = XlsBiffRecord.GetRecord(_bytes, (uint)offset, _reader);
 
-			//choose ReadOption.Loose to skip this check (e.g. sql reporting services)
-			if (m_reader.ReadOption == ReadOption.Strict)
-			{
-				if (Position + rec.Size > Size)
-					return null;
-			}
-			
-			return rec;
-		}
+            // choose ReadOption.Loose to skip this check (e.g. sql reporting services)
+            if (_reader.ReadOption == ReadOption.Strict)
+            {
+                if (Position + rec.Size > Size)
+                    return null;
+            }
+            
+            return rec;
+        }
 
 #if NET45 || NET20
         private sealed class RC4Key
-	    {
-	        private readonly byte[] m_key;
+        {
+            private readonly byte[] _key;
 
-	        public RC4Key(string password, byte[] salt)
-	        {
+            public RC4Key(string password, byte[] salt)
+            {
                 int length = Math.Min(password.Length, 16);
                 byte[] passwordData = new byte[length * 2];
                 for (int i = 0; i < length; i++)
@@ -200,7 +200,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     passwordData[i * 2 + 1] = (byte)((ch << 8) & 0xFF);
                 }
 
-	            using (MD5 md5 = new MD5CryptoServiceProvider())
+                using (MD5 md5 = new MD5CryptoServiceProvider())
                 {
                     byte[] passwordHash = md5.ComputeHash(passwordData);
 
@@ -225,20 +225,19 @@ namespace ExcelDataReader.Core.BinaryFormat
                     Array.Copy(finalHash, 0, result, 0, keyLength);
                     md5.Clear();
 
-                    m_key = result;
+                    _key = result;
                 }
-	        }
-
-
+            }
+            
             public RC4 Create(int blockNumber)
             {
-                byte[] data = new byte[4 + m_key.Length];
+                byte[] data = new byte[4 + _key.Length];
                 data[data.Length - 1] = (byte)((blockNumber >> 24) & 0xFF);
                 data[data.Length - 2] = (byte)((blockNumber >> 16) & 0xFF);
                 data[data.Length - 3] = (byte)((blockNumber >> 8) & 0xFF);
                 data[data.Length - 4] = (byte)((blockNumber >> 0) & 0xFF);
 
-                Array.Copy(m_key, 0, data, 0, m_key.Length);
+                Array.Copy(_key, 0, data, 0, _key.Length);
 
                 using (MD5 md5 = new MD5CryptoServiceProvider())
                 {
@@ -249,37 +248,37 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
-	    private sealed class RC4
-	    {
-            private readonly byte[] m_s = new byte[256];
+        private sealed class RC4
+        {
+            private readonly byte[] _s = new byte[256];
 
-	        private int m_i;
+            private int _index1;
 
-	        private int m_j;
+            private int _index2;
 
             public RC4(byte[] key)
-	        {
-	            for (int i = 0; i < m_s.Length; i++)
-	            {
-                    m_s[i] = (byte)i;
-	            }
+            {
+                for (int i = 0; i < _s.Length; i++)
+                {
+                    _s[i] = (byte)i;
+                }
 
                 for (int i = 0, j = 0; i < 256; i++)
                 {
-                    j = (j + key[i % key.Length] + m_s[i]) & 255;
+                    j = (j + key[i % key.Length] + _s[i]) & 255;
 
-                    Swap(m_s, i, j);
+                    Swap(_s, i, j);
                 }
             }
 
             public byte Output()
             {
-                m_i = (m_i + 1) & 255;
-                m_j = (m_j + m_s[m_i]) & 255;
+                _index1 = (_index1 + 1) & 255;
+                _index2 = (_index2 + _s[_index1]) & 255;
 
-                Swap(m_s, m_i, m_j);
+                Swap(_s, _index1, _index2);
 
-                return m_s[(m_s[m_i] + m_s[m_j]) & 255];
+                return _s[(_s[_index1] + _s[_index2]) & 255];
             }
 
             private static void Swap(byte[] s, int i, int j)
