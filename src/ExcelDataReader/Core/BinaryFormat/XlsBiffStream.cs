@@ -163,28 +163,6 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
-        /// <summary>
-        /// Reads record at specified offset, does not change cursor position
-        /// </summary>
-        /// <param name="offset">The offset.</param>
-        /// <returns>The record.</returns>
-        public XlsBiffRecord ReadAt(int offset)
-        {
-            if ((uint)offset >= _bytes.Length)
-                return null;
-
-            XlsBiffRecord rec = XlsBiffRecord.GetRecord(_bytes, (uint)offset, _reader);
-
-            // choose ReadOption.Loose to skip this check (e.g. sql reporting services)
-            if (_reader.ReadOption == ReadOption.Strict)
-            {
-                if (Position + rec.Size > Size)
-                    return null;
-            }
-            
-            return rec;
-        }
-
 #if NET45 || NET20
         private sealed class RC4Key
         {
