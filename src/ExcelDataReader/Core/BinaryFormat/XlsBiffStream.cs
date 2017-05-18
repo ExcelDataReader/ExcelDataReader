@@ -1,8 +1,6 @@
 using System;
 using System.IO;
-#if NET45 || NET20
 using System.Security.Cryptography;
-#endif
 
 using Excel;
 
@@ -25,7 +23,6 @@ namespace ExcelDataReader.Core.BinaryFormat
             var xlsStream = new XlsStream(hdr, streamStart, isMini, rootDir);
             _bytes = xlsStream.ReadStream();
 
-#if NET45 || NET20
             XlsBiffRecord rec = XlsBiffRecord.GetRecord(_bytes, 0, _reader);
             XlsBiffRecord rec2 = XlsBiffRecord.GetRecord(_bytes, (uint)rec.Size, reader);
             XlsBiffFilePass filePass = rec2 as XlsBiffFilePass;
@@ -80,7 +77,6 @@ namespace ExcelDataReader.Core.BinaryFormat
                     }
                 }
             }
-#endif
 
             Size = _bytes.Length;
             Position = 0;
@@ -163,7 +159,6 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
-#if NET45 || NET20
         private sealed class RC4Key
         {
             private readonly byte[] _key;
@@ -179,7 +174,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     passwordData[i * 2 + 1] = (byte)((ch << 8) & 0xFF);
                 }
 
-                using (MD5 md5 = new MD5CryptoServiceProvider())
+                using (MD5 md5 = MD5.Create())
                 {
                     byte[] passwordHash = md5.ComputeHash(passwordData);
 
@@ -202,7 +197,6 @@ namespace ExcelDataReader.Core.BinaryFormat
                     byte[] finalHash = md5.ComputeHash(intermediateData);
                     byte[] result = new byte[keyLength];
                     Array.Copy(finalHash, 0, result, 0, keyLength);
-                    md5.Clear();
 
                     _key = result;
                 }
@@ -218,7 +212,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                 Array.Copy(_key, 0, data, 0, _key.Length);
 
-                using (MD5 md5 = new MD5CryptoServiceProvider())
+                using (MD5 md5 = MD5.Create())
                 {
                     byte[] blockKey = md5.ComputeHash(data);
 
@@ -268,6 +262,5 @@ namespace ExcelDataReader.Core.BinaryFormat
                 s[j] = c;
             }
         }
-#endif
     }
 }

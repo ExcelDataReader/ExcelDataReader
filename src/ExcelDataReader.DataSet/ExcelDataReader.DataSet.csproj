@@ -5,7 +5,7 @@
     <AssemblyTitle>ExcelDataReader.DataSet</AssemblyTitle>
     <VersionPrefix>2.5.0.2-dev</VersionPrefix>
     <Authors>ExcelDataReader developers</Authors>
-    <TargetFrameworks>net20;net45;netstandard1.2</TargetFrameworks>
+    <TargetFrameworks>net20;net45;netstandard1.3</TargetFrameworks>
     <AssemblyName>ExcelDataReader.DataSet</AssemblyName>
     <AssemblyOriginatorKeyFile>..\ExcelDataReader.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>

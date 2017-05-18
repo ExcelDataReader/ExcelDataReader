@@ -1,4 +1,4 @@
-﻿#if NETSTANDARD1_2
+﻿#if NETSTANDARD1_3
 
 using System;
 using System.Collections.Generic;

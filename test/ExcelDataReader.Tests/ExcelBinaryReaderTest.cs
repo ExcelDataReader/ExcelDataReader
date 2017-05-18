@@ -1005,7 +1005,6 @@ namespace ExcelDataReader.Tests
             }
         }
 
-#if NET45 || NET20
         [TestMethod]
         public void ReadWriteProtectedStructureUsingStandardEncryption()
         {
@@ -1017,7 +1016,6 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(1.4, ds.Tables[0].Rows[1][0]);
             }
         }
-#endif
 
         [TestMethod]
         public void TestIncludeTableWithOnlyImage()
