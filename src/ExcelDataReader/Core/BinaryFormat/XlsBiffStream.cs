@@ -15,6 +15,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly ExcelBinaryReader _reader;
         private readonly byte[] _bytes;
+        private readonly object _lock = new object();
 
         private XlsBiffRecord _lastRead;
 
@@ -99,7 +100,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             get
             {
-                lock (this)
+                lock (_lock)
                 {
                     return _lastRead;
                 }
@@ -114,7 +115,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public void Seek(int offset, SeekOrigin origin)
         {
             // add lock(this) as this is equivalent to [MethodImpl(MethodImplOptions.Synchronized)] on the method
-            lock (this)
+            lock (_lock)
             {
                 switch (origin)
                 {
@@ -143,7 +144,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public XlsBiffRecord Read()
         {
             // add lock(this) as this is equivalent to [MethodImpl(MethodImplOptions.Synchronized)] on the method
-            lock (this)
+            lock (_lock)
             {
                 _lastRead = null;
 
