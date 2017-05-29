@@ -13,9 +13,6 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly ExcelBinaryReader _reader;
         private readonly byte[] _bytes;
-        private readonly object _lock = new object();
-
-        private XlsBiffRecord _lastRead;
 
         public XlsBiffStream(XlsHeader hdr, uint streamStart, bool isMini, XlsRootDirectory rootDir, ExcelBinaryReader reader)
         {
@@ -92,16 +89,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public int Position { get; private set; }
 
-        public XlsBiffRecord LastRead
-        {
-            get
-            {
-                lock (_lock)
-                {
-                    return _lastRead;
-                }
-            }
-        }
+        public XlsBiffRecord LastRead { get; private set; }
 
         /// <summary>
         /// Sets stream pointer to the specified offset
@@ -110,27 +98,23 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <param name="origin">Offset origin</param>
         public void Seek(int offset, SeekOrigin origin)
         {
-            // add lock(this) as this is equivalent to [MethodImpl(MethodImplOptions.Synchronized)] on the method
-            lock (_lock)
+            switch (origin)
             {
-                switch (origin)
-                {
-                    case SeekOrigin.Begin:
-                        Position = offset;
-                        break;
-                    case SeekOrigin.Current:
-                        Position += offset;
-                        break;
-                    case SeekOrigin.End:
-                        Position = Size - offset;
-                        break;
-                }
-
-                if (Position < 0)
-                    throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalBefore, offset));
-                if (Position > Size)
-                    throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalAfter, offset));
+                case SeekOrigin.Begin:
+                    Position = offset;
+                    break;
+                case SeekOrigin.Current:
+                    Position += offset;
+                    break;
+                case SeekOrigin.End:
+                    Position = Size - offset;
+                    break;
             }
+
+            if (Position < 0)
+                throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalBefore, offset));
+            if (Position > Size)
+                throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalAfter, offset));
         }
 
         /// <summary>
@@ -139,24 +123,20 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <returns>The record -or- null.</returns>
         public XlsBiffRecord Read()
         {
-            // add lock(this) as this is equivalent to [MethodImpl(MethodImplOptions.Synchronized)] on the method
-            lock (_lock)
+            LastRead = null;
+
+            // Minimum record size is 4
+            if ((uint)Position + 4 >= _bytes.Length)
+                return null;
+
+            LastRead = XlsBiffRecord.GetRecord(_bytes, (uint)Position, _reader);
+            Position += LastRead.Size;
+            if (Position > Size)
             {
-                _lastRead = null;
-
-                // Minimum record size is 4
-                if ((uint)Position + 4 >= _bytes.Length)
-                    return null;
-
-                _lastRead = XlsBiffRecord.GetRecord(_bytes, (uint)Position, _reader);
-                Position += _lastRead.Size;
-                if (Position > Size)
-                {
-                    _lastRead = null;
-                }
-
-                return _lastRead;
+                LastRead = null;
             }
+
+            return LastRead;
         }
 
         private sealed class RC4Key
