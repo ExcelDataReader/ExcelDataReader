@@ -1,107 +1,35 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7ABFA914-8980-4630-B7E5-92921E5D897D}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ExcelDataReader.Net45.Tests</RootNamespace>
+    <AssemblyTitle>ExcelDataReader.Net45.Tests</AssemblyTitle>
+    <Authors>ExcelDataReader developers</Authors>
+    <TargetFramework>net45</TargetFramework>
     <AssemblyName>ExcelDataReader.Net45.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NET45</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;NET45</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <PackageId>ExcelDataReader.Net45.Tests</PackageId>
+    <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ExcelDataReader, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\src\ExcelDataReader\bin\$(ConfigurationName)\net45\ExcelDataReader.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ExcelDataReader.DataSet, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\src\ExcelDataReader.DataSet\bin\$(ConfigurationName)\net45\ExcelDataReader.DataSet.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="nunit.core, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NUnitTestAdapter.2.0.0\lib\nunit.core.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="nunit.core.interfaces, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NUnitTestAdapter.2.0.0\lib\nunit.core.interfaces.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="nunit.util, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NUnitTestAdapter.2.0.0\lib\nunit.util.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="NUnit.VisualStudio.TestAdapter, Version=2.0.0.0, Culture=neutral, PublicKeyToken=4cb40d35494691ac, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NUnitTestAdapter.2.0.0\lib\NUnit.VisualStudio.TestAdapter.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <Compile Include="..\ExcelDataReader.Tests\AssertUtilities.cs" Link="AssertUtilities.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\Configuration.cs" Link="Configuration.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\DateTimeExtensions.cs" Link="DateTimeExtensions.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\ExcelBinaryReaderTest.cs" Link="ExcelBinaryReaderTest.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\ExcelOpenXmlReaderLocaleTest.cs" Link="ExcelOpenXmlReaderLocaleTest.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\ExcelOpenXmlReaderTest.cs" Link="ExcelOpenXmlReaderTest.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\FormatReaderTest.cs" Link="FormatReaderTest.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\Log4NetLog.cs" Link="Log4NetLog.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\SeekErrorMemoryStream.cs" Link="SeekErrorMemoryStream.cs" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="Net45TestsConfiguration.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="..\ExcelDataReader.Tests\ExcelBinaryReaderTest.cs">
-      <Link>ExcelBinaryReaderTest.cs</Link>
-    </Compile>
-    <Compile Include="..\ExcelDataReader.Tests\ExcelOpenXmlReaderTest.cs">
-      <Link>ExcelOpenXmlReaderTest.cs</Link>
-    </Compile>
-    <Compile Include="..\ExcelDataReader.Tests\FormatReaderTest.cs">
-      <Link>FormatReaderTest.cs</Link>
-    </Compile>
-    <Compile Include="..\ExcelDataReader.Tests\AppSettings.cs">
-      <Link>Helper.cs</Link>
-    </Compile>
-    <Compile Include="..\ExcelDataReader.Tests\SeekErrorMemoryStream.cs">
-      <Link>SeekErrorMemoryStream.cs</Link>
-    </Compile>
-    <Compile Include="..\ExcelDataReader.Tests\Log\Logger\Log4NetLog.cs">
-      <Link>Log\Logger\Log4NetLog.cs</Link>
-    </Compile>
+    <ProjectReference Include="..\..\src\ExcelDataReader\ExcelDataReader.csproj" />
+    <ProjectReference Include="..\..\src\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="NUnit" Version="3.6.1" />
   </ItemGroup>
+
   <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+    <AdditionalFiles Include="..\..\stylecop.json" Link="stylecop.json" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

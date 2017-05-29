@@ -2,28 +2,16 @@ using System.Collections.Generic;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
-	internal class XlsxStyles
-	{
-		public XlsxStyles()
-		{
-			_cellXfs = new List<XlsxXf>();
-			_NumFmts = new List<XlsxNumFmt>();
-		}
+    internal class XlsxStyles
+    {
+        public XlsxStyles()
+        {
+            CellXfs = new List<XlsxXf>();
+            NumFmts = new List<XlsxNumFmt>();
+        }
 
-		private List<XlsxXf> _cellXfs;
+        public List<XlsxXf> CellXfs { get; set; }
 
-		public List<XlsxXf> CellXfs
-		{
-			get { return _cellXfs; }
-			set { _cellXfs = value; }
-		}
-
-		private List<XlsxNumFmt> _NumFmts;
-
-		public List<XlsxNumFmt> NumFmts
-		{
-			get { return _NumFmts; }
-			set { _NumFmts = value; }
-		}
-	}
+        public List<XlsxNumFmt> NumFmts { get; set; }
+    }
 }

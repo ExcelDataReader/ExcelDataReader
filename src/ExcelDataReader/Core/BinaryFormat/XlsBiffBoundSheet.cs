@@ -4,101 +4,80 @@ using Excel;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
-	/// <summary>
-	/// Represents Sheet record in Workbook Globals
-	/// </summary>
-	internal class XlsBiffBoundSheet : XlsBiffRecord
-	{
-		#region SheetType enum
+    /// <summary>
+    /// Represents Sheet record in Workbook Globals
+    /// </summary>
+    internal class XlsBiffBoundSheet : XlsBiffRecord
+    {
+        internal XlsBiffBoundSheet(byte[] bytes, uint offset, ExcelBinaryReader reader)
+            : base(bytes, offset, reader)
+        {
+            IsV8 = reader.IsV8();
+        }
 
-		public enum SheetType : byte
-		{
-			Worksheet = 0x0,
-			MacroSheet = 0x1,
-			Chart = 0x2,
-			VBModule = 0x6
-		}
+        public enum SheetType : byte
+        {
+            Worksheet = 0x0,
+            MacroSheet = 0x1,
+            Chart = 0x2,
 
-		#endregion
+            // ReSharper disable once InconsistentNaming
+            VBModule = 0x6
+        }
 
-		#region SheetVisibility enum
+        public enum SheetVisibility : byte
+        {
+            Visible = 0x0,
+            Hidden = 0x1,
+            VeryHidden = 0x2
+        }
 
-		public enum SheetVisibility : byte
-		{
-			Visible = 0x0,
-			Hidden = 0x1,
-			VeryHidden = 0x2
-		}
+        /// <summary>
+        /// Gets the worksheet data start offset.
+        /// </summary>
+        public uint StartOffset => ReadUInt32(0x0);
 
-		#endregion
+        /// <summary>
+        /// Gets the worksheet type.
+        /// </summary>
+        public SheetType Type => (SheetType)ReadByte(0x5);
 
-		private bool isV8 = true;
-        //private Encoding m_UseEncoding = Encoding.UTF8; 
+        /// <summary>
+        /// Gets the visibility of the worksheet.
+        /// </summary>
+        public SheetVisibility VisibleState => (SheetVisibility)ReadByte(0x4);
 
-		internal XlsBiffBoundSheet(byte[] bytes, uint offset, ExcelBinaryReader reader)
-			: base(bytes, offset, reader)
-		{
-		}
-		/// <summary>
-		/// Worksheet data start offset
-		/// </summary>
-		public uint StartOffset
-		{
-			get { return base.ReadUInt32(0x0); }
-		}
+        /// <summary>
+        /// Gets the name of the worksheet.
+        /// </summary>
+        public string SheetName
+        {
+            get
+            {
+                ushort len = ReadByte(0x6);
 
-		/// <summary>
-		/// Type of worksheet
-		/// </summary>
-		public SheetType Type
-		{
-			get { return (SheetType)base.ReadByte(0x5); }
-		}
+                const int start = 0x8;
+                if (!IsV8)
+                    return Reader.Encoding.GetString(Bytes, RecordContentOffset + start, Helpers.IsSingleByteEncoding(Reader.Encoding) ? len : len * 2);
 
-		/// <summary>
-		/// Visibility of worksheet
-		/// </summary>
-		public SheetVisibility VisibleState
-		{
-			get { return (SheetVisibility)base.ReadByte(0x4); }
-		}
+                if (ReadByte(0x7) == 0)
+                {
+                    byte[] bytes = new byte[len * 2];
+                    for (int i = 0; i < len; i++)
+                    {
+                        bytes[i * 2] = Bytes[RecordContentOffset + start + i];
+                    }
 
-		/// <summary>
-		/// Name of worksheet
-		/// </summary>
-		public string SheetName
-		{
-			get
-			{
-				ushort len = base.ReadByte(0x6);
+                    return Encoding.Unicode.GetString(bytes, 0, len * 2);
+                }
 
-				int start = 0x8;
-				if (isV8)
-					if (base.ReadByte(0x7) == 0)
-                        return Encoding.UTF8.GetString(m_bytes, m_readoffset + start, len);
-					else
-                        return reader.Encoding.GetString(m_bytes, m_readoffset + start, Helpers.IsSingleByteEncoding(reader.Encoding) ? len : len * 2);
-				else
-                    return Encoding.UTF8.GetString(m_bytes, m_readoffset + start - 1, len);
-			}
-		}
+                return Encoding.Unicode.GetString(Bytes, RecordContentOffset + start, len * 2);
+            }
+        }
 
-        ///// <summary>
-        ///// Encoding used to deal with strings
-        ///// </summary>
-        //public Encoding UseEncoding
-        //{
-        //    get { return m_UseEncoding; }
-        //    set { m_UseEncoding = value; }
-        //}
-
-		/// <summary>
-		/// Specifies if BIFF8 format should be used
-		/// </summary>
-		public bool IsV8
-		{
-			get { return isV8; }
-			set { isV8 = value; }
-		}
-	}
+        /// <summary>
+        /// Gets a value indicating whether this is a BIFF8 file or not.
+        /// </summary>
+        public bool IsV8 { get; }
+    }
 }

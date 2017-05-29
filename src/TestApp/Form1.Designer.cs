@@ -54,7 +54,7 @@
             this.button1.TabIndex = 0;
             this.button1.Text = "select file";
             this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.button1.Click += new System.EventHandler(this.Button1Click);
             // 
             // textBox1
             // 
@@ -71,7 +71,7 @@
             this.button2.TabIndex = 2;
             this.button2.Text = "Process";
             this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.button2.Click += new System.EventHandler(this.Button2Click);
             // 
             // dataSet1
             // 
@@ -96,7 +96,7 @@
             this.sheetCombo.Name = "sheetCombo";
             this.sheetCombo.Size = new System.Drawing.Size(121, 24);
             this.sheetCombo.TabIndex = 4;
-            this.sheetCombo.SelectedIndexChanged += new System.EventHandler(this.sheetCombo_SelectedIndexChanged);
+            this.sheetCombo.SelectedIndexChanged += new System.EventHandler(this.SheetComboSelectedIndexChanged);
             // 
             // Sheet
             // 

@@ -3,102 +3,87 @@ using System.IO;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
-	/// <summary>
-	/// Represents an Excel file stream
-	/// </summary>
-	internal class XlsStream
-	{
-		protected XlsFat m_fat;
-		protected XlsFat m_minifat;
-		protected Stream m_fileStream;
-		protected XlsHeader m_hdr;
-		protected uint m_startSector;
-		protected bool m_isMini;
-		protected XlsRootDirectory m_rootDir;
+    /// <summary>
+    /// Represents an Excel file stream
+    /// </summary>
+    internal class XlsStream
+    {
+        private readonly XlsFat _fat;
+        private readonly Stream _fileStream;
+        private readonly XlsHeader _hdr;
 
-		public XlsStream(XlsHeader hdr, uint startSector, bool isMini, XlsRootDirectory rootDir)
-		{
-			m_fileStream = hdr.FileStream;
-			m_fat = hdr.FAT;
-			m_hdr = hdr;
-			m_startSector = startSector;
-			m_isMini = isMini;
-			m_rootDir = rootDir;
+        private readonly bool _isMini;
+        private readonly XlsRootDirectory _rootDir;
+        private readonly XlsFat _minifat;
 
-			CalculateMiniFat(rootDir);
+        public XlsStream(XlsHeader hdr, uint startSector, bool isMini, XlsRootDirectory rootDir)
+        {
+            _fileStream = hdr.FileStream;
+            _fat = hdr.Fat;
+            _hdr = hdr;
+            BaseSector = startSector;
+            _isMini = isMini;
+            _rootDir = rootDir;
 
-		}
+            _minifat = _hdr.GetMiniFat();
+        }
 
-		public void CalculateMiniFat(XlsRootDirectory rootDir)
-		{
-			m_minifat = m_hdr.GetMiniFAT(rootDir);
-		}
+        /// <summary>
+        /// Gets the offset of first stream sector
+        /// </summary>
+        public uint BaseOffset => (uint)((BaseSector + 1) * _hdr.SectorSize);
 
-		/// <summary>
-		/// Returns offset of first stream sector
-		/// </summary>
-		public uint BaseOffset
-		{
-			get { return (uint)((m_startSector + 1) * m_hdr.SectorSize); }
-		}
+        /// <summary>
+        /// Gets the number of first stream sector
+        /// </summary>
+        public uint BaseSector { get; }
 
-		/// <summary>
-		/// Returns number of first stream sector
-		/// </summary>
-		public uint BaseSector
-		{
-			get { return (m_startSector); }
-		}
+        /// <summary>
+        /// Reads stream data from file
+        /// </summary>
+        /// <returns>Stream data</returns>
+        public byte[] ReadStream()
+        {
+            uint sector = BaseSector, prevSector = 0;
+            int sectorSize = _isMini ? _hdr.MiniSectorSize : _hdr.SectorSize;
+            var fat = _isMini ? _minifat : _fat;
+            long offset = 0;
+            if (_isMini && _rootDir != null)
+            {
+                offset = (_rootDir.RootEntry.StreamFirstSector + 1) * _hdr.SectorSize;
+            }
 
-		/// <summary>
-		/// Reads stream data from file
-		/// </summary>
-		/// <returns>Stream data</returns>
-		public byte[] ReadStream()
-		{
+            byte[] buff = new byte[sectorSize];
+            byte[] ret;
 
-			uint sector = m_startSector, prevSector = 0;
-			int sectorSize = m_isMini ? m_hdr.MiniSectorSize : m_hdr.SectorSize;
-			var fat = m_isMini ? m_minifat : m_fat;
-			long offset = 0;
-			if (m_isMini && m_rootDir != null)
-			{
-				offset = (m_rootDir.RootEntry.StreamFirstSector + 1)*m_hdr.SectorSize;
-			}
+            using (MemoryStream ms = new MemoryStream(sectorSize * 8))
+            {
+                do
+                {
+                    if (prevSector == 0 || (sector - prevSector) != 1)
+                    {
+                        var adjustedSector = _isMini ? sector : sector + 1; // standard sector is + 1 because header is first
+                        _fileStream.Seek(adjustedSector * sectorSize + offset, SeekOrigin.Begin);
+                    }
 
-			byte[] buff = new byte[sectorSize];
-			byte[] ret;
+                    if (prevSector != 0 && prevSector == sector)
+                        throw new InvalidOperationException("The excel file may be corrupt. We appear to be stuck");
 
-			using (MemoryStream ms = new MemoryStream(sectorSize * 8))
-			{
-				lock (m_fileStream)
-				{
-					do
-					{
-						if (prevSector == 0 || (sector - prevSector) != 1)
-						{
-							var adjustedSector = m_isMini ? sector : sector + 1; //standard sector is + 1 because header is first
-							m_fileStream.Seek(adjustedSector * sectorSize + offset, SeekOrigin.Begin);
-						}
+                    prevSector = sector;
+                    _fileStream.Read(buff, 0, sectorSize);
+                    ms.Write(buff, 0, sectorSize);
 
-                        if (prevSector != 0 && prevSector == sector)
-                            throw new InvalidOperationException("The excel file may be corrupt. We appear to be stuck");
+                    sector = fat.GetNextSector(sector);
 
-						prevSector = sector;
-						m_fileStream.Read(buff, 0, sectorSize);
-						ms.Write(buff, 0, sectorSize);
+                    if (sector == 0)
+                        throw new InvalidOperationException("Next sector cannot be 0. Possibly corrupt excel file");
+                }
+                while (sector != (uint)FATMARKERS.FAT_EndOfChain);
 
-					    sector = fat.GetNextSector(sector);
+                ret = ms.ToArray();
+            }
 
-                        if (sector == 0)
-                            throw new InvalidOperationException("Next sector cannot be 0. Possibly corrupt excel file");
-					} while (sector != (uint)FATMARKERS.FAT_EndOfChain);
-				}
-
-				ret = ms.ToArray();
-			}
-
-			return ret;
-		}
-	}
+            return ret;
+        }
+    }
 }

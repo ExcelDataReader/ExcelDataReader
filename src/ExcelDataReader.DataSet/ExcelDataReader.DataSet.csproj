@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Lightweight and fast library written in C# for reading Microsoft Excel files ('97-2007).</Description>
+    <AssemblyTitle>ExcelDataReader.DataSet</AssemblyTitle>
+    <VersionPrefix>2.5.0.2-dev</VersionPrefix>
+    <Authors>ExcelDataReader developers</Authors>
+    <TargetFrameworks>net20;net45;netstandard1.3</TargetFrameworks>
+    <AssemblyName>ExcelDataReader.DataSet</AssemblyName>
+    <AssemblyOriginatorKeyFile>..\ExcelDataReader.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
+    <PackageId>ExcelDataReader.DataSet</PackageId>
+    <PackageTags>excel</PackageTags>
+    <PackageIconUrl>https://nugetgallery.blob.core.windows.net/icons/ExcelDataReader.2.1.png</PackageIconUrl>
+    <PackageProjectUrl>http://exceldatareader.codeplex.com/</PackageProjectUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="..\..\stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\ExcelDataReader.snk" Link="ExcelDataReader.snk" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta001" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ExcelDataReader\ExcelDataReader.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <Reference Include="System.Data" />
+    <Reference Include="System" />
+  </ItemGroup>
+
+</Project>
