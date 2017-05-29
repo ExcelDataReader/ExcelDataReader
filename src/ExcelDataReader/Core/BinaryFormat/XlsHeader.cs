@@ -147,34 +147,31 @@ namespace ExcelDataReader.Core.BinaryFormat
                 int difCount;
                 if ((difCount = DifSectorCount) == 0)
                     goto XlsHeader_Fat_Ready;
-                lock (FileStream)
+                uint difSector = DifFirstSector;
+                byte[] buff = new byte[sectorSize];
+                uint prevSector = 0;
+                while (difCount > 0)
                 {
-                    uint difSector = DifFirstSector;
-                    byte[] buff = new byte[sectorSize];
-                    uint prevSector = 0;
-                    while (difCount > 0)
+                    sectors.Capacity += 128;
+                    if (prevSector == 0 || (difSector - prevSector) != 1)
+                        FileStream.Seek((difSector + 1) * sectorSize, SeekOrigin.Begin);
+                    prevSector = difSector;
+                    FileStream.Read(buff, 0, sectorSize);
+                    for (int i = 0; i < 508; i += 4)
                     {
-                        sectors.Capacity += 128;
-                        if (prevSector == 0 || (difSector - prevSector) != 1)
-                            FileStream.Seek((difSector + 1) * sectorSize, SeekOrigin.Begin);
-                        prevSector = difSector;
-                        FileStream.Read(buff, 0, sectorSize);
-                        for (int i = 0; i < 508; i += 4)
-                        {
-                            value = BitConverter.ToUInt32(buff, i);
-                            if (value == (uint)FATMARKERS.FAT_FreeSpace)
-                                goto XlsHeader_Fat_Ready;
-                            sectors.Add(value);
-                        }
-
-                        value = BitConverter.ToUInt32(buff, 508);
+                        value = BitConverter.ToUInt32(buff, i);
                         if (value == (uint)FATMARKERS.FAT_FreeSpace)
-                            break;
-                        if (difCount-- > 1)
-                            difSector = value;
-                        else
-                            sectors.Add(value);
+                            goto XlsHeader_Fat_Ready;
+                        sectors.Add(value);
                     }
+
+                    value = BitConverter.ToUInt32(buff, 508);
+                    if (value == (uint)FATMARKERS.FAT_FreeSpace)
+                        break;
+                    if (difCount-- > 1)
+                        difSector = value;
+                    else
+                        sectors.Add(value);
                 }
 
                 XlsHeader_Fat_Ready:

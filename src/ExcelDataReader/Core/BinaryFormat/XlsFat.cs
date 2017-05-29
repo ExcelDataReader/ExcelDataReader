@@ -38,17 +38,14 @@ namespace ExcelDataReader.Core.BinaryFormat
             Stream file = hdr.FileStream;
             using (MemoryStream ms = new MemoryStream(sizeOfSector * SectorsForFat))
             {
-                lock (file)
+                for (int i = 0; i < sectors.Count; i++)
                 {
-                    for (int i = 0; i < sectors.Count; i++)
-                    {
-                        uint sector = sectors[i];
-                        if (prevSector == 0 || sector - prevSector != 1)
-                            file.Seek((sector + 1) * sizeOfSector, SeekOrigin.Begin);
-                        prevSector = sector;
-                        file.Read(buff, 0, sizeOfSector);
-                        ms.Write(buff, 0, sizeOfSector);
-                    }
+                    uint sector = sectors[i];
+                    if (prevSector == 0 || sector - prevSector != 1)
+                        file.Seek((sector + 1) * sizeOfSector, SeekOrigin.Begin);
+                    prevSector = sector;
+                    file.Read(buff, 0, sizeOfSector);
+                    ms.Write(buff, 0, sizeOfSector);
                 }
 
                 ms.Seek(0, SeekOrigin.Begin);
