@@ -72,7 +72,7 @@ namespace Excel
                     var value = self.GetValue(i);
                     row[i] = value;
                 }
-
+                
                 result.Rows.Add(row);
             }
 

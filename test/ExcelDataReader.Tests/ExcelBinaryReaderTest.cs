@@ -1105,5 +1105,12 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("\nWholesale", ds.Tables[1].Rows[18][9]);
             }
         }
+
+        [TestCase]
+        public void Biff3IsNotSupported()
+        {
+            using (var stream = Configuration.GetTestWorkbook("biff3"))
+                Assert.Throws<NotSupportedException>(() => ExcelReaderFactory.CreateBinaryReader(stream));
+        }
     }
 }

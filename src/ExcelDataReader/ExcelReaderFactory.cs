@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ExcelDataReader.Core.BinaryFormat;
 
 namespace Excel
 {
@@ -17,16 +18,13 @@ namespace Excel
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateReader(Stream fileStream, bool convertOADates = true, ReadOption readOption = ReadOption.Strict)
         {
-            const ulong xlsSignature = 0xE11AB1A1E011CFD0;
-            var buf = new byte[512];
-            fileStream.Seek(0, SeekOrigin.Begin);
-            fileStream.Read(buf, 0, 512);
-            fileStream.Seek(0, SeekOrigin.Begin);
+            XlsHeader header = new XlsHeader(fileStream);
+            if (header.IsSignatureValid)
+                return new ExcelBinaryReader(fileStream, header, convertOADates, readOption);
 
-            var hdr = BitConverter.ToUInt64(buf, 0x0);
+            if (header.IsRawBiffStream)
+                throw new NotSupportedException("File appears to be a raw BIFF stream which isn't supported (BIFF" + header.RawBiffVersion + ").");
 
-            if (hdr == xlsSignature)
-                return CreateBinaryReader(fileStream, convertOADates, readOption);
             return CreateOpenXmlReader(fileStream);
         }
 

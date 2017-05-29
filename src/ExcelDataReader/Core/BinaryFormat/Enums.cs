@@ -89,7 +89,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         BOF_V3 = 0x0209, // BOF Id for BIFF3
 
-        BOF_V4 = 0x0409, // BOF Id for BIFF5
+        BOF_V4 = 0x0409, // BOF Id for BIFF4
 
         EOF = 0x000A, // End of block started with BOF
 

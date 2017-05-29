@@ -48,7 +48,7 @@ namespace ExcelDataReader.Core
                 Value += 1462.0;
             }
             */
-
+            
             return DateTimeHelper.FromOADate(value);
         }
     }

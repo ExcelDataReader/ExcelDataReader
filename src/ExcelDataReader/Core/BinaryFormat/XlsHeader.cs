@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Excel;
-using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
@@ -16,11 +14,24 @@ namespace ExcelDataReader.Core.BinaryFormat
         private XlsFat _fat;
         private XlsFat _minifat;
 
-        private XlsHeader(Stream file)
+        public XlsHeader(Stream file)
         {
             _bytes = new byte[512];
+
+            file.Read(_bytes, 0, 512);
+
             FileStream = file;
+
+            if (CheckRawBiffStream(_bytes, out int version))
+            {
+                IsRawBiffStream = true;
+                RawBiffVersion = version;
+            }
         }
+
+        public bool IsRawBiffStream { get; }
+
+        public int RawBiffVersion { get; }
 
         /// <summary>
         /// Gets the file signature
@@ -171,28 +182,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 return _fat;
             }
         }
-
-        /// <summary>
-        /// Reads Excel header from Stream
-        /// </summary>
-        /// <param name="file">Stream with Excel file</param>
-        /// <returns>XlsHeader representing specified file</returns>
-        public static XlsHeader ReadHeader(Stream file)
-        {
-            XlsHeader hdr = new XlsHeader(file);
-            lock (file)
-            {
-                file.Seek(0, SeekOrigin.Begin);
-                file.Read(hdr._bytes, 0, 512);
-            }
-
-            if (!hdr.IsSignatureValid)
-                throw new HeaderException(Errors.ErrorHeaderSignature);
-            if (hdr.ByteOrder != 0xFFFE && hdr.ByteOrder != 0xFFFF) // Some broken xls files uses 0xFFFF
-                throw new FormatException(Errors.ErrorHeaderOrder);
-            return hdr;
-        }
-
+        
         /// <summary>
         /// Returns mini FAT table
         /// </summary>
@@ -230,6 +220,46 @@ namespace ExcelDataReader.Core.BinaryFormat
             */
             _minifat = new XlsFat(this, sectors);
             return _minifat;
+        }
+
+        private static bool CheckRawBiffStream(byte[] bytes, out int version)
+        {
+            ushort rid = BitConverter.ToUInt16(bytes, 0);
+            ushort size = BitConverter.ToUInt16(bytes, 2);
+            version = BitConverter.ToUInt16(bytes, 4);
+            ushort type = BitConverter.ToUInt16(bytes, 6);
+
+            switch (rid)
+            {
+                case 0x0009: // BIFF2
+                    if (size != 4)
+                        return false;
+                    if (type != 0x10 && type != 0x20 && type != 0x40)
+                        return false;
+                    return true;
+                case 0x0209: // BIFF3
+                    if (size != 6)
+                        return false;
+                    if (type != 0x10 && type != 0x20 && type != 0x40 && type != 0x0100)
+                        return false;
+                    ushort notUsed = BitConverter.ToUInt16(bytes, 8);
+                    if (notUsed != 0x00)
+                        return false;
+                    return true;
+                case 0x0809: // BIFF5/BIFF8
+                    if (size != 8 || size != 16)
+                        return false;
+                    if (version != 0x0500 && version != 0x600)
+                        return false;
+                    if (type != 0x5 && type != 0x6 && type != 0x10 && type != 0x20 && type != 0x40 && type != 0x0100)
+                        return false;
+                    ushort identifier = BitConverter.ToUInt16(bytes, 10);
+                    if (identifier == 0)
+                        return false;
+                    return true;
+            }
+
+            return false;
         }
     }
 }

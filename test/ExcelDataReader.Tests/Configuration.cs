@@ -104,7 +104,8 @@ namespace ExcelDataReader.Tests
             { "RowWithDifferentNumberOfColumns", "RowWithDifferentNumberOfColumns.xls" },
             { "NoDimensionOrCellReferenceAttribute", "NoDimensionOrCellReferenceAttribute.xlsx" },
             { "Test_Row1217NotRead", "Test_Row1217NotRead.xls" },
-            { "StringContinuationAfterCharacterData", "StringContinuationAfterCharacterData.xls" }
+            { "StringContinuationAfterCharacterData", "StringContinuationAfterCharacterData.xls" },
+            { "biff3", "biff3.xls" }
         };
 
         public static Stream GetTestWorkbook(string key)
