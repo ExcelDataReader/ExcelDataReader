@@ -38,8 +38,7 @@ namespace ExcelDataReader.Log
         {
             lock (Sync)
             {
-                ILog result;
-                if (Dictionary.TryGetValue(objectName, out result))
+                if (Dictionary.TryGetValue(objectName, out ILog result))
                     return result;
 
                 // The logger does not exist. Create it and add it to the Dictionary.
