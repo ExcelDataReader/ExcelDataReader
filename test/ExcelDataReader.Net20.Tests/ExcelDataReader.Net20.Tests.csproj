@@ -2,10 +2,13 @@
   <PropertyGroup>
     <AssemblyTitle>ExcelDataReader.Net20.Tests</AssemblyTitle>
     <Authors>ExcelDataReader developers</Authors>
-    <TargetFramework>net20</TargetFramework>
+    <TargetFramework>net45</TargetFramework>
     <AssemblyName>ExcelDataReader.Net20.Tests</AssemblyName>
     <PackageId>ExcelDataReader.Net20.Tests</PackageId>
     <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;NET45;EXCELDATAREADER_NET20</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\ExcelDataReader.Tests\AssertUtilities.cs" Link="AssertUtilities.cs" />
@@ -20,16 +23,39 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\ExcelDataReader\ExcelDataReader.csproj" />
-    <ProjectReference Include="..\..\src\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj" />
+    <!-- 
+      Workaround to reference ExcelDataReader's net20 dlls from tests targeting net45, 
+      the minimum supported test runner framework.
+    -->
+    <ProjectReference Include="..\..\src\ExcelDataReader\ExcelDataReader.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <Reference Include="ExcelDataReader">
+      <HintPath>..\..\src\ExcelDataReader\bin\$(Configuration)\net20\ExcelDataReader.dll</HintPath>
+    </Reference>
+    <Reference Include="ExcelDataReader.DataSet">
+      <HintPath>..\..\src\ExcelDataReader.DataSet\bin\$(Configuration)\net20\ExcelDataReader.DataSet.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\..\src\ExcelDataReader\bin\$(Configuration)\net20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <PackageReference Include="NUnit" Version="3.6.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.8.0-alpha1" />
   </ItemGroup>
 
   <ItemGroup>
     <AdditionalFiles Include="..\..\stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
 </Project>

@@ -271,7 +271,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Fail_Test()
         {
-#if NET20
+#if EXCELDATAREADER_NET20
             var expectedException = typeof(ICSharpCode.SharpZipLib.Zip.ZipException);
 #else
             var expectedException = typeof(InvalidDataException);
@@ -284,7 +284,7 @@ namespace ExcelDataReader.Tests
                     }
                 });
 
-#if NET20
+#if EXCELDATAREADER_NET20
             Assert.AreEqual("Cannot find central directory", exception.Message);
 #else
             Assert.AreEqual("End of Central Directory record could not be found.", exception.Message);
