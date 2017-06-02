@@ -10,6 +10,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG;NET45;EXCELDATAREADER_NET20</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;NET45;EXCELDATAREADER_NET20</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\ExcelDataReader.Tests\AssertUtilities.cs" Link="AssertUtilities.cs" />
     <Compile Include="..\ExcelDataReader.Tests\Configuration.cs" Link="Configuration.cs" />
