@@ -6,27 +6,37 @@ namespace Excel
 {
     public class DataRow
     {
+        readonly object[] values;
+
         internal DataRow(object[] itemArray)
         {
-            ItemArray = itemArray;
+            values = (object[])itemArray.Clone();
         }
 
-        public object[] ItemArray { get; }
+        public object[] ItemArray { 
+            get {
+                var result = new object[values.Length];
+                for (var i = 0; i < values.Length; i++) {
+                    result[i] = values[i] ?? DBNull.Value;
+                }
+                return result;
+            }
+        }
 
         public object this[int index]
         {
             get
             {
-                var result = ItemArray[index];
+                var result = values[index];
                 return result ?? DBNull.Value;
             }
 
-            set => ItemArray[index] = value;
+            set => values[index] = value;
         }
 
         public bool IsNull(int i)
         {
-            return ItemArray[i] == null;
+            return ItemArray[i] == DBNull.Value;
         }
     }
 }
