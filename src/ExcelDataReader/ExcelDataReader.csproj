@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>Lightweight and fast library written in C# for reading Microsoft Excel files ('97-2007).</Description>
     <AssemblyTitle>ExcelDataReader</AssemblyTitle>
-    <VersionPrefix>2.5.0.2-dev</VersionPrefix>
+    <VersionPrefix>3.0.0</VersionPrefix>
     <Authors>ExcelDataReader developers</Authors>
     <TargetFrameworks>net20;net45;netstandard1.3</TargetFrameworks>
     <AssemblyName>ExcelDataReader</AssemblyName>
@@ -14,7 +14,7 @@
     <PackageTags>excel</PackageTags>
     <PackageReleaseNotes>OpenXmlReader does not use temp files. Packages for .NET Core.</PackageReleaseNotes>
     <PackageIconUrl>https://nugetgallery.blob.core.windows.net/icons/ExcelDataReader.2.1.png</PackageIconUrl>
-    <PackageProjectUrl>http://exceldatareader.codeplex.com/</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/ExcelDataReader/ExcelDataReader</PackageProjectUrl>
     <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
@@ -52,6 +52,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta001" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta001" PrivateAssets="All" />
   </ItemGroup>
 </Project>
