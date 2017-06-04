@@ -1,5 +1,3 @@
-using Excel;
-
 namespace ExcelDataReader.Core.BinaryFormat
 {
     internal class XlsStringFactory

@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 
-using Excel;
-
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>

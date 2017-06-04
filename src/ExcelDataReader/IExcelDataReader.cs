@@ -2,7 +2,7 @@ using System;
 using System.Data;
 using System.Text;
 
-namespace Excel
+namespace ExcelDataReader
 {
     public interface IExcelDataReader : IDataReader
     {

@@ -1,5 +1,4 @@
 using System;
-using Excel;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {

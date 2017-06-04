@@ -9,7 +9,6 @@ using System.IO;
 #if NET20 || NET45
 using System.Threading;
 #endif
-using Excel;
 
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
