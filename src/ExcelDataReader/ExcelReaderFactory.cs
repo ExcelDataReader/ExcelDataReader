@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using ExcelDataReader.Core.BinaryFormat;
 
-namespace Excel
+namespace ExcelDataReader
 {
     /// <summary>
     /// The ExcelReader Factory

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Excel;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {

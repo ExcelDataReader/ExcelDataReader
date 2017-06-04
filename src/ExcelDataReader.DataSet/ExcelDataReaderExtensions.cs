@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 
-namespace Excel
+namespace ExcelDataReader
 {
     public static class ExcelDataReaderExtensions
     {

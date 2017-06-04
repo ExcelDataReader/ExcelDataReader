@@ -2,8 +2,6 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 
-using Excel;
-
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>

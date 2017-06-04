@@ -1,7 +1,6 @@
 ﻿#if NET20 || NET45
 using System.Globalization;
 using System.Threading;
-using Excel;
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
 using TestMethod = NUnit.Framework.TestAttribute;

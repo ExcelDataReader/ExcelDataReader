@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Excel
+namespace ExcelDataReader
 {
     public class DataColumn
     {

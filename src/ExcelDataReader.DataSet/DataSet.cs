@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Excel
+namespace ExcelDataReader
 {
     public class DataSet
     {

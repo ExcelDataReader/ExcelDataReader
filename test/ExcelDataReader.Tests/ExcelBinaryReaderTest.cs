@@ -3,7 +3,6 @@
 using System.Data;
 #endif
 using System.IO;
-using Excel;
 using ExcelDataReader.Exceptions;
 
 using NUnit.Framework;

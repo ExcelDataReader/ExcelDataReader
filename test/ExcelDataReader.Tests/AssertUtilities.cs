@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Data;
 
-using Excel;
-
 using NUnit.Framework;
 
 namespace ExcelDataReader.Tests

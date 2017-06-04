@@ -10,7 +10,7 @@ using System.Xml;
 using ExcelDataReader.Core;
 using ExcelDataReader.Core.OpenXmlFormat;
 
-namespace Excel
+namespace ExcelDataReader
 {
     public partial class ExcelOpenXmlReader : IExcelDataReader
     {
