@@ -1,9 +1,4 @@
-﻿#if NETSTANDARD1_3
-
-using System;
-using System.Collections.Generic;
-
-namespace ExcelDataReader
+﻿namespace ExcelDataReader
 {
     public class DataSet
     {
@@ -19,5 +14,3 @@ namespace ExcelDataReader
         }
     }
 }
-
-#endif
