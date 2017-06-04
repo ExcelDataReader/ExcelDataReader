@@ -1,8 +1,4 @@
-﻿#if NETSTANDARD1_3
-using System;
-using System.Linq;
-
-namespace ExcelDataReader
+﻿namespace ExcelDataReader
 {
     public class DataTable
     {
@@ -71,4 +67,3 @@ namespace ExcelDataReader
         }
     }
 }
-#endif

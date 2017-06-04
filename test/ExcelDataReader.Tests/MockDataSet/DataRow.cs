@@ -1,6 +1,4 @@
-﻿#if NETSTANDARD1_3
-using System;
-using System.Linq;
+﻿using System;
 
 namespace ExcelDataReader
 {
@@ -40,4 +38,3 @@ namespace ExcelDataReader
         }
     }
 }
-#endif
