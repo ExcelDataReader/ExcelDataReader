@@ -1111,5 +1111,11 @@ namespace ExcelDataReader.Tests
             using (var stream = Configuration.GetTestWorkbook("biff3"))
                 Assert.Throws<NotSupportedException>(() => ExcelReaderFactory.CreateBinaryReader(stream));
         }
+
+        public void GitIssue5()
+        {
+            using (var stream = Configuration.GetTestWorkbook("Test_git_issue_5"))
+                Assert.Throws<InvalidOperationException>(() => ExcelReaderFactory.CreateBinaryReader(stream));
+        }
     }
 }

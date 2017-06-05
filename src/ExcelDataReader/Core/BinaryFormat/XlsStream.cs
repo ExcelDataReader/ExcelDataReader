@@ -70,7 +70,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                         throw new InvalidOperationException("The excel file may be corrupt. We appear to be stuck");
 
                     prevSector = sector;
-                    _fileStream.Read(buff, 0, sectorSize);
+                    if (_fileStream.Read(buff, 0, sectorSize) <= 0)
+                        throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.");
                     ms.Write(buff, 0, sectorSize);
 
                     sector = fat.GetNextSector(sector);
