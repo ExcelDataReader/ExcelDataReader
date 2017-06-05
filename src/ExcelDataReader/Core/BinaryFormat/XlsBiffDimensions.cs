@@ -12,11 +12,6 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Gets a value indicating whether BIFF8 addressing is used or not.
-        /// </summary>
-        public bool IsV8 { get; }
-
-        /// <summary>
         /// Gets the index of first row.
         /// </summary>
         public uint FirstRow => IsV8 ? ReadUInt32(0x0) : ReadUInt16(0x0);
@@ -35,5 +30,10 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// Gets the index of last column + 1.
         /// </summary>
         public ushort LastColumn => IsV8 ? (ushort)((ReadUInt16(0x9) >> 8) + 1) : ReadUInt16(0x6);
+
+        /// <summary>
+        /// Gets a value indicating whether BIFF8 addressing is used or not.
+        /// </summary>
+        private bool IsV8 { get; }
     }
 }
