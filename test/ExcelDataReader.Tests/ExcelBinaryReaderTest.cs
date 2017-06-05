@@ -1113,6 +1113,13 @@ namespace ExcelDataReader.Tests
         }
 
         [TestCase]
+        public void GitIssue5()
+        {
+            using (var stream = Configuration.GetTestWorkbook("Test_git_issue_5"))
+                Assert.Throws<InvalidOperationException>(() => ExcelReaderFactory.CreateBinaryReader(stream));
+        }
+
+        [TestCase]
         public void Issue2InvalidDimensionRecord()
         {
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_2")))
