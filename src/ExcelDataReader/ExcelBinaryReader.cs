@@ -322,10 +322,10 @@ namespace ExcelDataReader
 
             object[] cellValues = null;
 
+            var rec = _stream.LastRead;
+
             while (true)
             {
-                var rec = _stream.Read();
-
                 if (rec == null || rec is XlsBiffEof)
                 {
                     _reachedEndOfSheet = true;
@@ -333,7 +333,10 @@ namespace ExcelDataReader
                 }
 
                 if (rec is XlsBiffMSODrawing || rec is XlsBiffDbCell)
+                {
+                    _stream.Read();
                     break;
+                }
 
                 var cell = rec as XlsBiffBlankCell;
                 if (cell != null)
@@ -354,6 +357,8 @@ namespace ExcelDataReader
 
                     PushCellValue(cellValues, cell);
                 }
+
+                rec = _stream.Read();
             }
         }
 
@@ -475,36 +480,41 @@ namespace ExcelDataReader
                 return false;
             }
 
-            // Handle case where sheet reports last column is 1 but there are actually more
-            if (FieldCount <= 0)
-            {
-                int offset = _stream.Position;
-
-                int maxReferenceColumn = 0;
-
-                var thisRec = _stream.LastRead;
-
-                // Check all cells
-                while (true)
-                {
-                    if (thisRec == null || thisRec is XlsBiffEof)
-                        break;
-
-                    XlsBiffBlankCell cell = thisRec as XlsBiffBlankCell;
-                    if (cell != null)
-                    {
-                        maxReferenceColumn = Math.Max(maxReferenceColumn, cell.ColumnIndex + 1);
-                    }
-
-                    thisRec = _stream.Read();
-                }
-
-                FieldCount = maxReferenceColumn;
-
-                _stream.Seek(offset, SeekOrigin.Begin);
-            }
+            // Handle when dimensions report less columns than used by cell records.
+            int maxCellColumn = FindMaxReferencedColumn();
+            if (FieldCount < maxCellColumn)
+                FieldCount = maxCellColumn;
 
             return true;
+        }
+
+        private int FindMaxReferencedColumn()
+        {
+            int offset = _stream.Position;
+
+            int maxReferenceColumn = 0;
+
+            var thisRec = _stream.LastRead;
+
+            // Check all cells
+            while (true)
+            {
+                if (thisRec == null || thisRec is XlsBiffEof)
+                    break;
+
+                XlsBiffBlankCell cell = thisRec as XlsBiffBlankCell;
+                if (cell != null)
+                {
+                    maxReferenceColumn = Math.Max(maxReferenceColumn, cell.ColumnIndex + 1);
+                }
+
+                thisRec = _stream.Read();
+            }
+
+            _stream.Seek(offset, SeekOrigin.Begin);
+            _stream.Read();
+
+            return maxReferenceColumn;
         }
 
         private object TryConvertOADateTime(double value, ushort xFormat)
