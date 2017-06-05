@@ -231,6 +231,7 @@ namespace ExcelDataReader
 
             //// DumpBiffRecords();
 
+            int previousPosition = _stream.Position;
             XlsBiffRecord rec = _stream.Read();
             if (rec == null || rec is XlsBiffEof)
                 return false;
@@ -242,6 +243,7 @@ namespace ExcelDataReader
             else if (rec is XlsBiffUncalced)
             {
                 // Sometimes this come before the index...
+                previousPosition = _stream.Position;
                 rec = _stream.Read();
                 if (rec == null || rec is XlsBiffEof)
                     return false;
@@ -272,6 +274,7 @@ namespace ExcelDataReader
                     break;
                 }
 
+                previousPosition = _stream.Position;
                 rec = _stream.Read();
             }
 
@@ -291,6 +294,18 @@ namespace ExcelDataReader
             {
                 return false;
             }
+
+            if (rec.IsCell)
+                _stream.Seek(previousPosition, SeekOrigin.Begin);
+            else
+                previousPosition = _stream.Position;
+
+            // Handle when dimensions report less columns than used by cell records.
+            int maxCellColumn = FindMaxReferencedColumn();
+            if (FieldCount < maxCellColumn)
+                FieldCount = maxCellColumn;
+
+            _stream.Seek(previousPosition, SeekOrigin.Begin);
 
             Depth = 0;
 
@@ -322,11 +337,11 @@ namespace ExcelDataReader
 
             object[] cellValues = null;
 
-            var rec = _stream.LastRead;
+            XlsBiffRecord rec;
 
-            while (true)
+            while ((rec = _stream.Read()) != null)
             {
-                if (rec == null || rec is XlsBiffEof)
+                if (rec is XlsBiffEof)
                 {
                     _reachedEndOfSheet = true;
                     break;
@@ -334,7 +349,6 @@ namespace ExcelDataReader
 
                 if (rec is XlsBiffMSODrawing || rec is XlsBiffDbCell)
                 {
-                    _stream.Read();
                     break;
                 }
 
@@ -357,8 +371,6 @@ namespace ExcelDataReader
 
                     PushCellValue(cellValues, cell);
                 }
-
-                rec = _stream.Read();
             }
         }
 
@@ -480,39 +492,26 @@ namespace ExcelDataReader
                 return false;
             }
 
-            // Handle when dimensions report less columns than used by cell records.
-            int maxCellColumn = FindMaxReferencedColumn();
-            if (FieldCount < maxCellColumn)
-                FieldCount = maxCellColumn;
-
             return true;
         }
 
         private int FindMaxReferencedColumn()
         {
-            int offset = _stream.Position;
-
             int maxReferenceColumn = 0;
 
-            var thisRec = _stream.LastRead;
-
             // Check all cells
-            while (true)
+            XlsBiffRecord rec;
+            while ((rec = _stream.Read()) != null)
             {
-                if (thisRec == null || thisRec is XlsBiffEof)
+                if (rec is XlsBiffEof)
                     break;
 
-                XlsBiffBlankCell cell = thisRec as XlsBiffBlankCell;
+                XlsBiffBlankCell cell = rec as XlsBiffBlankCell;
                 if (cell != null)
                 {
                     maxReferenceColumn = Math.Max(maxReferenceColumn, cell.ColumnIndex + 1);
                 }
-
-                thisRec = _stream.Read();
             }
-
-            _stream.Seek(offset, SeekOrigin.Begin);
-            _stream.Read();
 
             return maxReferenceColumn;
         }
