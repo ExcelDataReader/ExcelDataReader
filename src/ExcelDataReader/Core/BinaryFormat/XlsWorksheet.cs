@@ -54,12 +54,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public XlsBiffSimpleValueRecord Iteration { get; set; }
 
         public XlsBiffRecord Delta { get; set; }
-
-        /// <summary>
-        /// Gets or sets the dimensions of the worksheet
-        /// </summary>
-        public XlsBiffDimensions Dimensions { get; set; }
-
+        
         public XlsBiffRecord Window { get; set; }
     }
 }

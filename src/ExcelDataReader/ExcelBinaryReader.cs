@@ -249,48 +249,42 @@ namespace ExcelDataReader
                 idx = rec as XlsBiffIndex;
             }
 
-            /*
-            if (null == idx)
-            {
-                // There is a record before the index! Chech his type and see the MS Biff Documentation
-                return false;
-            }
-            */
-
             if (idx != null)
             {
                 LogManager.Log(this).Debug("INDEX IsV8={0}", idx.IsV8);
+
+                if (idx.LastExistingRow <= idx.FirstExistingRow)
+                    return false;
             }
 
-            XlsBiffDimensions dims = null;
-
-            while (rec.Id != BIFFRECORDTYPE.ROW && !rec.IsCell)
+            while (!(rec is XlsBiffRow) && !(rec is XlsBiffBlankCell))
             {
-                if (rec.Id == BIFFRECORDTYPE.DIMENSIONS)
+                if (rec is XlsBiffDimensions dims)
                 {
-                    dims = (XlsBiffDimensions)rec;
+                    LogManager.Log(this).Debug("dims IsV8={0}", IsV8());
+                    FieldCount = dims.LastColumn - 1;
                     break;
                 }
 
                 rec = _stream.Read();
             }
 
-            if (dims != null)
+            // Handle when dimensions report less columns than used by cell records.
+            int maxCellColumn = 0;
+            while (rec != null && !(rec is XlsBiffEof))
             {
-                LogManager.Log(this).Debug("dims IsV8={0}", dims.IsV8);
-                FieldCount = dims.LastColumn - 1;
+                if (rec is XlsBiffBlankCell cell)
+                {
+                    maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
+                }
 
-                sheet.Dimensions = dims;
+                rec = _stream.Read();
             }
-            else
-            {
-                FieldCount = 256;
-            }
+            
+            if (FieldCount < maxCellColumn)
+                FieldCount = maxCellColumn;
 
-            if (idx != null && idx.LastExistingRow <= idx.FirstExistingRow)
-            {
-                return false;
-            }
+            _stream.Seek((int)sheet.DataOffset, SeekOrigin.Begin);
 
             Depth = 0;
 
@@ -322,18 +316,20 @@ namespace ExcelDataReader
 
             object[] cellValues = null;
 
-            while (true)
-            {
-                var rec = _stream.Read();
+            XlsBiffRecord rec;
 
-                if (rec == null || rec is XlsBiffEof)
+            while ((rec = _stream.Read()) != null)
+            {
+                if (rec is XlsBiffEof)
                 {
                     _reachedEndOfSheet = true;
                     break;
                 }
 
                 if (rec is XlsBiffMSODrawing || rec is XlsBiffDbCell)
+                {
                     break;
+                }
 
                 var cell = rec as XlsBiffBlankCell;
                 if (cell != null)
@@ -475,35 +471,6 @@ namespace ExcelDataReader
                 return false;
             }
 
-            // Handle case where sheet reports last column is 1 but there are actually more
-            if (FieldCount <= 0)
-            {
-                int offset = _stream.Position;
-
-                int maxReferenceColumn = 0;
-
-                var thisRec = _stream.LastRead;
-
-                // Check all cells
-                while (true)
-                {
-                    if (thisRec == null || thisRec is XlsBiffEof)
-                        break;
-
-                    XlsBiffBlankCell cell = thisRec as XlsBiffBlankCell;
-                    if (cell != null)
-                    {
-                        maxReferenceColumn = Math.Max(maxReferenceColumn, cell.ColumnIndex + 1);
-                    }
-
-                    thisRec = _stream.Read();
-                }
-
-                FieldCount = maxReferenceColumn;
-
-                _stream.Seek(offset, SeekOrigin.Begin);
-            }
-
             return true;
         }
 
@@ -612,6 +579,7 @@ namespace ExcelDataReader
 
         private void ResetSheetData()
         {
+            FieldCount = 0;
             _isFirstRead = true;
             _reachedEndOfSheet = false;
             _currentRows.Clear();
