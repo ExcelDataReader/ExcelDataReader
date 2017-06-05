@@ -86,9 +86,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// Gets the current position in BIFF stream
         /// </summary>
         public int Position { get; private set; }
-
-        public XlsBiffRecord LastRead { get; private set; }
-
+        
         /// <summary>
         /// Sets stream pointer to the specified offset
         /// </summary>
@@ -121,20 +119,18 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <returns>The record -or- null.</returns>
         public XlsBiffRecord Read()
         {
-            LastRead = null;
-
             // Minimum record size is 4
             if ((uint)Position + 4 >= _bytes.Length)
                 return null;
 
-            LastRead = XlsBiffRecord.GetRecord(_bytes, (uint)Position, _reader);
-            Position += LastRead.Size;
+            var record = XlsBiffRecord.GetRecord(_bytes, (uint)Position, _reader);
+            Position += record.Size;
             if (Position > Size)
             {
-                LastRead = null;
+                record = null;
             }
 
-            return LastRead;
+            return record;
         }
 
         private sealed class RC4Key
