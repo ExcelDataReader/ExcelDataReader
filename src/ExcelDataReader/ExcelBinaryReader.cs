@@ -59,11 +59,6 @@ namespace ExcelDataReader
         }
 
         public ExcelBinaryReader(Stream stream, bool convertOADate, ReadOption readOption)
-            : this(stream, new XlsHeader(stream), convertOADate, readOption)
-        {
-        }
-
-        internal ExcelBinaryReader(Stream stream, XlsHeader header, bool convertOADate, ReadOption readOption)
         {
             _version = 0x0600;
             _isFirstRead = true;
@@ -71,10 +66,10 @@ namespace ExcelDataReader
             ReadOption = readOption;
             ConvertOaDate = convertOADate;
 
-            _hdr = header;
+            _hdr = new XlsHeader(stream);
 
-            if (header.IsRawBiffStream)
-                throw new NotSupportedException("File appears to be a raw BIFF stream which isn't supported (BIFF" + header.RawBiffVersion + ").");
+            if (_hdr.IsRawBiffStream)
+                throw new NotSupportedException("File appears to be a raw BIFF stream which isn't supported (BIFF" + _hdr.RawBiffVersion + ").");
             if (!_hdr.IsSignatureValid)
                 throw new HeaderException(Errors.ErrorHeaderSignature);
             if (_hdr.ByteOrder != 0xFFFE && _hdr.ByteOrder != 0xFFFF) // Some broken xls files uses 0xFFFF
