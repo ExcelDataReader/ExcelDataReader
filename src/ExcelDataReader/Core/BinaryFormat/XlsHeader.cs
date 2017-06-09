@@ -104,9 +104,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         public int DifSectorCount { get; set; }
 
         /// <summary>
-        /// Gets or sets the DIF sector chain
+        /// Gets or sets the first 109 locations in the DIF sector chain
         /// </summary>
-        public List<uint> DifSectorChain { get; set; }
-
+        public List<uint> First109DifSectorChain { get; set; }
     }
 }

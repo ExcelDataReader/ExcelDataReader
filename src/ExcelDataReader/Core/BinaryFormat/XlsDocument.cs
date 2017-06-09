@@ -21,7 +21,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             if (Header.ByteOrder != 0xFFFE && Header.ByteOrder != 0xFFFF) // Some broken xls files uses 0xFFFF
                 throw new FormatException(Errors.ErrorHeaderOrder);
 
-            SectorTable = ReadSectorTable(reader, Header.DifSectorChain);
+            var difSectorChain = ReadDifSectorChain(stream);
+            SectorTable = ReadSectorTable(reader, difSectorChain);
 
             var miniChain = GetSectorChain(Header.MiniFatFirstSector, false);
             MiniSectorTable = ReadSectorTable(reader, miniChain);
@@ -147,6 +148,12 @@ namespace ExcelDataReader.Core.BinaryFormat
             return result;
         }
 
+        private int ReadSector(Stream stream, uint sector, byte[] result, int offset)
+        {
+            stream.Seek(GetSectorOffset(sector, false), SeekOrigin.Begin);
+            return stream.Read(result, offset, Header.SectorSize);
+        }
+
         private void ReadDirectoryEntries(byte[] bytes)
         {
             try
@@ -235,14 +242,63 @@ namespace ExcelDataReader.Core.BinaryFormat
                 chain.Add(reader.ReadUInt32());
             }
 
+            result.First109DifSectorChain = chain;
+
+            return result;
+        }
+
+        /// <summary>
+        /// The header contains the first 109 DIF entries. If there are any more, read from a separate stream.
+        /// </summary>
+        private List<uint> ReadDifSectorChain(Stream stream)
+        {
+            // Read the DIF chain sectors directly, can't use ReadStream yet because it depends on the DIF chain
+            var difSectorChain = new List<uint>(Header.First109DifSectorChain);
+            if (Header.DifFirstSector != (uint)FATMARKERS.FAT_EndOfChain)
+            {
+                var difBytes = new byte[Header.DifSectorCount * Header.SectorSize];
+                for (var i = 0; i < Header.DifSectorCount; ++i)
+                {
+                    ReadSector(stream, (uint)(Header.DifFirstSector + i), difBytes, i * Header.SectorSize);
+                }
+
+                var additionalDifSectorChain = ReadDifSectorChain(difBytes);
+                difSectorChain.AddRange(additionalDifSectorChain);
+            }
+
+            TrimSectorChain(difSectorChain);
+            return difSectorChain;
+        }
+
+        private List<uint> ReadDifSectorChain(byte[] difBytes)
+        {
+            var chain = new List<uint>();
+            using (var difStream = new MemoryStream(difBytes))
+            {
+                using (var difReader = new BinaryReader(difStream))
+                {
+                    for (int i = 0; i < difBytes.Length / 4; ++i)
+                    {
+                        var sector = difReader.ReadUInt32();
+                        if (sector == (uint)FATMARKERS.FAT_EndOfChain)
+                        {
+                            break;
+                        }
+
+                        chain.Add(sector);
+                    }
+                }
+            }
+
+            return chain;
+        }
+
+        private void TrimSectorChain(List<uint> chain)
+        {
             while (chain.Count > 0 && chain[chain.Count - 1] == (uint)FATMARKERS.FAT_FreeSpace)
             {
                 chain.RemoveAt(chain.Count - 1);
             }
-
-            result.DifSectorChain = chain;
-
-            return result;
         }
 
         private List<uint> GetSectorChain(uint sector, bool mini)
@@ -250,14 +306,11 @@ namespace ExcelDataReader.Core.BinaryFormat
             List<uint> chain = new List<uint>();
             while (sector != (uint)FATMARKERS.FAT_EndOfChain)
             {
-                if (sector != (uint)FATMARKERS.FAT_FreeSpace)
-                {
-                    chain.Add(sector);
-                }
-
+                chain.Add(sector);
                 sector = GetNextSector(sector, mini);
             }
 
+            TrimSectorChain(chain);
             return chain;
         }
 
@@ -319,13 +372,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                 throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.", ex);
             }
 
-            while (sectorTable.Count > 0 && sectorTable[sectorTable.Count - 1] == (uint)FATMARKERS.FAT_FreeSpace)
-            {
-                sectorTable.RemoveAt(sectorTable.Count - 1);
-            }
+            TrimSectorChain(sectorTable);
 
             return sectorTable;
         }
-
     }
 }
