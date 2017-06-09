@@ -33,7 +33,7 @@ namespace ExcelDataReader
         private readonly Dictionary<int, object[]> _currentRows = new Dictionary<int, object[]>();
 
         private Stream _file;
-        private XlsHeader _hdr;
+        private XlsDocument _document;
         private List<XlsWorksheet> _sheets;
         private XlsBiffStream _stream;
         private XlsWorkbookGlobals _globals;
@@ -66,15 +66,7 @@ namespace ExcelDataReader
             ReadOption = readOption;
             ConvertOaDate = convertOADate;
 
-            _hdr = new XlsHeader(stream);
-
-            if (_hdr.IsRawBiffStream)
-                throw new NotSupportedException("File appears to be a raw BIFF stream which isn't supported (BIFF" + _hdr.RawBiffVersion + ").");
-            if (!_hdr.IsSignatureValid)
-                throw new HeaderException(Errors.ErrorHeaderSignature);
-            if (_hdr.ByteOrder != 0xFFFE && _hdr.ByteOrder != 0xFFFF) // Some broken xls files uses 0xFFFF
-                throw new FormatException(Errors.ErrorHeaderOrder);
-
+            _document = new XlsDocument(stream);
             ReadWorkBookGlobals();
 
             // set the sheet index to the index of the first sheet.. this is so that properties such as Name which use sheetIndex reflect the first sheet in the file without having to perform a read() operation
@@ -90,8 +82,7 @@ namespace ExcelDataReader
 
         private void ReadWorkBookGlobals()
         {
-            XlsRootDirectory dir = new XlsRootDirectory(_hdr);
-            XlsDirectoryEntry workbookEntry = dir.FindEntry(Workbook) ?? dir.FindEntry(Book);
+            XlsDirectoryEntry workbookEntry = _document.FindEntry(Workbook) ?? _document.FindEntry(Book);
 
             if (workbookEntry == null)
             {
@@ -103,7 +94,9 @@ namespace ExcelDataReader
                 throw new ExcelReaderException(Errors.ErrorWorkbookIsNotStream);
             }
 
-            _stream = new XlsBiffStream(_hdr, workbookEntry.StreamFirstSector, workbookEntry.IsEntryMiniStream, dir, this);
+            var bytes = _document.ReadStream(_file, workbookEntry.StreamFirstSector, workbookEntry.IsEntryMiniStream);
+
+            _stream = new XlsBiffStream(bytes, this);
 
             _globals = new XlsWorkbookGlobals();
 
@@ -733,7 +726,7 @@ namespace ExcelDataReader
             _stream = null;
             _globals = null;
             Encoding = null;
-            _hdr = null;
+            _document = null;
 
             if (_file != null)
             {

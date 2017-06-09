@@ -1128,5 +1128,15 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(new[] { "A1", "B1" }, ds.Tables[0].Rows[0].ItemArray);
             }
         }
+
+        [TestCase]
+        public void ExcelLibrary_NonContinousMiniStream()
+        {
+            // Verify the output from the sample code for the ExcelLibrary package parses
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("ExcelLibrary_newdoc")))
+            {
+                Assert.DoesNotThrow(() => excelReader.AsDataSet());
+            }
+        }
     }
 }

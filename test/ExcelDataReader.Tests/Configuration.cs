@@ -107,7 +107,8 @@ namespace ExcelDataReader.Tests
             { "StringContinuationAfterCharacterData", "StringContinuationAfterCharacterData.xls" },
             { "biff3", "biff3.xls" },
             { "Test_git_issue_5", "Test_git_issue_5.xls" },
-            { "Test_git_issue_2", "Test_git_issue_2.xls" }
+            { "Test_git_issue_2", "Test_git_issue_2.xls" },
+            { "ExcelLibrary_newdoc", "ExcelLibrary_newdoc.xls" },
         };
 
         public static Stream GetTestWorkbook(string key)

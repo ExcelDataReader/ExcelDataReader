@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
 using TestCleanup = NUnit.Framework.TearDownAttribute;
@@ -21,6 +22,10 @@ namespace ExcelDataReader.Tests
             {
                 Assert.AreEqual(excelReader.GetType(), typeof(ExcelBinaryReader));
             }
+
+            using (var stream = Configuration.GetTestWorkbook("biff3"))
+                Assert.Throws<NotSupportedException>(() => ExcelReaderFactory.CreateReader(stream));
+
         }
 
         [TestMethod]
