@@ -18,12 +18,17 @@ namespace ExcelDataReader
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateReader(Stream fileStream, bool convertOADates = true, ReadOption readOption = ReadOption.Strict)
         {
-            var probe = new byte[2];
+            var probe = new byte[8];
             fileStream.Read(probe, 0, probe.Length);
             fileStream.Seek(0, SeekOrigin.Begin);
 
+            if (!XlsDocument.CheckRawBiffStream(probe, out int version))
+            {
+                version = -1;
+            }
+
             // MUST be set to the value 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1.
-            if (probe[0] == 0xD0 && probe[1] == 0xCF) { 
+            if (version != -1 || (probe[0] == 0xD0 && probe[1] == 0xCF)) { 
                 return new ExcelBinaryReader(fileStream, convertOADates, readOption);
             }
 

@@ -1,6 +1,4 @@
 using System;
-using System.Text;
-using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
@@ -10,142 +8,78 @@ namespace ExcelDataReader.Core.BinaryFormat
     internal class XlsDirectoryEntry
     {
         /// <summary>
-        /// Length of structure in bytes
+        /// Gets or sets the name of directory entry
         /// </summary>
-        public const int Length = 0x80;
-
-        private readonly byte[] _bytes;
-        private readonly XlsHeader _header;
-        private XlsDirectoryEntry _child;
-        private XlsDirectoryEntry _leftSibling;
-        private XlsDirectoryEntry _rightSibling;
+        public string EntryName { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="XlsDirectoryEntry"/> class.
+        /// Gets or sets the entry type
         /// </summary>
-        /// <param name="bytes">byte array representing current object</param>
-        /// <param name="header">The header.</param>
-        public XlsDirectoryEntry(byte[] bytes, XlsHeader header)
-        {
-            if (bytes.Length < Length)
-                throw new BiffRecordException(Errors.ErrorDirectoryEntryArray);
-            _bytes = bytes;
-            _header = header;
-        }
+        public STGTY EntryType { get; set; }
 
         /// <summary>
-        /// Gets the name of directory entry
+        /// Gets or sets the entry "color" in directory tree
         /// </summary>
-        public string EntryName => Encoding.Unicode.GetString(_bytes, 0x0, EntryLength).TrimEnd('\0');
+        public DECOLOR EntryColor { get; set; }
 
         /// <summary>
-        /// Gets the size in bytes of entry's name (with terminating zero)
-        /// </summary>
-        public ushort EntryLength => BitConverter.ToUInt16(_bytes, 0x40);
-
-        /// <summary>
-        /// Gets the entry type
-        /// </summary>
-        public STGTY EntryType => (STGTY)Buffer.GetByte(_bytes, 0x42);
-
-        /// <summary>
-        /// Gets the entry "color" in directory tree
-        /// </summary>
-        public DECOLOR EntryColor => (DECOLOR)Buffer.GetByte(_bytes, 0x43);
-
-        /// <summary>
-        /// Gets the SID of left sibling
+        /// Gets or sets the SID of left sibling
         /// </summary>
         /// <remarks>0xFFFFFFFF if there's no one</remarks>
-        public uint LeftSiblingSid => BitConverter.ToUInt32(_bytes, 0x44);
-        
-        /// <summary>
-        /// Gets or sets  the left sibling
-        /// </summary>
-        public XlsDirectoryEntry LeftSibling
-        {
-            get => _leftSibling;
-            set { if (_leftSibling == null) _leftSibling = value; }
-        }
+        public uint LeftSiblingSid { get; set; }
 
         /// <summary>
-        /// Gets the SID of right sibling
+        /// Gets or sets the SID of right sibling
         /// </summary>
         /// <remarks>0xFFFFFFFF if there's no one</remarks>
-        public uint RightSiblingSid => BitConverter.ToUInt32(_bytes, 0x48);
-        
-        /// <summary>
-        /// Gets or sets the right sibling
-        /// </summary>
-        public XlsDirectoryEntry RightSibling
-        {
-            get => _rightSibling;
-            set { if (_rightSibling == null) _rightSibling = value; }
-        }
+        public uint RightSiblingSid { get; set; }
 
         /// <summary>
-        /// Gets the SID of first child (if EntryType is STGTY_STORAGE)
+        /// Gets or sets the SID of first child (if EntryType is STGTY_STORAGE)
         /// </summary>
         /// <remarks>0xFFFFFFFF if there's no one</remarks>
-        public uint ChildSid => BitConverter.ToUInt32(_bytes, 0x4C);
-        
-        /// <summary>
-        /// Gets or sets the child
-        /// </summary>
-        public XlsDirectoryEntry Child
-        {
-            get => _child;
-            set { if (_child == null) _child = value; }
-        }
+        public uint ChildSid { get; set; }
 
         /// <summary>
-        /// Gets the CLSID of container (if EntryType is STGTY_STORAGE)
+        /// Gets or sets the CLSID of container (if EntryType is STGTY_STORAGE)
         /// </summary>
-        public Guid ClassId
-        {
-            get
-            {
-                byte[] tmp = new byte[16];
-                Buffer.BlockCopy(_bytes, 0x50, tmp, 0, 16);
-                return new Guid(tmp);
-            }
-        }
+        public Guid ClassId { get; set; }
 
         /// <summary>
-        /// Gets the user flags of container (if EntryType is STGTY_STORAGE)
+        /// Gets or sets the user flags of container (if EntryType is STGTY_STORAGE)
         /// </summary>
-        public uint UserFlags => BitConverter.ToUInt32(_bytes, 0x60);
+        public uint UserFlags { get; set; }
 
         /// <summary>
-        /// Gets the creation time of entry
+        /// Gets or sets the creation time of entry
         /// </summary>
-        public DateTime CreationTime => DateTime.FromFileTime(BitConverter.ToInt64(_bytes, 0x64));
+        public DateTime CreationTime { get; set; }
 
         /// <summary>
-        /// Gets the last modification time of entry
+        /// Gets or sets the last modification time of entry
         /// </summary>
-        public DateTime LastWriteTime => DateTime.FromFileTime(BitConverter.ToInt64(_bytes, 0x6C));
+        public DateTime LastWriteTime { get; set; }
 
         /// <summary>
-        /// Gets the first sector of data stream (if EntryType is STGTY_STREAM)
+        /// Gets or sets the first sector of data stream (if EntryType is STGTY_STREAM)
         /// </summary>
         /// <remarks>if EntryType is STGTY_ROOT, this can be first sector of MiniStream</remarks>
-        public uint StreamFirstSector => BitConverter.ToUInt32(_bytes, 0x74);
+        public uint StreamFirstSector { get; set; }
 
         /// <summary>
-        /// Gets the size of data stream (if EntryType is STGTY_STREAM)
+        /// Gets or sets the size of data stream (if EntryType is STGTY_STREAM)
         /// </summary>
         /// <remarks>if EntryType is STGTY_ROOT, this can be size of MiniStream</remarks>
-        public uint StreamSize => BitConverter.ToUInt32(_bytes, 0x78);
+        public uint StreamSize { get; set; }
 
         /// <summary>
-        /// Gets a value indicating whether this entry relats to a ministream
+        /// Gets or sets a value indicating whether this entry relats to a ministream
         /// </summary>
-        public bool IsEntryMiniStream => StreamSize < _header.MiniStreamCutoff;
+        public bool IsEntryMiniStream { get; set; }
 
         /// <summary>
-        /// Gets the prop type. Reserved, must be 0.
+        /// Gets or sets the prop type. Reserved, must be 0.
         /// </summary>
-        public uint PropType => BitConverter.ToUInt32(_bytes, 0x7C);
+        public uint PropType { get; set; }
     }
 }

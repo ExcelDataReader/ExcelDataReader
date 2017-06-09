@@ -12,11 +12,10 @@ namespace ExcelDataReader.Core.BinaryFormat
         private readonly ExcelBinaryReader _reader;
         private readonly byte[] _bytes;
 
-        public XlsBiffStream(XlsHeader hdr, uint streamStart, bool isMini, XlsRootDirectory rootDir, ExcelBinaryReader reader)
+        public XlsBiffStream(byte[] bytes, ExcelBinaryReader reader)
         {
             _reader = reader;
-            var xlsStream = new XlsStream(hdr, streamStart, isMini, rootDir);
-            _bytes = xlsStream.ReadStream();
+            _bytes = bytes;
 
             XlsBiffRecord rec = XlsBiffRecord.GetRecord(_bytes, 0, _reader);
             XlsBiffRecord rec2 = XlsBiffRecord.GetRecord(_bytes, (uint)rec.Size, reader);
