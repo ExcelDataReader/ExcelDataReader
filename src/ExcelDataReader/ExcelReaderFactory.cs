@@ -18,14 +18,21 @@ namespace ExcelDataReader
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateReader(Stream fileStream, bool convertOADates = true, ReadOption readOption = ReadOption.Strict)
         {
-            XlsHeader header = new XlsHeader(fileStream);
-            if (header.IsSignatureValid)
-                return new ExcelBinaryReader(fileStream, header, convertOADates, readOption);
+            var probe = new byte[2];
+            fileStream.Read(probe, 0, probe.Length);
+            fileStream.Seek(0, SeekOrigin.Begin);
 
-            if (header.IsRawBiffStream)
-                throw new NotSupportedException("File appears to be a raw BIFF stream which isn't supported (BIFF" + header.RawBiffVersion + ").");
+            // MUST be set to the value 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1.
+            if (probe[0] == 0xD0 && probe[1] == 0xCF) { 
+                return new ExcelBinaryReader(fileStream, convertOADates, readOption);
+            }
 
-            return CreateOpenXmlReader(fileStream);
+            // zip files start with 'PK'
+            if (probe[0] == 0x50 && probe[1] == 0x4B) { 
+                return CreateOpenXmlReader(fileStream);
+            }
+
+            throw new NotSupportedException("Unknown file format");
         }
 
         /// <summary>
