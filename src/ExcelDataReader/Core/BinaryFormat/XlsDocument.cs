@@ -24,7 +24,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             var difSectorChain = ReadDifSectorChain(stream);
             SectorTable = ReadSectorTable(reader, difSectorChain);
 
-            var miniChain = GetSectorChain(Header.MiniFatFirstSector, false);
+            var miniChain = GetSectorChain(Header.MiniFatFirstSector, SectorTable);
             MiniSectorTable = ReadSectorTable(reader, miniChain);
 
             var bytes = ReadStream(stream, Header.RootDirectoryEntryStart, false);
@@ -99,48 +99,57 @@ namespace ExcelDataReader.Core.BinaryFormat
             return null;
         }
 
+        /// <summary>
+        /// Reads bytes from a regular or mini stream.
+        /// </summary>
         internal byte[] ReadStream(Stream stream, uint baseSector, bool isMini)
         {
-            int sectorSize;
-            List<uint> rootStreamChain;
-
             if (isMini)
             {
-                sectorSize = Header.MiniSectorSize;
-                rootStreamChain = GetSectorChain(RootEntry.StreamFirstSector, false);
+                return ReadMiniStream(stream, baseSector);
             }
             else
             {
-                sectorSize = Header.SectorSize;
-                rootStreamChain = null;
+                return ReadRegularStream(stream, baseSector);
+            }
+        }
+
+        /// <summary>
+        /// Reads bytes from the mini stream stored inside the Root Entry's stream.
+        /// </summary>
+        private byte[] ReadMiniStream(Stream stream, uint baseSector)
+        {
+            var chain = GetSectorChain(baseSector, MiniSectorTable);
+            var rootStreamChain = GetSectorChain(RootEntry.StreamFirstSector, SectorTable);
+
+            var result = new byte[Header.MiniSectorSize * chain.Count];
+            int resultOffset = 0;
+            foreach (var sector in chain)
+            {
+                // Convert to sector+offset in the root stream
+                var miniStreamOffset = (int)GetMiniSectorOffset(sector);
+
+                var rootSector = rootStreamChain[miniStreamOffset / Header.SectorSize];
+                var rootOffset = miniStreamOffset % Header.SectorSize;
+
+                stream.Seek(GetSectorOffset(rootSector) + rootOffset, SeekOrigin.Begin);
+                stream.Read(result, resultOffset, Header.MiniSectorSize);
+                resultOffset += Header.MiniSectorSize;
             }
 
-            var chain = GetSectorChain(baseSector, isMini);
+            return result;
+        }
+
+        private byte[] ReadRegularStream(Stream stream, uint baseSector)
+        {
+            var sectorSize = Header.SectorSize;
+            var chain = GetSectorChain(baseSector, SectorTable);
+
             var result = new byte[sectorSize * chain.Count];
             int resultOffset = 0;
             foreach (var sector in chain)
             {
-                if (isMini)
-                {
-                    // Convert to sector+offset in the root stream
-                    var miniStreamOffset = (int)GetSectorOffset(sector, isMini);
-
-                    var rootSector = rootStreamChain[miniStreamOffset / Header.SectorSize];
-                    var rootOffset = miniStreamOffset % Header.SectorSize;
-
-                    stream.Seek(GetSectorOffset(rootSector, false) + rootOffset, SeekOrigin.Begin);
-
-                    /*
-                    // Previous (but incorrect) behavior: assume root stream is continous in the file
-                    var miniOffset = GetSectorOffset(RootEntry.StreamFirstSector, false);
-                    stream.Seek(miniOffset + GetSectorOffset(sector, isMini), SeekOrigin.Begin);
-                    */
-                }
-                else
-                {
-                    stream.Seek(GetSectorOffset(sector, isMini), SeekOrigin.Begin);
-                }
-
+                stream.Seek(GetSectorOffset(sector), SeekOrigin.Begin);
                 stream.Read(result, resultOffset, sectorSize);
                 resultOffset += sectorSize;
             }
@@ -150,7 +159,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private int ReadSector(Stream stream, uint sector, byte[] result, int offset)
         {
-            stream.Seek(GetSectorOffset(sector, false), SeekOrigin.Begin);
+            stream.Seek(GetSectorOffset(sector), SeekOrigin.Begin);
             return stream.Read(result, offset, Header.SectorSize);
         }
 
@@ -293,65 +302,6 @@ namespace ExcelDataReader.Core.BinaryFormat
             return chain;
         }
 
-        private void TrimSectorChain(List<uint> chain)
-        {
-            while (chain.Count > 0 && chain[chain.Count - 1] == (uint)FATMARKERS.FAT_FreeSpace)
-            {
-                chain.RemoveAt(chain.Count - 1);
-            }
-        }
-
-        private List<uint> GetSectorChain(uint sector, bool mini)
-        {
-            List<uint> chain = new List<uint>();
-            while (sector != (uint)FATMARKERS.FAT_EndOfChain)
-            {
-                chain.Add(sector);
-                sector = GetNextSector(sector, mini);
-            }
-
-            TrimSectorChain(chain);
-            return chain;
-        }
-
-        private long GetSectorOffset(uint sector, bool mini)
-        {
-            if (mini)
-            {
-                return Header.MiniSectorSize * sector;
-            }
-            else
-            {
-                return 512 + Header.SectorSize * sector;
-            }
-        }
-
-        private uint GetNextSector(uint sector, bool mini)
-        {
-            if (mini)
-            {
-                if (sector < MiniSectorTable.Count)
-                {
-                    return MiniSectorTable[(int)sector];
-                }
-                else
-                {
-                    return (uint)FATMARKERS.FAT_EndOfChain;
-                }
-            }
-            else
-            {
-                if (sector < SectorTable.Count)
-                {
-                    return SectorTable[(int)sector];
-                }
-                else
-                {
-                    return (uint)FATMARKERS.FAT_EndOfChain;
-                }
-            }
-        }
-
         private List<uint> ReadSectorTable(BinaryReader reader, List<uint> chain)
         {
             var sectorTable = new List<uint>(Header.SectorSize / 4);
@@ -359,7 +309,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             {
                 foreach (var sector in chain)
                 {
-                    reader.BaseStream.Seek(GetSectorOffset(sector, false), SeekOrigin.Begin);
+                    reader.BaseStream.Seek(GetSectorOffset(sector), SeekOrigin.Begin);
                     for (var i = 0; i < Header.SectorSize / 4; ++i)
                     {
                         var sectorTableSector = reader.ReadUInt32();
@@ -375,6 +325,49 @@ namespace ExcelDataReader.Core.BinaryFormat
             TrimSectorChain(sectorTable);
 
             return sectorTable;
+        }
+
+        private void TrimSectorChain(List<uint> chain)
+        {
+            while (chain.Count > 0 && chain[chain.Count - 1] == (uint)FATMARKERS.FAT_FreeSpace)
+            {
+                chain.RemoveAt(chain.Count - 1);
+            }
+        }
+
+        private long GetMiniSectorOffset(uint sector)
+        {
+            return Header.MiniSectorSize * sector;
+        }
+
+        private long GetSectorOffset(uint sector)
+        {
+            return 512 + Header.SectorSize * sector;
+        }
+
+        private List<uint> GetSectorChain(uint sector, List<uint> sectorTable)
+        {
+            List<uint> chain = new List<uint>();
+            while (sector != (uint)FATMARKERS.FAT_EndOfChain)
+            {
+                chain.Add(sector);
+                sector = GetNextSector(sector, sectorTable);
+            }
+
+            TrimSectorChain(chain);
+            return chain;
+        }
+
+        private uint GetNextSector(uint sector, List<uint> sectorTable)
+        {
+            if (sector < sectorTable.Count)
+            {
+                return sectorTable[(int)sector];
+            }
+            else
+            {
+                return (uint)FATMARKERS.FAT_EndOfChain;
+            }
         }
     }
 }
