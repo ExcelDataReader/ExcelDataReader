@@ -64,6 +64,11 @@ namespace ExcelDataReader.Core.BinaryFormat
         public int MiniSectorSize => 1 << MiniSectorSizeInPot;
 
         /// <summary>
+        /// Gets or sets the number of directory sectors
+        /// </summary>
+        public int DirectorySectorCount { get; set; }
+
+        /// <summary>
         /// Gets or sets the number of FAT sectors
         /// </summary>
         public int FatSectorCount { get; set; }
