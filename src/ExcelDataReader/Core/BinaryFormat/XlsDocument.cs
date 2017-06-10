@@ -21,7 +21,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             if (Header.ByteOrder != 0xFFFE && Header.ByteOrder != 0xFFFF) // Some broken xls files uses 0xFFFF
                 throw new FormatException(Errors.ErrorHeaderOrder);
 
-            var difSectorChain = ReadDifSectorChain(stream);
+            var difSectorChain = ReadDifSectorChain(reader);
             SectorTable = ReadSectorTable(reader, difSectorChain);
 
             var miniChain = GetSectorChain(Header.MiniFatFirstSector, SectorTable);
@@ -235,10 +235,11 @@ namespace ExcelDataReader.Core.BinaryFormat
             result.ByteOrder = reader.ReadUInt16();
             result.SectorSizeInPot = reader.ReadUInt16();
             result.MiniSectorSizeInPot = reader.ReadUInt16();
-            reader.ReadBytes(10); // skip 10 unused bytes
+            reader.ReadBytes(6); // skip 6 unused bytes
+            result.DirectorySectorCount = reader.ReadInt32();
             result.FatSectorCount = reader.ReadInt32();
             result.RootDirectoryEntryStart = reader.ReadUInt32();
-            reader.ReadBytes(4); // skip 4 unused bytes
+            result.TransactionSignature = reader.ReadUInt32();
             result.MiniStreamCutoff = reader.ReadUInt32();
             result.MiniFatFirstSector = reader.ReadUInt32();
             result.MiniFatSectorCount = reader.ReadInt32();
@@ -259,62 +260,40 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// The header contains the first 109 DIF entries. If there are any more, read from a separate stream.
         /// </summary>
-        private List<uint> ReadDifSectorChain(Stream stream)
+        private List<uint> ReadDifSectorChain(BinaryReader reader)
         {
             // Read the DIF chain sectors directly, can't use ReadStream yet because it depends on the DIF chain
             var difSectorChain = new List<uint>(Header.First109DifSectorChain);
             if (Header.DifFirstSector != (uint)FATMARKERS.FAT_EndOfChain)
             {
                 var difBytes = new byte[Header.DifSectorCount * Header.SectorSize];
+
                 for (var i = 0; i < Header.DifSectorCount; ++i)
                 {
-                    ReadSector(stream, (uint)(Header.DifFirstSector + i), difBytes, i * Header.SectorSize);
+                    var difSector = (uint)(Header.DifFirstSector + i);
+                    var difContent = ReadSectorAsUInt32s(reader, difSector);
+                    difSectorChain.AddRange(difContent);
                 }
-
-                var additionalDifSectorChain = ReadDifSectorChain(difBytes);
-                difSectorChain.AddRange(additionalDifSectorChain);
             }
 
-            TrimSectorChain(difSectorChain);
+            TrimSectorChain(difSectorChain, FATMARKERS.FAT_FreeSpace);
+
+            // A special value of ENDOFCHAIN (0xFFFFFFFE) is stored in the "Next DIFAT Sector Location" field of the
+            // last DIFAT sector, or in the header when no DIFAT sectors are needed.
+            TrimSectorChain(difSectorChain, FATMARKERS.FAT_EndOfChain);
+
             return difSectorChain;
-        }
-
-        private List<uint> ReadDifSectorChain(byte[] difBytes)
-        {
-            var chain = new List<uint>();
-            using (var difStream = new MemoryStream(difBytes))
-            {
-                using (var difReader = new BinaryReader(difStream))
-                {
-                    for (int i = 0; i < difBytes.Length / 4; ++i)
-                    {
-                        var sector = difReader.ReadUInt32();
-                        if (sector == (uint)FATMARKERS.FAT_EndOfChain)
-                        {
-                            break;
-                        }
-
-                        chain.Add(sector);
-                    }
-                }
-            }
-
-            return chain;
         }
 
         private List<uint> ReadSectorTable(BinaryReader reader, List<uint> chain)
         {
-            var sectorTable = new List<uint>(Header.SectorSize / 4);
+            var sectorTable = new List<uint>(Header.SectorSize / 4 * chain.Count);
             try
             {
                 foreach (var sector in chain)
                 {
-                    reader.BaseStream.Seek(GetSectorOffset(sector), SeekOrigin.Begin);
-                    for (var i = 0; i < Header.SectorSize / 4; ++i)
-                    {
-                        var sectorTableSector = reader.ReadUInt32();
-                        sectorTable.Add(sectorTableSector);
-                    }
+                    var result = ReadSectorAsUInt32s(reader, sector);
+                    sectorTable.AddRange(result);
                 }
             }
             catch (EndOfStreamException ex)
@@ -322,14 +301,27 @@ namespace ExcelDataReader.Core.BinaryFormat
                 throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.", ex);
             }
 
-            TrimSectorChain(sectorTable);
+            TrimSectorChain(sectorTable, FATMARKERS.FAT_FreeSpace);
 
             return sectorTable;
         }
 
-        private void TrimSectorChain(List<uint> chain)
+        private List<uint> ReadSectorAsUInt32s(BinaryReader reader, uint sector)
         {
-            while (chain.Count > 0 && chain[chain.Count - 1] == (uint)FATMARKERS.FAT_FreeSpace)
+            var result = new List<uint>(Header.SectorSize / 4);
+            reader.BaseStream.Seek(GetSectorOffset(sector), SeekOrigin.Begin);
+            for (var i = 0; i < Header.SectorSize / 4; ++i)
+            {
+                var value = reader.ReadUInt32();
+                result.Add(value);
+            }
+
+            return result;
+        }
+
+        private void TrimSectorChain(List<uint> chain, FATMARKERS marker)
+        {
+            while (chain.Count > 0 && chain[chain.Count - 1] == (uint)marker)
             {
                 chain.RemoveAt(chain.Count - 1);
             }
@@ -354,7 +346,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 sector = GetNextSector(sector, sectorTable);
             }
 
-            TrimSectorChain(chain);
+            TrimSectorChain(chain, FATMARKERS.FAT_FreeSpace);
             return chain;
         }
 
