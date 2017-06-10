@@ -64,7 +64,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         public int MiniSectorSize => 1 << MiniSectorSizeInPot;
 
         /// <summary>
-        /// Gets or sets the number of directory sectors
+        /// Gets or sets the number of directory sectors. If Major Version is 3, the Number of 
+        /// Directory Sectors MUST be zero. This field is not supported for version 3 compound files
         /// </summary>
         public int DirectorySectorCount { get; set; }
 

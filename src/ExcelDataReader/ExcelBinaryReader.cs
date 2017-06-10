@@ -94,7 +94,7 @@ namespace ExcelDataReader
                 throw new ExcelReaderException(Errors.ErrorWorkbookIsNotStream);
             }
 
-            var bytes = _document.ReadStream(_file, workbookEntry.StreamFirstSector, workbookEntry.IsEntryMiniStream);
+            var bytes = _document.ReadStream(_file, workbookEntry.StreamFirstSector, (int)workbookEntry.StreamSize, workbookEntry.IsEntryMiniStream);
 
             _stream = new XlsBiffStream(bytes, this);
 

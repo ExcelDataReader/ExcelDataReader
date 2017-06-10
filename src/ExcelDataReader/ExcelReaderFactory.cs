@@ -28,12 +28,14 @@ namespace ExcelDataReader
             }
 
             // MUST be set to the value 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1.
-            if (version != -1 || (probe[0] == 0xD0 && probe[1] == 0xCF)) { 
+            if (version != -1 || (probe[0] == 0xD0 && probe[1] == 0xCF))
+            {
                 return new ExcelBinaryReader(fileStream, convertOADates, readOption);
             }
 
             // zip files start with 'PK'
-            if (probe[0] == 0x50 && probe[1] == 0x4B) { 
+            if (probe[0] == 0x50 && probe[1] == 0x4B)
+            {
                 return CreateOpenXmlReader(fileStream);
             }
 

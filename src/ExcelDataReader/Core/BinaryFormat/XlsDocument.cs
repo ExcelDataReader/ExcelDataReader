@@ -27,7 +27,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             var miniChain = GetSectorChain(Header.MiniFatFirstSector, SectorTable);
             MiniSectorTable = ReadSectorTable(reader, miniChain);
 
-            var bytes = ReadStream(stream, Header.RootDirectoryEntryStart, false);
+            var directoryChain = GetSectorChain(Header.RootDirectoryEntryStart, SectorTable);
+            var bytes = ReadRegularStream(stream, directoryChain, Header.RootDirectoryEntryStart, directoryChain.Count * Header.SectorSize);
             ReadDirectoryEntries(bytes);
         }
 
@@ -102,27 +103,27 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Reads bytes from a regular or mini stream.
         /// </summary>
-        internal byte[] ReadStream(Stream stream, uint baseSector, bool isMini)
+        internal byte[] ReadStream(Stream stream, uint baseSector, int length, bool isMini)
         {
             if (isMini)
             {
-                return ReadMiniStream(stream, baseSector);
+                return ReadMiniStream(stream, baseSector, length);
             }
             else
             {
-                return ReadRegularStream(stream, baseSector);
+                return ReadRegularStream(stream, baseSector, length);
             }
         }
 
         /// <summary>
         /// Reads bytes from the mini stream stored inside the Root Entry's stream.
         /// </summary>
-        private byte[] ReadMiniStream(Stream stream, uint baseSector)
+        private byte[] ReadMiniStream(Stream stream, uint baseSector, int length)
         {
             var chain = GetSectorChain(baseSector, MiniSectorTable);
             var rootStreamChain = GetSectorChain(RootEntry.StreamFirstSector, SectorTable);
 
-            var result = new byte[Header.MiniSectorSize * chain.Count];
+            var result = new byte[length];
             int resultOffset = 0;
             foreach (var sector in chain)
             {
@@ -133,34 +134,43 @@ namespace ExcelDataReader.Core.BinaryFormat
                 var rootOffset = miniStreamOffset % Header.SectorSize;
 
                 stream.Seek(GetSectorOffset(rootSector) + rootOffset, SeekOrigin.Begin);
-                stream.Read(result, resultOffset, Header.MiniSectorSize);
-                resultOffset += Header.MiniSectorSize;
+
+                var chunkSize = Math.Min(length - resultOffset, Header.MiniSectorSize);
+                if (stream.Read(result, resultOffset, chunkSize) < chunkSize)
+                {
+                    throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.");
+                }
+
+                resultOffset += chunkSize;
             }
 
             return result;
         }
 
-        private byte[] ReadRegularStream(Stream stream, uint baseSector)
+        private byte[] ReadRegularStream(Stream stream, uint baseSector, int length)
         {
-            var sectorSize = Header.SectorSize;
             var chain = GetSectorChain(baseSector, SectorTable);
+            return ReadRegularStream(stream, chain, baseSector, length);
+        }
 
-            var result = new byte[sectorSize * chain.Count];
+        private byte[] ReadRegularStream(Stream stream, List<uint> chain, uint baseSector, int length)
+        {
+            var result = new byte[length];
             int resultOffset = 0;
             foreach (var sector in chain)
             {
                 stream.Seek(GetSectorOffset(sector), SeekOrigin.Begin);
-                stream.Read(result, resultOffset, sectorSize);
-                resultOffset += sectorSize;
+
+                var chunkSize = Math.Min(length - resultOffset, Header.SectorSize);
+                if (stream.Read(result, resultOffset, chunkSize) < chunkSize)
+                {
+                    throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.");
+                }
+
+                resultOffset += chunkSize;
             }
 
             return result;
-        }
-
-        private int ReadSector(Stream stream, uint sector, byte[] result, int offset)
-        {
-            stream.Seek(GetSectorOffset(sector), SeekOrigin.Begin);
-            return stream.Read(result, offset, Header.SectorSize);
         }
 
         private void ReadDirectoryEntries(byte[] bytes)
@@ -266,13 +276,18 @@ namespace ExcelDataReader.Core.BinaryFormat
             var difSectorChain = new List<uint>(Header.First109DifSectorChain);
             if (Header.DifFirstSector != (uint)FATMARKERS.FAT_EndOfChain)
             {
-                var difBytes = new byte[Header.DifSectorCount * Header.SectorSize];
-
-                for (var i = 0; i < Header.DifSectorCount; ++i)
+                try
                 {
-                    var difSector = (uint)(Header.DifFirstSector + i);
-                    var difContent = ReadSectorAsUInt32s(reader, difSector);
-                    difSectorChain.AddRange(difContent);
+                    for (var i = 0; i < Header.DifSectorCount; ++i)
+                    {
+                        var difSector = (uint)(Header.DifFirstSector + i);
+                        var difContent = ReadSectorAsUInt32s(reader, difSector);
+                        difSectorChain.AddRange(difContent);
+                    }
+                }
+                catch (EndOfStreamException ex)
+                {
+                    throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.", ex);
                 }
             }
 

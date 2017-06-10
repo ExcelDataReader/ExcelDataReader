@@ -1145,7 +1145,11 @@ namespace ExcelDataReader.Tests
             // Big spreadsheets have additional sectors beyond the header with FAT contents
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("GitIssue_184_FATSectors")))
             {
-                Assert.DoesNotThrow(() => excelReader.AsDataSet());
+                DataSet ds = null;
+                Assert.DoesNotThrow(() => ds = excelReader.AsDataSet());
+                Assert.AreEqual(12, ds.Tables.Count);
+                Assert.AreEqual("DATAS (12)", ds.Tables[0].TableName);
+                Assert.AreEqual("DATAS (5)", ds.Tables[11].TableName);
             }
         }
     }
