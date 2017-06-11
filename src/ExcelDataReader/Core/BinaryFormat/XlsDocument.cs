@@ -28,7 +28,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             MiniSectorTable = ReadSectorTable(reader, miniChain);
 
             var directoryChain = GetSectorChain(Header.RootDirectoryEntryStart, SectorTable);
-            var bytes = ReadRegularStream(stream, directoryChain, Header.RootDirectoryEntryStart, directoryChain.Count * Header.SectorSize);
+            var bytes = ReadRegularStream(stream, directoryChain, directoryChain.Count * Header.SectorSize);
             ReadDirectoryEntries(bytes);
         }
 
@@ -155,10 +155,10 @@ namespace ExcelDataReader.Core.BinaryFormat
         private byte[] ReadRegularStream(Stream stream, uint baseSector, int length)
         {
             var chain = GetSectorChain(baseSector, SectorTable);
-            return ReadRegularStream(stream, chain, baseSector, length);
+            return ReadRegularStream(stream, chain, length);
         }
 
-        private byte[] ReadRegularStream(Stream stream, List<uint> chain, uint baseSector, int length)
+        private byte[] ReadRegularStream(Stream stream, List<uint> chain, int length)
         {
             var result = new byte[length];
             int resultOffset = 0;
