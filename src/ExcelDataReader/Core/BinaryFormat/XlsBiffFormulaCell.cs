@@ -31,50 +31,50 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public byte FormulaLength => ReadByte(0xF);
 
+        public byte FormulaValueByte1 => ReadByte(0x6);
+
+        public byte FormulaValueByte2 => ReadByte(0x7);
+
+        public byte FormulaValueByte3 => ReadByte(0x8);
+
+        public byte FormulaValueByte4 => ReadByte(0x9);
+
+        public byte FormulaValueByte5 => ReadByte(0xA);
+
+        public byte FormulaValueByte6 => ReadByte(0xB);
+
+        public ushort FormulaValueExprO => ReadUInt16(0xC);
+
         /// <summary>
-        /// Gets the type-dependent value of formula
+        /// Gets a value indicating whether a string value is stored in a String record that immediately follows this record. See [MS-XLS] 2.5.133 FormulaValue
         /// </summary>
-        public new object Value
-        {
-            get
-            {
-                long val = ReadInt64(0x6);
-                if (((ulong)val & 0xFFFF000000000000) == 0xFFFF000000000000)
-                {
-                    byte type = (byte)(val & 0xFF);
-                    byte code = (byte)((val >> 16) & 0xFF);
-                    switch (type)
-                    {
-                        case 0: // String
+        public bool IsString => FormulaValueExprO == 0xFFFF && FormulaValueByte1 == 0x00;
 
-                            //////////////fix
-                            XlsBiffRecord rec = GetRecord(Bytes, (uint)(Offset + Size), Reader);
-                            XlsBiffFormulaString str;
-                            if (rec.Id == BIFFRECORDTYPE.SHAREDFMLA)
-                                str = GetRecord(Bytes, (uint)(Offset + Size + rec.Size), Reader) as XlsBiffFormulaString;
-                            else
-                                str = rec as XlsBiffFormulaString;
-                            //////////////fix
+        /// <summary>
+        /// Gets a value indicating whether the BooleanValue property is valid.
+        /// </summary>
+        public bool IsBoolean => FormulaValueExprO == 0xFFFF && FormulaValueByte1 == 0x01;
 
-                            if (str == null)
-                                return string.Empty;
-                            else
-                                return str.Value;
+        /// <summary>
+        /// Gets a value indicating whether the ErrorValue property is valid.
+        /// </summary>
+        public bool IsError => FormulaValueExprO == 0xFFFF && FormulaValueByte1 == 0x02;
 
-                        case 1: // Boolean
+        /// <summary>
+        /// Gets a value indicating whether the XNumValue property is valid.
+        /// </summary>
+        public bool IsXNum => FormulaValueExprO != 0xFFFF;
 
-                            return code != 0;
-                        case 2: // Error
+        /// <summary>
+        /// Gets a value indicating whether the formula value is an empty string.
+        /// </summary>
+        public bool IsEmptyString => FormulaValueExprO == 0xFFFF && FormulaValueByte1 == 0x03;
 
-                            return (FORMULAERROR)code;
-                        default:
-                            return null;
-                    }
-                }
+        public bool BooleanValue => FormulaValueByte3 != 0;
 
-                return Helpers.Int64BitsToDouble(val);
-            }
-        }
+        public FORMULAERROR ErrorValue => (FORMULAERROR)FormulaValueByte3;
+
+        public double XNumValue => ReadDouble(0x6);
 
         public string Formula
         {
