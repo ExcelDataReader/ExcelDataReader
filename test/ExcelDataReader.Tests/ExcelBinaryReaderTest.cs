@@ -1108,8 +1108,10 @@ namespace ExcelDataReader.Tests
         [TestCase]
         public void Biff3IsNotSupported()
         {
+            NotSupportedException e;
             using (var stream = Configuration.GetTestWorkbook("biff3"))
-                Assert.Throws<NotSupportedException>(() => ExcelReaderFactory.CreateBinaryReader(stream));
+                e = Assert.Throws<NotSupportedException>(() => ExcelReaderFactory.CreateBinaryReader(stream));
+            Assert.That(e.Message, Is.EqualTo("File appears to be a raw BIFF stream which isn't supported (BIFF3)."));
         }
 
         [TestCase]
