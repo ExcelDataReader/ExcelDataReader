@@ -6,7 +6,7 @@ using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
-    public class XlsDocument
+    internal class XlsDocument
     {
         public XlsDocument(Stream stream)
         {
