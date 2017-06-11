@@ -49,9 +49,11 @@ namespace ExcelDataReader.Core.BinaryFormat
                 throw new ArgumentException("Needs at least 8 bytes to probe", nameof(bytes));
             }
 
+            version = -1;
+
             ushort rid = BitConverter.ToUInt16(bytes, 0);
             ushort size = BitConverter.ToUInt16(bytes, 2);
-            version = BitConverter.ToUInt16(bytes, 4);
+            ushort bofVersion = BitConverter.ToUInt16(bytes, 4);
             ushort type = BitConverter.ToUInt16(bytes, 6);
 
             switch (rid)
@@ -61,6 +63,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         return false;
                     if (type != 0x10 && type != 0x20 && type != 0x40)
                         return false;
+                    version = 2;
                     return true;
                 case 0x0209: // BIFF3
                     if (size != 6)
@@ -71,11 +74,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                     ushort notUsed = BitConverter.ToUInt16(bytes, 8);
                     if (notUsed != 0x00)
                         return false;*/
+                    version = 3;
                     return true;
                 case 0x0809: // BIFF5/BIFF8
                     if (size != 8 || size != 16)
                         return false;
-                    if (version != 0x0500 && version != 0x600)
+                    if (bofVersion != 0x0500 && bofVersion != 0x600)
                         return false;
                     if (type != 0x5 && type != 0x6 && type != 0x10 && type != 0x20 && type != 0x40 && type != 0x0100)
                         return false;
@@ -83,6 +87,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     ushort identifier = BitConverter.ToUInt16(bytes, 10);
                     if (identifier == 0)
                         return false;*/
+                    version = bofVersion == 0x0500 ? 5 : 8;
                     return true;
             }
 
