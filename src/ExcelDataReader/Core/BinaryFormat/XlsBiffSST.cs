@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
@@ -11,10 +12,12 @@ namespace ExcelDataReader.Core.BinaryFormat
         private readonly List<uint> _continues = new List<uint>();
         private readonly List<string> _strings;
 
-        internal XlsBiffSST(byte[] bytes, uint offset, ExcelBinaryReader reader)
-            : base(bytes, offset, reader)
+        internal XlsBiffSST(byte[] bytes, uint offset, bool isV8, Encoding encoding)
+            : base(bytes, offset)
         {
             _strings = new List<string>();
+            IsV8 = isV8;
+            SSTEncoding = encoding;
         }
 
         /// <summary>
@@ -27,6 +30,10 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public uint UniqueCount => ReadUInt32(0x4);
 
+        public bool IsV8 { get; }
+
+        public Encoding SSTEncoding { get; }
+
         /// <summary>
         /// Reads strings from BIFF stream into SST array
         /// </summary>
@@ -38,7 +45,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             uint count = UniqueCount;
             while (offset < last)
             {
-                var str = XlsStringFactory.CreateXlsString(Bytes, offset, Reader);
+                var str = XlsStringFactory.CreateXlsString(Bytes, offset, IsV8, SSTEncoding);
                 uint prefix = str.HeadSize;
                 uint postfix = str.TailSize;
                 uint len = str.CharacterCount;

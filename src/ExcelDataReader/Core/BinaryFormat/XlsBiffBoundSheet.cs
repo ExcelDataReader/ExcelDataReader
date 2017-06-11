@@ -7,10 +7,11 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffBoundSheet : XlsBiffRecord
     {
-        internal XlsBiffBoundSheet(byte[] bytes, uint offset, ExcelBinaryReader reader)
-            : base(bytes, offset, reader)
+        internal XlsBiffBoundSheet(byte[] bytes, uint offset, bool isV8, Encoding encoding)
+            : base(bytes, offset)
         {
-            IsV8 = reader.IsV8();
+            IsV8 = isV8;
+            SheetNameEncoding = encoding;
         }
 
         public enum SheetType : byte
@@ -56,7 +57,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                 const int start = 0x8;
                 if (!IsV8)
-                    return Reader.Encoding.GetString(Bytes, RecordContentOffset + start, Helpers.IsSingleByteEncoding(Reader.Encoding) ? len : len * 2);
+                    return SheetNameEncoding.GetString(Bytes, RecordContentOffset + start, Helpers.IsSingleByteEncoding(SheetNameEncoding) ? len : len * 2);
 
                 if (ReadByte(0x7) == 0)
                 {
@@ -77,5 +78,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// Gets a value indicating whether this is a BIFF8 file or not.
         /// </summary>
         public bool IsV8 { get; }
+
+        public Encoding SheetNameEncoding { get; }
     }
 }

@@ -1,13 +1,15 @@
+using System.Text;
+
 namespace ExcelDataReader.Core.BinaryFormat
 {
     internal class XlsStringFactory
     {
-        public static IXlsString CreateXlsString(byte[] bytes, uint offset, ExcelBinaryReader reader)
+        public static IXlsString CreateXlsString(byte[] bytes, uint offset, bool isV8, Encoding encoding)
         {
-            if (reader.IsV8())
+            if (isV8)
                 return new XlsFormattedUnicodeString(bytes, offset);
 
-            return new XlsByteString(bytes, offset, reader.Encoding);
+            return new XlsByteString(bytes, offset, encoding);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
@@ -9,13 +10,13 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly IXlsString _string;
 
-        internal XlsBiffFormatString(byte[] bytes, uint offset, ExcelBinaryReader reader)
-            : base(bytes, offset, reader)
+        internal XlsBiffFormatString(byte[] bytes, uint offset, bool isV8, Encoding encoding)
+            : base(bytes, offset)
         {
-            if (reader.IsV8())
+            if (isV8)
                 _string = new XlsFormattedUnicodeString(bytes, offset + 6);
             else
-                _string = new XlsByteString(bytes, offset + 4, reader.Encoding);
+                _string = new XlsByteString(bytes, offset + 4, encoding);
         }
 
         /// <summary>

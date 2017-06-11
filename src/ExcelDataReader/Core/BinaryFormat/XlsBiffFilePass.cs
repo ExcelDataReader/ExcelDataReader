@@ -7,8 +7,8 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffFilePass : XlsBiffRecord
     {
-        internal XlsBiffFilePass(byte[] bytes, uint offset, ExcelBinaryReader reader)
-            : base(bytes, offset, reader)
+        internal XlsBiffFilePass(byte[] bytes, uint offset)
+            : base(bytes, offset)
         {
             ushort type = ReadUInt16(0);
             switch (type)

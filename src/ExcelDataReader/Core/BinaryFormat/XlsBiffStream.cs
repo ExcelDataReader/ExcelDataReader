@@ -123,7 +123,19 @@ namespace ExcelDataReader.Core.BinaryFormat
                 return null;
 
             var record = XlsBiffRecord.GetRecord(_bytes, (uint)Position, _reader);
-            Position += record.Size;
+
+            if (record != null)
+            {
+                // Set readOption to loose to not cause exception here (sql reporting services)
+                if (_reader.ReadOption == ReadOption.Strict)
+                {
+                    if (record.Bytes.Length < Position + record.Size)
+                        throw new ArgumentException(Errors.ErrorBiffBufferSize);
+                }
+
+                Position += record.Size;
+            }
+
             if (Position > Size)
             {
                 record = null;

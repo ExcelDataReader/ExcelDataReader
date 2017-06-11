@@ -8,8 +8,8 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffFormulaCell : XlsBiffNumberCell
     {
-        internal XlsBiffFormulaCell(byte[] bytes, uint offset, ExcelBinaryReader reader)
-            : base(bytes, offset, reader)
+        internal XlsBiffFormulaCell(byte[] bytes, uint offset)
+            : base(bytes, offset)
         {
         }
 
