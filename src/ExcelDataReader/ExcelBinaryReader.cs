@@ -336,7 +336,12 @@ namespace ExcelDataReader
                         currentRow = cell.RowIndex;
                     }
 
-                    PushCellValue(cellValues, cell);
+                    var additionalRecords = new List<XlsBiffRecord>();
+                    while (!PushCellValue(cellValues, cell, additionalRecords))
+                    {
+                        var additionalRecord = _stream.Read();
+                        additionalRecords.Add(additionalRecord);
+                    }
                 }
             }
         }
@@ -363,7 +368,7 @@ namespace ExcelDataReader
             return false;
         }
 
-        private void PushCellValue(object[] cellValues, XlsBiffBlankCell cell)
+        private bool PushCellValue(object[] cellValues, XlsBiffBlankCell cell, List<XlsBiffRecord> additionalRecords)
         {
             double doubleValue;
             LogManager.Log(this).Debug("PushCellValue {0}", cell.Id);
@@ -432,20 +437,87 @@ namespace ExcelDataReader
                 case BIFFRECORDTYPE.FORMULA:
                 case BIFFRECORDTYPE.FORMULA_OLD:
 
-                    object objectValue = ((XlsBiffFormulaCell)cell).Value;
-
-                    if (objectValue is FORMULAERROR)
+                    var objectValue = (object)null;
+                    if (!TryGetFormulaValue((XlsBiffFormulaCell)cell, additionalRecords, out objectValue))
                     {
-                        objectValue = null;
-                    }
-                    else
-                    {
-                        cellValues[cell.ColumnIndex] = !ConvertOaDate ?
-                            objectValue : TryConvertOADateTime(objectValue, cell.XFormat); // date time offset
+                        // want additional records
+                        return false;
                     }
 
+                    cellValues[cell.ColumnIndex] = !ConvertOaDate ?
+                            objectValue : TryConvertOADateTime(objectValue, cell.XFormat); // date time offset;
                     LogManager.Log(this).Debug("VALUE: {0}", objectValue);
                     break;
+            }
+
+            return true;
+        }
+
+        private bool TryGetFormulaValue(XlsBiffFormulaCell formulaCell, List<XlsBiffRecord> additionalRecords, out object result)
+        {
+            if (formulaCell.IsBoolean)
+            {
+                result = formulaCell.BooleanValue;
+                return true;
+            }
+
+            if (formulaCell.IsError)
+            {
+                result = null;
+                return true;
+            }
+            else if (formulaCell.IsEmptyString)
+            {
+                result = string.Empty;
+                return true;
+            }
+            else if (formulaCell.IsXNum)
+            {
+                result = formulaCell.XNumValue;
+                return true;
+            }
+            else if (formulaCell.IsString)
+            {
+                if (additionalRecords.Count == 0)
+                {
+                    result = null;
+                    return false;
+                }
+
+                if (additionalRecords.Count == 1) { 
+                    var recId = additionalRecords[0].Id;
+                    if (recId == BIFFRECORDTYPE.SHAREDFMLA)
+                    {
+                        result = null;
+                        return false;
+                    }
+                    else if (recId == BIFFRECORDTYPE.STRING)
+                    {
+                        var stringRecord = additionalRecords[0] as XlsBiffFormulaString;
+                        result = stringRecord.Value;
+                        return true;
+                    }
+                }
+
+                {
+                    var recId = additionalRecords[1].Id;
+                    if (recId == BIFFRECORDTYPE.STRING)
+                    {
+                        var stringRecord = additionalRecords[1] as XlsBiffFormulaString;
+                        result = stringRecord.Value;
+                        return true;
+                    }
+                }
+
+                // Bad data - could not find a string following the formula
+                result = null;
+                return true;
+            }
+            else
+            {
+                // Bad data or new formula value type
+                result = null;
+                return true;
             }
         }
 
