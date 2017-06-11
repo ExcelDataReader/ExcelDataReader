@@ -484,7 +484,8 @@ namespace ExcelDataReader
                     return false;
                 }
 
-                if (additionalRecords.Count == 1) { 
+                if (additionalRecords.Count == 1)
+                { 
                     var recId = additionalRecords[0].Id;
                     if (recId == BIFFRECORDTYPE.SHAREDFMLA)
                     {

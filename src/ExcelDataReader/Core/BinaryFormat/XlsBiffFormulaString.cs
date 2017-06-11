@@ -7,8 +7,8 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly XlsFormattedUnicodeString _unicodeString;
 
-        internal XlsBiffFormulaString(byte[] bytes, uint offset, ExcelBinaryReader reader)
-            : base(bytes, offset, reader)
+        internal XlsBiffFormulaString(byte[] bytes, uint offset)
+            : base(bytes, offset)
         {
             _unicodeString = new XlsFormattedUnicodeString(bytes, offset + 4); 
         }

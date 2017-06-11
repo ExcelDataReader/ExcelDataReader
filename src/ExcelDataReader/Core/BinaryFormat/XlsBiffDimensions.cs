@@ -5,10 +5,10 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffDimensions : XlsBiffRecord
     {
-        internal XlsBiffDimensions(byte[] bytes, uint offset, ExcelBinaryReader reader)
-            : base(bytes, offset, reader)
+        internal XlsBiffDimensions(byte[] bytes, uint offset, bool isV8)
+            : base(bytes, offset)
         {
-            IsV8 = reader.IsV8();
+            IsV8 = isV8;
         }
 
         /// <summary>

@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
@@ -7,10 +9,10 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly IXlsString _xlsString;
 
-        internal XlsBiffLabelCell(byte[] bytes, uint offset, uint stringOffset, ExcelBinaryReader reader)
-            : base(bytes, offset, reader)
+        internal XlsBiffLabelCell(byte[] bytes, uint offset, uint stringOffset, bool isV8, Encoding encoding)
+            : base(bytes, offset)
         {
-            _xlsString = XlsStringFactory.CreateXlsString(bytes, offset + stringOffset, reader);
+            _xlsString = XlsStringFactory.CreateXlsString(bytes, offset + stringOffset, isV8, encoding);
         }
 
         /// <summary>
