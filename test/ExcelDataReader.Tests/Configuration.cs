@@ -109,7 +109,8 @@ namespace ExcelDataReader.Tests
             { "Test_git_issue_5", "Test_git_issue_5.xls" },
             { "Test_git_issue_2", "Test_git_issue_2.xls" },
             { "ExcelLibrary_newdoc", "ExcelLibrary_newdoc.xls" },
-            { "GitIssue_184_FATSectors", "GitIssue_184_FATSectors.xls" }
+            { "GitIssue_184_FATSectors", "GitIssue_184_FATSectors.xls" },
+            { "Test_git_issue_217", "Test_git_issue_217.xls" }
         };
 
         public static Stream GetTestWorkbook(string key)
