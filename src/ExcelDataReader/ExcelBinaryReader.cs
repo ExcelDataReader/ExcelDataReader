@@ -48,6 +48,8 @@ namespace ExcelDataReader
 
         private bool _reachedEndOfSheet;
 
+        private bool _rowContentInMultipleBlocks;
+
         public ExcelBinaryReader(Stream stream)
             : this(stream, true, ReadOption.Strict)
         {
@@ -259,11 +261,35 @@ namespace ExcelDataReader
 
             // Handle when dimensions report less columns than used by cell records.
             int maxCellColumn = 0;
+            Dictionary<int, bool> previousBlocksObservedRows = new Dictionary<int, bool>();
+            Dictionary<int, bool> observedRows = new Dictionary<int, bool>();
             while (rec != null && !(rec is XlsBiffEof))
             {
+                if (!_rowContentInMultipleBlocks && rec is XlsBiffDbCell)
+                {
+                    foreach (int row in observedRows.Keys)
+                    {
+                        previousBlocksObservedRows[row] = true;
+                    }
+
+                    observedRows.Clear();
+                }
+
                 if (rec is XlsBiffBlankCell cell)
                 {
                     maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
+
+                    if (!_rowContentInMultipleBlocks)
+                    {
+                        if (previousBlocksObservedRows.ContainsKey(cell.RowIndex))
+                        {
+                            _rowContentInMultipleBlocks = true;
+                            previousBlocksObservedRows.Clear();
+                            observedRows.Clear();
+                        }
+
+                        observedRows[cell.RowIndex] = true;
+                    }
                 }
 
                 rec = _stream.Read();
@@ -314,7 +340,7 @@ namespace ExcelDataReader
                     break;
                 }
 
-                if (rec is XlsBiffMSODrawing || rec is XlsBiffDbCell)
+                if (rec is XlsBiffMSODrawing || (!_rowContentInMultipleBlocks && rec is XlsBiffDbCell))
                 {
                     break;
                 }
@@ -645,6 +671,7 @@ namespace ExcelDataReader
             _reachedEndOfSheet = false;
             _currentRows.Clear();
             _largestObservedRow = -1;
+            _rowContentInMultipleBlocks = false;
         }
     }
 

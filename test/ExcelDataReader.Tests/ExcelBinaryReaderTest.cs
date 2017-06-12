@@ -1161,7 +1161,7 @@ namespace ExcelDataReader.Tests
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_217")))
             {
                 var ds = excelReader.AsDataSet();
-                CollectionAssert.AreEqual(new object[] { "REX GESAMT      ", 484.7929, 142.1032, -0.1656, 5.0315, 37.5345 }, ds.Tables[2].Rows[10].ItemArray);
+                CollectionAssert.AreEqual(new object[] { "REX GESAMT      ", 484.7929, 142.1032, -0.1656, 5.0315225293000001, 5.0398685515999997, 37.5344725251, DBNull.Value, DBNull.Value }, ds.Tables[2].Rows[10].ItemArray);
             }
         }
     }
