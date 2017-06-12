@@ -1154,5 +1154,15 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("DATAS (5)", ds.Tables[11].TableName);
             }
         }
+
+        [TestMethod]
+        public void RowContentSpreadOverMultipleBlocks()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_217")))
+            {
+                var ds = excelReader.AsDataSet();
+                CollectionAssert.AreEqual(new object[] { "REX GESAMT      ", 484.7929, 142.1032, -0.1656, 5.0315, 37.5345 }, ds.Tables[2].Rows[10].ItemArray);
+            }
+        }
     }
 }
