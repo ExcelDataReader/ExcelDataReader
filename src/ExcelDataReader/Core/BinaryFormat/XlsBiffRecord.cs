@@ -46,9 +46,9 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         /// <param name="bytes">byte array</param>
         /// <param name="offset">position in array</param>
-        /// <param name="reader">The reader.</param>
+        /// <param name="workbook">The workbook.</param>
         /// <returns>The record -or- null.</returns>
-        public static XlsBiffRecord GetRecord(byte[] bytes, uint offset, ExcelBinaryReader reader)
+        public static XlsBiffRecord GetRecord(byte[] bytes, uint offset, XlsWorkbook workbook)
         {
             if (offset >= bytes.Length)
                 return null;
@@ -69,10 +69,10 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffInterfaceHdr(bytes, offset);
 
                 case BIFFRECORDTYPE.SST:
-                    return new XlsBiffSST(bytes, offset, reader.IsV8(), reader.Encoding);
+                    return new XlsBiffSST(bytes, offset, workbook.IsV8, workbook.Encoding);
 
                 case BIFFRECORDTYPE.INDEX:
-                    return new XlsBiffIndex(bytes, offset, reader.IsV8());
+                    return new XlsBiffIndex(bytes, offset, workbook.IsV8);
                 case BIFFRECORDTYPE.ROW:
                     return new XlsBiffRow(bytes, offset);
                 case BIFFRECORDTYPE.DBCELL:
@@ -86,10 +86,10 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.MULBLANK:
                     return new XlsBiffMulBlankCell(bytes, offset);
                 case BIFFRECORDTYPE.LABEL_OLD:
-                    return new XlsBiffLabelCell(bytes, offset, 4 + 7, reader.IsV8(), reader.Encoding);
+                    return new XlsBiffLabelCell(bytes, offset, 4 + 7, workbook.IsV8, workbook.Encoding);
                 case BIFFRECORDTYPE.LABEL:
                 case BIFFRECORDTYPE.RSTRING:
-                    return new XlsBiffLabelCell(bytes, offset, 4 + 6, reader.IsV8(), reader.Encoding);
+                    return new XlsBiffLabelCell(bytes, offset, 4 + 6, workbook.IsV8, workbook.Encoding);
                 case BIFFRECORDTYPE.LABELSST:
                     return new XlsBiffLabelSSTCell(bytes, offset);
                 case BIFFRECORDTYPE.INTEGER:
@@ -107,15 +107,15 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffFormulaCell(bytes, offset);
                 case BIFFRECORDTYPE.FORMAT_V23:
                 case BIFFRECORDTYPE.FORMAT:
-                    return new XlsBiffFormatString(bytes, offset, reader.IsV8(), reader.Encoding);
+                    return new XlsBiffFormatString(bytes, offset, workbook.IsV8, workbook.Encoding);
                 case BIFFRECORDTYPE.STRING:
                     return new XlsBiffFormulaString(bytes, offset);
                 case BIFFRECORDTYPE.CONTINUE:
                     return new XlsBiffContinue(bytes, offset);
                 case BIFFRECORDTYPE.DIMENSIONS:
-                    return new XlsBiffDimensions(bytes, offset, reader.IsV8());
+                    return new XlsBiffDimensions(bytes, offset, workbook.IsV8);
                 case BIFFRECORDTYPE.BOUNDSHEET:
-                    return new XlsBiffBoundSheet(bytes, offset, reader.IsV8(), reader.Encoding);
+                    return new XlsBiffBoundSheet(bytes, offset, workbook.IsV8, workbook.Encoding);
                 case BIFFRECORDTYPE.WINDOW1:
                     return new XlsBiffWindow1(bytes, offset);
                 case BIFFRECORDTYPE.CODEPAGE:

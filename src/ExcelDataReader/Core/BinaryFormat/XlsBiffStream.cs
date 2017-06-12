@@ -9,20 +9,20 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffStream
     {
-        private readonly ExcelBinaryReader _reader;
+        private readonly XlsWorkbook _workbook;
         private readonly byte[] _bytes;
 
-        public XlsBiffStream(byte[] bytes, ExcelBinaryReader reader)
+        public XlsBiffStream(byte[] bytes, XlsWorkbook workbook)
         {
-            _reader = reader;
+            _workbook = workbook;
             _bytes = bytes;
 
-            XlsBiffRecord rec = XlsBiffRecord.GetRecord(_bytes, 0, _reader);
-            XlsBiffRecord rec2 = XlsBiffRecord.GetRecord(_bytes, (uint)rec.Size, reader);
+            XlsBiffRecord rec = XlsBiffRecord.GetRecord(_bytes, 0, _workbook);
+            XlsBiffRecord rec2 = XlsBiffRecord.GetRecord(_bytes, (uint)rec.Size, workbook);
             XlsBiffFilePass filePass = rec2 as XlsBiffFilePass;
             if (filePass == null)
             {
-                XlsBiffRecord rec3 = XlsBiffRecord.GetRecord(_bytes, (uint)(rec.Size + rec2.Size), reader);
+                XlsBiffRecord rec3 = XlsBiffRecord.GetRecord(_bytes, (uint)(rec.Size + rec2.Size), workbook);
                 filePass = rec3 as XlsBiffFilePass;
             }
 
@@ -122,12 +122,12 @@ namespace ExcelDataReader.Core.BinaryFormat
             if ((uint)Position + 4 >= _bytes.Length)
                 return null;
 
-            var record = XlsBiffRecord.GetRecord(_bytes, (uint)Position, _reader);
+            var record = XlsBiffRecord.GetRecord(_bytes, (uint)Position, _workbook);
 
             if (record != null)
             {
                 // Set readOption to loose to not cause exception here (sql reporting services)
-                if (_reader.ReadOption == ReadOption.Strict)
+                if (_workbook.ReadOption == ReadOption.Strict)
                 {
                     if (record.Bytes.Length < Position + record.Size)
                         throw new ArgumentException(Errors.ErrorBiffBufferSize);
