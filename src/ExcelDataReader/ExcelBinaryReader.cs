@@ -204,7 +204,8 @@ namespace ExcelDataReader
 
             ResetSheetData();
 
-            if (_workbook != null) { 
+            if (_workbook != null)
+            { 
                 _worksheetIterator = _workbook.ReadWorksheets().GetEnumerator();
                 if (!_worksheetIterator.MoveNext())
                 {
