@@ -1,4 +1,5 @@
 ﻿#if NET20 || NET45
+using System.Data;
 using System.Globalization;
 using System.Threading;
 using NUnit.Framework;
@@ -45,6 +46,17 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual(0.0001, dataSet.Tables[0].Rows[1][0]);
             Assert.AreEqual(0.123456789, dataSet.Tables[0].Rows[2][0]);
             Assert.AreEqual(0.00000000001, dataSet.Tables[0].Rows[3][0]);
+        }
+
+        [TestMethod]
+        [SetCulture("sv-SE")]
+        public void CellFormat49()
+        {
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Format49_@")))
+            {
+                DataSet result = excelReader.AsDataSet();
+                Assert.That(result.Tables[0].Rows[0].ItemArray, Is.EqualTo(new[] { "2010-05-05", "1.1", "2,2", "123", "2,2" }));
+            }
         }
     }
 }

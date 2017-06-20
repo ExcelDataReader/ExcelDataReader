@@ -1,7 +1,7 @@
 using System;
+using System.Globalization;
 #if !NETCOREAPP1_0
 using System.Data;
-using System.Globalization;
 #endif
 #if !NET20
 using System.IO;
@@ -881,6 +881,26 @@ namespace ExcelDataReader.Tests
 
                 Assert.AreEqual(8, result.Tables[1].Columns.Count, "Sheet1 Columns");
                 Assert.AreEqual(20, result.Tables[1].Rows.Count, "Sheet1 Rows");
+            }
+        }
+
+        [TestMethod]
+        public void CellValueIso8601Date()
+        {
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_221")))
+            {
+                DataSet result = excelReader.AsDataSet();
+                Assert.AreEqual(new DateTime(2017, 3, 16), result.Tables[0].Rows[0][0]);
+            }
+        }
+
+        [TestMethod]
+        public void CellFormat49()
+        {
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Format49_@")))
+            {
+                DataSet result = excelReader.AsDataSet();
+                Assert.That(result.Tables[0].Rows[0].ItemArray, Is.EqualTo(new[] { "2010-05-05", "1.1", 2.2.ToString(CultureInfo.CurrentCulture), "123", "2,2" }));
             }
         }
     }
