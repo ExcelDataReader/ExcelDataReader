@@ -8,7 +8,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents Worksheet section in workbook
     /// </summary>
-    internal class XlsWorksheet
+    internal class XlsWorksheet : IWorksheet
     {
         public XlsWorksheet(XlsWorkbook workbook, int index)
         {

@@ -9,7 +9,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents Globals section of workbook
     /// </summary>
-    internal class XlsWorkbook
+    internal class XlsWorkbook : IWorkbook<XlsWorksheet>
     {
         internal XlsWorkbook(byte[] bytes, bool convertOaDate, ReadOption readOption)
         {
@@ -62,6 +62,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         public XlsBiffStream BiffStream { get; }
 
         public bool IsV8 => Version >= 0x600;
+
+        public int ResultsCount => Sheets?.Count ?? -1;
 
         public IEnumerable<XlsWorksheet> ReadWorksheets()
         {

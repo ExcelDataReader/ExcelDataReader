@@ -15,12 +15,12 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("Test10x10")))
             {
-                Assert.AreEqual(excelReader.GetType(), typeof(ExcelBinaryReader));
+                Assert.AreEqual(excelReader.GetType().Name, "ExcelBinaryReader");
             }
 
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("TestUnicodeChars")))
             {
-                Assert.AreEqual(excelReader.GetType(), typeof(ExcelBinaryReader));
+                Assert.AreEqual(excelReader.GetType().Name, "ExcelBinaryReader");
             }
 
             NotSupportedException e;
@@ -34,12 +34,12 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("xTest10x10")))
             {
-                Assert.AreEqual(excelReader.GetType(), typeof(ExcelOpenXmlReader));
+                Assert.AreEqual(excelReader.GetType().Name, "ExcelOpenXmlReader");
             }
 
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("xTestOpenXml")))
             {
-                Assert.AreEqual(excelReader.GetType(), typeof(ExcelOpenXmlReader));
+                Assert.AreEqual(excelReader.GetType().Name, "ExcelOpenXmlReader");
             }
         }
     }
