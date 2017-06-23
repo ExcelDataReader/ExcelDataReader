@@ -152,38 +152,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
                     if (xmlReader.NodeType == XmlNodeType.Text && hasValue)
                     {
-                        double number;
-                        object o = xmlReader.Value;
-
-                        const NumberStyles style = NumberStyles.Any;
-                        var culture = CultureInfo.InvariantCulture;
-
-                        if (double.TryParse(o.ToString(), style, culture, out number))
-                            o = number;
-
-                        if (aT != null && aT == XlsxWorksheet.AS) //// if string
-                        {
-                            o = Helpers.ConvertEscapeChars(Workbook.SST[int.Parse(o.ToString())]);
-                        } // Requested change 4: missing (it appears that if should be else if)
-                        else if (aT != null && aT == XlsxWorksheet.NInlineStr) //// if string inline
-                        {
-                            o = Helpers.ConvertEscapeChars(o.ToString());
-                        }
-                        else if (aT == "b") //// boolean
-                        {
-                            o = xmlReader.Value == "1";
-                        }
-                        else if (aS != null) //// if something else
-                        {
-                            XlsxXf xf = Workbook.Styles.CellXfs[int.Parse(aS)];
-                            if (o != null && o.ToString() != string.Empty && Workbook.IsDateTimeStyle(xf.NumFmtId))
-                                o = Helpers.ConvertFromOATime(number);
-                            else if (xf.NumFmtId == 49)
-                                o = o.ToString();
-                        }
-
                         if (col - 1 < result.Values.Length)
-                            result.Values[col - 1] = o;
+                            result.Values[col - 1] = ConvertCellValue(xmlReader.Value, aT, aS);
                     }
                 }
 
@@ -192,6 +162,40 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
             // not a row
             return null;
+        }
+
+        private object ConvertCellValue(string rawValue, string aT, string aS)
+        {
+            const NumberStyles style = NumberStyles.Any;
+            var invariantCulture = CultureInfo.InvariantCulture;
+
+            switch (aT)
+            {
+                case XlsxWorksheet.AS: //// if string
+                    return Helpers.ConvertEscapeChars(Workbook.SST[int.Parse(rawValue, invariantCulture)]);
+                case XlsxWorksheet.NInlineStr: //// if string inline
+                    return Helpers.ConvertEscapeChars(rawValue);
+                case "b": //// boolean
+                    return rawValue == "1";
+                case "d": //// ISO 8601 date
+                    return DateTime.ParseExact(rawValue, "yyyy-MM-dd", invariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite);
+                default:
+                    bool isNumber = double.TryParse(rawValue, style, invariantCulture, out double number);
+
+                    if (aS != null)
+                    {
+                        XlsxXf xf = Workbook.Styles.CellXfs[int.Parse(aS)];
+                        if (isNumber && Workbook.IsDateTimeStyle(xf.NumFmtId))
+                            return Helpers.ConvertFromOATime(number);
+
+                        if (xf.NumFmtId == 49) // Text format but value is not stored as a string. If numeric convert to current culture. 
+                            return isNumber ? number.ToString(CultureInfo.CurrentCulture) : rawValue;
+                    }
+
+                    if (isNumber)
+                        return number;
+                    return rawValue;
+            }
         }
 
         private void ReadWorksheetGlobals()
