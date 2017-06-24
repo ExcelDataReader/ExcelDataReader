@@ -7,7 +7,8 @@ namespace ExcelDataReader
 {
     internal partial class ExcelOpenXmlReader : ExcelDataReader<XlsxWorkbook, XlsxWorksheet>
     {
-        public ExcelOpenXmlReader(Stream stream)
+        public ExcelOpenXmlReader(Stream stream, ExcelReaderConfiguration configuration)
+            : base(configuration)
         {
             Document = new ZipWorker(stream);
             Workbook = new XlsxWorkbook(Document);
