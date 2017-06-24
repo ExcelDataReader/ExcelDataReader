@@ -20,7 +20,13 @@ namespace ExcelDataReader
             {
                 var tableConfiguration = configuration.ConfigureDataTable != null
                     ? configuration.ConfigureDataTable(self)
-                    : new ExcelDataTableConfiguration();
+                    : null;
+
+                if (tableConfiguration == null)
+                {
+                    tableConfiguration = new ExcelDataTableConfiguration();
+                }
+
                 var table = AsDataTable(self, tableConfiguration);
                 result.Tables.Add(table);
             }
@@ -67,10 +73,14 @@ namespace ExcelDataReader
 
                     for (var i = 0; i < self.FieldCount; i++)
                     {
-                        var emptyColumnName = configuration.EmptyColumnNamePrefix + i;
-                        var name = configuration.UseHeaderRow
-                            ? self.GetString(i) ?? emptyColumnName
-                            : emptyColumnName;
+                        var name = configuration.UseHeaderRow 
+                            ? self.GetString(i)
+                            : null;
+
+                        if (string.IsNullOrEmpty(name))
+                        {
+                            name = configuration.EmptyColumnNamePrefix + i;
+                        }
 
                         // if a column already exists with the name append _i to the duplicates
                         var columnName = GetUniqueColumnName(result, name);
