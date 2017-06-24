@@ -388,8 +388,7 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Issue_4145")))
             {
-                excelReader.IsFirstRowAsColumnNames = true;
-                Assert.DoesNotThrow(() => excelReader.AsDataSet());
+                Assert.DoesNotThrow(() => excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration));
 
                 while (excelReader.Read())
                 {
@@ -534,8 +533,6 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Excel_OpenOffice")))
             {
-                excelReader.IsFirstRowAsColumnNames = true;
-
                 AssertUtilities.DoOpenOfficeTest(excelReader);
             }
         }
@@ -639,8 +636,7 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Issue_11522_OpenXml")))
             {
-                excelReader.IsFirstRowAsColumnNames = true;
-                DataSet result = excelReader.AsDataSet();
+                DataSet result = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
                 Assert.AreEqual(11, result.Tables[0].Columns.Count);
                 Assert.AreEqual(1, result.Tables[0].Rows.Count);
@@ -742,7 +738,6 @@ namespace ExcelDataReader.Tests
 #endif
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Issue_11573_BlankValues")))
             {
-                excelReader.IsFirstRowAsColumnNames = false;
                 var dataset = excelReader.AsDataSet();
 
                 Assert.AreEqual(1D, dataset.Tables[0].Rows[12][0]);
@@ -755,8 +750,7 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Issue_11773_Exponential")))
             {
-                excelReader.IsFirstRowAsColumnNames = true;
-                var dataset = excelReader.AsDataSet();
+                var dataset = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
                 Assert.AreEqual(2566.37168141593D, double.Parse(dataset.Tables[0].Rows[0][6].ToString()));
             }
@@ -770,8 +764,7 @@ namespace ExcelDataReader.Tests
 
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Issue_11773_Exponential")))
             {
-                excelReader.IsFirstRowAsColumnNames = true;
-                var dataset = excelReader.AsDataSet();
+                var dataset = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
                 Assert.AreEqual(2566.37168141593D, double.Parse(dataset.Tables[0].Rows[0][6].ToString()));
             }
@@ -783,8 +776,7 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_googlesourced")))
             {
-                excelReader.IsFirstRowAsColumnNames = true;
-                var dataset = excelReader.AsDataSet();
+                var dataset = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
                 Assert.AreEqual("9583638582", dataset.Tables[0].Rows[0][0].ToString());
                 Assert.AreEqual(4, dataset.Tables[0].Rows.Count);
@@ -797,8 +789,7 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Issue_12667_GoogleExport_MissingColumns")))
             {
-                excelReader.IsFirstRowAsColumnNames = true;
-                var dataset = excelReader.AsDataSet();
+                var dataset = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
                 Assert.AreEqual(7, dataset.Tables[0].Columns.Count); // 6 with data + 1 that is present but no data in it
                 Assert.AreEqual(19, dataset.Tables[0].Rows.Count);
@@ -856,7 +847,6 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_Issue_NoStyles_NoRAttribute")))
             {
-                excelReader.IsFirstRowAsColumnNames = false;
                 DataSet result = excelReader.AsDataSet();
 
                 Assert.IsTrue(result.Tables.Count > 0);

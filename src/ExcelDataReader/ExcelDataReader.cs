@@ -25,8 +25,6 @@ namespace ExcelDataReader
         where TWorkbook : IWorkbook<TWorksheet>
         where TWorksheet : IWorksheet
     {
-        private bool _isFirstRead;
-        private string[] _cellsNames;
         private IEnumerator<TWorksheet> _worksheetIterator = null;
         private IEnumerator<object[]> _rowIterator = null;
 
@@ -45,8 +43,6 @@ namespace ExcelDataReader
                 ReadOption = configuration.ReadOption
             };
         }
-
-        public bool IsFirstRowAsColumnNames { get; set; }
 
         public Encoding Encoding => Workbook?.Encoding;
 
@@ -181,7 +177,7 @@ namespace ExcelDataReader
 
         public string GetName(int i)
         {
-            return _cellsNames?[i];
+            throw new NotSupportedException();
         }
 
         public int GetOrdinal(string name)
@@ -290,34 +286,6 @@ namespace ExcelDataReader
                 return false;
             }
 
-            if (_isFirstRead)
-            {
-                _isFirstRead = false;
-                if (IsFirstRowAsColumnNames)
-                {
-                    _cellsNames = new string[CellsValues.Length];
-                    for (var i = 0; i < CellsValues.Length; i++)
-                    {
-                        var value = CellsValues[i]?.ToString();
-                        if (!string.IsNullOrEmpty(value))
-                        {
-                            _cellsNames[i] = value;
-                        }
-                    }
-
-                    if (!_rowIterator.MoveNext())
-                    {
-                        _rowIterator.Dispose();
-                        _rowIterator = null;
-                        return false;
-                    }
-                }
-                else
-                {
-                    _cellsNames = null; // no columns
-                }
-            }
-
             Depth++;
             return true;
         }
@@ -342,7 +310,6 @@ namespace ExcelDataReader
 
         private void ResetSheetData()
         {
-            _isFirstRead = true;
             Depth = -1;
         }
     }

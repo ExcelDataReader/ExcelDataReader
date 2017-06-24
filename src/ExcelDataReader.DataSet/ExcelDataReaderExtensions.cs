@@ -6,22 +6,32 @@ namespace ExcelDataReader
 {
     public static class ExcelDataReaderExtensions
     {
-        private const string Column = "Column";
-
-        public static DataSet AsDataSet(this IExcelDataReader self)
+        public static DataSet AsDataSet(this IExcelDataReader self, ExcelDataSetConfiguration configuration = null)
         {
+            if (configuration == null)
+            {
+                configuration = new ExcelDataSetConfiguration();
+            }
+
             self.Reset();
 
             var result = new DataSet();
             do
             {
-                var table = AsDataTable(self);
+                var tableConfiguration = configuration.ConfigureDataTable != null
+                    ? configuration.ConfigureDataTable(self)
+                    : new ExcelDataTableConfiguration();
+                var table = AsDataTable(self, tableConfiguration);
                 result.Tables.Add(table);
             }
             while (self.NextResult());
 
             result.AcceptChanges();
-            FixDataTypes(result);
+
+            if (configuration.UseColumnDataType)
+            {
+                FixDataTypes(result);
+            }
 
             self.Reset();
 
@@ -41,7 +51,7 @@ namespace ExcelDataReader
             return columnName;
         }
 
-        private static DataTable AsDataTable(IExcelDataReader self)
+        private static DataTable AsDataTable(IExcelDataReader self, ExcelDataTableConfiguration configuration)
         {
             var result = new DataTable { TableName = self.Name };
             result.ExtendedProperties.Add("visiblestate", self.VisibleState);
@@ -50,9 +60,17 @@ namespace ExcelDataReader
             {
                 if (first)
                 {
+                    if (configuration.UseHeaderRow && configuration.ReadHeaderRow != null)
+                    {
+                        configuration.ReadHeaderRow(self);
+                    }
+
                     for (var i = 0; i < self.FieldCount; i++)
                     {
-                        var name = self.GetName(i) ?? Column + i;
+                        var emptyColumnName = configuration.EmptyColumnNamePrefix + i;
+                        var name = configuration.UseHeaderRow
+                            ? self.GetString(i) ?? emptyColumnName
+                            : emptyColumnName;
 
                         // if a column already exists with the name append _i to the duplicates
                         var columnName = GetUniqueColumnName(result, name);
@@ -62,6 +80,11 @@ namespace ExcelDataReader
 
                     result.BeginLoadData();
                     first = false;
+
+                    if (configuration.UseHeaderRow)
+                    {
+                        continue;
+                    }
                 }
 
                 var row = result.NewRow();

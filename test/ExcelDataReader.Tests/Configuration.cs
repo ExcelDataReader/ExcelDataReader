@@ -136,5 +136,31 @@ namespace ExcelDataReader.Tests
             Assert.IsTrue(File.Exists(fileName), string.Format("By the key '{0}' the file '{1}' could not be found. Inside the Excel.Tests App.config file, edit the key basePath to be the folder where the test workbooks are located. If this is fine, check the filename that is related to the key.", key, fileName));
             return fileName;
         }
+
+        public static ExcelDataSetConfiguration NoColumnNamesConfiguration = new ExcelDataSetConfiguration()
+        {
+            ConfigureDataTable = (reader) => new ExcelDataTableConfiguration()
+            {
+                UseHeaderRow = false
+            }
+        };
+
+        public static ExcelDataSetConfiguration FirstRowColumnNamesConfiguration = new ExcelDataSetConfiguration()
+        {
+            ConfigureDataTable = (reader) => new ExcelDataTableConfiguration()
+            {
+                UseHeaderRow = true
+            }
+        };
+
+        public static ExcelDataSetConfiguration FirstRowColumnNamesPrefixConfiguration = new ExcelDataSetConfiguration()
+        {
+            ConfigureDataTable = (reader) => new ExcelDataTableConfiguration()
+            {
+                UseHeaderRow = true,
+                EmptyColumnNamePrefix = "Prefix"
+            }
+        };
+
     }
 }
