@@ -30,8 +30,20 @@ namespace ExcelDataReader
         private IEnumerator<TWorksheet> _worksheetIterator = null;
         private IEnumerator<object[]> _rowIterator = null;
 
-        public ExcelDataReader()
+        public ExcelDataReader(ExcelReaderConfiguration configuration)
         {
+            if (configuration == null)
+            {
+                // Use the defaults
+                configuration = new ExcelReaderConfiguration();
+            }
+
+            // Copy the configuration to prevent external changes
+            Configuration = new ExcelReaderConfiguration()
+            {
+                ConvertOaDate = configuration.ConvertOaDate,
+                ReadOption = configuration.ReadOption
+            };
         }
 
         public bool IsFirstRowAsColumnNames { get; set; }
@@ -51,6 +63,8 @@ namespace ExcelDataReader
         public int FieldCount => _worksheetIterator?.Current?.FieldCount ?? 0;
 
         public int RecordsAffected => throw new NotSupportedException();
+
+        protected ExcelReaderConfiguration Configuration { get; }
 
         protected TWorkbook Workbook { get; set; }
 

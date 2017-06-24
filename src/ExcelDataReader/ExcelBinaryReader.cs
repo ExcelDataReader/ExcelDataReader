@@ -12,21 +12,12 @@ namespace ExcelDataReader
         private const string DirectoryEntryWorkbook = "Workbook";
         private const string DirectoryEntryBook = "Book";
 
-        public ExcelBinaryReader(Stream stream)
-            : this(stream, true, ReadOption.Strict)
-        {
-        }
-
-        public ExcelBinaryReader(Stream stream, ReadOption readOption)
-            : this(stream, true, readOption)
-        {
-        }
-
-        public ExcelBinaryReader(Stream stream, bool convertOADate, ReadOption readOption)
+        public ExcelBinaryReader(Stream stream, ExcelReaderConfiguration configuration)
+            : base(configuration)
         {
             Stream = stream;
             Document = new XlsDocument(stream);
-            Workbook = ReadWorkbook(convertOADate, readOption);
+            Workbook = ReadWorkbook();
 
             // By default, the data reader is positioned on the first result.
             Reset();
@@ -46,7 +37,7 @@ namespace ExcelDataReader
             Document = null;
         }
 
-        private XlsWorkbook ReadWorkbook(bool convertOADate, ReadOption option)
+        private XlsWorkbook ReadWorkbook()
         {
             XlsDirectoryEntry workbookEntry = Document.FindEntry(DirectoryEntryWorkbook) ?? Document.FindEntry(DirectoryEntryBook);
 
@@ -62,7 +53,7 @@ namespace ExcelDataReader
 
             var bytes = Document.ReadStream(Stream, workbookEntry.StreamFirstSector, (int)workbookEntry.StreamSize, workbookEntry.IsEntryMiniStream);
 
-            return new XlsWorkbook(bytes, convertOADate, option);
+            return new XlsWorkbook(bytes, Configuration.ConvertOaDate, Configuration.ReadOption);
         }
     }
 }
