@@ -14,6 +14,8 @@
 
   <ItemGroup>
     <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataReaderExtensions.cs" Link="ExcelDataReaderExtensions.cs" />
+    <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataSetConfiguration.cs" Link="ExcelDataSetConfiguration.cs" />
+    <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataTableConfiguration.cs" Link="ExcelDataTableConfiguration.cs" />
   </ItemGroup>
   
   <ItemGroup>

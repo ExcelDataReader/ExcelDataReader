@@ -11,13 +11,14 @@ namespace ExcelDataReader.Tests
         {
             excelReader.Read();
             Assert.AreEqual(6, excelReader.FieldCount);
-            Assert.AreEqual("column a", excelReader.GetName(0));
-            Assert.AreEqual(" column b", excelReader.GetName(1));
-            Assert.AreEqual(" column b", excelReader.GetName(2));
-            Assert.IsNull(excelReader.GetName(3));
-            Assert.AreEqual("column e", excelReader.GetName(4));
-            Assert.AreEqual(" column b", excelReader.GetName(5));
+            Assert.AreEqual("column a", excelReader.GetString(0));
+            Assert.AreEqual(" column b", excelReader.GetString(1));
+            Assert.AreEqual(" column b", excelReader.GetString(2));
+            Assert.IsNull(excelReader.GetString(3));
+            Assert.AreEqual("column e", excelReader.GetString(4));
+            Assert.AreEqual(" column b", excelReader.GetString(5));
 
+            excelReader.Read();
             Assert.AreEqual(2, excelReader.GetInt32(0));
             Assert.AreEqual("b", excelReader.GetString(1));
             Assert.AreEqual("c", excelReader.GetString(2));
@@ -59,7 +60,7 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual(0, excelReader.FieldCount);
 
             // test dataset
-            DataSet result = excelReader.AsDataSet();
+            DataSet result = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
             Assert.AreEqual(3, result.Tables.Count);
             Assert.AreEqual(6, result.Tables[0].Columns.Count);
             Assert.AreEqual(33, result.Tables[0].Rows.Count);
@@ -97,6 +98,15 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(i + 5, Convert.ToInt32(result.Tables[0].Rows[i][3]));
                 Assert.AreEqual(i + 6, Convert.ToInt32(result.Tables[0].Rows[i][4]));
             }
+
+            // Test default and overridden column name prefix
+            Assert.AreEqual("column a", result.Tables[0].Columns[0].ColumnName);
+            Assert.AreEqual("Column3", result.Tables[0].Columns[3].ColumnName);
+
+            DataSet prefixedResult = excelReader.AsDataSet(Configuration.FirstRowColumnNamesPrefixConfiguration);
+            Assert.AreEqual("column a", prefixedResult.Tables[0].Columns[0].ColumnName);
+            Assert.AreEqual("Prefix3", prefixedResult.Tables[0].Columns[3].ColumnName);
+
         }
     }
 }

@@ -66,8 +66,15 @@ namespace TestApp
 
                 if (reader == null)
                     return;
-                reader.IsFirstRowAsColumnNames = firstRowNamesCheckBox.Checked;
-                ds = reader.AsDataSet();
+
+                // reader.IsFirstRowAsColumnNames = firstRowNamesCheckBox.Checked;
+                ds = reader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
+                    {
+                        UseHeaderRow = firstRowNamesCheckBox.Checked
+                    }
+                });
 
                 var tablenames = GetTablenames(ds.Tables);
                 sheetCombo.DataSource = tablenames;

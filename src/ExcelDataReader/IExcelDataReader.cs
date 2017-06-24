@@ -26,14 +26,6 @@ namespace ExcelDataReader
         /// <value>The results count.</value>
         int ResultsCount { get; }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the first row contains the column names.
-        /// </summary>
-        /// <value>
-        ///     <c>true</c> if the first row contains column names; otherwise, <c>false</c>.
-        /// </value>
-        bool IsFirstRowAsColumnNames { get; set; }
-
         Encoding Encoding { get; }
 
         /// <summary>

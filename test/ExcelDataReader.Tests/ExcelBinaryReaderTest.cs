@@ -118,8 +118,7 @@ namespace ExcelDataReader.Tests
         {
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("TestChess")))
             {
-                excelReader.IsFirstRowAsColumnNames = false;
-                var result = excelReader.AsDataSet();
+                var result = excelReader.AsDataSet(Configuration.NoColumnNamesConfiguration);
 
                 Assert.AreEqual(4, result.Tables[0].Rows.Count);
             }
@@ -130,8 +129,7 @@ namespace ExcelDataReader.Tests
         {
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("TestChess")))
             {
-                excelReader.IsFirstRowAsColumnNames = true;
-                var result = excelReader.AsDataSet();
+                var result = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
                 Assert.AreEqual(3, result.Tables[0].Rows.Count);
             }
@@ -166,11 +164,8 @@ namespace ExcelDataReader.Tests
                 using (Stream stream = new MemoryStream(File.ReadAllBytes(filePath)))
                 using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(stream))
                 {
-                    // Options
-                    excelReader.IsFirstRowAsColumnNames = true;
-                    
                     // ReSharper disable once AccessToDisposedClosure
-                    Assert.DoesNotThrow(() => excelReader.AsDataSet());
+                    Assert.DoesNotThrow(() => excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration));
                 }
             }
 
@@ -660,8 +655,6 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_OpenOffice")))
             {
-                excelReader.IsFirstRowAsColumnNames = true;
-
                 AssertUtilities.DoOpenOfficeTest(excelReader);
             }
         }
@@ -674,9 +667,7 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_OpenOffice")))
             {
-                excelReader.IsFirstRowAsColumnNames = false;
-
-                var dataset = excelReader.AsDataSet();
+                var dataset = excelReader.AsDataSet(Configuration.NoColumnNamesConfiguration);
                 Assert.AreEqual(34, dataset.Tables[0].Rows.Count);
             }
         }
@@ -689,8 +680,6 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Excel_OpenOffice")))
             {
-                excelReader.IsFirstRowAsColumnNames = true;
-
                 AssertUtilities.DoOpenOfficeTest(excelReader);
             }
         }
@@ -787,8 +776,7 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11545_NoIndex")))
             {
-                excelReader.IsFirstRowAsColumnNames = true;
-                var dataset = excelReader.AsDataSet();
+                var dataset = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
                 Assert.AreEqual("CI2229         ", dataset.Tables[0].Rows[0][0]);
                 Assert.AreEqual("12069E01018A1  ", dataset.Tables[0].Rows[0][6]);
@@ -801,7 +789,6 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11573_BlankValues"), false))
             {
-                excelReader.IsFirstRowAsColumnNames = false;
                 var dataset = excelReader.AsDataSet();
 
                 Assert.AreEqual(1D, dataset.Tables[0].Rows[12][0]);
@@ -842,7 +829,6 @@ namespace ExcelDataReader.Tests
             // Excel.Log.Log.InitializeWith<Log4NetLog>();
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11642_ValuesNotLoaded")))
             {
-                excelReader.IsFirstRowAsColumnNames = false;
                 var dataset = excelReader.AsDataSet();
 
                 Assert.AreEqual("431113*", dataset.Tables[2].Rows[29][1].ToString());
@@ -856,7 +842,6 @@ namespace ExcelDataReader.Tests
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11636_BiffStream")))
             {
-                excelReader.IsFirstRowAsColumnNames = false;
                 var dataset = excelReader.AsDataSet();
 
                 // check a couple of values
@@ -882,7 +867,6 @@ namespace ExcelDataReader.Tests
                 using (var forwardStream = SeekErrorMemoryStream.CreateFromStream(stream))
                 using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(forwardStream))
                 {
-                    excelReader.IsFirstRowAsColumnNames = false;
                     Assert.DoesNotThrow(() => excelReader.AsDataSet());
                 }
             }
@@ -903,7 +887,6 @@ namespace ExcelDataReader.Tests
                 using (var forwardStream = Configuration.GetTestWorkbook("Test_Issue_12556_corrupt"))
                 using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(forwardStream))
                 {
-                    excelReader.IsFirstRowAsColumnNames = false;
                     Assert.DoesNotThrow(() => excelReader.AsDataSet());
                 }
             });
@@ -920,7 +903,6 @@ namespace ExcelDataReader.Tests
 #endif
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11818_OutOfRange")))
             {
-                excelReader.IsFirstRowAsColumnNames = false;
                 var dataset = excelReader.AsDataSet();
 
                 Assert.AreEqual("Total Revenue", dataset.Tables[0].Rows[10][0]);
