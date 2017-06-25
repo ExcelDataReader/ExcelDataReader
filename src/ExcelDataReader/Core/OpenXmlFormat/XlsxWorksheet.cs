@@ -71,7 +71,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
             using (var sheetStream = Document.GetWorksheetStream(Path))
             {
-                if (sheetStream == null) { 
+                if (sheetStream == null)
+                { 
                     yield break;
                 }
 
@@ -135,9 +136,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                             aT = xmlReader.GetAttribute(XlsxWorksheet.AT);
                             aR = xmlReader.GetAttribute(XlsxWorksheet.AR);
 
-                            if (aR != null)
+                            if (ReferenceHelper.ParseReference(aR, out int referenceColumn, out int referenceRow))
                             {
-                                ReferenceHelper.ParseReference(aR, out col);
+                                col = referenceColumn;
                             }
                             else
                             {
@@ -259,10 +260,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
                             if (refAttribute != null)
                             {
-                                int column;
-                                ReferenceHelper.ParseReference(refAttribute, out column);
-                                if (column > biggestColumn)
-                                    biggestColumn = column;
+                                int column, row;
+                                if (ReferenceHelper.ParseReference(refAttribute, out column, out row))
+                                { 
+                                    if (column > biggestColumn)
+                                        biggestColumn = column;
+                                }
                             }
                         }
                     }

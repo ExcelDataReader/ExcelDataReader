@@ -113,6 +113,7 @@ namespace ExcelDataReader.Tests
             { "Test_git_issue_217", "Test_git_issue_217.xls" },
             { "Test_git_issue_221", "Test_git_issue_221.xlsx" },
             { "Format49_@", "Format49_@.xlsx" },
+            { "fillreport", "fillreport.xlsx" },
         };
 
         public static Stream GetTestWorkbook(string key)
