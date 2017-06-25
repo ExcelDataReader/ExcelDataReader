@@ -1,0 +1,26 @@
+version: 3.0.0.{build}
+skip_tags: true
+image: Visual Studio 2017
+configuration: Release
+build_script:
+- ps: |-
+    If ($Env:APPVEYOR_REPO_BRANCH -eq "master") {
+      $Env:VERSION_SUFFIX=""
+    } Else {
+      $Env:VERSION_SUFFIX=$Env:APPVEYOR_REPO_BRANCH + $Env:APPVEYOR_BUILD_NUMBER.PadLeft(5, "0")
+    }
+    msbuild /t:Restore /p:VersionSuffix=$Env:VERSION_SUFFIX
+    msbuild ExcelDataReader.sln /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=$Env:CONFIGURATION /p:VersionSuffix=$Env:VERSION_SUFFIX /p:TreatWarningsAsErrors=true
+test_script:
+- ps: |-
+    # run tests
+    dotnet test test\ExcelDataReader.Tests\ExcelDataReader.Tests.csproj --logger "trx;LogFileName=tests.trx" -c $Env:CONFIGURATION
+    dotnet test test\ExcelDataReader.Net20.Tests\ExcelDataReader.Net20.Tests.csproj --logger "trx;LogFileName=tests.trx" -c $Env:CONFIGURATION
+    dotnet test test\ExcelDataReader.Net45.Tests\ExcelDataReader.Net45.Tests.csproj --logger "trx;LogFileName=tests.trx" -c $Env:CONFIGURATION
+    # upload results to AppVeyor
+    $wc = New-Object 'System.Net.WebClient'
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test\ExcelDataReader.Tests\TestResults\tests.trx))
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test\ExcelDataReader.Net20.Tests\TestResults\tests.trx))
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test\ExcelDataReader.Net45.Tests\TestResults\tests.trx))
+artifacts:
+- path: '**\*.nupkg'
