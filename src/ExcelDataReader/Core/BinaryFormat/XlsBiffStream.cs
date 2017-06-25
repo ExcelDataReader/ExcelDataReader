@@ -126,12 +126,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             if (record != null)
             {
-                // Set readOption to loose to not cause exception here (sql reporting services)
-                if (_workbook.ReadOption == ReadOption.Strict)
-                {
-                    if (record.Bytes.Length < Position + record.Size)
-                        throw new ArgumentException(Errors.ErrorBiffBufferSize);
-                }
+                if (record.Bytes.Length < Position + record.Size)
+                    throw new ArgumentException(Errors.ErrorBiffBufferSize);
 
                 Position += record.Size;
             }
