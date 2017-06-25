@@ -376,10 +376,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             {
                 return sectorTable[(int)sector];
             }
-            else
-            {
-                return (uint)FATMARKERS.FAT_EndOfChain;
-            }
+
+            return (uint)FATMARKERS.FAT_EndOfChain;
         }
     }
 }

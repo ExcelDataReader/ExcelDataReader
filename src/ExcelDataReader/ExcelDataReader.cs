@@ -25,10 +25,10 @@ namespace ExcelDataReader
         where TWorkbook : IWorkbook<TWorksheet>
         where TWorksheet : IWorksheet
     {
-        private IEnumerator<TWorksheet> _worksheetIterator = null;
-        private IEnumerator<object[]> _rowIterator = null;
+        private IEnumerator<TWorksheet> _worksheetIterator;
+        private IEnumerator<object[]> _rowIterator;
 
-        public ExcelDataReader(ExcelReaderConfiguration configuration)
+        protected ExcelDataReader(ExcelReaderConfiguration configuration)
         {
             if (configuration == null)
             {
