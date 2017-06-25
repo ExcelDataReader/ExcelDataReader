@@ -12,7 +12,6 @@
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <PackageId>ExcelDataReader</PackageId>
     <PackageTags>excel</PackageTags>
-    <PackageReleaseNotes>OpenXmlReader does not use temp files. Packages for .NET Core.</PackageReleaseNotes>
     <PackageIconUrl>https://nugetgallery.blob.core.windows.net/icons/ExcelDataReader.2.1.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/ExcelDataReader/ExcelDataReader</PackageProjectUrl>
     <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>

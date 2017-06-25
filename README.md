@@ -3,16 +3,14 @@ ExcelDataReader
 
 Lightweight and fast library written in C# for reading Microsoft Excel files.
 
-Please feel free to fork and submit pull requests.
+Please feel free to fork and submit pull requests to the develop branch.
 
 If you are reporting an issue it is really useful if you can supply an example Excel file as this makes debugging much easier and without it we may not be able to resolve any problems.
-
-This project is using a git-flow style workflow so please submit pull requests to the develop branch if possible.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/ii6hbs9otpbg1nqh/branch/master?svg=true)](https://ci.appveyor.com/project/andersnm/exceldatareader/branch/master) [![Build status](https://ci.appveyor.com/api/projects/status/ii6hbs9otpbg1nqh/branch/develop?svg=true)](https://ci.appveyor.com/project/andersnm/exceldatareader/branch/develop)
 
 ## Finding the binaries
-It is recommended to use Nuget. F.ex through the VS Package Manager Console `Install-Package <package>` or using the VS "Manage NuGet Packages..." extension. 
+It is recommended to use NuGet. F.ex through the VS Package Manager Console `Install-Package <package>` or using the VS "Manage NuGet Packages..." extension. 
 
 As of ExcelDataReader version 3.0, the project was split into multiple packages:
 
@@ -24,59 +22,73 @@ Install the `ExcelDataReader.DataSet` extension package to use the AsDataSet() m
 ## How to use
 ### C# code :
 ```c#
-FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
+using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read)) {
 
-// Choose one of either 1 or 2
-// 1. Reading from a binary Excel file ('97-2003 format; *.xls)
-IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(stream);
+	// Auto-detect format, supports:
+	//  - Binary Excel files ('97-2003 format; *.xls)
+	//  - OpenXml Excel files (2007 format; *.xlsx)
+	using (var reader = ExcelReaderFactory.CreateReader(stream)) {
+	
+		// Choose one of either 1 or 2:
 
-// 2. Reading from a OpenXml Excel file (2007 format; *.xlsx)
-IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+		// 1. Use the reader methods
+		do {
+			while (reader.Read()) {
+				// reader.GetInt32(0);
+			}
+		} while (reader.NextResult());
 
-// Choose one of either 3, 4, or 5
-// 3. DataSet - The result of each spreadsheet will be created in the result.Tables
-DataSet result = excelReader.AsDataSet();
+		
+		// 2. Use the AsDataSet extension method
+		var result = reader.AsDataSet();
 
-// 4. DataSet - Create column names from first row
-excelReader.IsFirstRowAsColumnNames = true;
-DataSet result = excelReader.AsDataSet();
-
-// 5. Data Reader methods
-while (excelReader.Read()) {
-	// excelReader.GetInt32(0);
+		// The result of each spreadsheet is in result.Tables
+	}
 }
-
-// 6. Free resources (IExcelDataReader is IDisposable)
-excelReader.Close();
 ```
 
-### VB.NET Code:
 
-```vb.net
+### CreateReader configuration options
 
-Dim stream As FileStream = File.Open(filePath, FileMode.Open, FileAccess.Read)
+The `CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()` functions accept an optional configuration object to modify the behavior of the reader:
 
-' 1. Reading from a binary Excel file ('97-2003 format; *.xls)
-Dim excelReader As IExcelDataReader = ExcelReaderFactory.CreateBinaryReader(stream)
-
-' 2. Reading from a OpenXml Excel file (2007 format; *.xlsx)
-Dim excelReader As IExcelDataReader = ExcelReaderFactory.CreateOpenXmlReader(stream)
-
-' 3. DataSet - The result of each spreadsheet will be created in the result.Tables
-Dim result As DataSet = excelReader.AsDataSet()
-
-' 4. DataSet - Create column names from first row
-excelReader.IsFirstRowAsColumnNames = True
-Dim result As DataSet = excelReader.AsDataSet()
-
-' 5. Data Reader methods
-While excelReader.Read()
-	' excelReader.GetInt32(0);
-End While
-
-' 6. Free resources (IExcelDataReader is IDisposable)
-excelReader.Close()
+```c#
+var reader = ExcelReaderFactory.CreateReader(new ExcelReaderConfiguration() {
+	
+	// Gets or sets a value indicating whether OLE Automation dates will be 
+	// converted to DateTime. Default: true. (XLS only)
+	ConvertOaDate = true
+});
 ```
 
-### Tips
-* SQL reporting services. Set ReadOption.Loose in the CreateBinaryReader factory method to skip some bounds checking which was causing SSRS generated xls to fail. (Only on changeset >= 82970)
+
+### AsDataSet configuration options
+
+The `AsDataSet()` function accepts an optional configuration object to modify the behavior of the DataSet conversion:
+
+```c#
+var result = reader.AsDataSet(new ExcelDataSetConfiguration() {
+	
+	// Gets or sets a value indicating whether to set the DataColumn.DataType 
+	// property in a second pass.
+	UseColumnDataType = true,
+	
+	// Gets or sets a callback to obtain configuration options for a DataTable. 
+	ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration() {
+		
+		// Gets or sets a value indicating the prefix of generated column names.
+		EmptyColumnNamePrefix = "Column",
+		
+		// Gets or sets a value indicating whether to use a row from the 
+		// data as column names.
+		UseHeaderRow = false,
+		
+		// Gets or sets a callback to determine which row is the header row. 
+		// Only called when UseHeaderRow = true.
+		ReadHeaderRow = (rowReader) => {
+			// F.ex skip the first row and use the 2nd row as column headers:
+			rowReader.Read();
+		}
+	}
+});
+```
