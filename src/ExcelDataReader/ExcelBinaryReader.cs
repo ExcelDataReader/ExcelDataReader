@@ -7,7 +7,7 @@ namespace ExcelDataReader
     /// <summary>
     /// ExcelDataReader Class
     /// </summary>
-    internal partial class ExcelBinaryReader : ExcelDataReader<XlsWorkbook, XlsWorksheet>
+    internal class ExcelBinaryReader : ExcelDataReader<XlsWorkbook, XlsWorksheet>
     {
         private const string DirectoryEntryWorkbook = "Workbook";
         private const string DirectoryEntryBook = "Book";

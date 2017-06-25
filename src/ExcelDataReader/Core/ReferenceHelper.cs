@@ -28,15 +28,12 @@ namespace ExcelDataReader.Core
                         column += c - offset;
                         continue;
                     }
-                    else if (char.IsDigit(c))
-                    {
+
+                    if (char.IsDigit(c))
                         break;
-                    }
-                    else
-                    {
-                        position = 0;
-                        break;
-                    }
+
+                    position = 0;
+                    break;
                 }
             }
 

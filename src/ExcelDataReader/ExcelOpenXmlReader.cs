@@ -5,7 +5,7 @@ using ExcelDataReader.Core.OpenXmlFormat;
 
 namespace ExcelDataReader
 {
-    internal partial class ExcelOpenXmlReader : ExcelDataReader<XlsxWorkbook, XlsxWorksheet>
+    internal class ExcelOpenXmlReader : ExcelDataReader<XlsxWorkbook, XlsxWorksheet>
     {
         public ExcelOpenXmlReader(Stream stream, ExcelReaderConfiguration configuration)
             : base(configuration)

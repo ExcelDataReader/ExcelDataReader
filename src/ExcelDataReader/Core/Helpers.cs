@@ -14,11 +14,11 @@ namespace ExcelDataReader.Core
         private static readonly Regex EscapeRegex = new Regex("_x([0-9A-F]{4,4})_");
 
         /// <summary>
-        /// Determines whether [is single byte] [the specified encoding].
+        /// Determines whether the encoding is single byte or not.
         /// </summary>
         /// <param name="encoding">The encoding.</param>
         /// <returns>
-        ///     <c>true</c> if [is single byte] [the specified encoding]; otherwise, <c>false</c>.
+        ///     <see langword="true"/> if the specified encoding is single byte; otherwise, <see langword="false"/>.
         /// </returns>
         public static bool IsSingleByteEncoding(Encoding encoding)
         {

@@ -11,9 +11,9 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public XlsByteString(byte[] bytes, uint offset, Encoding encoding)
         {
-            this._bytes = bytes;
-            this._offset = offset;
-            this._encoding = encoding;
+            _bytes = bytes;
+            _offset = offset;
+            _encoding = encoding;
         }
         
         /// <summary>
@@ -42,7 +42,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public byte[] ReadArray(int offset, int size)
         {
             byte[] tmp = new byte[size];
-            Buffer.BlockCopy(_bytes, (int)(this._offset + offset), tmp, 0, size);
+            Buffer.BlockCopy(_bytes, (int)(_offset + offset), tmp, 0, size);
             return tmp;
         }
     }

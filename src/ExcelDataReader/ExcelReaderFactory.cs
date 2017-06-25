@@ -86,6 +86,7 @@ namespace ExcelDataReader
         /// Creates an instance of <see cref="ExcelOpenXmlReader"/>
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
+        /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateOpenXmlReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
