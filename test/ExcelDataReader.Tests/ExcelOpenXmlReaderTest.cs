@@ -895,7 +895,7 @@ namespace ExcelDataReader.Tests
         }
 
         [TestMethod]
-        public void GitIssue_79()
+        public void GitIssue_97()
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("fillreport")))
             {
@@ -903,6 +903,7 @@ namespace ExcelDataReader.Tests
                 DataSet result = excelReader.AsDataSet();
                 Assert.AreEqual(1, result.Tables.Count);
                 Assert.AreEqual(20, result.Tables[0].Rows.Count);
+                Assert.AreEqual(10, result.Tables[0].Columns.Count);
                 Assert.AreEqual("Account Number", result.Tables[0].Rows[1][0]);
                 Assert.AreEqual("Trader", result.Tables[0].Rows[1][1]);
             }
