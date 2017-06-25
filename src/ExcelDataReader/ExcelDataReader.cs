@@ -44,6 +44,11 @@ namespace ExcelDataReader
             };
         }
 
+        ~ExcelDataReader()
+        {
+            Dispose(false);
+        }
+
         public Encoding Encoding => Workbook?.Encoding;
 
         public string Name => _worksheetIterator?.Current?.Name;
@@ -290,11 +295,6 @@ namespace ExcelDataReader
             return true;
         }
     
-        ~ExcelDataReader()
-        {
-            Dispose(false);
-        }
-
         public void Dispose()
         {
             Dispose(true);

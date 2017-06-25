@@ -787,7 +787,12 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11573_BlankValues()
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11573_BlankValues"), false))
+            var noOaDateConfiguration = new ExcelReaderConfiguration()
+            {
+                ConvertOaDate = false
+            };
+
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11573_BlankValues"), noOaDateConfiguration))
             {
                 var dataset = excelReader.AsDataSet();
 
