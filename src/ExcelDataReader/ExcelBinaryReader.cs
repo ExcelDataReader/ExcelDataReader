@@ -53,7 +53,7 @@ namespace ExcelDataReader
 
             var bytes = Document.ReadStream(Stream, workbookEntry.StreamFirstSector, (int)workbookEntry.StreamSize, workbookEntry.IsEntryMiniStream);
 
-            return new XlsWorkbook(bytes, Configuration.ConvertOaDate, Configuration.ReadOption);
+            return new XlsWorkbook(bytes, Configuration.ConvertOaDate);
         }
     }
 }

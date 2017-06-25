@@ -8,15 +8,6 @@ using ExcelDataReader.Misc;
 namespace ExcelDataReader
 {
     /// <summary>
-    /// Strict is as normal, Loose is more forgiving and will not cause an exception if a record size takes it beyond the end of the file. It will be trunacted in this case (SQl Reporting Services)
-    /// </summary>
-    public enum ReadOption
-    {
-        Strict,
-        Loose
-    }
-
-    /// <summary>
     /// A generic implementation of the IExcelDataReader interface using IWorkbook/IWorksheet to enumerate data.
     /// </summary>
     /// <typeparam name="TWorkbook">A type implementing IWorkbook</typeparam>
@@ -40,7 +31,6 @@ namespace ExcelDataReader
             Configuration = new ExcelReaderConfiguration()
             {
                 ConvertOaDate = configuration.ConvertOaDate,
-                ReadOption = configuration.ReadOption
             };
         }
 

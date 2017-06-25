@@ -11,12 +11,11 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsWorkbook : IWorkbook<XlsWorksheet>
     {
-        internal XlsWorkbook(byte[] bytes, bool convertOaDate, ReadOption readOption)
+        internal XlsWorkbook(byte[] bytes, bool convertOaDate)
         {
             Version = 0x0600;
             BiffStream = new XlsBiffStream(bytes, this);
             ConvertOaDate = convertOaDate;
-            ReadOption = readOption;
             ReadWorkbookGlobals();
         }
 
@@ -56,9 +55,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public XlsBiffRecord ExtSST { get; set; }
 
         public bool ConvertOaDate { get; }
-
-        public ReadOption ReadOption { get; }
-
+        
         public XlsBiffStream BiffStream { get; }
 
         public bool IsV8 => Version >= 0x600;

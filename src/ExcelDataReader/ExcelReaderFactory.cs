@@ -14,15 +14,13 @@ namespace ExcelDataReader
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
         /// <param name="convertOADates">If <see langword="true"/> convert OA dates to <see cref="DateTime"/>. Only applicable to binary (xls) files.</param>
-        /// <param name="readOption">The read option to use for binary (xls) files.</param>
         /// <returns>The excel data reader.</returns>
         [Obsolete("Use CreateReader() with a configuration object instead")]
-        public static IExcelDataReader CreateReader(Stream fileStream, bool convertOADates, ReadOption readOption = ReadOption.Strict)
+        public static IExcelDataReader CreateReader(Stream fileStream, bool convertOADates)
         {
             return CreateReader(fileStream, new ExcelReaderConfiguration()
             {
                 ConvertOaDate = convertOADates,
-                ReadOption = readOption
             });
         }
 
@@ -63,15 +61,13 @@ namespace ExcelDataReader
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
         /// <param name="convertOADate">If true oa dates will be converer to <see cref="DateTime"/>.</param>
-        /// <param name="readOption">The read option.</param>
         /// <returns>The excel data reader.</returns>
         [Obsolete("Use CreateBinaryReader() with a configuration object instead")]
-        public static IExcelDataReader CreateBinaryReader(Stream fileStream, bool convertOADate, ReadOption readOption = ReadOption.Strict)
+        public static IExcelDataReader CreateBinaryReader(Stream fileStream, bool convertOADate)
         {
             return CreateBinaryReader(fileStream, new ExcelReaderConfiguration()
             {
                 ConvertOaDate = convertOADate,
-                ReadOption = readOption
             });
         }
 
