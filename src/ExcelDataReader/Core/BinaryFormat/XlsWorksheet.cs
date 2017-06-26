@@ -249,68 +249,62 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private bool TryGetFormulaValue(XlsBiffFormulaCell formulaCell, List<XlsBiffRecord> additionalRecords, out object result)
         {
-            if (formulaCell.IsBoolean)
+            switch (formulaCell.FormulaType)
             {
-                result = formulaCell.BooleanValue;
-                return true;
-            }
-
-            if (formulaCell.IsError)
-            {
-                result = null;
-                return true;
-            }
-
-            if (formulaCell.IsEmptyString)
-            {
-                result = string.Empty;
-                return true;
-            }
-
-            if (formulaCell.IsXNum)
-            {
-                result = formulaCell.XNumValue;
-                return true;
-            }
-
-            if (formulaCell.IsString)
-            {
-                if (additionalRecords.Count == 0)
-                {
+                case XlsBiffFormulaCell.FormulaValueType.Boolean:
+                    result = formulaCell.BooleanValue;
+                    return true;
+                case XlsBiffFormulaCell.FormulaValueType.Error:
                     result = null;
+                    return true;
+                case XlsBiffFormulaCell.FormulaValueType.EmptyString:
+                    result = string.Empty;
+                    return true;
+                case XlsBiffFormulaCell.FormulaValueType.Number:
+                    result = formulaCell.XNumValue;
+                    return true;
+                case XlsBiffFormulaCell.FormulaValueType.String when additionalRecords.Count == 0:
+                    result = null;
+
+                    // Request additional records.
                     return false;
-                }
+                case XlsBiffFormulaCell.FormulaValueType.String:
+                    BIFFRECORDTYPE recId;
 
-                if (additionalRecords.Count == 1)
-                {
-                    var recId = additionalRecords[0].Id;
-                    if (recId == BIFFRECORDTYPE.SHAREDFMLA)
+                    if (additionalRecords.Count == 1)
                     {
-                        result = null;
-                        return false;
+                        recId = additionalRecords[0].Id;
+                        if (recId == BIFFRECORDTYPE.SHAREDFMLA)
+                        {
+                            result = null;
+
+                            // Request additional records.
+                            return false;
+                        }
+
+                        if (recId == BIFFRECORDTYPE.STRING)
+                        {
+                            var stringRecord = (XlsBiffFormulaString)additionalRecords[0];
+                            result = stringRecord.Value;
+                            return true;
+                        }
                     }
 
-                    if (recId == BIFFRECORDTYPE.STRING)
+                    // The old implementation would throw an IndexOutOfRangeException if the record isn't
+                    // a SHAREDFMLA or STRING. 
+                    if (additionalRecords.Count > 1)
                     {
-                        var stringRecord = (XlsBiffFormulaString)additionalRecords[0];
-                        result = stringRecord.Value;
-                        return true;
+                        recId = additionalRecords[1].Id;
+                        if (recId == BIFFRECORDTYPE.STRING)
+                        {
+                            var stringRecord = (XlsBiffFormulaString)additionalRecords[1];
+                            result = stringRecord.Value;
+                            return true;
+                        }
                     }
-                }
 
-                {
-                    var recId = additionalRecords[1].Id;
-                    if (recId == BIFFRECORDTYPE.STRING)
-                    {
-                        var stringRecord = (XlsBiffFormulaString)additionalRecords[1];
-                        result = stringRecord.Value;
-                        return true;
-                    }
-                }
-
-                // Bad data - could not find a string following the formula
-                result = null;
-                return true;
+                    // Bad data - could not find a string following the formula
+                    break;
             }
 
             // Bad data or new formula value type

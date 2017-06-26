@@ -21,10 +21,61 @@ namespace ExcelDataReader.Core.BinaryFormat
             SharedFormulaGroup = 0x0008
         }
 
+        public enum FormulaValueType
+        {
+            Unknown,
+
+            /// <summary>
+            /// Indicates that a string value is stored in a String record that immediately follows this record. See[MS - XLS] 2.5.133 FormulaValue.
+            /// </summary>
+            String, 
+
+            /// <summary>
+            /// Indecates that the formula value is an empty string.
+            /// </summary>
+            EmptyString,
+
+            /// <summary>
+            /// Indicates that the <see cref="BooleanValue"/> property is valid.
+            /// </summary>
+            Boolean,
+
+            /// <summary>
+            /// Indicates that the <see cref="ErrorValue"/> property is valid.
+            /// </summary>
+            Error,
+
+            /// <summary>
+            /// Indicates that the <see cref="XNumValue"/> property is valid.
+            /// </summary>
+            Number
+        }
+
         /// <summary>
         /// Gets the formula flags
         /// </summary>
         public FormulaFlags Flags => (FormulaFlags)ReadUInt16(0xE);
+
+        /// <summary>
+        /// Gets the formula value type.
+        /// </summary>
+        public FormulaValueType FormulaType
+        {
+            get
+            {
+                if (FormulaValueExprO != 0xFFFF)
+                    return FormulaValueType.Number;
+
+                switch (FormulaValueByte1)
+                {
+                    case 0x00: return FormulaValueType.String;
+                    case 0x01: return FormulaValueType.Boolean;
+                    case 0x02: return FormulaValueType.Error;
+                    case 0x03: return FormulaValueType.EmptyString;
+                    default: return FormulaValueType.Unknown;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets the formula string length.
@@ -44,31 +95,6 @@ namespace ExcelDataReader.Core.BinaryFormat
         public byte FormulaValueByte6 => ReadByte(0xB);
 
         public ushort FormulaValueExprO => ReadUInt16(0xC);
-
-        /// <summary>
-        /// Gets a value indicating whether a string value is stored in a String record that immediately follows this record. See [MS-XLS] 2.5.133 FormulaValue
-        /// </summary>
-        public bool IsString => FormulaValueExprO == 0xFFFF && FormulaValueByte1 == 0x00;
-
-        /// <summary>
-        /// Gets a value indicating whether the BooleanValue property is valid.
-        /// </summary>
-        public bool IsBoolean => FormulaValueExprO == 0xFFFF && FormulaValueByte1 == 0x01;
-
-        /// <summary>
-        /// Gets a value indicating whether the ErrorValue property is valid.
-        /// </summary>
-        public bool IsError => FormulaValueExprO == 0xFFFF && FormulaValueByte1 == 0x02;
-
-        /// <summary>
-        /// Gets a value indicating whether the XNumValue property is valid.
-        /// </summary>
-        public bool IsXNum => FormulaValueExprO != 0xFFFF;
-
-        /// <summary>
-        /// Gets a value indicating whether the formula value is an empty string.
-        /// </summary>
-        public bool IsEmptyString => FormulaValueExprO == 0xFFFF && FormulaValueByte1 == 0x03;
 
         public bool BooleanValue => FormulaValueByte3 != 0;
 
