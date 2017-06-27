@@ -201,6 +201,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         private void ReadWorksheetGlobals()
         {
+            if (string.IsNullOrEmpty(Path))
+                return;
+
             using (var sheetStream = Document.GetWorksheetStream(Path))
             {
                 if (sheetStream == null)

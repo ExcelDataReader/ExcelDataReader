@@ -939,7 +939,6 @@ namespace ExcelDataReader.Tests
         }
 
         [TestMethod]
-        [Ignore("Pending fix")]
         public void GitIssue_68_NullSheetPath()
         {
             using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_68_NullSheetPath")))
