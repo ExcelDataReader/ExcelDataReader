@@ -124,6 +124,12 @@
     <None Include="Excel.snk" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Excel.csproj">
+      <Project>{4cb0690e-3e7a-497c-9116-d52024f63195}</Project>
+      <Name>Excel</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
