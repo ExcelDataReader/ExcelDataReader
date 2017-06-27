@@ -10,7 +10,6 @@ namespace ExcelDataReader
         public const string ErrorHeaderSignature = "Invalid file signature.";
         public const string ErrorHeaderOrder = "Invalid byte order specified in header.";
         public const string ErrorBiffRecordSize = "Buffer size is less than minimum BIFF record size.";
-        public const string ErrorBiffBufferSize = "BIFF Stream error: Buffer size is less than entry length.";
         public const string ErrorBiffIlegalBefore = "BIFF Stream error: Moving before stream start.";
         public const string ErrorBiffIlegalAfter = "BIFF Stream error: Moving after stream end.";
 
