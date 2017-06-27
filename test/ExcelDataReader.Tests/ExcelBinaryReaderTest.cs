@@ -1151,5 +1151,46 @@ namespace ExcelDataReader.Tests
                 CollectionAssert.AreEqual(new object[] { "REX GESAMT      ", 484.7929, 142.1032, -0.1656, 5.0315225293000001, 5.0398685515999997, 37.5344725251, DBNull.Value, DBNull.Value }, ds.Tables[2].Rows[10].ItemArray);
             }
         }
+
+        [TestMethod]
+        [Ignore("Pending fix")]
+        public void GitIssue_231_NoCodePage()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_231_NoCodePage")))
+            {
+                var ds = excelReader.AsDataSet();
+                Assert.AreEqual(11, ds.Tables[0].Columns.Count);
+                Assert.AreEqual(5, ds.Tables[0].Rows.Count);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_82_Date1900_Binary()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("roo_1900_base")))
+            {
+                // 15/06/2009
+                // 28/06/2009 (=TODAY() when file was saved)
+
+                DataSet result = excelReader.AsDataSet();
+                Assert.AreEqual(new DateTime(2009, 6, 15), (DateTime)result.Tables[0].Rows[0][0]);
+                Assert.AreEqual(new DateTime(2009, 6, 28), (DateTime)result.Tables[0].Rows[1][0]);
+            }
+        }
+
+        [TestMethod]
+        [Ignore("Pending fix")]
+        public void GitIssue_82_Date1904_Binary()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("roo_1904_base")))
+            {
+                // 15/06/2009
+                // 28/06/2009 (=TODAY() when file was saved)
+
+                DataSet result = excelReader.AsDataSet();
+                Assert.AreEqual(new DateTime(2009, 6, 15), (DateTime)result.Tables[0].Rows[0][0]);
+                Assert.AreEqual(new DateTime(2009, 6, 28), (DateTime)result.Tables[0].Rows[1][0]);
+            }
+        }
     }
 }

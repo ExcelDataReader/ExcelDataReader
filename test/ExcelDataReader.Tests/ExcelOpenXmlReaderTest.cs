@@ -908,5 +908,69 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("Trader", result.Tables[0].Rows[1][1]);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_82_Date1900_OpenXml()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xroo_1900_base")))
+            {
+                // 15/06/2009
+                // 4/19/2013 (=TODAY() when file was saved)
+
+                DataSet result = excelReader.AsDataSet();
+                Assert.AreEqual(new DateTime(2009, 6, 15), (DateTime)result.Tables[0].Rows[0][0]);
+                Assert.AreEqual(new DateTime(2013, 4, 19), (DateTime)result.Tables[0].Rows[1][0]);
+            }
+        }
+
+        [TestMethod]
+        [Ignore("Pending fix")]
+        public void GitIssue_82_Date1904_OpenXml()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xroo_1904_base")))
+            {
+                // 15/06/2009
+                // 4/19/2013 (=TODAY() when file was saved)
+
+                DataSet result = excelReader.AsDataSet();
+                Assert.AreEqual(new DateTime(2009, 6, 15), (DateTime)result.Tables[0].Rows[0][0]);
+                Assert.AreEqual(new DateTime(2013, 4, 19), (DateTime)result.Tables[0].Rows[1][0]);
+            }
+        }
+
+        [TestMethod]
+        [Ignore("Pending fix")]
+        public void GitIssue_68_NullSheetPath()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_68_NullSheetPath")))
+            {
+                DataSet result = excelReader.AsDataSet();
+                Assert.AreEqual(2, result.Tables[0].Columns.Count);
+                Assert.AreEqual(1, result.Tables[0].Rows.Count);
+
+            }
+        }
+
+        [TestMethod]
+        [Ignore("Pending fix")]
+        public void GitIssue_53_Cached_Formula_String_Type()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_53_Cached_Formula_String_Type")))
+            {
+                var dataset = excelReader.AsDataSet();
+
+                // Ensure that parseable, numeric cached formula values are read as a double
+                Assert.IsInstanceOf<double>(dataset.Tables[0].Rows[0][2]);
+                Assert.AreEqual(3D, dataset.Tables[0].Rows[0][2]);
+
+                // Ensure that non-parseable, non-numeric cached formula values are read as a string
+                Assert.IsInstanceOf<string>(dataset.Tables[0].Rows[1][2]);
+                Assert.AreEqual("AB", dataset.Tables[0].Rows[1][2]);
+
+                // Ensure that parseable, non-numeric cached formula values are read as a string
+                Assert.IsInstanceOf<string>(dataset.Tables[0].Rows[2][2]);
+                Assert.AreEqual("1,", dataset.Tables[0].Rows[2][2]);
+            }
+        }
     }
 }

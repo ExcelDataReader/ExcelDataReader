@@ -114,6 +114,13 @@ namespace ExcelDataReader.Tests
             { "Test_git_issue_221", "Test_git_issue_221.xlsx" },
             { "Format49_@", "Format49_@.xlsx" },
             { "fillreport", "fillreport.xlsx" },
+            { "Test_git_issue_231_NoCodePage", "Test_git_issue_231_NoCodePage.xls" },
+            { "xroo_1900_base", "roo_1900_base.xlsx" },
+            { "roo_1900_base", "roo_1900_base.xls" },
+            { "xroo_1904_base", "roo_1904_base.xlsx" },
+            { "roo_1904_base", "roo_1904_base.xls" },
+            { "Test_git_issue_68_NullSheetPath", "Test_git_issue_68_NullSheetPath.xlsm" },
+            { "Test_git_issue_53_Cached_Formula_String_Type", "Test_git_issue_53_Cached_Formula_String_Type.xlsx" }
         };
 
         public static Stream GetTestWorkbook(string key)
