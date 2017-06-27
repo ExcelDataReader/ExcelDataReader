@@ -126,9 +126,6 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             if (record != null)
             {
-                if (record.Bytes.Length < Position + record.Size)
-                    throw new ArgumentException(Errors.ErrorBiffBufferSize);
-
                 Position += record.Size;
             }
 
