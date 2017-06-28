@@ -757,11 +757,10 @@ namespace ExcelDataReader.Tests
         }
 
         [TestMethod]
-
-        // "Issue will mot be resolved as codepage 27651 is not supported in .net \"System.NotSupportedException : No data is available for encoding 27651.\"")]
-        [Ignore("codepage 27651 is not supported in .net")]
         public void Issue_11572_CodePage()
         {
+            // This test was skipped for a long time as it produced: "System.NotSupportedException : No data is available for encoding 27651."
+            // Upon revisting the underlying cause appears to be fixed
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11572_CodePage")))
             {
                 Assert.DoesNotThrow(() => excelReader.AsDataSet());

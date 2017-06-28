@@ -31,6 +31,7 @@ namespace ExcelDataReader
             Configuration = new ExcelReaderConfiguration()
             {
                 ConvertOaDate = configuration.ConvertOaDate,
+                FallbackEncoding = configuration.FallbackEncoding
             };
         }
 
