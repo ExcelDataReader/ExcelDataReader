@@ -8,21 +8,36 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffFormatString : XlsBiffRecord
     {
-        private readonly IXlsString _string;
+        private readonly IXlsString _xlsString;
 
-        internal XlsBiffFormatString(byte[] bytes, uint offset, bool isV8, Encoding encoding)
+        internal XlsBiffFormatString(byte[] bytes, uint offset, int biffVersion, Encoding encoding)
             : base(bytes, offset)
         {
-            if (isV8)
-                _string = new XlsFormattedUnicodeString(bytes, offset + 6);
+            if (biffVersion == 2 || biffVersion == 3)
+            {
+                // BIFF2-3
+                _xlsString = new XlsShortByteString(bytes, offset + 4, encoding);
+            }
+            else if (biffVersion == 4 || biffVersion == 5)
+            {
+                // BIFF4-5
+                _xlsString = new XlsShortByteString(bytes, offset + 4 + 2, encoding);
+            }
+            else if (biffVersion == 8)
+            {
+                // BIFF8
+                _xlsString = new XlsUnicodeString(bytes, offset + 4 + 2);
+            }
             else
-                _string = new XlsByteString(bytes, offset + 4, encoding);
+            {
+                throw new ArgumentException("Unexpected BIFF version " + biffVersion.ToString(), nameof(biffVersion));
+            }
         }
 
         /// <summary>
         /// Gets the string value.
         /// </summary>
-        public string Value => _string.Value;
+        public string Value => _xlsString.Value;
 
         public ushort Index
         {

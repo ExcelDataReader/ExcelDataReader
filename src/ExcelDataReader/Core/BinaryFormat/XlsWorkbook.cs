@@ -14,12 +14,15 @@ namespace ExcelDataReader.Core.BinaryFormat
         internal XlsWorkbook(byte[] bytes, bool convertOaDate)
         {
             Version = 0x0600;
+            BiffVersion = 8;
             BiffStream = new XlsBiffStream(bytes, this);
             ConvertOaDate = convertOaDate;
             ReadWorkbookGlobals();
         }
 
         public ushort Version { get; set; }
+
+        public int BiffVersion { get; private set; }
 
         public Encoding Encoding { get; set; }
 
@@ -58,7 +61,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         
         public XlsBiffStream BiffStream { get; }
 
-        public bool IsV8 => Version >= 0x600;
+        public bool IsV8 => BiffVersion == 8;
 
         public int ResultsCount => Sheets?.Count ?? -1;
 
@@ -90,6 +93,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             bool sst = false;
 
             Version = bof.Version;
+            BiffVersion = GetBiffVersion(bof);
 
             while ((rec = BiffStream.Read()) != null)
             {
@@ -104,7 +108,6 @@ namespace ExcelDataReader.Core.BinaryFormat
                         if (sheet.Type != XlsBiffBoundSheet.SheetType.Worksheet)
                             break;
 
-                        LogManager.Log(this).Debug("BOUNDSHEET IsV8={0}", sheet.IsV8);
                         Sheets.Add(sheet);
                         break;
                     case BIFFRECORDTYPE.MMS:
@@ -177,6 +180,27 @@ namespace ExcelDataReader.Core.BinaryFormat
                         continue;
                 }
             }
+        }
+
+        private int GetBiffVersion(XlsBiffBOF bof)
+        {
+            switch (bof.Id)
+            {
+                case BIFFRECORDTYPE.BOF_V2:
+                    return 2;
+                case BIFFRECORDTYPE.BOF_V3:
+                    return 3;
+                case BIFFRECORDTYPE.BOF_V4:
+                    return 4;
+                case BIFFRECORDTYPE.BOF:
+                    if (bof.Version == 0x500)
+                        return 5;
+                    if (bof.Version == 0x600)
+                        return 8;
+                    break;
+            }
+
+            return 0;
         }
     }
 }

@@ -164,6 +164,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         STRING = 0x0207, // And one more, for string formula results
 
+        STRING_OLD = 0x0007, // Old string formula results
+
         CF = 0x01B1,
         CODENAME = 0x01BA,
         CONDFMT = 0x01B0,

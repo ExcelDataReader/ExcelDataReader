@@ -12,11 +12,11 @@ namespace ExcelDataReader.Core.BinaryFormat
         private readonly List<uint> _continues = new List<uint>();
         private readonly List<string> _strings;
 
-        internal XlsBiffSST(byte[] bytes, uint offset, bool isV8, Encoding encoding)
+        internal XlsBiffSST(byte[] bytes, uint offset, int biffVersion, Encoding encoding)
             : base(bytes, offset)
         {
             _strings = new List<string>();
-            IsV8 = isV8;
+            BiffVersion = biffVersion;
             SSTEncoding = encoding;
         }
 
@@ -30,7 +30,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public uint UniqueCount => ReadUInt32(0x4);
 
-        public bool IsV8 { get; }
+        public int BiffVersion { get; }
 
         public Encoding SSTEncoding { get; }
 
@@ -45,7 +45,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             uint count = UniqueCount;
             while (offset < last)
             {
-                var str = XlsStringFactory.CreateXlsString(Bytes, offset, IsV8, SSTEncoding);
+                var str = CreateXlsString(Bytes, offset);
                 uint prefix = str.HeadSize;
                 uint postfix = str.TailSize;
                 uint len = str.CharacterCount;
@@ -158,6 +158,17 @@ namespace ExcelDataReader.Core.BinaryFormat
         public void Append(XlsBiffContinue fragment)
         {
             _continues.Add((uint)fragment.Offset);
+        }
+
+        private IXlsString CreateXlsString(byte[] bytes, uint offset)
+        {
+            if (BiffVersion == 8)
+                return new XlsFormattedUnicodeString(bytes, offset);
+
+            if (BiffVersion == 5)
+                return new XlsByteString(bytes, offset, SSTEncoding);
+
+            throw new ArgumentException("Unexpected BIFF version " + BiffVersion.ToString(), nameof(BiffVersion));
         }
     }
 }

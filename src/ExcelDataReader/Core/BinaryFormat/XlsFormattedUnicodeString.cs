@@ -4,7 +4,8 @@ using System.Text;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents formatted unicode string in SST
+    /// [MS-XLS] 2.5.293 XLUnicodeRichExtendedString
+    /// Word-sized formatted string in SST, stored as single or multibyte unicode characters.
     /// </summary>
     internal class XlsFormattedUnicodeString : IXlsString
     {

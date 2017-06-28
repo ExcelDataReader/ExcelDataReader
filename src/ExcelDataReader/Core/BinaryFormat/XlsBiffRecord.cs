@@ -69,7 +69,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffInterfaceHdr(bytes, offset);
 
                 case BIFFRECORDTYPE.SST:
-                    return new XlsBiffSST(bytes, offset, workbook.IsV8, workbook.Encoding);
+                    return new XlsBiffSST(bytes, offset, workbook.BiffVersion, workbook.Encoding);
 
                 case BIFFRECORDTYPE.INDEX:
                     return new XlsBiffIndex(bytes, offset, workbook.IsV8);
@@ -86,10 +86,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.MULBLANK:
                     return new XlsBiffMulBlankCell(bytes, offset);
                 case BIFFRECORDTYPE.LABEL_OLD:
-                    return new XlsBiffLabelCell(bytes, offset, 4 + 7, workbook.IsV8, workbook.Encoding);
                 case BIFFRECORDTYPE.LABEL:
                 case BIFFRECORDTYPE.RSTRING:
-                    return new XlsBiffLabelCell(bytes, offset, 4 + 6, workbook.IsV8, workbook.Encoding);
+                    return new XlsBiffLabelCell(bytes, offset, workbook.BiffVersion, workbook.Encoding);
                 case BIFFRECORDTYPE.LABELSST:
                     return new XlsBiffLabelSSTCell(bytes, offset);
                 case BIFFRECORDTYPE.INTEGER:
@@ -107,15 +106,16 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffFormulaCell(bytes, offset);
                 case BIFFRECORDTYPE.FORMAT_V23:
                 case BIFFRECORDTYPE.FORMAT:
-                    return new XlsBiffFormatString(bytes, offset, workbook.IsV8, workbook.Encoding);
+                    return new XlsBiffFormatString(bytes, offset, workbook.BiffVersion, workbook.Encoding);
                 case BIFFRECORDTYPE.STRING:
-                    return new XlsBiffFormulaString(bytes, offset);
+                case BIFFRECORDTYPE.STRING_OLD:
+                    return new XlsBiffFormulaString(bytes, offset, workbook.BiffVersion, workbook.Encoding);
                 case BIFFRECORDTYPE.CONTINUE:
                     return new XlsBiffContinue(bytes, offset);
                 case BIFFRECORDTYPE.DIMENSIONS:
                     return new XlsBiffDimensions(bytes, offset, workbook.IsV8);
                 case BIFFRECORDTYPE.BOUNDSHEET:
-                    return new XlsBiffBoundSheet(bytes, offset, workbook.IsV8, workbook.Encoding);
+                    return new XlsBiffBoundSheet(bytes, offset, workbook.BiffVersion, workbook.Encoding);
                 case BIFFRECORDTYPE.WINDOW1:
                     return new XlsBiffWindow1(bytes, offset);
                 case BIFFRECORDTYPE.CODEPAGE:
