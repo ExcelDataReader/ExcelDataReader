@@ -741,7 +741,7 @@ namespace ExcelDataReader.Tests
                 var dataset = excelReader.AsDataSet();
 
                 Assert.AreEqual(1D, dataset.Tables[0].Rows[12][0]);
-                Assert.AreEqual(070202D, dataset.Tables[0].Rows[12][1]);
+                Assert.AreEqual("070202", dataset.Tables[0].Rows[12][1]);
             }
         }
 
@@ -951,12 +951,11 @@ namespace ExcelDataReader.Tests
         }
 
         [TestMethod]
-        [Ignore("Pending fix")]
         public void GitIssue_53_Cached_Formula_String_Type()
         {
             using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_53_Cached_Formula_String_Type")))
             {
-                var dataset = excelReader.AsDataSet();
+                var dataset = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
                 // Ensure that parseable, numeric cached formula values are read as a double
                 Assert.IsInstanceOf<double>(dataset.Tables[0].Rows[0][2]);

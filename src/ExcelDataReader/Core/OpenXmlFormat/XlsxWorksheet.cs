@@ -21,6 +21,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         public const string AS = "s";
         public const string NSheetData = "sheetData";
         public const string NInlineStr = "inlineStr";
+        public const string NStr = "str";
 
         private string _namespaceUri;
 
@@ -175,6 +176,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 case XlsxWorksheet.AS: //// if string
                     return Helpers.ConvertEscapeChars(Workbook.SST[int.Parse(rawValue, invariantCulture)]);
                 case XlsxWorksheet.NInlineStr: //// if string inline
+                case XlsxWorksheet.NStr: //// if cached formula string
                     return Helpers.ConvertEscapeChars(rawValue);
                 case "b": //// boolean
                     return rawValue == "1";
