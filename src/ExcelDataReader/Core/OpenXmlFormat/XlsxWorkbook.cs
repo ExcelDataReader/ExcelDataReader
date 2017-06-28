@@ -13,6 +13,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string ElementStringItem = "si";
         private const string ElementCellCrossReference = "cellXfs";
         private const string ElementNumberFormats = "numFmts";
+        private const string ElementWorkbookProperties = "workbookPr";
 
         private const string AttributeSheetId = "sheetId";
         private const string AttributeVisibleState = "state";
@@ -65,6 +66,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         public XlsxStyles Styles { get; }
 
         public Encoding Encoding => null;
+
+        public bool IsDate1904 { get; private set; }
 
         public int ResultsCount => Sheets?.Count ?? -1;
 
@@ -124,7 +127,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             {
                 while (reader.Read())
                 {
-                    if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementSheet)
+                    if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementWorkbookProperties)
+                    {
+                        IsDate1904 = reader.GetAttribute("date1904") == "1";
+                    }
+                    else if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementSheet)
                     {
                         sheets.Add(new XlsxBoundSheet(
                             reader.GetAttribute(AttributeName),

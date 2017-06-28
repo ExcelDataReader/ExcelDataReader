@@ -189,7 +189,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     {
                         XlsxXf xf = Workbook.Styles.CellXfs[int.Parse(aS)];
                         if (isNumber && Workbook.IsDateTimeStyle(xf.NumFmtId))
-                            return Helpers.ConvertFromOATime(number);
+                            return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
 
                         if (xf.NumFmtId == 49) // Text format but value is not stored as a string. If numeric convert to current culture. 
                             return isNumber ? number.ToString(CultureInfo.CurrentCulture) : rawValue;

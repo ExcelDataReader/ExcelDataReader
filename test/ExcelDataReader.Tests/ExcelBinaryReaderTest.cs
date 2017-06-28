@@ -1177,7 +1177,6 @@ namespace ExcelDataReader.Tests
         }
 
         [TestMethod]
-        [Ignore("Pending fix")]
         public void GitIssue_82_Date1904_Binary()
         {
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("roo_1904_base")))

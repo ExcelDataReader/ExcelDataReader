@@ -63,6 +63,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public bool IsV8 => BiffVersion == 8;
 
+        public bool IsDate1904 { get; private set; }
+
         public int ResultsCount => Sheets?.Count ?? -1;
 
         public IEnumerable<XlsWorksheet> ReadWorksheets()
@@ -167,6 +169,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case BIFFRECORDTYPE.PROTECT:
                     case BIFFRECORDTYPE.PROT4REVPASSWORD:
                         // IsProtected
+                        break;
+                    case BIFFRECORDTYPE.RECORD1904:
+                        IsDate1904 = ((XlsBiffSimpleValueRecord)rec).Value == 1;
                         break;
                     case BIFFRECORDTYPE.EOF:
                         SST?.ReadStrings();

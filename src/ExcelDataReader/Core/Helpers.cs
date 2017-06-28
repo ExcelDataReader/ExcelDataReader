@@ -35,20 +35,21 @@ namespace ExcelDataReader.Core
             return EscapeRegex.Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber)).ToString());
         }
 
-        public static object ConvertFromOATime(double value)
+        public static object ConvertFromOATime(double value, bool date1904)
         {
-            if (value >= 0.0 && value < 60.0)
-            {
-                value++;
+            if (!date1904)
+            { 
+                // Workaround for 1900 leap year bug in Excel
+                if (value >= 0.0 && value < 60.0)
+                {
+                    value++;
+                }
+            }
+            else
+            { 
+                value += 1462.0;
             }
 
-            /*
-            if (date1904)
-            {
-                Value += 1462.0;
-            }
-            */
-            
             return DateTimeHelper.FromOADate(value);
         }
     }

@@ -115,20 +115,7 @@ namespace ExcelDataReader
                 return (DateTime)val;
             }
 
-            // otherwise proceed with conversion attempts
-            string valString = val.ToString();
-            double dVal;
-
-            try
-            {
-                dVal = double.Parse(valString);
-            }
-            catch (FormatException)
-            {
-                return DateTime.Parse(valString);
-            }
-
-            return DateTimeHelper.FromOADate(dVal);
+            return DateTime.MinValue;
         }
 
         public decimal GetDecimal(int i)

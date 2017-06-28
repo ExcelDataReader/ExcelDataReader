@@ -924,7 +924,7 @@ namespace ExcelDataReader.Tests
         }
 
         [TestMethod]
-        [Ignore("Pending fix")]
+//        [Ignore("Pending fix")]
         public void GitIssue_82_Date1904_OpenXml()
         {
             using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xroo_1904_base")))

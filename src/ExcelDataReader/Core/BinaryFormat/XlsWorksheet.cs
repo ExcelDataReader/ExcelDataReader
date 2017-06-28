@@ -385,7 +385,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case 0x2d: // "mm:ss";
                 case 0x2e: // "[h]:mm:ss";
                 case 0x2f: // "mm:ss.0";
-                    return Helpers.ConvertFromOATime(value);
+                    return Helpers.ConvertFromOATime(value, Workbook.IsDate1904);
                 case 0x31: // "@";
                     return value.ToString(); // TODO: What is the exepcted culture here?
 
@@ -395,7 +395,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         var fmt = fmtString.Value;
                         var formatReader = new FormatReader { FormatString = fmt };
                         if (formatReader.IsDateFormatString())
-                            return Helpers.ConvertFromOATime(value);
+                            return Helpers.ConvertFromOATime(value, Workbook.IsDate1904);
                     }
 
                     return value;
