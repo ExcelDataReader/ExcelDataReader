@@ -1153,7 +1153,6 @@ namespace ExcelDataReader.Tests
         }
 
         [TestMethod]
-        [Ignore("Pending fix")]
         public void GitIssue_231_NoCodePage()
         {
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_231_NoCodePage")))

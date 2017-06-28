@@ -1,4 +1,6 @@
-﻿namespace ExcelDataReader
+﻿using System.Text;
+
+namespace ExcelDataReader
 {
     /// <summary>
     /// Configuration options for an instance of ExcelDataReader.
@@ -9,5 +11,10 @@
         /// Gets or sets a value indicating whether OLE Automation dates will be converted to DateTime. Default: true. (XLS only)
         /// </summary>
         public bool ConvertOaDate { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating the encoding to use when the input XLS lacks a CodePage record. Default: cp1252. (XLS BIFF2-5 only)
+        /// </summary>
+        public Encoding FallbackEncoding { get; set; } = Encoding.GetEncoding(1252);
     }
 }

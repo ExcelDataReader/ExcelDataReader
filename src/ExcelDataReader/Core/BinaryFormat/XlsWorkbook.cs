@@ -11,13 +11,13 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsWorkbook : IWorkbook<XlsWorksheet>
     {
-        internal XlsWorkbook(byte[] bytes, bool convertOaDate)
+        internal XlsWorkbook(byte[] bytes, bool convertOaDate, Encoding fallbackEncoding)
         {
             Version = 0x0600;
             BiffVersion = 8;
             BiffStream = new XlsBiffStream(bytes, this);
             ConvertOaDate = convertOaDate;
-            ReadWorkbookGlobals();
+            ReadWorkbookGlobals(fallbackEncoding);
         }
 
         public ushort Version { get; set; }
@@ -78,7 +78,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             return new XlsWorksheet(this, index);
         }
 
-        private void ReadWorkbookGlobals()
+        private void ReadWorkbookGlobals(Encoding fallbackEncoding)
         {
             BiffStream.Seek(0, SeekOrigin.Begin);
 
@@ -94,6 +94,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             Version = bof.Version;
             BiffVersion = GetBiffVersion(bof);
+            Encoding = BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
 
             while ((rec = BiffStream.Read()) != null)
             {
@@ -117,16 +118,11 @@ namespace ExcelDataReader.Core.BinaryFormat
                         Country = rec;
                         break;
                     case BIFFRECORDTYPE.CODEPAGE:
+                        // [MS-XLS 2.4.52 CodePage] An unsigned integer that specifies the workbook’s code page.The value MUST be one
+                        // of the code page values specified in [CODEPG] or the special value 1200, which means that the
+                        // workbook is Unicode.
                         CodePage = (XlsBiffSimpleValueRecord)rec;
-
-                        // set encoding based on code page name
-                        // PCL does not supported codepage numbers
-                        if (CodePage.Value == 1200)
-                            Encoding = EncodingHelper.GetEncoding(65001);
-                        else
-                            Encoding = EncodingHelper.GetEncoding(CodePage.Value);
-
-                        // NOTE: the format spec states that for BIFF8 this is always UTF-16.
+                        Encoding = EncodingHelper.GetEncoding(CodePage.Value);
                         break;
                     case BIFFRECORDTYPE.FONT:
                     case BIFFRECORDTYPE.FONT_V34:
