@@ -4,6 +4,12 @@ namespace ExcelDataReader.Misc
 {
     public static class DateTimeHelper
     {
+        // All OA dates must be greater than (not >=) OADateMinAsDouble
+        public const double OADateMinAsDouble = -657435.0;
+
+        // All OA dates must be less than (not <=) OADateMaxAsDouble
+        public const double OADateMaxAsDouble = 2958466.0;
+
         // From DateTime class to enable OADate in PCL
         // Number of 100ns ticks per time unit
         private const long TicksPerMillisecond = 10000;
@@ -39,12 +45,6 @@ namespace ExcelDataReader.Misc
         private const long MaxMillis = (long)DaysTo10000 * MillisPerDay;
 
         private const long DoubleDateOffset = DaysTo1899 * TicksPerDay;
-
-        // All OA dates must be greater than (not >=) OADateMinAsDouble
-        private const double OADateMinAsDouble = -657435.0;
-
-        // All OA dates must be less than (not <=) OADateMaxAsDouble
-        private const double OADateMaxAsDouble = 2958466.0;
 
         public static DateTime FromOADate(double d)
         {

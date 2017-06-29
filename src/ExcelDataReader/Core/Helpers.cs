@@ -37,6 +37,8 @@ namespace ExcelDataReader.Core
 
         public static object ConvertFromOATime(double value, bool date1904)
         {
+            var originalValue = value;
+
             if (!date1904)
             { 
                 // Workaround for 1900 leap year bug in Excel
@@ -49,6 +51,9 @@ namespace ExcelDataReader.Core
             { 
                 value += 1462.0;
             }
+
+            if (value >= DateTimeHelper.OADateMaxAsDouble || value <= DateTimeHelper.OADateMinAsDouble)
+                return originalValue;
 
             return DateTimeHelper.FromOADate(value);
         }

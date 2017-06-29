@@ -970,5 +970,17 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("1,", dataset.Tables[0].Rows[2][2]);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_14_InvalidOADate()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_14_InvalidOADate")))
+            {
+                var dataset = excelReader.AsDataSet();
+
+                // Test out of range double formatted as date returns double
+                Assert.AreEqual(1000000000000D, dataset.Tables[0].Rows[0][0]);
+            }
+        }
     }
 }
