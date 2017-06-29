@@ -3,11 +3,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 {
     internal class XlsxXf
     {
-        public const string NXF = "xf";
-        public const string ANumFmtId = "numFmtId";
-        public const string AXFId = "xfId";
-        public const string AApplyNumberFormat = "applyNumberFormat";
-
         public XlsxXf(int id, int numFmtId, string applyNumberFormat)
         {
             Id = id;

@@ -1,15 +1,15 @@
-using System;
-
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
-    internal class XlsxDimension
+    internal class XlsxDimension : XlsxElement
     {
         public XlsxDimension(string value)
+            : base(XlsxElementType.Dimension)
         {
             ParseDimensions(value);
         }
 
         public XlsxDimension(int rows, int cols)
+            : base(XlsxElementType.Dimension)
         {
             FirstRow = 1;
             LastRow = rows;

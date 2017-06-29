@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using System.Xml;
 
@@ -8,11 +6,17 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 {
     internal class XlsxWorkbook : IWorkbook<XlsxWorksheet>
     {
+        private const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        private const string NsRelationship = "http://schemas.openxmlformats.org/package/2006/relationships";
+        private const string ElementSst = "sst";
+        private const string ElementSheets = "sheets";
         private const string ElementSheet = "sheet";
         private const string ElementT = "t";
         private const string ElementStringItem = "si";
+        private const string ElementStyleSheet = "styleSheet";
         private const string ElementCellCrossReference = "cellXfs";
         private const string ElementNumberFormats = "numFmts";
+        private const string ElementWorkbook = "workbook";
         private const string ElementWorkbookProperties = "workbookPr";
 
         private const string AttributeSheetId = "sheetId";
@@ -21,8 +25,17 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string AttributeRelationshipId = "r:id";
 
         private const string ElementRelationship = "Relationship";
+        private const string ElementRelationships = "Relationships";
         private const string AttributeId = "Id";
         private const string AttributeTarget = "Target";
+
+        private const string NXF = "xf";
+        private const string ANumFmtId = "numFmtId";
+        private const string AXFId = "xfId";
+        private const string AApplyNumberFormat = "applyNumberFormat";
+
+        private const string NNumFmt = "numFmt";
+        private const string AFormatCode = "formatCode";
 
         private readonly List<int> _defaultDateTimeStyles;
         private ZipWorker _zipWorker;
@@ -36,34 +49,19 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
             _zipWorker = zipWorker;
 
-            using (var stream = _zipWorker.GetWorkbookStream())
-            {
-                Sheets = ReadWorkbook(stream);
-            }
-
-            using (var stream = _zipWorker.GetWorkbookRelsStream())
-            {
-                ReadWorkbookRels(stream, Sheets);
-            }
-
-            using (var stream = _zipWorker.GetSharedStringsStream())
-            {
-                SST = ReadSharedStrings(stream);
-            }
-
-            using (var stream = _zipWorker.GetStylesStream())
-            {
-                Styles = ReadStyles(stream);
-            }
+            ReadWorkbook();
+            ReadWorkbookRels();
+            ReadSharedStrings();
+            ReadStyles();
 
             CheckDateTimeNumFmts(Styles.NumFmts);
         }
 
-        public List<XlsxBoundSheet> Sheets { get; }
+        public List<XlsxBoundSheet> Sheets { get; } = new List<XlsxBoundSheet>();
 
-        public XlsxSST SST { get; }
+        public XlsxSST SST { get; } = new XlsxSST();
 
-        public XlsxStyles Styles { get; }
+        public XlsxStyles Styles { get; } = new XlsxStyles();
 
         public Encoding Encoding => null;
 
@@ -119,190 +117,276 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
-        private List<XlsxBoundSheet> ReadWorkbook(Stream xmlFileStream)
+        private void ReadWorkbook()
         {
-            var sheets = new List<XlsxBoundSheet>();
-
-            using (XmlReader reader = XmlReader.Create(xmlFileStream))
+            using (var stream = _zipWorker.GetWorkbookStream())
             {
-                while (reader.Read())
+                using (XmlReader reader = XmlReader.Create(stream))
                 {
-                    if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementWorkbookProperties)
-                    {
-                        IsDate1904 = reader.GetAttribute("date1904") == "1";
-                    }
-                    else if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementSheet)
-                    {
-                        sheets.Add(new XlsxBoundSheet(
-                            reader.GetAttribute(AttributeName),
-                            int.Parse(reader.GetAttribute(AttributeSheetId)),
-                            reader.GetAttribute(AttributeRelationshipId),
-                            reader.GetAttribute(AttributeVisibleState)));
-                    }
+                    ReadWorkbook(reader);
                 }
             }
-
-            return sheets;
         }
 
-        private void ReadWorkbookRels(Stream xmlFileStream, List<XlsxBoundSheet> sheets)
+        private void ReadWorkbook(XmlReader reader)
         {
-            using (XmlReader reader = XmlReader.Create(xmlFileStream))
+            if (!reader.IsStartElement(ElementWorkbook, NsSpreadsheetMl))
             {
-                while (reader.Read())
+                return;
+            }
+
+            if (!XmlReaderHelper.ReadFirstContent(reader))
+            {
+                return;
+            }
+
+            while (!reader.EOF)
+            {
+                if (reader.IsStartElement(ElementWorkbookProperties, NsSpreadsheetMl))
                 {
-                    if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementRelationship)
+                    IsDate1904 = reader.GetAttribute("date1904") == "1";
+                    reader.Skip();
+                }
+                else if (reader.IsStartElement(ElementSheets, NsSpreadsheetMl))
+                {
+                    ReadSheets(reader);
+                }
+                else if (!XmlReaderHelper.SkipContent(reader))
+                {
+                    break;
+                }
+            }
+        }
+
+        private void ReadSheets(XmlReader reader)
+        {
+            if (!XmlReaderHelper.ReadFirstContent(reader))
+            {
+                return;
+            }
+
+            while (!reader.EOF)
+            {
+                if (reader.IsStartElement(ElementSheet, NsSpreadsheetMl))
+                {
+                    Sheets.Add(new XlsxBoundSheet(
+                        reader.GetAttribute(AttributeName),
+                        int.Parse(reader.GetAttribute(AttributeSheetId)),
+                        reader.GetAttribute(AttributeRelationshipId),
+                        reader.GetAttribute(AttributeVisibleState)));
+                    reader.Skip();
+                }
+                else if (!XmlReaderHelper.SkipContent(reader))
+                {
+                    break;
+                }
+            }
+        }
+
+        private void ReadWorkbookRels()
+        {
+            using (var stream = _zipWorker.GetWorkbookRelsStream())
+            {
+                using (XmlReader reader = XmlReader.Create(stream))
+                {
+                    ReadWorkbookRels(reader);
+                }
+            }
+        }
+
+        private void ReadWorkbookRels(XmlReader reader)
+        {
+            if (!reader.IsStartElement(ElementRelationships, NsRelationship))
+            {
+                return;
+            }
+
+            if (!XmlReaderHelper.ReadFirstContent(reader))
+            {
+                return;
+            }
+
+            while (!reader.EOF)
+            {
+                if (reader.IsStartElement(ElementRelationship, NsRelationship))
+                {
+                    string rid = reader.GetAttribute(AttributeId);
+                    foreach (var sheet in Sheets)
                     {
-                        string rid = reader.GetAttribute(AttributeId);
-
-                        for (int i = 0; i < sheets.Count; i++)
+                        if (sheet.Rid == rid)
                         {
-                            var tempSheet = sheets[i];
-
-                            if (tempSheet.Rid == rid)
-                            {
-                                tempSheet.Path = reader.GetAttribute(AttributeTarget);
-                                sheets[i] = tempSheet;
-                                break;
-                            }
+                            sheet.Path = reader.GetAttribute(AttributeTarget);
+                            break;
                         }
                     }
+
+                    reader.Skip();
+                }
+                else if (!XmlReaderHelper.SkipContent(reader))
+                {
+                    break;
                 }
             }
         }
 
-        private XlsxSST ReadSharedStrings(Stream xmlFileStream)
+        private void ReadSharedStrings()
         {
-            if (xmlFileStream == null)
-                return null;
-
-            var sst = new XlsxSST();
-
-            using (XmlReader reader = XmlReader.Create(xmlFileStream))
+            using (var stream = _zipWorker.GetSharedStringsStream())
             {
-                // Skip phonetic string data.
-                bool bSkipPhonetic = false;
+                if (stream == null)
+                    return;
 
-                // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
-                bool bAddStringItem = false;
-                string sStringItem = string.Empty;
+                using (XmlReader reader = XmlReader.Create(stream))
+                {
+                    ReadSharedStrings(reader);
+                }
+            }
+        }
 
-                while (reader.Read())
+        private void ReadSharedStrings(XmlReader reader)
+        {
+            if (!reader.IsStartElement(ElementSst, NsSpreadsheetMl))
+            {
+                return;
+            }
+
+            if (!XmlReaderHelper.ReadFirstContent(reader))
+            {
+                return;
+            }
+
+            while (!reader.EOF)
+            {
+                if (reader.IsStartElement(ElementStringItem, NsSpreadsheetMl))
+                {
+                    var value = ReadStringItem(reader);
+                    SST.Add(value);
+                }
+                else if (!XmlReaderHelper.SkipContent(reader))
+                {
+                    break;
+                }
+            }
+        }
+
+        private string ReadStringItem(XmlReader reader)
+        {
+            string result = string.Empty;
+            if (!XmlReaderHelper.ReadFirstContent(reader))
+            {
+                return result;
+            }
+
+            while (!reader.EOF)
+            {
+                if (reader.IsStartElement(ElementT, NsSpreadsheetMl))
                 {
                     // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
-                    if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementStringItem)
-                    {
-                        // Do not add the string item until the next string item is read.
-                        if (bAddStringItem)
-                        {
-                            // Add the string item to XlsxSST.
-                            sst.Add(sStringItem);
-                        }
-                        else
-                        {
-                            // Add the string items from here on.
-                            bAddStringItem = true;
-                        }
-
-                        // Reset the string item.
-                        sStringItem = string.Empty;
-                    }
-                    else if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementT)
-                    {
-                        // Skip phonetic string data.
-                        if (!bSkipPhonetic)
-                        {
-                            // Append to the string item.
-                            sStringItem += reader.ReadElementContentAsString();
-                        }
-                    }
-
-                    if (reader.LocalName == "rPh")
-                    {
-                        // Phonetic items represents pronunciation hints for some East Asian languages.
-                        // In the file 'xl/sharedStrings.xml', the phonetic properties appear like:
-                        // <si>
-                        //  <t>(a japanese text in KANJI)</t>
-                        //  <rPh sb="0" eb="1">
-                        //      <t>(its pronounciation in KATAKANA)</t>
-                        //  </rPh>
-                        // </si>
-                        if (reader.NodeType == XmlNodeType.Element)
-                            bSkipPhonetic = true;
-                        else if (reader.NodeType == XmlNodeType.EndElement)
-                            bSkipPhonetic = false;
-                    }
+                    result += reader.ReadElementContentAsString();
                 }
-
-                // Do not add the last string item unless we have read previous string items.
-                if (bAddStringItem)
+                else if (!XmlReaderHelper.SkipContent(reader))
                 {
-                    // Add the string item to XlsxSST.
-                    sst.Add(sStringItem);
+                    break;
                 }
             }
 
-            return sst;
+            return result;
         }
 
-        private XlsxStyles ReadStyles(Stream xmlFileStream)
+        private void ReadStyles()
         {
-            var styles = new XlsxStyles();
-
-            if (xmlFileStream == null)
-                return styles;
-
-            bool rXlsxNumFmt = false;
-
-            using (XmlReader reader = XmlReader.Create(xmlFileStream))
+            using (var stream = _zipWorker.GetStylesStream())
             {
-                while (reader.Read())
+                if (stream == null)
+                    return;
+
+                using (XmlReader reader = XmlReader.Create(stream))
                 {
-                    if (!rXlsxNumFmt && reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementNumberFormats)
-                    {
-                        while (reader.Read())
-                        {
-                            if (reader.NodeType == XmlNodeType.Element && reader.Depth == 1)
-                                break;
-
-                            if (reader.NodeType == XmlNodeType.Element && reader.LocalName == XlsxNumFmt.NNumFmt)
-                            {
-                                styles.NumFmts.Add(
-                                    new XlsxNumFmt(
-                                        int.Parse(reader.GetAttribute(XlsxNumFmt.ANumFmtId)),
-                                        reader.GetAttribute(XlsxNumFmt.AFormatCode)));
-                            }
-                        }
-
-                        rXlsxNumFmt = true;
-                    }
-
-                    if (reader.NodeType == XmlNodeType.Element && reader.LocalName == ElementCellCrossReference)
-                    {
-                        while (reader.Read())
-                        {
-                            if (reader.NodeType == XmlNodeType.Element && reader.Depth == 1)
-                                break;
-
-                            if (reader.NodeType == XmlNodeType.Element && reader.LocalName == XlsxXf.NXF)
-                            {
-                                var xfId = reader.GetAttribute(XlsxXf.AXFId);
-                                var numFmtId = reader.GetAttribute(XlsxXf.ANumFmtId);
-
-                                styles.CellXfs.Add(
-                                    new XlsxXf(
-                                        xfId == null ? -1 : int.Parse(xfId),
-                                        numFmtId == null ? -1 : int.Parse(numFmtId),
-                                        reader.GetAttribute(XlsxXf.AApplyNumberFormat)));
-                            }
-                        }
-
-                        break;
-                    }
+                    ReadStyles(reader);
                 }
             }
 
-            return styles;
+        }
+
+        private void ReadStyles(XmlReader reader)
+        {
+            if (!reader.IsStartElement(ElementStyleSheet, NsSpreadsheetMl))
+            {
+                return;
+            }
+
+            if (!XmlReaderHelper.ReadFirstContent(reader))
+            {
+                return;
+            }
+
+            while (!reader.EOF)
+            {
+                if (reader.IsStartElement(ElementCellCrossReference, NsSpreadsheetMl))
+                {
+                    ReadCellXfs(reader);
+                }
+                else if (reader.IsStartElement(ElementNumberFormats, NsSpreadsheetMl))
+                {
+                    ReadNumberFormats(reader);
+                }
+                else if (!XmlReaderHelper.SkipContent(reader))
+                {
+                    break;
+                }
+            }
+        }
+
+        private void ReadCellXfs(XmlReader reader)
+        {
+            if (!XmlReaderHelper.ReadFirstContent(reader))
+            {
+                return;
+            }
+
+            while (!reader.EOF)
+            {
+                if (reader.IsStartElement(NXF, NsSpreadsheetMl))
+                {
+                    var xfId = reader.GetAttribute(AXFId);
+                    var numFmtId = reader.GetAttribute(ANumFmtId);
+
+                    Styles.CellXfs.Add(
+                        new XlsxXf(
+                            xfId == null ? -1 : int.Parse(xfId),
+                            numFmtId == null ? -1 : int.Parse(numFmtId),
+                            reader.GetAttribute(AApplyNumberFormat)));
+                    reader.Skip();
+                }
+                else if (!XmlReaderHelper.SkipContent(reader))
+                {
+                    break;
+                }
+            }
+        }
+
+        private void ReadNumberFormats(XmlReader reader)
+        {
+            if (!XmlReaderHelper.ReadFirstContent(reader))
+            {
+                return;
+            }
+
+            while (!reader.EOF)
+            {
+                if (reader.IsStartElement(NNumFmt, NsSpreadsheetMl))
+                {
+                    Styles.NumFmts.Add(
+                        new XlsxNumFmt(
+                            int.Parse(reader.GetAttribute(ANumFmtId)),
+                            reader.GetAttribute(AFormatCode)));
+                    reader.Skip();
+                }
+                else if (!XmlReaderHelper.SkipContent(reader))
+                {
+                    break;
+                }
+            }
         }
     }
 }
