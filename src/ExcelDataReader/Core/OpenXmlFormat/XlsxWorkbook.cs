@@ -305,7 +305,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     ReadStyles(reader);
                 }
             }
-
         }
 
         private void ReadStyles(XmlReader reader)
