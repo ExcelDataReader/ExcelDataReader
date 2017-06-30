@@ -89,23 +89,20 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Gets the value.
         /// </summary>
-        public string Value
+        public string GetValue(Encoding encoding)
         {
-            get
+            if (IsMultiByte)
+                return Encoding.Unicode.GetString(_bytes, (int)(_offset + HeadSize), CharacterCount * 2);
+
+            int len = CharacterCount;
+            int start = (int)HeadSize;
+            byte[] bytes = new byte[len * 2];
+            for (int i = 0; i < len; i++)
             {
-                if (IsMultiByte)
-                    return Encoding.Unicode.GetString(_bytes, (int)(_offset + HeadSize), CharacterCount * 2);
-
-                int len = CharacterCount;
-                int start = (int)HeadSize;
-                byte[] bytes = new byte[len * 2];
-                for (int i = 0; i < len; i++)
-                {
-                    bytes[i * 2] = _bytes[_offset + start + i];
-                }
-
-                return Encoding.Unicode.GetString(bytes, 0, len * 2);
+                bytes[i * 2] = _bytes[_offset + start + i];
             }
+
+            return Encoding.Unicode.GetString(bytes, 0, len * 2);
         }
     }
 }

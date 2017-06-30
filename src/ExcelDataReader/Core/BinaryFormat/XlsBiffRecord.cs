@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
@@ -46,9 +47,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         /// <param name="bytes">byte array</param>
         /// <param name="offset">position in array</param>
-        /// <param name="workbook">The workbook.</param>
         /// <returns>The record -or- null.</returns>
-        public static XlsBiffRecord GetRecord(byte[] bytes, uint offset, XlsWorkbook workbook)
+        public static XlsBiffRecord GetRecord(byte[] bytes, uint offset, int biffVersion)
         {
             if (offset >= bytes.Length)
                 return null;
@@ -69,10 +69,10 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffInterfaceHdr(bytes, offset);
 
                 case BIFFRECORDTYPE.SST:
-                    return new XlsBiffSST(bytes, offset, workbook.BiffVersion, workbook.Encoding);
+                    return new XlsBiffSST(bytes, offset, biffVersion);
 
                 case BIFFRECORDTYPE.INDEX:
-                    return new XlsBiffIndex(bytes, offset, workbook.IsV8);
+                    return new XlsBiffIndex(bytes, offset, biffVersion == 8);
                 case BIFFRECORDTYPE.ROW:
                     return new XlsBiffRow(bytes, offset);
                 case BIFFRECORDTYPE.DBCELL:
@@ -88,7 +88,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.LABEL_OLD:
                 case BIFFRECORDTYPE.LABEL:
                 case BIFFRECORDTYPE.RSTRING:
-                    return new XlsBiffLabelCell(bytes, offset, workbook.BiffVersion, workbook.Encoding);
+                    return new XlsBiffLabelCell(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.LABELSST:
                     return new XlsBiffLabelSSTCell(bytes, offset);
                 case BIFFRECORDTYPE.INTEGER:
@@ -106,16 +106,16 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffFormulaCell(bytes, offset);
                 case BIFFRECORDTYPE.FORMAT_V23:
                 case BIFFRECORDTYPE.FORMAT:
-                    return new XlsBiffFormatString(bytes, offset, workbook.BiffVersion, workbook.Encoding);
+                    return new XlsBiffFormatString(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.STRING:
                 case BIFFRECORDTYPE.STRING_OLD:
-                    return new XlsBiffFormulaString(bytes, offset, workbook.BiffVersion, workbook.Encoding);
+                    return new XlsBiffFormulaString(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.CONTINUE:
                     return new XlsBiffContinue(bytes, offset);
                 case BIFFRECORDTYPE.DIMENSIONS:
-                    return new XlsBiffDimensions(bytes, offset, workbook.IsV8);
+                    return new XlsBiffDimensions(bytes, offset, biffVersion == 8);
                 case BIFFRECORDTYPE.BOUNDSHEET:
-                    return new XlsBiffBoundSheet(bytes, offset, workbook.BiffVersion, workbook.Encoding);
+                    return new XlsBiffBoundSheet(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.WINDOW1:
                     return new XlsBiffWindow1(bytes, offset);
                 case BIFFRECORDTYPE.CODEPAGE:

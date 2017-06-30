@@ -10,14 +10,13 @@ namespace ExcelDataReader.Core.BinaryFormat
     internal class XlsBiffSST : XlsBiffRecord
     {
         private readonly List<uint> _continues = new List<uint>();
-        private readonly List<string> _strings;
+        private readonly List<IXlsString> _strings;
 
-        internal XlsBiffSST(byte[] bytes, uint offset, int biffVersion, Encoding encoding)
+        internal XlsBiffSST(byte[] bytes, uint offset, int biffVersion)
             : base(bytes, offset)
         {
-            _strings = new List<string>();
+            _strings = new List<IXlsString>();
             BiffVersion = biffVersion;
-            SSTEncoding = encoding;
         }
 
         /// <summary>
@@ -31,8 +30,6 @@ namespace ExcelDataReader.Core.BinaryFormat
         public uint UniqueCount => ReadUInt32(0x4);
 
         public int BiffVersion { get; }
-
-        public Encoding SSTEncoding { get; }
 
         /// <summary>
         /// Reads strings from BIFF stream into SST array
@@ -131,7 +128,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     }
                 }
 
-                _strings.Add(str.Value);
+                _strings.Add(str);
                 count--;
                 if (count == 0)
                     break;
@@ -143,10 +140,10 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         /// <param name="sstIndex">Index of string to get</param>
         /// <returns>string value if it was found, empty string otherwise</returns>
-        public string GetString(uint sstIndex)
+        public string GetString(uint sstIndex, Encoding encoding)
         {
             if (sstIndex < _strings.Count)
-                return _strings[(int)sstIndex];
+                return _strings[(int)sstIndex].GetValue(encoding);
             
             return string.Empty;
         }
@@ -166,7 +163,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 return new XlsFormattedUnicodeString(bytes, offset);
 
             if (BiffVersion == 5)
-                return new XlsByteString(bytes, offset, SSTEncoding);
+                return new XlsByteString(bytes, offset);
 
             throw new ArgumentException("Unexpected BIFF version " + BiffVersion.ToString(), nameof(BiffVersion));
         }

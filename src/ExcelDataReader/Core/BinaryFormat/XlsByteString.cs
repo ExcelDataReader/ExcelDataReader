@@ -10,13 +10,11 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly byte[] _bytes;
         private readonly uint _offset;
-        private readonly Encoding _encoding;
 
-        public XlsByteString(byte[] bytes, uint offset, Encoding encoding)
+        public XlsByteString(byte[] bytes, uint offset)
         {
             _bytes = bytes;
             _offset = offset;
-            _encoding = encoding;
         }
         
         /// <summary>
@@ -28,18 +26,15 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public uint TailSize => 0;
 
-        public bool IsMultiByte => !Helpers.IsSingleByteEncoding(_encoding);
+        public bool IsMultiByte => false;
 
         /// <summary>
         /// Gets the value.
         /// </summary>
-        public string Value
+        public string GetValue(Encoding encoding)
         {
-            get
-            {
-                var stringBytes = ReadArray(0x2, CharacterCount * (Helpers.IsSingleByteEncoding(_encoding) ? 1 : 2));
-                return _encoding.GetString(stringBytes, 0, stringBytes.Length);
-            }
+            var stringBytes = ReadArray(0x2, CharacterCount * (Helpers.IsSingleByteEncoding(encoding) ? 1 : 2));
+            return encoding.GetString(stringBytes, 0, stringBytes.Length);
         }
 
         public byte[] ReadArray(int offset, int size)

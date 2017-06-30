@@ -10,18 +10,18 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly IXlsString _xlsString;
 
-        internal XlsBiffFormulaString(byte[] bytes, uint offset, int biffVersion, Encoding encoding)
+        internal XlsBiffFormulaString(byte[] bytes, uint offset, int biffVersion)
             : base(bytes, offset)
         {
             if (biffVersion == 2)
             {
                 // BIFF2
-                _xlsString = new XlsShortByteString(bytes, offset + 4, encoding);
+                _xlsString = new XlsShortByteString(bytes, offset + 4);
             }
             else if (biffVersion >= 3 && biffVersion <= 5)
             {
                 // BIFF3-5
-                _xlsString = new XlsByteString(bytes, offset + 4, encoding);
+                _xlsString = new XlsByteString(bytes, offset + 4);
             }
             else if (biffVersion == 8)
             {
@@ -37,6 +37,9 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Gets the string value.
         /// </summary>
-        public string Value => _xlsString.Value;
+        public string GetValue(Encoding encoding)
+        {
+            return _xlsString.GetValue(encoding);
+        }
     }
 }

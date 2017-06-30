@@ -10,7 +10,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly IXlsString _sheetName;
 
-        internal XlsBiffBoundSheet(byte[] bytes, uint offset, int biffVersion, Encoding encoding)
+        internal XlsBiffBoundSheet(byte[] bytes, uint offset, int biffVersion)
             : base(bytes, offset)
         {
             if (biffVersion == 8)
@@ -19,7 +19,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
             else if (biffVersion == 5)
             {
-                _sheetName = new XlsShortByteString(bytes, offset + 4 + 6, encoding);
+                _sheetName = new XlsShortByteString(bytes, offset + 4 + 6);
             }
             else 
             {
@@ -62,6 +62,9 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Gets the name of the worksheet.
         /// </summary>
-        public string SheetName => _sheetName.Value;
+        public string GetSheetName(Encoding encoding)
+        {
+            return _sheetName.GetValue(encoding);
+        }
     }
 }

@@ -16,7 +16,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             Index = index;
 
             var refSheet = workbook.Sheets[index];
-            Name = refSheet.SheetName;
+            Name = refSheet.GetSheetName(workbook.Encoding);
             DataOffset = refSheet.StartOffset;
 
             switch (refSheet.VisibleState)
@@ -195,12 +195,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.LABEL_OLD:
                 case BIFFRECORDTYPE.RSTRING:
 
-                    cellValues[cell.ColumnIndex] = ((XlsBiffLabelCell)cell).Value;
+                    cellValues[cell.ColumnIndex] = ((XlsBiffLabelCell)cell).GetValue(Workbook.Encoding);
 
                     LogManager.Log(this).Debug("VALUE: {0}", cellValues[cell.ColumnIndex]);
                     break;
                 case BIFFRECORDTYPE.LABELSST:
-                    string tmp = Workbook.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex);
+                    string tmp = Workbook.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex, Workbook.Encoding);
                     LogManager.Log(this).Debug("VALUE: {0}", tmp);
                     cellValues[cell.ColumnIndex] = tmp;
                     break;
@@ -285,7 +285,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         if (recId == BIFFRECORDTYPE.STRING)
                         {
                             var stringRecord = (XlsBiffFormulaString)additionalRecords[0];
-                            result = stringRecord.Value;
+                            result = stringRecord.GetValue(Workbook.Encoding);
                             return true;
                         }
                     }
@@ -298,7 +298,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         if (recId == BIFFRECORDTYPE.STRING)
                         {
                             var stringRecord = (XlsBiffFormulaString)additionalRecords[1];
-                            result = stringRecord.Value;
+                            result = stringRecord.GetValue(Workbook.Encoding);
                             return true;
                         }
                     }
@@ -392,7 +392,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 default:
                     if (Workbook.Formats.TryGetValue(format, out XlsBiffFormatString fmtString))
                     {
-                        var fmt = fmtString.Value;
+                        var fmt = fmtString.GetValue(Workbook.Encoding);
                         var formatReader = new FormatReader { FormatString = fmt };
                         if (formatReader.IsDateFormatString())
                             return Helpers.ConvertFromOATime(value, Workbook.IsDate1904);

@@ -25,27 +25,24 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public bool IsMultiByte => (_bytes[_offset + 1] & 0x01) != 0;
 
-        public string Value 
-        {
-            get
-            {
-                if (IsMultiByte)
-                {
-                    return Encoding.Unicode.GetString(_bytes, (int)_offset + 2, CharacterCount * 2);
-                }
-
-                byte[] bytes = new byte[CharacterCount * 2];
-                for (int i = 0; i < CharacterCount; i++)
-                {
-                    bytes[i * 2] = _bytes[_offset + 2 + i];
-                }
-
-                return Encoding.Unicode.GetString(bytes);
-            }
-        }
-
         public uint HeadSize => throw new NotImplementedException();
 
         public uint TailSize => throw new NotImplementedException();
+
+        public string GetValue(Encoding encoding)
+        {
+            if (IsMultiByte)
+            {
+                return Encoding.Unicode.GetString(_bytes, (int)_offset + 2, CharacterCount * 2);
+            }
+
+            byte[] bytes = new byte[CharacterCount * 2];
+            for (int i = 0; i < CharacterCount; i++)
+            {
+                bytes[i * 2] = _bytes[_offset + 2 + i];
+            }
+
+            return Encoding.Unicode.GetString(bytes);
+        }
     }
 }

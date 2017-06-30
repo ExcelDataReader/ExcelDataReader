@@ -10,18 +10,18 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly IXlsString _xlsString;
 
-        internal XlsBiffFormatString(byte[] bytes, uint offset, int biffVersion, Encoding encoding)
+        internal XlsBiffFormatString(byte[] bytes, uint offset, int biffVersion)
             : base(bytes, offset)
         {
             if (biffVersion == 2 || biffVersion == 3)
             {
                 // BIFF2-3
-                _xlsString = new XlsShortByteString(bytes, offset + 4, encoding);
+                _xlsString = new XlsShortByteString(bytes, offset + 4);
             }
             else if (biffVersion == 4 || biffVersion == 5)
             {
                 // BIFF4-5
-                _xlsString = new XlsShortByteString(bytes, offset + 4 + 2, encoding);
+                _xlsString = new XlsShortByteString(bytes, offset + 4 + 2);
             }
             else if (biffVersion == 8)
             {
@@ -33,11 +33,6 @@ namespace ExcelDataReader.Core.BinaryFormat
                 throw new ArgumentException("Unexpected BIFF version " + biffVersion.ToString(), nameof(biffVersion));
             }
         }
-
-        /// <summary>
-        /// Gets the string value.
-        /// </summary>
-        public string Value => _xlsString.Value;
 
         public ushort Index
         {
@@ -51,6 +46,14 @@ namespace ExcelDataReader.Core.BinaryFormat
                         return ReadUInt16(0);
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the string value.
+        /// </summary>
+        public string GetValue(Encoding encoding)
+        {
+            return _xlsString.GetValue(encoding);
         }
     }
 }
