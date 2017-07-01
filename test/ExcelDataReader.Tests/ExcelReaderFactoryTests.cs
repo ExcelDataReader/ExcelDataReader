@@ -23,10 +23,15 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(excelReader.GetType().Name, "ExcelBinaryReader");
             }
 
-            NotSupportedException e;
-            using (var stream = Configuration.GetTestWorkbook("biff3"))
-                e = Assert.Throws<NotSupportedException>(() => ExcelReaderFactory.CreateReader(stream));
-            Assert.That(e.Message, Is.EqualTo("File appears to be a raw BIFF stream which isn't supported (BIFF3)."));
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("biff3")))
+            {
+                Assert.AreEqual(excelReader.GetType().Name, "ExcelBinaryReader");
+            }
+
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("as3xls_BIFF2")))
+            {
+                Assert.AreEqual(excelReader.GetType().Name, "ExcelBinaryReader");
+            }
         }
 
         [TestMethod]

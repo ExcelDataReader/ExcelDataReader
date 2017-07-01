@@ -1092,12 +1092,15 @@ namespace ExcelDataReader.Tests
         }
 
         [TestCase]
-        public void Biff3IsNotSupported()
+        public void Biff3IsSupported()
         {
-            NotSupportedException e;
             using (var stream = Configuration.GetTestWorkbook("biff3"))
-                e = Assert.Throws<NotSupportedException>(() => ExcelReaderFactory.CreateBinaryReader(stream));
-            Assert.That(e.Message, Is.EqualTo("File appears to be a raw BIFF stream which isn't supported (BIFF3)."));
+            {
+                using (var reader = ExcelReaderFactory.CreateBinaryReader(stream))
+                {
+                    reader.AsDataSet();
+                }
+            }
         }
 
         [TestCase]
@@ -1189,5 +1192,75 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(new DateTime(2009, 6, 28), (DateTime)result.Tables[0].Rows[1][0]);
             }
         }
+
+        [TestMethod]
+        [Ignore("Pending fix")]
+        public void As3xls_BIFF2()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("as3xls_BIFF2")))
+            {
+                DataSet result = excelReader.AsDataSet();
+                Test_As3xls(result);
+            }
+        }
+
+        [TestMethod]
+        [Ignore("Pending fix")]
+        public void As3xls_BIFF3()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("as3xls_BIFF3")))
+            {
+                DataSet result = excelReader.AsDataSet();
+                Test_As3xls(result);
+            }
+        }
+
+        [TestMethod]
+        [Ignore("Pending fix")]
+        public void As3xls_BIFF4()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("as3xls_BIFF4")))
+            {
+                DataSet result = excelReader.AsDataSet();
+                Test_As3xls(result);
+            }
+        }
+
+        [TestMethod]
+        public void As3xls_BIFF5()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("as3xls_BIFF5")))
+            {
+                DataSet result = excelReader.AsDataSet();
+                Test_As3xls(result);
+            }
+        }
+
+        void Test_As3xls(DataSet result)
+        {
+            Assert.AreEqual(1, result.Tables[0].Rows[0][0]);
+            Assert.AreEqual("Hi", result.Tables[0].Rows[0][1]);
+            Assert.AreEqual(10.22D, result.Tables[0].Rows[0][2]);
+            Assert.AreEqual(14.7543176023568D, result.Tables[0].Rows[0][3]);
+            Assert.AreEqual(21.041075725336899D, result.Tables[0].Rows[0][4]);
+
+            Assert.AreEqual(2, result.Tables[0].Rows[1][0]);
+            Assert.AreEqual("How", result.Tables[0].Rows[1][1]);
+            Assert.AreEqual(new DateTime(2007, 2, 22), result.Tables[0].Rows[1][2]);
+
+            Assert.AreEqual(3, result.Tables[0].Rows[2][0]);
+            Assert.AreEqual("are", result.Tables[0].Rows[2][1]);
+            Assert.AreEqual(new DateTime(2002, 1, 19), result.Tables[0].Rows[2][2]);
+
+            Assert.AreEqual("Saturday", result.Tables[0].Rows[3][2]);
+            Assert.AreEqual(0.33000000000000002D, result.Tables[0].Rows[4][2]);
+            Assert.AreEqual(19, result.Tables[0].Rows[5][2]);
+            Assert.AreEqual("Goog", result.Tables[0].Rows[6][2]);
+            Assert.AreEqual(12.19D, result.Tables[0].Rows[7][2]);
+            Assert.AreEqual(99, result.Tables[0].Rows[8][2]);
+            Assert.AreEqual(1385729.234D, result.Tables[0].Rows[9][2]);
+        }
+
+
     }
 }

@@ -10,12 +10,14 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsWorksheet : IWorksheet
     {
-        public XlsWorksheet(XlsWorkbook workbook, int index)
+        public XlsWorksheet(XlsWorkbook workbook, XlsBiffBoundSheet refSheet, byte[] bytes)
         {
             Workbook = workbook;
-            Index = index;
+            Bytes = bytes;
 
-            var refSheet = workbook.Sheets[index];
+            IsDate1904 = workbook.IsDate1904;
+            ExtendedFormats = new List<XlsBiffRecord>(workbook.ExtendedFormats);
+
             Name = refSheet.GetSheetName(workbook.Encoding);
             DataOffset = refSheet.StartOffset;
 
@@ -46,14 +48,14 @@ namespace ExcelDataReader.Core.BinaryFormat
         public string VisibleState { get; }
 
         /// <summary>
-        /// Gets the zero-based index of worksheet
-        /// </summary>
-        public int Index { get; }
-
-        /// <summary>
         /// Gets the worksheet data offset.
         /// </summary>
         public uint DataOffset { get; }
+
+        public byte[] Bytes { get; }
+
+        public List<XlsBiffRecord> ExtendedFormats { get; }
+
 /*
     TODO: populate these in ReadWorksheetGlobals() if needed
         public XlsBiffSimpleValueRecord CalcMode { get; set; }
@@ -73,18 +75,18 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public bool RowContentInMultipleBlocks { get; private set; }
 
-        public XlsWorkbook Workbook { get; }
+        public bool IsDate1904 { get; private set; }
 
-        public XlsBiffStream BiffStream => Workbook.BiffStream;
+        public XlsWorkbook Workbook { get; }
 
         public IEnumerable<object[]> ReadRows()
         {
             var rowIndex = 0;
-            BiffStream.Seek((int)DataOffset, SeekOrigin.Begin);
+            var biffStream = new XlsBiffStream(Bytes, (int)DataOffset, Workbook.BiffVersion);
 
             while (true)
             {
-                var block = ReadNextBlock();
+                var block = ReadNextBlock(biffStream);
 
                 var maxRow = int.MinValue;
                 foreach (var blockRowIndex in block.Rows.Keys)
@@ -112,7 +114,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
-        private XlsRowBlock ReadNextBlock()
+        private XlsRowBlock ReadNextBlock(XlsBiffStream biffStream)
         {
             var result = new XlsRowBlock { Rows = new Dictionary<int, object[]>() };
 
@@ -121,7 +123,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             XlsBiffRecord rec;
 
-            while ((rec = BiffStream.Read()) != null)
+            while ((rec = biffStream.Read()) != null)
             {
                 if (rec is XlsBiffEof)
                 {
@@ -151,7 +153,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     var additionalRecords = new List<XlsBiffRecord>();
                     while (!PushCellValue(currentRow, cell, additionalRecords))
                     {
-                        var additionalRecord = BiffStream.Read();
+                        var additionalRecord = biffStream.Read();
                         additionalRecords.Add(additionalRecord);
                     }
                 }
@@ -315,11 +317,11 @@ namespace ExcelDataReader.Core.BinaryFormat
         private object TryConvertOADateTime(double value, ushort xFormat)
         {
             ushort format;
-            if (xFormat < Workbook.ExtendedFormats.Count)
+            if (xFormat < ExtendedFormats.Count)
             {
                 // If a cell XF record does not contain explicit attributes in a group (if the attribute group flag is not set),
                 // it repeats the attributes of its style XF record.
-                var rec = Workbook.ExtendedFormats[xFormat];
+                var rec = ExtendedFormats[xFormat];
                 switch (rec.Id)
                 {
                     case BIFFRECORDTYPE.XF_V2:
@@ -385,7 +387,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case 0x2d: // "mm:ss";
                 case 0x2e: // "[h]:mm:ss";
                 case 0x2f: // "mm:ss.0";
-                    return Helpers.ConvertFromOATime(value, Workbook.IsDate1904);
+                    return Helpers.ConvertFromOATime(value, IsDate1904);
                 case 0x31: // "@";
                     return value.ToString(); // TODO: What is the exepcted culture here?
 
@@ -395,7 +397,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         var fmt = fmtString.GetValue(Workbook.Encoding);
                         var formatReader = new FormatReader { FormatString = fmt };
                         if (formatReader.IsDateFormatString())
-                            return Helpers.ConvertFromOATime(value, Workbook.IsDate1904);
+                            return Helpers.ConvertFromOATime(value, IsDate1904);
                     }
 
                     return value;
@@ -417,15 +419,12 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             XlsBiffIndex idx = null;
 
-            BiffStream.Seek((int)DataOffset, SeekOrigin.Begin);
-
-            XlsBiffBOF bof = BiffStream.Read() as XlsBiffBOF;
-            if (bof == null || bof.Type != BIFFTYPE.Worksheet)
+            var biffStream = new XlsBiffStream(Bytes, (int)DataOffset, Workbook.BiffVersion);
+            if (biffStream.BiffVersion == 0 || biffStream.BiffType != BIFFTYPE.Worksheet)
                 return;
 
-            //// DumpBiffRecords();
-
-            XlsBiffRecord rec = BiffStream.Read();
+            XlsBiffBOF bof = biffStream.Read() as XlsBiffBOF;
+            XlsBiffRecord rec = biffStream.Read();
             if (rec == null || rec is XlsBiffEof)
                 return;
 
@@ -436,7 +435,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             else if (rec is XlsBiffUncalced)
             {
                 // Sometimes this come before the index...
-                rec = BiffStream.Read();
+                rec = biffStream.Read();
                 if (rec == null || rec is XlsBiffEof)
                     return;
 
@@ -460,7 +459,17 @@ namespace ExcelDataReader.Core.BinaryFormat
                     break;
                 }
 
-                rec = BiffStream.Read();
+                if (rec.Id == BIFFRECORDTYPE.RECORD1904)
+                {
+                    IsDate1904 = ((XlsBiffSimpleValueRecord)rec).Value == 1;
+                }
+
+                if (rec.Id == BIFFRECORDTYPE.XF_V2 || rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4)
+                {
+                    ExtendedFormats.Add(rec);
+                }
+
+                rec = biffStream.Read();
             }
 
             // Handle when dimensions report less columns than used by cell records.
@@ -496,7 +505,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     }
                 }
 
-                rec = BiffStream.Read();
+                rec = biffStream.Read();
             }
 
             if (FieldCount < maxCellColumn)

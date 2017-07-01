@@ -36,13 +36,7 @@ namespace ExcelDataReader
             fileStream.Read(probe, 0, probe.Length);
             fileStream.Seek(0, SeekOrigin.Begin);
 
-            if (!XlsDocument.CheckRawBiffStream(probe, out int version))
-            {
-                version = -1;
-            }
-
-            // MUST be set to the value 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1.
-            if (version != -1 || (probe[0] == 0xD0 && probe[1] == 0xCF))
+            if (XlsWorkbook.IsCompoundDocument(probe) || XlsWorkbook.IsRawBiffStream(probe))
             {
                 return CreateBinaryReader(fileStream, configuration);
             }

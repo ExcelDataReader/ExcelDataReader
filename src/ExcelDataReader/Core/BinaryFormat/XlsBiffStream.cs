@@ -11,14 +11,17 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly byte[] _bytes;
 
-        public XlsBiffStream(byte[] bytes)
+        public XlsBiffStream(byte[] bytes, int offset = 0, int explicitVersion = 0)
         {
             _bytes = bytes;
-            Position = 0;
+            Position = offset;
 
             var bof = Read() as XlsBiffBOF;
             if (bof != null)
-                BiffVersion = GetBiffVersion(bof);
+            { 
+                BiffVersion = explicitVersion == 0 ? GetBiffVersion(bof) : explicitVersion;
+                BiffType = bof.Type;
+            }
 
             var filePass = Read() as XlsBiffFilePass;
             if (filePass == null)
@@ -27,10 +30,12 @@ namespace ExcelDataReader.Core.BinaryFormat
             if (filePass != null)
                 ApplyFilePass(filePass);
 
-            Position = 0;
+            Position = offset;
         }
 
         public int BiffVersion { get; }
+
+        public BIFFTYPE BiffType { get; }
 
         /// <summary>
         /// Gets the size of BIFF stream in bytes

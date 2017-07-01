@@ -121,7 +121,11 @@ namespace ExcelDataReader.Tests
             { "roo_1904_base", "roo_1904_base.xls" },
             { "Test_git_issue_68_NullSheetPath", "Test_git_issue_68_NullSheetPath.xlsm" },
             { "Test_git_issue_53_Cached_Formula_String_Type", "Test_git_issue_53_Cached_Formula_String_Type.xlsx" },
-            { "Test_git_issue_14_InvalidOADate", "Test_git_issue_14_InvalidOADate.xlsx" }
+            { "Test_git_issue_14_InvalidOADate", "Test_git_issue_14_InvalidOADate.xlsx" },
+            { "as3xls_BIFF2", "as3xls_BIFF2.xls" },
+            { "as3xls_BIFF3", "as3xls_BIFF3.xls" },
+            { "as3xls_BIFF4", "as3xls_BIFF4.xls" },
+            { "as3xls_BIFF5", "as3xls_BIFF5.xls" },
         };
 
         public static Stream GetTestWorkbook(string key)

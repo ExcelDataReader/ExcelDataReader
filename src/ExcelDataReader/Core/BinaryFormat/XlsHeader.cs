@@ -8,10 +8,6 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsHeader
     {
-        public bool IsRawBiffStream { get; set; }
-
-        public int RawBiffVersion { get; set; }
-
         /// <summary>
         /// Gets or sets the file signature
         /// </summary>

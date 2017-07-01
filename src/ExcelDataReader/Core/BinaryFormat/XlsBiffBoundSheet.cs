@@ -13,6 +13,10 @@ namespace ExcelDataReader.Core.BinaryFormat
         internal XlsBiffBoundSheet(byte[] bytes, uint offset, int biffVersion)
             : base(bytes, offset)
         {
+            StartOffset = ReadUInt32(0x0);
+            Type = (SheetType)ReadByte(0x5);
+            VisibleState = (SheetVisibility)ReadByte(0x4);
+
             if (biffVersion == 8)
             {
                 _sheetName = new XlsShortUnicodeString(bytes, offset + 4 + 6);
@@ -25,6 +29,15 @@ namespace ExcelDataReader.Core.BinaryFormat
             {
                 throw new ArgumentException("Unexpected BIFF version " + biffVersion.ToString(), nameof(biffVersion));
             }
+        }
+
+        internal XlsBiffBoundSheet(uint startOffset, SheetType type, SheetVisibility visibleState, string name)
+            : base(new byte[32], 0)
+        {
+            StartOffset = startOffset;
+            Type = type;
+            VisibleState = visibleState;
+            _sheetName = new XlsInternalString(name);
         }
 
         public enum SheetType : byte
@@ -47,17 +60,17 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Gets the worksheet data start offset.
         /// </summary>
-        public uint StartOffset => ReadUInt32(0x0);
+        public uint StartOffset { get; }
 
         /// <summary>
         /// Gets the worksheet type.
         /// </summary>
-        public SheetType Type => (SheetType)ReadByte(0x5);
+        public SheetType Type { get; }
 
         /// <summary>
         /// Gets the visibility of the worksheet.
         /// </summary>
-        public SheetVisibility VisibleState => (SheetVisibility)ReadByte(0x4);
+        public SheetVisibility VisibleState { get; }
 
         /// <summary>
         /// Gets the name of the worksheet.

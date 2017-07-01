@@ -14,8 +14,6 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             Header = ReadHeader(reader);
 
-            if (Header.IsRawBiffStream)
-                throw new NotSupportedException("File appears to be a raw BIFF stream which isn't supported (BIFF" + Header.RawBiffVersion + ").");
             if (!Header.IsSignatureValid)
                 throw new HeaderException(Errors.ErrorHeaderSignature);
             if (Header.ByteOrder != 0xFFFE && Header.ByteOrder != 0xFFFF) // Some broken xls files uses 0xFFFF
@@ -41,58 +39,6 @@ namespace ExcelDataReader.Core.BinaryFormat
         internal XlsDirectoryEntry RootEntry { get; set; }
 
         internal List<XlsDirectoryEntry> Entries { get; set; }
-
-        internal static bool CheckRawBiffStream(byte[] bytes, out int version)
-        {
-            if (bytes.Length < 8)
-            {
-                throw new ArgumentException("Needs at least 8 bytes to probe", nameof(bytes));
-            }
-
-            version = -1;
-
-            ushort rid = BitConverter.ToUInt16(bytes, 0);
-            ushort size = BitConverter.ToUInt16(bytes, 2);
-            ushort bofVersion = BitConverter.ToUInt16(bytes, 4);
-            ushort type = BitConverter.ToUInt16(bytes, 6);
-
-            switch (rid)
-            {
-                case 0x0009: // BIFF2
-                    if (size != 4)
-                        return false;
-                    if (type != 0x10 && type != 0x20 && type != 0x40)
-                        return false;
-                    version = 2;
-                    return true;
-                case 0x0209: // BIFF3
-                    if (size != 6)
-                        return false;
-                    if (type != 0x10 && type != 0x20 && type != 0x40 && type != 0x0100)
-                        return false;
-                    /* removed this additional check to keep the probe at 8 bytes
-                    ushort notUsed = BitConverter.ToUInt16(bytes, 8);
-                    if (notUsed != 0x00)
-                        return false;*/
-                    version = 3;
-                    return true;
-                case 0x0809: // BIFF5/BIFF8
-                    if (size != 8 || size != 16)
-                        return false;
-                    if (bofVersion != 0x0500 && bofVersion != 0x600)
-                        return false;
-                    if (type != 0x5 && type != 0x6 && type != 0x10 && type != 0x20 && type != 0x40 && type != 0x0100)
-                        return false;
-                    /* removed this additional check to keep the probe at 8 bytes
-                    ushort identifier = BitConverter.ToUInt16(bytes, 10);
-                    if (identifier == 0)
-                        return false;*/
-                    version = bofVersion == 0x0500 ? 5 : 8;
-                    return true;
-            }
-
-            return false;
-        }
 
         internal XlsDirectoryEntry FindEntry(string entryName)
         {
@@ -234,16 +180,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         private XlsHeader ReadHeader(BinaryReader reader)
         {
             var result = new XlsHeader();
-            var signature = reader.ReadBytes(8);
-
-            if (CheckRawBiffStream(signature, out int version))
-            {
-                result.IsRawBiffStream = true;
-                result.RawBiffVersion = version;
-                return result;
-            }
-
-            result.Signature = BitConverter.ToUInt64(signature, 0);
+            result.Signature = reader.ReadUInt64();
             result.ClassId = new Guid(reader.ReadBytes(16));
             result.Version = reader.ReadUInt16();
             result.DllVersion = reader.ReadUInt16();

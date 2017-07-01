@@ -1,8 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using ExcelDataReader.Exceptions;
-using ExcelDataReader.Log;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
@@ -11,17 +11,58 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsWorkbook : IWorkbook<XlsWorksheet>
     {
-        internal XlsWorkbook(byte[] bytes, bool convertOaDate, Encoding fallbackEncoding)
+        private const string DirectoryEntryWorkbook = "Workbook";
+        private const string DirectoryEntryBook = "Book";
+
+        private readonly byte[] _bytes;
+
+        internal XlsWorkbook(Stream stream, bool convertOaDate, Encoding fallbackEncoding)
         {
-            Version = 0x0600;
-            BiffStream = new XlsBiffStream(bytes);
             ConvertOaDate = convertOaDate;
-            ReadWorkbookGlobals(fallbackEncoding);
+
+            var probe = new byte[8];
+            stream.Read(probe, 0, probe.Length);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            if (IsCompoundDocument(probe))
+            {
+                _bytes = ReadCompoundDocument(stream);
+            }
+            else if (IsRawBiffStream(probe))
+            {
+                _bytes = ReadWorksheetDocument(stream);
+            }
+            else
+            {
+                throw new HeaderException(Errors.ErrorHeaderSignature);
+            }
+
+            var biffStream = new XlsBiffStream(_bytes);
+
+            if (biffStream.BiffVersion == 0)
+                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+
+            BiffVersion = biffStream.BiffVersion;
+            Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
+
+            if (biffStream.BiffType == BIFFTYPE.WorkbookGlobals)
+            {
+                ReadWorkbookGlobals(biffStream);
+            }
+            else if (biffStream.BiffType == BIFFTYPE.Worksheet)
+            {
+                // set up 'virtual' bound sheet pointing at this
+                Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
+            }
+            else
+            {
+                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+            }
         }
 
-        public ushort Version { get; set; }
+        public int BiffVersion { get; }
 
-        public Encoding Encoding { get; set; }
+        public Encoding Encoding { get; private set; }
 
         public XlsBiffInterfaceHdr InterfaceHdr { get; set; }
 
@@ -56,43 +97,101 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public bool ConvertOaDate { get; }
 
-        public XlsBiffStream BiffStream { get; }
-
         public bool IsDate1904 { get; private set; }
 
         public int ResultsCount => Sheets?.Count ?? -1;
+
+        public static bool IsCompoundDocument(byte[] probe)
+        {
+            return BitConverter.ToUInt64(probe, 0) == 0xE11AB1A1E011CFD0;
+        }
+
+        public static bool IsRawBiffStream(byte[] bytes)
+        {
+            if (bytes.Length < 8)
+            {
+                throw new ArgumentException("Needs at least 8 bytes to probe", nameof(bytes));
+            }
+
+            ushort rid = BitConverter.ToUInt16(bytes, 0);
+            ushort size = BitConverter.ToUInt16(bytes, 2);
+            ushort bofVersion = BitConverter.ToUInt16(bytes, 4);
+            ushort type = BitConverter.ToUInt16(bytes, 6);
+
+            switch (rid)
+            {
+                case 0x0009: // BIFF2
+                    if (size != 4)
+                        return false;
+                    if (type != 0x10 && type != 0x20 && type != 0x40)
+                        return false;
+                    return true;
+                case 0x0209: // BIFF3
+                case 0x0409: // BIFF4
+                    if (size != 6)
+                        return false;
+                    if (type != 0x10 && type != 0x20 && type != 0x40 && type != 0x0100)
+                        return false;
+                    /* removed this additional check to keep the probe at 8 bytes
+                    ushort notUsed = BitConverter.ToUInt16(bytes, 8);
+                    if (notUsed != 0x00)
+                        return false;*/
+                    return true;
+                case 0x0809: // BIFF5/BIFF8
+                    if (size != 8 || size != 16)
+                        return false;
+                    if (bofVersion != 0x0500 && bofVersion != 0x600)
+                        return false;
+                    if (type != 0x5 && type != 0x6 && type != 0x10 && type != 0x20 && type != 0x40 && type != 0x0100)
+                        return false;
+                    /* removed this additional check to keep the probe at 8 bytes
+                    ushort identifier = BitConverter.ToUInt16(bytes, 10);
+                    if (identifier == 0)
+                        return false;*/
+                    return true;
+            }
+
+            return false;
+        }
 
         public IEnumerable<XlsWorksheet> ReadWorksheets()
         {
             for (var i = 0; i < Sheets.Count; ++i)
             {
-                yield return ReadWorksheet(i);
+                yield return new XlsWorksheet(this, Sheets[i], _bytes);
             }
         }
 
-        public XlsWorksheet ReadWorksheet(int index)
+        private byte[] ReadCompoundDocument(Stream stream)
         {
-            return new XlsWorksheet(this, index);
-        }
+            var document = new XlsDocument(stream);
+            XlsDirectoryEntry workbookEntry = document.FindEntry(DirectoryEntryWorkbook) ?? document.FindEntry(DirectoryEntryBook);
 
-        private void ReadWorkbookGlobals(Encoding fallbackEncoding)
-        {
-            BiffStream.Seek(0, SeekOrigin.Begin);
-
-            XlsBiffRecord rec = BiffStream.Read();
-            XlsBiffBOF bof = rec as XlsBiffBOF;
-
-            if (bof == null || bof.Type != BIFFTYPE.WorkbookGlobals)
+            if (workbookEntry == null)
             {
-                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+                throw new ExcelReaderException(Errors.ErrorStreamWorkbookNotFound);
             }
 
+            if (workbookEntry.EntryType != STGTY.STGTY_STREAM)
+            {
+                throw new ExcelReaderException(Errors.ErrorWorkbookIsNotStream);
+            }
+
+            return document.ReadStream(stream, workbookEntry.StreamFirstSector, (int)workbookEntry.StreamSize, workbookEntry.IsEntryMiniStream);
+        }
+
+        private byte[] ReadWorksheetDocument(Stream stream)
+        {
+            var result = new byte[stream.Length];
+            stream.Read(result, 0, (int)stream.Length);
+            return result;
+        }
+
+        private void ReadWorkbookGlobals(XlsBiffStream biffStream)
+        {
             bool sst = false;
-
-            Version = bof.Version;
-            Encoding = BiffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
-
-            while ((rec = BiffStream.Read()) != null)
+            XlsBiffRecord rec;
+            while ((rec = biffStream.Read()) != null)
             {
                 switch (rec.Id)
                 {
