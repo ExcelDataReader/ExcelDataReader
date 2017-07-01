@@ -1,16 +1,12 @@
-﻿namespace ExcelDataReader.Log
+﻿using System;
+
+namespace ExcelDataReader.Log
 {
     /// <summary>
     /// Custom interface for logging messages
     /// </summary>
     public interface ILog
     {
-        /// <summary>
-        /// Initializes the instance for the logger name
-        /// </summary>
-        /// <param name="loggerName">Name of the logger</param>
-        void InitializeFor(string loggerName);
-
         /// <summary>
         /// Debug level of the specified message. The other method is preferred since the execution is deferred.
         /// </summary>
@@ -48,11 +44,15 @@
     }
 
     /// <summary>
-    /// Ensures a default constructor for the logger type
+    /// Factory interface for loggers.
     /// </summary>
-    /// <typeparam name="T">The logger type.</typeparam>
-    public interface ILog<T> 
-        where T : new()
+    public interface ILogFactory
     {
+        /// <summary>
+        /// Create a logger for the specified type.
+        /// </summary>
+        /// <param name="loggingType">The type to create a logger for.</param>
+        /// <returns>The logger instance.</returns>
+        ILog Create(Type loggingType);
     }
 }

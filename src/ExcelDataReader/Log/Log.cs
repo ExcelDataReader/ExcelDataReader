@@ -8,47 +8,46 @@ namespace ExcelDataReader.Log
     /// </summary>
     public static class Log
     {
-        private static Type logType = typeof(NullLog);
-        private static ILog logger;
+        private static readonly object LockObject = new object();
+
+        private static Type logType = typeof(NullLogFactory);
+        private static ILogFactory factoryInstance;
 
         /// <summary>
         /// Sets up logging to be with a certain type
         /// </summary>
         /// <typeparam name="T">The type of ILog for the application to use</typeparam>
         public static void InitializeWith<T>() 
-            where T : ILog, new()
+            where T : ILogFactory, new()
         {
-            logType = typeof(T);
-        }
-
-        /// <summary>
-        /// Sets up logging to be with a certain instance. The other method is preferred.
-        /// </summary>
-        /// <param name="loggerType">Type of the logger.</param>
-        /// <remarks>This is mostly geared towards testing</remarks>
-        public static void InitializeWith(ILog loggerType)
-        {
-            logType = loggerType.GetType();
-            logger = loggerType;
+            lock (LockObject)
+            {
+                logType = typeof(T);
+                factoryInstance = null;
+            }
         }
 
         /// <summary>
         /// Initializes a new instance of a logger for an object.
         /// This should be done only once per object name.
         /// </summary>
-        /// <param name="objectName">Name of the object.</param>
-        /// <returns>ILog instance for an object if log type has been intialized; otherwise null</returns>
-        public static ILog GetLoggerFor(string objectName)
+        /// <param name="loggingType">The type to get a logger for.</param>
+        /// <returns>ILog instance for an object if log type has been intialized; otherwise a null logger.</returns>
+        public static ILog GetLoggerFor(Type loggingType)
         {
-            var logger = Log.logger;
-
-            if (Log.logger == null)
+            var factory = factoryInstance;
+            if (factory == null)
             {
-                logger = Activator.CreateInstance(logType) as ILog;
-                logger?.InitializeFor(objectName);
+                lock (LockObject)
+                {
+                    if (factory == null)
+                    {
+                        factory = factoryInstance = (ILogFactory)Activator.CreateInstance(logType);
+                    }
+                }
             }
 
-            return logger;
+            return factory.Create(loggingType);
         }
     }
 }

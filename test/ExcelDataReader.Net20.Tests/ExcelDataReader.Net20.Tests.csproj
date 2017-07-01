@@ -22,8 +22,9 @@
     <Compile Include="..\ExcelDataReader.Tests\ExcelOpenXmlReaderTest.cs" Link="ExcelOpenXmlReaderTest.cs" />
     <Compile Include="..\ExcelDataReader.Tests\ExcelReaderFactoryTests.cs" Link="ExcelReaderFactoryTests.cs" />
     <Compile Include="..\ExcelDataReader.Tests\FormatReaderTest.cs" Link="FormatReaderTest.cs" />
-    <Compile Include="..\ExcelDataReader.Tests\Log4NetLog.cs" Link="Log4NetLog.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\NunitLogFactory.cs" Link="NunitLogFactory.cs" />
     <Compile Include="..\ExcelDataReader.Tests\SeekErrorMemoryStream.cs" Link="SeekErrorMemoryStream.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\SetUpFixture.cs" Link="SetUpFixture.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,7 +50,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <PackageReference Include="NUnit" Version="3.6.1" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.8.0-alpha1" />

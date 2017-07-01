@@ -18,7 +18,7 @@ namespace ExcelDataReader.Tests
 
     public class ExcelBinaryReaderTest
     {
-        [TestInitialize]
+        [OneTimeSetUp]
         public void TestInitialize()
         {
 #if NETCOREAPP1_0
@@ -902,9 +902,6 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_Issue_11818_OutOfRange()
         {
-#if !NETCOREAPP1_0
-            Log.Log.InitializeWith<Log4NetLog>();
-#endif
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11818_OutOfRange")))
             {
                 var dataset = excelReader.AsDataSet();
