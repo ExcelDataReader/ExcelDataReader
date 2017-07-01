@@ -6,11 +6,54 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents a cell containing formula
     /// </summary>
-    internal class XlsBiffFormulaCell : XlsBiffNumberCell
+    internal class XlsBiffFormulaCell : XlsBiffBlankCell
     {
-        internal XlsBiffFormulaCell(byte[] bytes, uint offset)
+        internal XlsBiffFormulaCell(byte[] bytes, uint offset, int biffVersion)
             : base(bytes, offset)
         {
+            if (biffVersion == 2)
+            {
+                Flags = (FormulaFlags)ReadUInt16(0xF);
+                XNumValue = ReadDouble(0x7);
+                FormulaType = FormulaValueType.Number;
+            }
+            else
+            {
+                Flags = (FormulaFlags)ReadUInt16(0xE);
+
+                var formulaValueExprO = ReadUInt16(0xC);
+                if (formulaValueExprO != 0xFFFF)
+                {
+                    FormulaType = FormulaValueType.Number;
+                    XNumValue = ReadDouble(0x6);
+                }
+                else
+                {
+                    var formulaValueByte1 = ReadByte(0x6);
+                    var formulaValueByte3 = ReadByte(0x8);
+                    var formulaLength = ReadByte(0xF);
+                    switch (formulaValueByte1)
+                    {
+                        case 0x00:
+                            FormulaType = FormulaValueType.String;
+                            break;
+                        case 0x01:
+                            FormulaType = FormulaValueType.Boolean;
+                            BooleanValue = formulaValueByte3 != 0;
+                            break;
+                        case 0x02:
+                            FormulaType = FormulaValueType.Error;
+                            ErrorValue = (FORMULAERROR)formulaValueByte3;
+                            break;
+                        case 0x03:
+                            FormulaType = FormulaValueType.EmptyString;
+                            break;
+                        default:
+                            FormulaType = FormulaValueType.Unknown;
+                            break;
+                    }
+                }
+            }
         }
 
         [Flags]
@@ -28,7 +71,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             /// <summary>
             /// Indicates that a string value is stored in a String record that immediately follows this record. See[MS - XLS] 2.5.133 FormulaValue.
             /// </summary>
-            String, 
+            String,
 
             /// <summary>
             /// Indecates that the formula value is an empty string.
@@ -54,61 +97,17 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Gets the formula flags
         /// </summary>
-        public FormulaFlags Flags => (FormulaFlags)ReadUInt16(0xE);
+        public FormulaFlags Flags { get; }
 
         /// <summary>
         /// Gets the formula value type.
         /// </summary>
-        public FormulaValueType FormulaType
-        {
-            get
-            {
-                if (FormulaValueExprO != 0xFFFF)
-                    return FormulaValueType.Number;
+        public FormulaValueType FormulaType { get; }
 
-                switch (FormulaValueByte1)
-                {
-                    case 0x00: return FormulaValueType.String;
-                    case 0x01: return FormulaValueType.Boolean;
-                    case 0x02: return FormulaValueType.Error;
-                    case 0x03: return FormulaValueType.EmptyString;
-                    default: return FormulaValueType.Unknown;
-                }
-            }
-        }
+        public bool BooleanValue { get; }
 
-        /// <summary>
-        /// Gets the formula string length.
-        /// </summary>
-        public byte FormulaLength => ReadByte(0xF);
+        public FORMULAERROR ErrorValue { get; }
 
-        public byte FormulaValueByte1 => ReadByte(0x6);
-
-        public byte FormulaValueByte2 => ReadByte(0x7);
-
-        public byte FormulaValueByte3 => ReadByte(0x8);
-
-        public byte FormulaValueByte4 => ReadByte(0x9);
-
-        public byte FormulaValueByte5 => ReadByte(0xA);
-
-        public byte FormulaValueByte6 => ReadByte(0xB);
-
-        public ushort FormulaValueExprO => ReadUInt16(0xC);
-
-        public bool BooleanValue => FormulaValueByte3 != 0;
-
-        public FORMULAERROR ErrorValue => (FORMULAERROR)FormulaValueByte3;
-
-        public double XNumValue => ReadDouble(0x6);
-
-        public string Formula
-        {
-            get
-            {
-                byte[] bts = ReadArray(0x10, FormulaLength);
-                return Encoding.Unicode.GetString(bts, 0, bts.Length);
-            }
-        }
+        public double XNumValue { get; }
     }
 }

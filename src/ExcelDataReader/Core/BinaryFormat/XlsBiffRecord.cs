@@ -93,10 +93,10 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffLabelSSTCell(bytes, offset);
                 case BIFFRECORDTYPE.INTEGER:
                 case BIFFRECORDTYPE.INTEGER_OLD:
-                    return new XlsBiffIntegerCell(bytes, offset);
+                    return new XlsBiffIntegerCell(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.NUMBER:
                 case BIFFRECORDTYPE.NUMBER_OLD:
-                    return new XlsBiffNumberCell(bytes, offset);
+                    return new XlsBiffNumberCell(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.RK:
                     return new XlsBiffRKCell(bytes, offset);
                 case BIFFRECORDTYPE.MULRK:
@@ -104,7 +104,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.FORMULA:
                 case BIFFRECORDTYPE.FORMULA_V3:
                 case BIFFRECORDTYPE.FORMULA_V4:
-                    return new XlsBiffFormulaCell(bytes, offset);
+                    return new XlsBiffFormulaCell(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.FORMAT_V23:
                 case BIFFRECORDTYPE.FORMAT:
                     return new XlsBiffFormatString(bytes, offset, biffVersion);
