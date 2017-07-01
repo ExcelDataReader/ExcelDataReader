@@ -453,6 +453,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                 return;
 
             XlsBiffBOF bof = biffStream.Read() as XlsBiffBOF;
+            if (bof == null)
+                return;
             XlsBiffRecord rec = biffStream.Read();
             if (rec == null || rec is XlsBiffEof)
                 return;
