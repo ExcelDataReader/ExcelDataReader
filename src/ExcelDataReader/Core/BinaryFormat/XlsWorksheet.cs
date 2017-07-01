@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using ExcelDataReader.Log;
 
 namespace ExcelDataReader.Core.BinaryFormat
@@ -17,6 +18,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             IsDate1904 = workbook.IsDate1904;
             Formats = new Dictionary<ushort, XlsBiffFormatString>(workbook.Formats);
             ExtendedFormats = new List<XlsBiffRecord>(workbook.ExtendedFormats);
+            Encoding = workbook.Encoding;
 
             Name = refSheet.GetSheetName(workbook.Encoding);
             DataOffset = refSheet.StartOffset;
@@ -57,6 +59,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         public Dictionary<ushort, XlsBiffFormatString> Formats { get; }
 
         public List<XlsBiffRecord> ExtendedFormats { get; }
+
+        public Encoding Encoding { get; private set; }
 
 /*
     TODO: populate these in ReadWorksheetGlobals() if needed
@@ -221,12 +225,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.LABEL_OLD:
                 case BIFFRECORDTYPE.RSTRING:
 
-                    cellValues[cell.ColumnIndex] = ((XlsBiffLabelCell)cell).GetValue(Workbook.Encoding);
+                    cellValues[cell.ColumnIndex] = ((XlsBiffLabelCell)cell).GetValue(Encoding);
 
                     LogManager.Log(this).Debug("VALUE: {0}", cellValues[cell.ColumnIndex]);
                     break;
                 case BIFFRECORDTYPE.LABELSST:
-                    string tmp = Workbook.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex, Workbook.Encoding);
+                    string tmp = Workbook.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex, Encoding);
                     LogManager.Log(this).Debug("VALUE: {0}", tmp);
                     cellValues[cell.ColumnIndex] = tmp;
                     break;
@@ -313,7 +317,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         if (recId == BIFFRECORDTYPE.STRING)
                         {
                             var stringRecord = (XlsBiffFormulaString)additionalRecords[0];
-                            result = stringRecord.GetValue(Workbook.Encoding);
+                            result = stringRecord.GetValue(Encoding);
                             return true;
                         }
                     }
@@ -326,7 +330,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         if (recId == BIFFRECORDTYPE.STRING)
                         {
                             var stringRecord = (XlsBiffFormulaString)additionalRecords[1];
-                            result = stringRecord.GetValue(Workbook.Encoding);
+                            result = stringRecord.GetValue(Encoding);
                             return true;
                         }
                     }
@@ -424,7 +428,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             if (Formats.TryGetValue(format, out XlsBiffFormatString fmtString))
             {
-                var fmt = fmtString.GetValue(Workbook.Encoding);
+                var fmt = fmtString.GetValue(Encoding);
                 var formatReader = new FormatReader { FormatString = fmt };
                 if (formatReader.IsDateFormatString())
                     return Helpers.ConvertFromOATime(value, IsDate1904);
@@ -485,8 +489,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             {
                 if (rec is XlsBiffDimensions dims)
                 {
-                    // LogManager.Log(this).Debug("dims IsV8={0}", IsV8());
-                    FieldCount = dims.LastColumn - 1;
+                    FieldCount = dims.LastColumn;
                     break;
                 }
 
@@ -518,6 +521,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                 {
                     var fmt = (XlsBiffFormatString)rec;
                     Formats.Add((ushort)Formats.Count, fmt);
+                }
+
+                if (rec.Id == BIFFRECORDTYPE.CODEPAGE)
+                {
+                    var codePage = (XlsBiffSimpleValueRecord)rec;
+                    Encoding = EncodingHelper.GetEncoding(codePage.Value);
                 }
 
                 rec = biffStream.Read();

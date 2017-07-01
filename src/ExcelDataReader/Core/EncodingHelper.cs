@@ -130,6 +130,8 @@ namespace ExcelDataReader.Core
                 case 28603: encoding = Encoding.GetEncoding("iso-8859-13"); break;
                 case 28605: encoding = Encoding.GetEncoding("iso-8859-15"); break;
                 case 29001: encoding = Encoding.GetEncoding("x-Europa"); break;
+                case 32768: encoding = Encoding.GetEncoding("macintosh"); break;
+                case 32769: encoding = Encoding.GetEncoding("windows-1252"); break;
                 case 38598: encoding = Encoding.GetEncoding("iso-8859-8-i"); break;
                 case 50220: encoding = Encoding.GetEncoding("iso-2022-jp"); break;
                 case 50221: encoding = Encoding.GetEncoding("csISO2022JP"); break;

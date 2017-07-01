@@ -1059,10 +1059,14 @@ namespace ExcelDataReader.Tests
         public void IfNoDimensionDetermineFieldCountByProcessingAllCellColumnIndexes()
         {
             // This xls file has a row record with 256 columns but only values for 6.
+            // This test was created when ExcelDataReader incorrectly dropped 8
+            // bits off the dimensions' LastColumn in BIFF8 files and relied
+            // on scanning to come up with 6 columns. The test was changed to
+            // assume valid dimensions:
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Git_Issue_145")))
             {
                 var ds = excelReader.AsDataSet();
-                Assert.AreEqual(6, ds.Tables[0].Columns.Count);
+                Assert.AreEqual(256, ds.Tables[0].Columns.Count);
             }
         }
 

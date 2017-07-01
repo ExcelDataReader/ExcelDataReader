@@ -5,35 +5,43 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffDimensions : XlsBiffRecord
     {
-        internal XlsBiffDimensions(byte[] bytes, uint offset, bool isV8)
+        internal XlsBiffDimensions(byte[] bytes, uint offset, int biffVersion)
             : base(bytes, offset)
         {
-            IsV8 = isV8;
+            if (biffVersion < 8)
+            {
+                FirstRow = ReadUInt16(0x0);
+                LastRow = ReadUInt16(0x2);
+                FirstColumn = ReadUInt16(0x4);
+                LastColumn = ReadUInt16(0x6);
+            }
+            else
+            {
+                FirstRow = ReadUInt32(0x0); // TODO: [MS-XLS] RwLongU
+                LastRow = ReadUInt32(0x4);
+                FirstColumn = ReadUInt16(0x8); // TODO: [MS-XLS] ColU
+                LastColumn = ReadUInt16(0xA);
+            }
         }
 
         /// <summary>
         /// Gets the index of first row.
         /// </summary>
-        public uint FirstRow => IsV8 ? ReadUInt32(0x0) : ReadUInt16(0x0);
+        public uint FirstRow { get; }
 
         /// <summary>
         /// Gets the index of last row + 1.
         /// </summary>
-        public uint LastRow => IsV8 ? ReadUInt32(0x4) : ReadUInt16(0x2);
+        public uint LastRow { get; }
 
         /// <summary>
         /// Gets the index of first column.
         /// </summary>
-        public ushort FirstColumn => IsV8 ? ReadUInt16(0x8) : ReadUInt16(0x4);
+        public ushort FirstColumn { get; }
 
         /// <summary>
         /// Gets the index of last column + 1.
         /// </summary>
-        public ushort LastColumn => IsV8 ? (ushort)((ReadUInt16(0x9) >> 8) + 1) : ReadUInt16(0x6);
-
-        /// <summary>
-        /// Gets a value indicating whether BIFF8 addressing is used or not.
-        /// </summary>
-        private bool IsV8 { get; }
+        public ushort LastColumn { get; }
     }
 }

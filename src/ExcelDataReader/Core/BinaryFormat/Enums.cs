@@ -115,6 +115,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         PRINTSETUP = 0x00A1,
         DFAULTCOLWIDTH = 0x0055,
         DIMENSIONS = 0x0200, // Size of area used for data
+        DIMENSIONS_V2 = 0x0000, // BIFF2
 
         ROW = 0x0208, // Row record
 
