@@ -221,7 +221,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.MULRK:
 
                     XlsBiffMulRKCell rkCell = (XlsBiffMulRKCell)cell;
-                    for (ushort j = cell.ColumnIndex; j <= rkCell.LastColumnIndex; j++)
+                    ushort lastColumnIndex = rkCell.LastColumnIndex;
+                    for (ushort j = cell.ColumnIndex; j <= lastColumnIndex; j++)
                     {
                         doubleValue = rkCell.GetValue(j);
                         LogManager.Log(this).Debug("VALUE[{1}]: {0}", doubleValue, j);
