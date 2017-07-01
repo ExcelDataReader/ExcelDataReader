@@ -408,7 +408,6 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
 
             return value;
-
         }
 
         private object TryConvertOADateTime(object value, ushort xFormat)
