@@ -142,9 +142,11 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         LABELSST = 0x00FD, // String cell with value from SST (for BIFF8)
 
-        FORMULA = 0x0406, // Formula cell
+        FORMULA = 0x0006, // Formula cell, BIFF2, BIFF5-8
 
-        FORMULA_OLD = 0x0006, // Formula cell, old format
+        FORMULA_V3 = 0x0206, // Formula cell, BIFF3
+
+        FORMULA_V4 = 0x0406, // Formula cell, BIFF4
 
         BOOLERR = 0x0205, // Boolean or error cell
 

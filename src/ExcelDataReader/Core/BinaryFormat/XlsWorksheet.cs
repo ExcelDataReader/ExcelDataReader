@@ -235,7 +235,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                     // Skip blank cells
                     break;
                 case BIFFRECORDTYPE.FORMULA:
-                case BIFFRECORDTYPE.FORMULA_OLD:
+                case BIFFRECORDTYPE.FORMULA_V3:
+                case BIFFRECORDTYPE.FORMULA_V4:
 
                     if (!TryGetFormulaValue((XlsBiffFormulaCell)cell, additionalRecords, out object objectValue))
                     {

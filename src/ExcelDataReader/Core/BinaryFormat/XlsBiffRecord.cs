@@ -102,7 +102,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.MULRK:
                     return new XlsBiffMulRKCell(bytes, offset);
                 case BIFFRECORDTYPE.FORMULA:
-                case BIFFRECORDTYPE.FORMULA_OLD:
+                case BIFFRECORDTYPE.FORMULA_V3:
+                case BIFFRECORDTYPE.FORMULA_V4:
                     return new XlsBiffFormulaCell(bytes, offset);
                 case BIFFRECORDTYPE.FORMAT_V23:
                 case BIFFRECORDTYPE.FORMAT:
