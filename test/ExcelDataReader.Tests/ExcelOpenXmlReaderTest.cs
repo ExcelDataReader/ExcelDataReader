@@ -733,9 +733,6 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11573_BlankValues()
         {
-#if !NETCOREAPP1_0
-            ExcelDataReader.Log.Log.InitializeWith<Log4NetLog>();
-#endif
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Issue_11573_BlankValues")))
             {
                 var dataset = excelReader.AsDataSet();
