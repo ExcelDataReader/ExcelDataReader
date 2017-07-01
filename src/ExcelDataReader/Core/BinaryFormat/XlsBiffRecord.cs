@@ -82,15 +82,15 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.BOOLERR_OLD:
                 case BIFFRECORDTYPE.BLANK:
                 case BIFFRECORDTYPE.BLANK_OLD:
-                    return new XlsBiffBlankCell(bytes, offset);
+                    return new XlsBiffBlankCell(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.MULBLANK:
-                    return new XlsBiffMulBlankCell(bytes, offset);
+                    return new XlsBiffMulBlankCell(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.LABEL_OLD:
                 case BIFFRECORDTYPE.LABEL:
                 case BIFFRECORDTYPE.RSTRING:
                     return new XlsBiffLabelCell(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.LABELSST:
-                    return new XlsBiffLabelSSTCell(bytes, offset);
+                    return new XlsBiffLabelSSTCell(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.INTEGER:
                 case BIFFRECORDTYPE.INTEGER_OLD:
                     return new XlsBiffIntegerCell(bytes, offset, biffVersion);
@@ -98,9 +98,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.NUMBER_OLD:
                     return new XlsBiffNumberCell(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.RK:
-                    return new XlsBiffRKCell(bytes, offset);
+                    return new XlsBiffRKCell(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.MULRK:
-                    return new XlsBiffMulRKCell(bytes, offset);
+                    return new XlsBiffMulRKCell(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.FORMULA:
                 case BIFFRECORDTYPE.FORMULA_V3:
                 case BIFFRECORDTYPE.FORMULA_V4:

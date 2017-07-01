@@ -125,6 +125,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             object[] currentRow = null;
 
             XlsBiffRecord rec;
+            XlsBiffRecord ixfe = null;
 
             while ((rec = biffStream.Read()) != null)
             {
@@ -137,6 +138,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                 if (rec is XlsBiffMSODrawing || (!RowContentInMultipleBlocks && rec is XlsBiffDbCell))
                 {
                     break;
+                }
+
+                if (rec.Id == BIFFRECORDTYPE.IXFE)
+                {
+                    // BIFF2: If cell.xformat == 63, this contains the actual XF index >= 63
+                    ixfe = rec;
                 }
 
                 if (rec is XlsBiffBlankCell cell)
@@ -153,12 +160,24 @@ namespace ExcelDataReader.Core.BinaryFormat
                         currentRowIndex = cell.RowIndex;
                     }
 
+                    ushort xFormat;
+                    if (Workbook.BiffVersion == 2 && cell.XFormat == 63 && ixfe != null)
+                    {
+                        xFormat = ixfe.ReadUInt16(0);
+                    }
+                    else
+                    {
+                        xFormat = cell.XFormat;
+                    }
+
                     var additionalRecords = new List<XlsBiffRecord>();
-                    while (!PushCellValue(currentRow, cell, additionalRecords))
+                    while (!PushCellValue(currentRow, cell, xFormat, additionalRecords))
                     {
                         var additionalRecord = biffStream.Read();
                         additionalRecords.Add(additionalRecord);
                     }
+
+                    ixfe = null;
                 }
             }
 
@@ -168,7 +187,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Returns false if more records are needed to parse the value. The caller is expected to retry after parsing a record into additionalRecords.
         /// </summary>
-        private bool PushCellValue(object[] cellValues, XlsBiffBlankCell cell, List<XlsBiffRecord> additionalRecords)
+        private bool PushCellValue(object[] cellValues, XlsBiffBlankCell cell, ushort xFormat, List<XlsBiffRecord> additionalRecords)
         {
             double doubleValue;
             LogManager.Log(this).Debug("PushCellValue {0}", cell.Id);
@@ -184,7 +203,10 @@ namespace ExcelDataReader.Core.BinaryFormat
                     break;
                 case BIFFRECORDTYPE.INTEGER:
                 case BIFFRECORDTYPE.INTEGER_OLD:
-                    cellValues[cell.ColumnIndex] = ((XlsBiffIntegerCell)cell).Value;
+                    // NOTE/TODO: ints are always cast to double or DateTime, should be int or DateTime
+                    doubleValue = ((XlsBiffIntegerCell)cell).Value;
+                    cellValues[cell.ColumnIndex] = !Workbook.ConvertOaDate ?
+                        doubleValue : TryConvertOADateTime(doubleValue, xFormat);
                     break;
                 case BIFFRECORDTYPE.NUMBER:
                 case BIFFRECORDTYPE.NUMBER_OLD:
@@ -192,7 +214,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     doubleValue = ((XlsBiffNumberCell)cell).Value;
 
                     cellValues[cell.ColumnIndex] = !Workbook.ConvertOaDate ?
-                        doubleValue : TryConvertOADateTime(doubleValue, cell.XFormat);
+                        doubleValue : TryConvertOADateTime(doubleValue, xFormat);
 
                     LogManager.Log(this).Debug("VALUE: {0}", doubleValue);
                     break;
@@ -214,7 +236,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     doubleValue = ((XlsBiffRKCell)cell).Value;
 
                     cellValues[cell.ColumnIndex] = !Workbook.ConvertOaDate ?
-                        doubleValue : TryConvertOADateTime(doubleValue, cell.XFormat);
+                        doubleValue : TryConvertOADateTime(doubleValue, xFormat);
 
                     LogManager.Log(this).Debug("VALUE: {0}", doubleValue);
                     break;
@@ -245,7 +267,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     }
 
                     cellValues[cell.ColumnIndex] = !Workbook.ConvertOaDate ?
-                            objectValue : TryConvertOADateTime(objectValue, cell.XFormat); // date time offset;
+                            objectValue : TryConvertOADateTime(objectValue, xFormat); // date time offset;
                     LogManager.Log(this).Debug("VALUE: {0}", objectValue);
                     break;
             }

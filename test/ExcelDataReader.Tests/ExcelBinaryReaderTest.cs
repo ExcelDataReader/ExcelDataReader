@@ -1194,7 +1194,6 @@ namespace ExcelDataReader.Tests
         }
 
         [TestMethod]
-        [Ignore("Pending fix")]
         public void As3xls_BIFF2()
         {
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("as3xls_BIFF2")))

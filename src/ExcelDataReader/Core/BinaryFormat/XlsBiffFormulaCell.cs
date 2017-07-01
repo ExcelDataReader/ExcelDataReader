@@ -9,7 +9,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     internal class XlsBiffFormulaCell : XlsBiffBlankCell
     {
         internal XlsBiffFormulaCell(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset)
+            : base(bytes, offset, biffVersion)
         {
             if (biffVersion == 2)
             {

@@ -76,6 +76,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         XF_V2 = 0x0043, // Extended format record, BIFF2
 
+        IXFE = 0x0044, // Index to XF, BIFF2
+
         STYLE = 0x0293,
         BOUNDSHEET = 0x0085,
         COUNTRY = 0x008C,

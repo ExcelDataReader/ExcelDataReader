@@ -5,8 +5,8 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffLabelSSTCell : XlsBiffBlankCell
     {
-        internal XlsBiffLabelSSTCell(byte[] bytes, uint offset)
-            : base(bytes, offset)
+        internal XlsBiffLabelSSTCell(byte[] bytes, uint offset, int biffVersion)
+            : base(bytes, offset, biffVersion)
         {
         }
 
