@@ -16,6 +16,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             Bytes = bytes;
 
             IsDate1904 = workbook.IsDate1904;
+            Formats = new Dictionary<ushort, XlsBiffFormatString>(workbook.Formats);
             ExtendedFormats = new List<XlsBiffRecord>(workbook.ExtendedFormats);
 
             Name = refSheet.GetSheetName(workbook.Encoding);
@@ -53,6 +54,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         public uint DataOffset { get; }
 
         public byte[] Bytes { get; }
+
+        public Dictionary<ushort, XlsBiffFormatString> Formats { get; }
 
         public List<XlsBiffRecord> ExtendedFormats { get; }
 
@@ -344,64 +347,68 @@ namespace ExcelDataReader.Core.BinaryFormat
                 format = xFormat;
             }
 
-            switch (format)
+            // From BIFF5 on, the built-in number formats will be omitted. 
+            if (Workbook.BiffVersion >= 5)
             {
-                // numeric built in formats
-                case 0: // "General";
-                case 1: // "0";
-                case 2: // "0.00";
-                case 3: // "#,##0";
-                case 4: // "#,##0.00";
-                case 5: // "\"$\"#,##0_);(\"$\"#,##0)";
-                case 6: // "\"$\"#,##0_);[Red](\"$\"#,##0)";
-                case 7: // "\"$\"#,##0.00_);(\"$\"#,##0.00)";
-                case 8: // "\"$\"#,##0.00_);[Red](\"$\"#,##0.00)";
-                case 9: // "0%";
-                case 10: // "0.00%";
-                case 11: // "0.00E+00";
-                case 12: // "# ?/?";
-                case 13: // "# ??/??";
-                case 0x30: // "##0.0E+0";
+                switch (format)
+                {
+                    // numeric built in formats
+                    case 0: // "General";
+                    case 1: // "0";
+                    case 2: // "0.00";
+                    case 3: // "#,##0";
+                    case 4: // "#,##0.00";
+                    case 5: // "\"$\"#,##0_);(\"$\"#,##0)";
+                    case 6: // "\"$\"#,##0_);[Red](\"$\"#,##0)";
+                    case 7: // "\"$\"#,##0.00_);(\"$\"#,##0.00)";
+                    case 8: // "\"$\"#,##0.00_);[Red](\"$\"#,##0.00)";
+                    case 9: // "0%";
+                    case 10: // "0.00%";
+                    case 11: // "0.00E+00";
+                    case 12: // "# ?/?";
+                    case 13: // "# ??/??";
+                    case 0x30: // "##0.0E+0";
 
-                case 0x25: // "_(#,##0_);(#,##0)";
-                case 0x26: // "_(#,##0_);[Red](#,##0)";
-                case 0x27: // "_(#,##0.00_);(#,##0.00)";
-                case 40: // "_(#,##0.00_);[Red](#,##0.00)";
-                case 0x29: // "_(\"$\"* #,##0_);_(\"$\"* (#,##0);_(\"$\"* \"-\"_);_(@_)";
-                case 0x2a: // "_(\"$\"* #,##0_);_(\"$\"* (#,##0);_(\"$\"* \"-\"_);_(@_)";
-                case 0x2b: // "_(\"$\"* #,##0.00_);_(\"$\"* (#,##0.00);_(\"$\"* \"-\"??_);_(@_)";
-                case 0x2c: // "_(* #,##0.00_);_(* (#,##0.00);_(* \"-\"??_);_(@_)";
-                    return value;
+                    case 0x25: // "_(#,##0_);(#,##0)";
+                    case 0x26: // "_(#,##0_);[Red](#,##0)";
+                    case 0x27: // "_(#,##0.00_);(#,##0.00)";
+                    case 40: // "_(#,##0.00_);[Red](#,##0.00)";
+                    case 0x29: // "_(\"$\"* #,##0_);_(\"$\"* (#,##0);_(\"$\"* \"-\"_);_(@_)";
+                    case 0x2a: // "_(\"$\"* #,##0_);_(\"$\"* (#,##0);_(\"$\"* \"-\"_);_(@_)";
+                    case 0x2b: // "_(\"$\"* #,##0.00_);_(\"$\"* (#,##0.00);_(\"$\"* \"-\"??_);_(@_)";
+                    case 0x2c: // "_(* #,##0.00_);_(* (#,##0.00);_(* \"-\"??_);_(@_)";
+                        return value;
 
-                // date formats
-                case 14: // this.GetDefaultDateFormat();
-                case 15: // "D-MM-YY";
-                case 0x10: // "D-MMM";
-                case 0x11: // "MMM-YY";
-                case 0x12: // "h:mm AM/PM";
-                case 0x13: // "h:mm:ss AM/PM";
-                case 20: // "h:mm";
-                case 0x15: // "h:mm:ss";
-                case 0x16: // string.Format("{0} {1}", this.GetDefaultDateFormat(), this.GetDefaultTimeFormat());
+                    // date formats
+                    case 14: // this.GetDefaultDateFormat();
+                    case 15: // "D-MM-YY";
+                    case 0x10: // "D-MMM";
+                    case 0x11: // "MMM-YY";
+                    case 0x12: // "h:mm AM/PM";
+                    case 0x13: // "h:mm:ss AM/PM";
+                    case 20: // "h:mm";
+                    case 0x15: // "h:mm:ss";
+                    case 0x16: // string.Format("{0} {1}", this.GetDefaultDateFormat(), this.GetDefaultTimeFormat());
 
-                case 0x2d: // "mm:ss";
-                case 0x2e: // "[h]:mm:ss";
-                case 0x2f: // "mm:ss.0";
-                    return Helpers.ConvertFromOATime(value, IsDate1904);
-                case 0x31: // "@";
-                    return value.ToString(); // TODO: What is the exepcted culture here?
-
-                default:
-                    if (Workbook.Formats.TryGetValue(format, out XlsBiffFormatString fmtString))
-                    {
-                        var fmt = fmtString.GetValue(Workbook.Encoding);
-                        var formatReader = new FormatReader { FormatString = fmt };
-                        if (formatReader.IsDateFormatString())
-                            return Helpers.ConvertFromOATime(value, IsDate1904);
-                    }
-
-                    return value;
+                    case 0x2d: // "mm:ss";
+                    case 0x2e: // "[h]:mm:ss";
+                    case 0x2f: // "mm:ss.0";
+                        return Helpers.ConvertFromOATime(value, IsDate1904);
+                    case 0x31: // "@";
+                        return value.ToString(); // TODO: What is the exepcted culture here?
+                }
             }
+
+            if (Formats.TryGetValue(format, out XlsBiffFormatString fmtString))
+            {
+                var fmt = fmtString.GetValue(Workbook.Encoding);
+                var formatReader = new FormatReader { FormatString = fmt };
+                if (formatReader.IsDateFormatString())
+                    return Helpers.ConvertFromOATime(value, IsDate1904);
+            }
+
+            return value;
+
         }
 
         private object TryConvertOADateTime(object value, ushort xFormat)
@@ -467,6 +474,26 @@ namespace ExcelDataReader.Core.BinaryFormat
                 if (rec.Id == BIFFRECORDTYPE.XF_V2 || rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4)
                 {
                     ExtendedFormats.Add(rec);
+                }
+
+                if (rec.Id == BIFFRECORDTYPE.FORMAT)
+                {
+                    var fmt = (XlsBiffFormatString)rec;
+                    if (Workbook.BiffVersion >= 5)
+                    {
+                        // fmt.Index exists on BIFF5+ only
+                        Formats.Add(fmt.Index, fmt);
+                    }
+                    else
+                    {
+                        Formats.Add((ushort)Formats.Count, fmt);
+                    }
+                }
+
+                if (rec.Id == BIFFRECORDTYPE.FORMAT_V23)
+                {
+                    var fmt = (XlsBiffFormatString)rec;
+                    Formats.Add((ushort)Formats.Count, fmt);
                 }
 
                 rec = biffStream.Read();
