@@ -1,7 +1,7 @@
 ExcelDataReader
 ===============
 
-Lightweight and fast library written in C# for reading Microsoft Excel files.
+Lightweight and fast library written in C# for reading Microsoft Excel files (2.0-2007).
 
 Please feel free to fork and submit pull requests to the develop branch.
 
@@ -25,7 +25,7 @@ Install the `ExcelDataReader.DataSet` extension package to use the AsDataSet() m
 using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read)) {
 
 	// Auto-detect format, supports:
-	//  - Binary Excel files ('97-2003 format; *.xls)
+	//  - Binary Excel files (2.0-2003 format; *.xls)
 	//  - OpenXml Excel files (2007 format; *.xlsx)
 	using (var reader = ExcelReaderFactory.CreateReader(stream)) {
 	
@@ -57,7 +57,11 @@ var reader = ExcelReaderFactory.CreateReader(new ExcelReaderConfiguration() {
 	
 	// Gets or sets a value indicating whether OLE Automation dates will be 
 	// converted to DateTime. Default: true. (XLS only)
-	ConvertOaDate = true
+	ConvertOaDate = true,
+	
+	// Gets or sets the encoding to use when the input XLS lacks a CodePage 
+	// record. Default: cp1252. (XLS BIFF2-5 only)
+	FallbackEncoding = Encoding.GetEncoding(1252)
 });
 ```
 

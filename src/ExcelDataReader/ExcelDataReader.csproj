@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Lightweight and fast library written in C# for reading Microsoft Excel files ('97-2007).</Description>
+    <Description>Lightweight and fast library written in C# for reading Microsoft Excel files (2.0-2007).</Description>
     <AssemblyTitle>ExcelDataReader</AssemblyTitle>
     <VersionPrefix>3.0.0</VersionPrefix>
     <Authors>ExcelDataReader developers</Authors>
@@ -11,7 +11,7 @@
     <SignAssembly>true</SignAssembly>
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <PackageId>ExcelDataReader</PackageId>
-    <PackageTags>excel</PackageTags>
+    <PackageTags>excel;xls;xlsx</PackageTags>
     <PackageIconUrl>https://nugetgallery.blob.core.windows.net/icons/ExcelDataReader.2.1.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/ExcelDataReader/ExcelDataReader</PackageProjectUrl>
     <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
