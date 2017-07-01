@@ -41,12 +41,13 @@ namespace ExcelDataReader.Core.BinaryFormat
         internal int RecordContentOffset { get; }
 
         internal int Offset => RecordContentOffset - ContentOffset;
-        
+
         /// <summary>
         /// Returns record at specified offset
         /// </summary>
         /// <param name="bytes">byte array</param>
         /// <param name="offset">position in array</param>
+        /// <param name="biffVersion">The biff version.</param>
         /// <returns>The record -or- null.</returns>
         public static XlsBiffRecord GetRecord(byte[] bytes, uint offset, int biffVersion)
         {
