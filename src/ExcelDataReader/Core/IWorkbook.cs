@@ -12,8 +12,6 @@ namespace ExcelDataReader.Core
     {
         int ResultsCount { get; }
 
-        Encoding Encoding { get; }
-
         IEnumerable<TWorksheet> ReadWorksheets();
     }
 }

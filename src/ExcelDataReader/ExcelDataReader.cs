@@ -39,8 +39,6 @@ namespace ExcelDataReader
             Dispose(false);
         }
 
-        public Encoding Encoding => Workbook?.Encoding;
-
         public string Name => _worksheetIterator?.Current?.Name;
 
         public string VisibleState => _worksheetIterator?.Current?.VisibleState;

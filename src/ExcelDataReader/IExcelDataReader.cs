@@ -26,8 +26,6 @@ namespace ExcelDataReader
         /// <value>The results count.</value>
         int ResultsCount { get; }
 
-        Encoding Encoding { get; }
-
         /// <summary>
         /// Seeks to the first result.
         /// </summary>

@@ -63,8 +63,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public XlsxStyles Styles { get; } = new XlsxStyles();
 
-        public Encoding Encoding => null;
-
         public bool IsDate1904 { get; private set; }
 
         public int ResultsCount => Sheets?.Count ?? -1;
