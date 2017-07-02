@@ -786,12 +786,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11573_BlankValues()
         {
-            var noOaDateConfiguration = new ExcelReaderConfiguration()
-            {
-                ConvertOaDate = false
-            };
-
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11573_BlankValues"), noOaDateConfiguration))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Issue_11573_BlankValues")))
             {
                 var dataset = excelReader.AsDataSet();
 
@@ -1239,8 +1234,8 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual(1, result.Tables[0].Rows[0][0]);
             Assert.AreEqual("Hi", result.Tables[0].Rows[0][1]);
             Assert.AreEqual(10.22D, result.Tables[0].Rows[0][2]);
-            Assert.AreEqual(14.7543176023568D, result.Tables[0].Rows[0][3]);
-            Assert.AreEqual(21.041075725336899D, result.Tables[0].Rows[0][4]);
+            Assert.AreEqual(14.754317602356753D, result.Tables[0].Rows[0][3]);
+            Assert.AreEqual(21.04107572533686D, result.Tables[0].Rows[0][4]);
 
             Assert.AreEqual(2, result.Tables[0].Rows[1][0]);
             Assert.AreEqual("How", result.Tables[0].Rows[1][1]);

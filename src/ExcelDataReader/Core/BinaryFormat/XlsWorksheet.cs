@@ -193,6 +193,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         private bool PushCellValue(object[] cellValues, XlsBiffBlankCell cell, ushort xFormat, List<XlsBiffRecord> additionalRecords)
         {
             double doubleValue;
+            int intValue;
             LogManager.Log(this).Debug("PushCellValue {0}", cell.Id);
             switch (cell.Id)
             {
@@ -206,27 +207,19 @@ namespace ExcelDataReader.Core.BinaryFormat
                     break;
                 case BIFFRECORDTYPE.INTEGER:
                 case BIFFRECORDTYPE.INTEGER_OLD:
-                    // NOTE/TODO: ints are always cast to double or DateTime, should be int or DateTime
-                    doubleValue = ((XlsBiffIntegerCell)cell).Value;
-                    cellValues[cell.ColumnIndex] = !Workbook.ConvertOaDate ?
-                        doubleValue : TryConvertOADateTime(doubleValue, xFormat);
+                    intValue = ((XlsBiffIntegerCell)cell).Value;
+                    cellValues[cell.ColumnIndex] = TryConvertOADateTime(intValue, xFormat);
                     break;
                 case BIFFRECORDTYPE.NUMBER:
                 case BIFFRECORDTYPE.NUMBER_OLD:
-
                     doubleValue = ((XlsBiffNumberCell)cell).Value;
-
-                    cellValues[cell.ColumnIndex] = !Workbook.ConvertOaDate ?
-                        doubleValue : TryConvertOADateTime(doubleValue, xFormat);
-
+                    cellValues[cell.ColumnIndex] = TryConvertOADateTime(doubleValue, xFormat);
                     LogManager.Log(this).Debug("VALUE: {0}", doubleValue);
                     break;
                 case BIFFRECORDTYPE.LABEL:
                 case BIFFRECORDTYPE.LABEL_OLD:
                 case BIFFRECORDTYPE.RSTRING:
-
                     cellValues[cell.ColumnIndex] = ((XlsBiffLabelCell)cell).GetValue(Encoding);
-
                     LogManager.Log(this).Debug("VALUE: {0}", cellValues[cell.ColumnIndex]);
                     break;
                 case BIFFRECORDTYPE.LABELSST:
@@ -235,12 +228,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                     cellValues[cell.ColumnIndex] = tmp;
                     break;
                 case BIFFRECORDTYPE.RK:
-
                     doubleValue = ((XlsBiffRKCell)cell).Value;
-
-                    cellValues[cell.ColumnIndex] = !Workbook.ConvertOaDate ?
-                        doubleValue : TryConvertOADateTime(doubleValue, xFormat);
-
+                    cellValues[cell.ColumnIndex] = TryConvertOADateTime(doubleValue, xFormat);
                     LogManager.Log(this).Debug("VALUE: {0}", doubleValue);
                     break;
                 case BIFFRECORDTYPE.MULRK:
@@ -251,7 +240,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     {
                         doubleValue = rkCell.GetValue(j);
                         LogManager.Log(this).Debug("VALUE[{1}]: {0}", doubleValue, j);
-                        cellValues[j] = !Workbook.ConvertOaDate ? doubleValue : TryConvertOADateTime(doubleValue, rkCell.GetXF(j));
+                        cellValues[j] = TryConvertOADateTime(doubleValue, rkCell.GetXF(j));
                     }
 
                     break;
@@ -263,15 +252,13 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.FORMULA:
                 case BIFFRECORDTYPE.FORMULA_V3:
                 case BIFFRECORDTYPE.FORMULA_V4:
-
-                    if (!TryGetFormulaValue((XlsBiffFormulaCell)cell, additionalRecords, out object objectValue))
+                    if (!TryGetFormulaValue((XlsBiffFormulaCell)cell, xFormat, additionalRecords, out object objectValue))
                     {
                         // want additional records
                         return false;
                     }
 
-                    cellValues[cell.ColumnIndex] = !Workbook.ConvertOaDate ?
-                            objectValue : TryConvertOADateTime(objectValue, xFormat); // date time offset;
+                    cellValues[cell.ColumnIndex] = objectValue;
                     LogManager.Log(this).Debug("VALUE: {0}", objectValue);
                     break;
             }
@@ -279,7 +266,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             return true;
         }
 
-        private bool TryGetFormulaValue(XlsBiffFormulaCell formulaCell, List<XlsBiffRecord> additionalRecords, out object result)
+        private bool TryGetFormulaValue(XlsBiffFormulaCell formulaCell, ushort xFormat, List<XlsBiffRecord> additionalRecords, out object result)
         {
             switch (formulaCell.FormulaType)
             {
@@ -293,7 +280,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     result = string.Empty;
                     return true;
                 case XlsBiffFormulaCell.FormulaValueType.Number:
-                    result = formulaCell.XNumValue;
+                    result = TryConvertOADateTime(formulaCell.XNumValue, xFormat);
                     return true;
                 case XlsBiffFormulaCell.FormulaValueType.String when additionalRecords.Count == 0:
                     result = null;
@@ -345,6 +332,20 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         private object TryConvertOADateTime(double value, ushort xFormat)
+        {
+            if (IsDateFormat(xFormat))
+                return Helpers.ConvertFromOATime(value, IsDate1904);
+            return value;
+        }
+
+        private object TryConvertOADateTime(int value, ushort xFormat)
+        {
+            if (IsDateFormat(xFormat))
+                return Helpers.ConvertFromOATime(value, IsDate1904);
+            return value;
+        }
+
+        private bool IsDateFormat(ushort xFormat)
         {
             ushort format;
             if (xFormat < ExtendedFormats.Count)
@@ -404,7 +405,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case 0x2a: // "_(\"$\"* #,##0_);_(\"$\"* (#,##0);_(\"$\"* \"-\"_);_(@_)";
                     case 0x2b: // "_(\"$\"* #,##0.00_);_(\"$\"* (#,##0.00);_(\"$\"* \"-\"??_);_(@_)";
                     case 0x2c: // "_(* #,##0.00_);_(* (#,##0.00);_(* \"-\"??_);_(@_)";
-                        return value;
+                        return false;
 
                     // date formats
                     case 14: // this.GetDefaultDateFormat();
@@ -420,9 +421,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case 0x2d: // "mm:ss";
                     case 0x2e: // "[h]:mm:ss";
                     case 0x2f: // "mm:ss.0";
-                        return Helpers.ConvertFromOATime(value, IsDate1904);
+                        return true;
                     case 0x31: // "@";
-                        return value.ToString(); // TODO: What is the exepcted culture here?
+                        return false; // NOTE: was value.ToString();
                 }
             }
 
@@ -430,22 +431,10 @@ namespace ExcelDataReader.Core.BinaryFormat
             {
                 var fmt = fmtString.GetValue(Encoding);
                 var formatReader = new FormatReader { FormatString = fmt };
-                if (formatReader.IsDateFormatString())
-                    return Helpers.ConvertFromOATime(value, IsDate1904);
+                return formatReader.IsDateFormatString();
             }
 
-            return value;
-        }
-
-        private object TryConvertOADateTime(object value, ushort xFormat)
-        {
-            if (value == null)
-                return null;
-
-            if (double.TryParse(value.ToString(), out double doubleValue))
-                return TryConvertOADateTime(doubleValue, xFormat);
-
-            return value;
+            return false;
         }
 
         private void ReadWorksheetGlobals()

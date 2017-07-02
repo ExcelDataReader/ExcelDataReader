@@ -339,8 +339,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         if (isNumber && Workbook.IsDateTimeStyle(xf.NumFmtId))
                             return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
 
-                        if (xf.NumFmtId == 49) // Text format but value is not stored as a string. If numeric convert to current culture. 
-                            return isNumber ? number.ToString() : rawValue;
+                        // NOTE: Commented out to match behavior of the binary reader; 
+                        // formatting should ultimately be applied by the caller
+                        // if (xf.NumFmtId == 49) // Text format but value is not stored as a string. If numeric convert to current culture. 
+                        //    return isNumber ? number.ToString() : rawValue;
                     }
 
                     if (isNumber)

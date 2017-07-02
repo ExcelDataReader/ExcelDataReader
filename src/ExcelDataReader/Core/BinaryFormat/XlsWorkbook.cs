@@ -16,10 +16,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private readonly byte[] _bytes;
 
-        internal XlsWorkbook(Stream stream, bool convertOaDate, Encoding fallbackEncoding)
+        internal XlsWorkbook(Stream stream, Encoding fallbackEncoding)
         {
-            ConvertOaDate = convertOaDate;
-
             var probe = new byte[8];
             stream.Read(probe, 0, probe.Length);
             stream.Seek(0, SeekOrigin.Begin);
@@ -94,8 +92,6 @@ namespace ExcelDataReader.Core.BinaryFormat
         public XlsBiffSST SST { get; set; }
 
         public XlsBiffRecord ExtSST { get; set; }
-
-        public bool ConvertOaDate { get; }
 
         public bool IsDate1904 { get; private set; }
 

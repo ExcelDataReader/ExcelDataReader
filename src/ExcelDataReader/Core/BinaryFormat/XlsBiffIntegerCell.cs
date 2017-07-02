@@ -21,6 +21,6 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Gets the cell value.
         /// </summary>
-        public uint Value { get; }
+        public int Value { get; }
     }
 }

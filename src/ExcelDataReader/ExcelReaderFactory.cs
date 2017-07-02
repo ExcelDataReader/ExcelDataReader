@@ -13,21 +13,6 @@ namespace ExcelDataReader
         /// Creates an instance of <see cref="ExcelBinaryReader"/> or <see cref="ExcelOpenXmlReader"/>
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
-        /// <param name="convertOADates">If <see langword="true"/> convert OA dates to <see cref="DateTime"/>. Only applicable to binary (xls) files.</param>
-        /// <returns>The excel data reader.</returns>
-        [Obsolete("Use CreateReader() with a configuration object instead")]
-        public static IExcelDataReader CreateReader(Stream fileStream, bool convertOADates)
-        {
-            return CreateReader(fileStream, new ExcelReaderConfiguration()
-            {
-                ConvertOaDate = convertOADates,
-            });
-        }
-
-        /// <summary>
-        /// Creates an instance of <see cref="ExcelBinaryReader"/> or <see cref="ExcelOpenXmlReader"/>
-        /// </summary>
-        /// <param name="fileStream">The file stream.</param>
         /// <param name="configuration">The configuration object.</param>
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
@@ -48,21 +33,6 @@ namespace ExcelDataReader
             }
 
             throw new NotSupportedException("Unknown file format");
-        }
-
-        /// <summary>
-        /// Creates an instance of <see cref="ExcelBinaryReader"/>
-        /// </summary>
-        /// <param name="fileStream">The file stream.</param>
-        /// <param name="convertOADate">If true oa dates will be converer to <see cref="DateTime"/>.</param>
-        /// <returns>The excel data reader.</returns>
-        [Obsolete("Use CreateBinaryReader() with a configuration object instead")]
-        public static IExcelDataReader CreateBinaryReader(Stream fileStream, bool convertOADate)
-        {
-            return CreateBinaryReader(fileStream, new ExcelReaderConfiguration()
-            {
-                ConvertOaDate = convertOADate,
-            });
         }
 
         /// <summary>

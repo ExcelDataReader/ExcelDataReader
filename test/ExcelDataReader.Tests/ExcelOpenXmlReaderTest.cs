@@ -887,7 +887,11 @@ namespace ExcelDataReader.Tests
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Format49_@")))
             {
                 DataSet result = excelReader.AsDataSet();
-                Assert.That(result.Tables[0].Rows[0].ItemArray, Is.EqualTo(new[] { "2010-05-05", "1.1", 2.2.ToString(CultureInfo.CurrentCulture), "123", "2,2" }));
+
+                // ExcelDataReader used to convert numbers formatted with NumFmtId=49/@ to culture-specific strings.
+                // This behaviour changed in v3 to return the original value:
+                // Assert.That(result.Tables[0].Rows[0].ItemArray, Is.EqualTo(new[] { "2010-05-05", "1.1", "2,2", "123", "2,2" }));
+                Assert.That(result.Tables[0].Rows[0].ItemArray, Is.EqualTo(new object[] { "2010-05-05", "1.1", 2.2000000000000002D, 123.0D, "2,2" }));
             }
         }
 

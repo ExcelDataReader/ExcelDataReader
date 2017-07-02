@@ -30,7 +30,6 @@ namespace ExcelDataReader
             // Copy the configuration to prevent external changes
             Configuration = new ExcelReaderConfiguration()
             {
-                ConvertOaDate = configuration.ConvertOaDate,
                 FallbackEncoding = configuration.FallbackEncoding
             };
         }

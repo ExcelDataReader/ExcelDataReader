@@ -12,7 +12,7 @@ namespace ExcelDataReader
             : base(configuration)
         {
             Stream = stream;
-            Workbook = new XlsWorkbook(stream, Configuration.ConvertOaDate, Configuration.FallbackEncoding);
+            Workbook = new XlsWorkbook(stream, Configuration.FallbackEncoding);
 
             // By default, the data reader is positioned on the first result.
             Reset();

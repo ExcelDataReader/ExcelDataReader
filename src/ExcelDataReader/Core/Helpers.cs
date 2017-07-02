@@ -35,27 +35,47 @@ namespace ExcelDataReader.Core
             return EscapeRegex.Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber)).ToString());
         }
 
-        public static object ConvertFromOATime(double value, bool date1904)
+        /// <summary>
+        /// Convert a double from Excel to an OA DateTime double. 
+        /// The returned value is normalized to the '1900' date mode and adjusted for the 1900 leap year bug.
+        /// </summary>
+        public static double AdjustOADateTime(double value, bool date1904)
         {
-            var originalValue = value;
-
             if (!date1904)
-            { 
+            {
                 // Workaround for 1900 leap year bug in Excel
                 if (value >= 0.0 && value < 60.0)
                 {
-                    value++;
+                    return value + 1;
                 }
             }
             else
-            { 
-                value += 1462.0;
+            {
+                return value + 1462.0;
             }
 
-            if (value >= DateTimeHelper.OADateMaxAsDouble || value <= DateTimeHelper.OADateMinAsDouble)
-                return originalValue;
+            return value;
+        }
 
-            return DateTimeHelper.FromOADate(value);
+        public static bool IsValidOADateTime(double value)
+        {
+            return value > DateTimeHelper.OADateMinAsDouble && value < DateTimeHelper.OADateMaxAsDouble;
+        }
+
+        public static object ConvertFromOATime(double value, bool date1904)
+        {
+            var dateValue = AdjustOADateTime(value, date1904);
+            if (IsValidOADateTime(dateValue))
+                return DateTimeHelper.FromOADate(dateValue);
+            return value;
+        }
+
+        public static object ConvertFromOATime(int value, bool date1904)
+        {
+            var dateValue = AdjustOADateTime(value, date1904);
+            if (IsValidOADateTime(dateValue))
+                return DateTimeHelper.FromOADate(dateValue);
+            return value;
         }
     }
 }
