@@ -214,7 +214,11 @@ namespace ExcelDataReader.Tests
                 while (r.Read())
                 {
                     fieldCount = r.FieldCount;
-                    table.Rows.Add(r.GetInt32(0), r.GetInt32(1), r.GetInt32(2), r.GetInt32(3));
+                    table.Rows.Add(
+                        Convert.ToInt32(r.GetValue(0)),
+                        Convert.ToInt32(r.GetValue(1)),
+                        Convert.ToInt32(r.GetValue(2)),
+                        Convert.ToInt32(r.GetValue(3)));
                 }
 
                 Assert.AreEqual(12, table.Rows.Count);
@@ -227,7 +231,11 @@ namespace ExcelDataReader.Tests
                 while (r.Read())
                 {
                     fieldCount = r.FieldCount;
-                    table.Rows.Add(r.GetInt32(0), r.GetInt32(1), r.GetInt32(2), r.GetInt32(3));
+                    table.Rows.Add(
+                        Convert.ToInt32(r.GetValue(0)),
+                        Convert.ToInt32(r.GetValue(1)),
+                        Convert.ToInt32(r.GetValue(2)),
+                        Convert.ToInt32(r.GetValue(3)));
                 }
 
                 Assert.AreEqual(12, table.Rows.Count);
@@ -240,7 +248,9 @@ namespace ExcelDataReader.Tests
                 while (r.Read())
                 {
                     fieldCount = r.FieldCount;
-                    table.Rows.Add(r.GetInt32(0), r.GetInt32(1));
+                    table.Rows.Add(
+                        Convert.ToInt32(r.GetValue(0)),
+                        Convert.ToInt32(r.GetValue(1)));
                 }
 
                 Assert.AreEqual(5, table.Rows.Count);
@@ -267,7 +277,11 @@ namespace ExcelDataReader.Tests
                 while (r.Read())
                 {
                     fieldCount = r.FieldCount;
-                    table.Rows.Add(r.GetInt32(0), r.GetDouble(1), r.GetDateTime(2), r.IsDBNull(4));
+                    table.Rows.Add(
+                        Convert.ToInt32(r.GetValue(0)),
+                        Convert.ToDouble(r.GetValue(1)),
+                        r.GetDateTime(2),
+                        r.IsDBNull(4));
                 }
 
                 Assert.AreEqual(6, fieldCount);
@@ -457,7 +471,7 @@ namespace ExcelDataReader.Tests
                 Assert.IsNull(excelReader.GetValue(1));
                 Assert.AreEqual("Test", excelReader.GetString(2));
                 Assert.IsNull(excelReader.GetValue(3));
-                Assert.AreEqual(1, excelReader.GetInt32(4));
+                Assert.AreEqual(1, excelReader.GetDouble(4));
             }
         }
 
@@ -645,7 +659,7 @@ namespace ExcelDataReader.Tests
                 excelReader.Read();
                 for (int i = 0; i < excelReader.FieldCount; i++)
                 {
-                    Console.WriteLine("{0}:{1}", i, excelReader.GetString(i));
+                    Console.WriteLine("{0}:{1}", i, excelReader.GetValue(i));
                 }
             }
         }
@@ -1252,6 +1266,25 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual(12.19D, result.Tables[0].Rows[7][2]);
             Assert.AreEqual(99, result.Tables[0].Rows[8][2]);
             Assert.AreEqual(1385729.234D, result.Tables[0].Rows[9][2]);
+        }
+
+        [TestMethod]
+        public void GitIssue_240_ExceptionBeforeRead()
+        {
+            // Check the exception and message when trying to get data before calling Read().
+            // Using the same as SqlDataReader, making it easier to search for a general solution.
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test10x10")))
+            {
+                var exception = Assert.Throws<InvalidOperationException>(() =>
+                {
+                    for (int columnIndex = 0; columnIndex < excelReader.FieldCount; columnIndex++)
+                    {
+                        string name = excelReader.GetString(columnIndex);
+                    }
+                });
+
+                Assert.AreEqual("No data exists for the row/column.", exception.Message);
+            }
         }
 
 

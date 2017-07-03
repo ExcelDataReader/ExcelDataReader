@@ -57,139 +57,68 @@ namespace ExcelDataReader
 
         protected TWorkbook Workbook { get; set; }
 
-        private object[] CellsValues => _rowIterator?.Current;
+        private object[] CellsValues
+        {
+            get
+            {
+                if (_rowIterator == null || _rowIterator.Current == null)
+                    throw new InvalidOperationException("No data exists for the row/column.");
+                return _rowIterator?.Current;
+            }
+        }
 
         public object this[int i] => CellsValues[i];
 
         public object this[string name] => throw new NotSupportedException();
 
-        public bool GetBoolean(int i)
-        {
-            return !IsDBNull(i) && bool.Parse(CellsValues[i].ToString());
-        }
+        public bool GetBoolean(int i) => (bool)CellsValues[i];
 
-        public byte GetByte(int i)
-        {
-            throw new NotSupportedException();
-        }
+        public byte GetByte(int i) => (byte)CellsValues[i];
 
         public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
-        {
-            throw new NotSupportedException();
-        }
+            => throw new NotSupportedException();
 
-        public char GetChar(int i)
-        {
-            throw new NotSupportedException();
-        }
+        public char GetChar(int i) => (char)CellsValues[i];
 
         public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
-        {
-            throw new NotSupportedException();
-        }
+             => throw new NotSupportedException();
 
-        public IDataReader GetData(int i)
-        {
-            throw new NotSupportedException();
-        }
+        public IDataReader GetData(int i) => throw new NotSupportedException();
 
-        public string GetDataTypeName(int i)
-        {
-            throw new NotSupportedException();
-        }
+        public string GetDataTypeName(int i) => throw new NotSupportedException();
 
-        public DateTime GetDateTime(int i)
-        {
-            if (IsDBNull(i))
-                return DateTime.MinValue;
+        public DateTime GetDateTime(int i) => (DateTime)CellsValues[i];
 
-            // requested change: 3
-            object val = CellsValues[i];
+        public decimal GetDecimal(int i) => (decimal)CellsValues[i];
 
-            if (val is DateTime)
-            {
-                // if the value is already a datetime.. return it without further conversion
-                return (DateTime)val;
-            }
+        public double GetDouble(int i) => (double)CellsValues[i];
 
-            return DateTime.MinValue;
-        }
+        public Type GetFieldType(int i) => CellsValues[i]?.GetType();
 
-        public decimal GetDecimal(int i)
-        {
-            return IsDBNull(i) ? decimal.MinValue : decimal.Parse(CellsValues[i].ToString());
-        }
+        public float GetFloat(int i) => (float)CellsValues[i];
 
-        public double GetDouble(int i)
-        {
-            return IsDBNull(i) ? double.MinValue : double.Parse(CellsValues[i].ToString());
-        }
+        public Guid GetGuid(int i) => (Guid)CellsValues[i];
 
-        public Type GetFieldType(int i)
-        {
-            return CellsValues[i]?.GetType();
-        }
+        public short GetInt16(int i) => (short)CellsValues[i];
 
-        public float GetFloat(int i)
-        {
-            return IsDBNull(i) ? float.MinValue : float.Parse(CellsValues[i].ToString());
-        }
+        public int GetInt32(int i) => (int)CellsValues[i];
 
-        public Guid GetGuid(int i)
-        {
-            throw new NotSupportedException();
-        }
+        public long GetInt64(int i) => (long)CellsValues[i];
 
-        public short GetInt16(int i)
-        {
-            return IsDBNull(i) ? short.MinValue : short.Parse(CellsValues[i].ToString());
-        }
+        public string GetName(int i) => throw new NotSupportedException();
 
-        public int GetInt32(int i)
-        {
-            return IsDBNull(i) ? int.MinValue : int.Parse(CellsValues[i].ToString());
-        }
-
-        public long GetInt64(int i)
-        {
-            return IsDBNull(i) ? long.MinValue : long.Parse(CellsValues[i].ToString());
-        }
-
-        public string GetName(int i)
-        {
-            throw new NotSupportedException();
-        }
-
-        public int GetOrdinal(string name)
-        {
-            throw new NotSupportedException();
-        }
+        public int GetOrdinal(string name) => throw new NotSupportedException();
 
         /// <inheritdoc />
-        public DataTable GetSchemaTable()
-        {
-            throw new NotSupportedException();
-        }
+        public DataTable GetSchemaTable() => throw new NotSupportedException();
 
-        public string GetString(int i)
-        {
-            return IsDBNull(i) ? null : CellsValues[i].ToString();
-        }
+        public string GetString(int i) => (string)CellsValues[i];
 
-        public object GetValue(int i)
-        {
-            return CellsValues[i];
-        }
+        public object GetValue(int i) => CellsValues[i];
 
-        public int GetValues(object[] values)
-        {
-            throw new NotSupportedException();
-        }
+        public int GetValues(object[] values) => throw new NotSupportedException();
 
-        public bool IsDBNull(int i)
-        {
-            return CellsValues[i] == null;
-        }
+        public bool IsDBNull(int i) => CellsValues[i] == null;
 
         /// <inheritdoc />
         public void Reset()

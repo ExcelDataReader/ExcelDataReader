@@ -122,7 +122,11 @@ namespace ExcelDataReader.Tests
                 while (r.Read())
                 {
                     fieldCount = r.FieldCount;
-                    table.Rows.Add(r.GetInt32(0), r.GetInt32(1), r.GetInt32(2), r.GetInt32(3));
+                    table.Rows.Add(
+                        Convert.ToInt32(r.GetValue(0)),
+                        Convert.ToInt32(r.GetValue(1)),
+                        Convert.ToInt32(r.GetValue(2)),
+                        Convert.ToInt32(r.GetValue(3)));
                 }
 
                 Assert.AreEqual(12, table.Rows.Count);
@@ -136,7 +140,11 @@ namespace ExcelDataReader.Tests
                 while (r.Read())
                 {
                     fieldCount = r.FieldCount;
-                    table.Rows.Add(r.GetInt32(0), r.GetInt32(1), r.GetInt32(2), r.GetInt32(3));
+                    table.Rows.Add(
+                        Convert.ToInt32(r.GetValue(0)),
+                        Convert.ToInt32(r.GetValue(1)),
+                        Convert.ToInt32(r.GetValue(2)),
+                        Convert.ToInt32(r.GetValue(3)));
                 }
 
                 Assert.AreEqual(12, table.Rows.Count);
@@ -150,7 +158,9 @@ namespace ExcelDataReader.Tests
                 while (r.Read())
                 {
                     fieldCount = r.FieldCount;
-                    table.Rows.Add(r.GetInt32(0), r.GetInt32(1));
+                    table.Rows.Add(
+                        Convert.ToInt32(r.GetValue(0)),
+                        Convert.ToInt32(r.GetValue(1)));
                 }
 
                 Assert.AreEqual(5, table.Rows.Count);
@@ -177,7 +187,11 @@ namespace ExcelDataReader.Tests
                 while (r.Read())
                 {
                     fieldCount = r.FieldCount;
-                    table.Rows.Add(r.GetInt32(0), r.GetDouble(1), r.GetDateTime(2), r.IsDBNull(4));
+                    table.Rows.Add(
+                        Convert.ToInt32(r.GetValue(0)), 
+                        Convert.ToDouble(r.GetValue(1)),
+                        r.GetDateTime(2), 
+                        r.IsDBNull(4));
                 }
 
                 Assert.AreEqual(6, fieldCount);
@@ -379,7 +393,7 @@ namespace ExcelDataReader.Tests
                 Assert.IsNull(excelReader.GetValue(1));
                 Assert.AreEqual("Test", excelReader.GetString(2));
                 Assert.IsNull(excelReader.GetValue(3));
-                Assert.AreEqual(1, excelReader.GetInt32(4));
+                Assert.AreEqual(1, excelReader.GetDouble(4));
             }
         }
 
@@ -523,7 +537,7 @@ namespace ExcelDataReader.Tests
                 excelReader.Read();
                 for (int i = 0; i < excelReader.FieldCount; i++)
                 {
-                    Console.WriteLine("{0}:{1}", i, excelReader.GetString(i));
+                    Console.WriteLine("{0}:{1}", i, excelReader.GetValue(i));
                 }
             }
         }

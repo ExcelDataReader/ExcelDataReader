@@ -19,7 +19,7 @@ namespace ExcelDataReader.Tests
             Assert.AreEqual(" column b", excelReader.GetString(5));
 
             excelReader.Read();
-            Assert.AreEqual(2, excelReader.GetInt32(0));
+            Assert.AreEqual(2, excelReader.GetDouble(0));
             Assert.AreEqual("b", excelReader.GetString(1));
             Assert.AreEqual("c", excelReader.GetString(2));
             Assert.AreEqual("d", excelReader.GetString(3));
@@ -27,15 +27,15 @@ namespace ExcelDataReader.Tests
 
             excelReader.Read();
             Assert.AreEqual(6, excelReader.FieldCount);
-            Assert.AreEqual(3, excelReader.GetInt32(0));
-            Assert.AreEqual(2, excelReader.GetInt32(1));
-            Assert.AreEqual(3, excelReader.GetInt32(2));
-            Assert.AreEqual(4, excelReader.GetInt32(3));
-            Assert.AreEqual(5, excelReader.GetInt32(4));
+            Assert.AreEqual(3, excelReader.GetDouble(0));
+            Assert.AreEqual(2, excelReader.GetDouble(1));
+            Assert.AreEqual(3, excelReader.GetDouble(2));
+            Assert.AreEqual(4, excelReader.GetDouble(3));
+            Assert.AreEqual(5, excelReader.GetDouble(4));
 
             excelReader.Read();
             Assert.AreEqual(6, excelReader.FieldCount);
-            Assert.AreEqual(4, excelReader.GetInt32(0));
+            Assert.AreEqual(4, excelReader.GetDouble(0));
             Assert.AreEqual(new DateTime(2012, 10, 13), excelReader.GetDateTime(1));
             Assert.AreEqual(new DateTime(2012, 10, 14), excelReader.GetDateTime(2));
             Assert.AreEqual(new DateTime(2012, 10, 15), excelReader.GetDateTime(3));
@@ -44,11 +44,11 @@ namespace ExcelDataReader.Tests
             for (int i = 4; i < 34; i++)
             {
                 excelReader.Read();
-                Assert.AreEqual(i + 1, excelReader.GetInt32(0));
-                Assert.AreEqual(i + 2, excelReader.GetInt32(1));
-                Assert.AreEqual(i + 3, excelReader.GetInt32(2));
-                Assert.AreEqual(i + 4, excelReader.GetInt32(3));
-                Assert.AreEqual(i + 5, excelReader.GetInt32(4));
+                Assert.AreEqual(i + 1, excelReader.GetDouble(0));
+                Assert.AreEqual(i + 2, excelReader.GetDouble(1));
+                Assert.AreEqual(i + 3, excelReader.GetDouble(2));
+                Assert.AreEqual(i + 4, excelReader.GetDouble(3));
+                Assert.AreEqual(i + 5, excelReader.GetDouble(4));
             }
 
             excelReader.NextResult();

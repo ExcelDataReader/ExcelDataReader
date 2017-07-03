@@ -73,8 +73,8 @@ namespace ExcelDataReader
 
                     for (var i = 0; i < self.FieldCount; i++)
                     {
-                        var name = configuration.UseHeaderRow 
-                            ? self.GetString(i)
+                        var name = configuration.UseHeaderRow
+                            ? Convert.ToString(self.GetValue(i))
                             : null;
 
                         if (string.IsNullOrEmpty(name))
