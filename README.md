@@ -34,11 +34,10 @@ using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read)) {
 		// 1. Use the reader methods
 		do {
 			while (reader.Read()) {
-				// reader.GetInt32(0);
+				// reader.GetDouble(0);
 			}
 		} while (reader.NextResult());
 
-		
 		// 2. Use the AsDataSet extension method
 		var result = reader.AsDataSet();
 
@@ -48,17 +47,29 @@ using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read)) {
 ```
 
 
+### Using the reader methods
+
+The `AsDataSet()` extension method is a convenient helper for quickly getting the data, but is not always available or desirable to use. ExcelDataReader implements the `System.Data.IDataReader` and `IDataRecord` interfaces to navigate and retrieve data at a lower level. The most important reader methods and properties:
+
+- `Read()` reads a row from the current sheet.
+- `NextResult()` advances the cursor to the next sheet.
+- `ResultsCount` returns the number of sheets in the current workbook.
+- `Name` returns the name of the current sheet.
+- `FieldCount` returns the number of columns in the current sheet.
+- `GetFieldType()` returns the type of a value in the current row. Always one of the types supported by Excel: `double`, `int`, `bool`, `DateTime`, `string`, or `null` if there is no value.
+- `IsDBNull()` checks if a value in the current row is null. 
+- `GetValue()` returns a value from the current row as an `object`, or `null` if there is no value.
+- `GetDouble()`, `GetInt32()`, `GetBoolean()`, `GetDateTime()`, `GetString()` return a value from the current row cast to their respective type.
+- The typed `Get*()` methods throw `InvalidCastException` unless the types match exactly.
+
+
 ### CreateReader configuration options
 
 The `CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()` functions accept an optional configuration object to modify the behavior of the reader:
 
 ```c#
 var reader = ExcelReaderFactory.CreateReader(new ExcelReaderConfiguration() {
-	
-	// Gets or sets a value indicating whether OLE Automation dates will be 
-	// converted to DateTime. Default: true. (XLS only)
-	ConvertOaDate = true,
-	
+
 	// Gets or sets the encoding to use when the input XLS lacks a CodePage 
 	// record. Default: cp1252. (XLS BIFF2-5 only)
 	FallbackEncoding = Encoding.GetEncoding(1252)
@@ -96,3 +107,15 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration() {
 	}
 });
 ```
+
+
+## Supported file formats and versions
+
+| File Type | Container Format  | Storage Format | Excel Version(s) |
+| --------- | ----------------- | -------------- | ---------------- |
+| .xlsx     | ZIP               | OpenXml        | 2007 and newer |
+| .xls      | Compound Document | BIFF8          | 97, 2000, XP, 2003<br>98, 2001, v.X, 2004 (Mac) |
+| .xls      | Compound Document | BIFF5          | 5.0, 95 |
+| .xls      | -                 | BIFF4          | 4.0 |
+| .xls      | -                 | BIFF3          | 3.0 |
+| .xls      | -                 | BIFF2          | 2.0, 2.2 |
