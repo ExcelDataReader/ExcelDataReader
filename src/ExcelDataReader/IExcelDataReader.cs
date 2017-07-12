@@ -9,21 +9,26 @@ namespace ExcelDataReader
         /// <summary>
         /// Gets the sheet name.
         /// </summary>
-        /// <value>The sheet name.</value>
         string Name { get; }
 
         /// <summary>
-        /// Gets the state of the visible.
+        /// Gets the sheet visible state.
         /// </summary>
-        /// <value>
-        /// The state of the visible.
-        /// </value>
         string VisibleState { get; }
+
+        /// <summary>
+        /// Gets the sheet header.
+        /// </summary>
+        string Header { get; }
+
+        /// <summary>
+        /// Gets the sheet footer.
+        /// </summary>
+        string Footer { get; }
 
         /// <summary>
         /// Gets the number of results (workbooks).
         /// </summary>
-        /// <value>The results count.</value>
         int ResultsCount { get; }
 
         /// <summary>
