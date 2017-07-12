@@ -49,6 +49,10 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public string VisibleState { get; }
 
+        public string Header { get; }
+
+        public string Footer { get; }
+
         /// <summary>
         /// Gets the worksheet data offset.
         /// </summary>

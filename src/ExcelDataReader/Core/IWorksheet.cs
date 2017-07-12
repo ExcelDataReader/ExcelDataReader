@@ -11,6 +11,10 @@ namespace ExcelDataReader.Core
 
         string VisibleState { get; }
 
+        string Header { get; }
+
+        string Footer { get; }
+
         int FieldCount { get; }
 
         IEnumerable<object[]> ReadRows();

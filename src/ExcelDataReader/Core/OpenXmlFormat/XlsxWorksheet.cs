@@ -51,6 +51,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public string VisibleState { get; }
 
+        public string Header { get; }
+
+        public string Footer { get; }
+
         public int Id { get; }
 
         public string Rid { get; set; }
