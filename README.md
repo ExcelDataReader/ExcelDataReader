@@ -9,6 +9,17 @@ If you are reporting an issue it is really useful if you can supply an example E
 
 [![Build status](https://ci.appveyor.com/api/projects/status/ii6hbs9otpbg1nqh/branch/master?svg=true)](https://ci.appveyor.com/project/andersnm/exceldatareader/branch/master) [![Build status](https://ci.appveyor.com/api/projects/status/ii6hbs9otpbg1nqh/branch/develop?svg=true)](https://ci.appveyor.com/project/andersnm/exceldatareader/branch/develop)
 
+## Supported file formats and versions
+
+| File Type | Container Format  | File Format    | Excel Version(s) |
+| --------- | ----------------- | -------------- | ---------------- |
+| .xlsx     | ZIP               | OpenXml        | 2007 and newer |
+| .xls      | Compound Document | BIFF8          | 97, 2000, XP, 2003<br>98, 2001, v.X, 2004 (Mac) |
+| .xls      | Compound Document | BIFF5          | 5.0, 95 |
+| .xls      | -                 | BIFF4          | 4.0 |
+| .xls      | -                 | BIFF3          | 3.0 |
+| .xls      | -                 | BIFF2          | 2.0, 2.2 |
+
 ## Finding the binaries
 It is recommended to use NuGet. F.ex through the VS Package Manager Console `Install-Package <package>` or using the VS "Manage NuGet Packages..." extension. 
 
@@ -20,7 +31,6 @@ Install the `ExcelDataReader.DataSet` extension package to use the AsDataSet() m
 
 
 ## How to use
-### C# code :
 ```c#
 using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read)) {
 
@@ -65,10 +75,10 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 
 ### CreateReader configuration options
 
-The `CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()` functions accept an optional configuration object to modify the behavior of the reader:
+The `ExcelReaderFactory.CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()` methods accept an optional configuration object to modify the behavior of the reader:
 
 ```c#
-var reader = ExcelReaderFactory.CreateReader(new ExcelReaderConfiguration() {
+var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguration() {
 
 	// Gets or sets the encoding to use when the input XLS lacks a CodePage 
 	// record. Default: cp1252. (XLS BIFF2-5 only)
@@ -79,7 +89,7 @@ var reader = ExcelReaderFactory.CreateReader(new ExcelReaderConfiguration() {
 
 ### AsDataSet configuration options
 
-The `AsDataSet()` function accepts an optional configuration object to modify the behavior of the DataSet conversion:
+The `AsDataSet()` method accepts an optional configuration object to modify the behavior of the DataSet conversion:
 
 ```c#
 var result = reader.AsDataSet(new ExcelDataSetConfiguration() {
@@ -109,13 +119,14 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration() {
 ```
 
 
-## Supported file formats and versions
+## Important note on .NET Core
 
-| File Type | Container Format  | Storage Format | Excel Version(s) |
-| --------- | ----------------- | -------------- | ---------------- |
-| .xlsx     | ZIP               | OpenXml        | 2007 and newer |
-| .xls      | Compound Document | BIFF8          | 97, 2000, XP, 2003<br>98, 2001, v.X, 2004 (Mac) |
-| .xls      | Compound Document | BIFF5          | 5.0, 95 |
-| .xls      | -                 | BIFF4          | 4.0 |
-| .xls      | -                 | BIFF3          | 3.0 |
-| .xls      | -                 | BIFF2          | 2.0, 2.2 |
+By default, ExcelDataReader throws a NotSupportedException "No data is available for encoding 1252." on .NET Core.
+
+To fix, add a dependency to the package `System.Text.Encoding.CodePages` and then add code to register the code page provider during application initialization (f.ex in Startup.cs):
+
+```c#
+System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+```
+
+This is required to parse strings in binary BIFF2-5 Excel documents encoded with DOS-era code pages. These encodings are registered by default in the full .NET Framework, but not on .NET Core.
