@@ -24,6 +24,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string NSheetData = "sheetData";
         private const string NInlineStr = "inlineStr";
         private const string NStr = "str";
+        private const string NHeaderFooter = "headerFooter";
+        private const string NOddHeader = "oddHeader";
+        private const string NOddFooter = "oddFooter";
 
         public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, XlsxBoundSheet refSheet)
         {
@@ -51,9 +54,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public string VisibleState { get; }
 
-        public string Header { get; }
+        public string Header { get; private set; }
 
-        public string Footer { get; }
+        public string Footer { get; private set; }
 
         public int Id { get; }
 
@@ -120,6 +123,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     rows = Math.Max(rows, rowBlock.RowIndex);
                     cols = Math.Max(cols, rowBlock.GetMaxColumnIndex());
                 }
+                else if (sheetObject.Type == XlsxElementType.HeaderFooter)
+                {
+                    XlsxHeaderFooter headerFooter = (XlsxHeaderFooter)sheetObject;
+                    if (headerFooter.IsHeader)
+                        Header = headerFooter.Value;
+                    else
+                        Footer = headerFooter.Value;
+                }
             }
 
             if (Dimension == null && rows != int.MinValue && cols != int.MinValue)
@@ -174,6 +185,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         yield return row;
                     }
                 }
+                else if (xmlReader.IsStartElement(NHeaderFooter, NsSpreadsheetMl))
+                {
+                    foreach (var headerFooter in ReadHeaderFooter(xmlReader))
+                    {
+                        yield return headerFooter;
+                    }
+                }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {
                     break;
@@ -213,6 +231,30 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     var row = ReadRow(xmlReader, nextRowIndex);
                     nextRowIndex = row.RowIndex + 1;
                     yield return row;
+                }
+                else if (!XmlReaderHelper.SkipContent(xmlReader))
+                {
+                    break;
+                }
+            }
+        }
+
+        private IEnumerable<XlsxHeaderFooter> ReadHeaderFooter(XmlReader xmlReader)
+        {
+            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
+            {
+                yield break;
+            }
+
+            while (!xmlReader.EOF)
+            {
+                if (xmlReader.IsStartElement(NOddHeader, NsSpreadsheetMl))
+                {
+                    yield return new XlsxHeaderFooter(true, xmlReader.ReadElementContentAsString());
+                }
+                else if (xmlReader.IsStartElement(NOddFooter, NsSpreadsheetMl))
+                {
+                    yield return new XlsxHeaderFooter(false, xmlReader.ReadElementContentAsString());
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {

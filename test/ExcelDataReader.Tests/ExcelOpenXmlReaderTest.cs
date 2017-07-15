@@ -997,5 +997,15 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(1000000000000D, dataset.Tables[0].Rows[0][0]);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_241_Simple()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_224_simple")))
+            {
+                Assert.That(reader.Header, Is.EqualTo("&LLeft едц &T&CCenter едц &D&RRight  едц &P"), "Header");
+                Assert.That(reader.Footer, Is.EqualTo("&LLeft едц &P&CFooter едц &P&RRight едц &D"), "Footer");
+            }
+        }
     }
 }
