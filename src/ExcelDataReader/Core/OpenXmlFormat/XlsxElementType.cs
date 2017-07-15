@@ -3,6 +3,7 @@
     internal enum XlsxElementType
     {
         Dimension,
-        Row
+        Row, 
+        HeaderFooter,
     }
 }

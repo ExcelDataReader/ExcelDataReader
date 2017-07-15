@@ -49,9 +49,9 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public string VisibleState { get; }
 
-        public string Header { get; }
+        public string Header { get; private set; }
 
-        public string Footer { get; }
+        public string Footer { get; private set; }
 
         /// <summary>
         /// Gets the worksheet data offset.
@@ -473,10 +473,10 @@ namespace ExcelDataReader.Core.BinaryFormat
             if (idx != null)
             {
                 LogManager.Log(this).Debug("INDEX IsV8={0}", idx.IsV8);
-
-                if (idx.LastExistingRow <= idx.FirstExistingRow)
-                    return;
             }
+
+            XlsBiffHeaderFooterString header = null;
+            XlsBiffHeaderFooterString footer = null;
 
             while (!(rec is XlsBiffRow) && !(rec is XlsBiffBlankCell))
             {
@@ -522,8 +522,24 @@ namespace ExcelDataReader.Core.BinaryFormat
                     Encoding = EncodingHelper.GetEncoding(codePage.Value);
                 }
 
+                if (rec.Id == BIFFRECORDTYPE.HEADER && rec.RecordSize > 0)
+                {
+                    header = (XlsBiffHeaderFooterString)rec;
+                }
+
+                if (rec.Id == BIFFRECORDTYPE.FOOTER && rec.RecordSize > 0)
+                {
+                    footer = (XlsBiffHeaderFooterString)rec;
+                }
+
                 rec = biffStream.Read();
             }
+
+            if (header != null)
+                Header = header.GetValue(Encoding);
+
+            if (footer != null)
+                Footer = footer.GetValue(Encoding);
 
             // Handle when dimensions report less columns than used by cell records.
             int maxCellColumn = 0;

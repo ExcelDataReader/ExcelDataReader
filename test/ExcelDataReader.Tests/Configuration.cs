@@ -126,6 +126,9 @@ namespace ExcelDataReader.Tests
             { "as3xls_BIFF3", "as3xls_BIFF3.xls" },
             { "as3xls_BIFF4", "as3xls_BIFF4.xls" },
             { "as3xls_BIFF5", "as3xls_BIFF5.xls" },
+            { "Test_git_issue_224_simple_biff95", "Test_git_issue_224_simple_95.xls" },
+            { "Test_git_issue_224_simple_biff", "Test_git_issue_224_simple.xls" },
+            { "Test_git_issue_224_simple", "Test_git_issue_224_simple.xlsx" },
         };
 
         public static Stream GetTestWorkbook(string key)
