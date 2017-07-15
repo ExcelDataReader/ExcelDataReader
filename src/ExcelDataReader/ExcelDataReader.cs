@@ -43,10 +43,8 @@ namespace ExcelDataReader
 
         public string VisibleState => _worksheetIterator?.Current?.VisibleState;
 
-        public string Header => _worksheetIterator?.Current?.Header;
-
-        public string Footer => _worksheetIterator?.Current?.Footer;
-
+        public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
+        
         public int Depth { get; private set; }
 
         public int ResultsCount => Workbook?.ResultsCount ?? -1;

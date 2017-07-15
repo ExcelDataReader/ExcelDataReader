@@ -4,15 +4,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 {
     internal sealed class XlsxHeaderFooter : XlsxElement
     {
-        public XlsxHeaderFooter(bool isHeader, string value)
-            : base((XlsxElementType)XlsxElementType.HeaderFooter)
+        public XlsxHeaderFooter(HeaderFooter headerFooter)
+            : base(XlsxElementType.HeaderFooter)
         {
-            IsHeader = isHeader;
-            Value = value;
+            Value = headerFooter;
         }
         
-        public bool IsHeader { get; }
-
-        public string Value { get; }
+        public HeaderFooter Value { get; }
     }
 }

@@ -17,14 +17,9 @@ namespace ExcelDataReader
         string VisibleState { get; }
 
         /// <summary>
-        /// Gets the sheet header.
+        /// Gets the sheet header and footer -or- <see langword="null"/> if none set.
         /// </summary>
-        string Header { get; }
-
-        /// <summary>
-        /// Gets the sheet footer.
-        /// </summary>
-        string Footer { get; }
+        HeaderFooter HeaderFooter { get; }
 
         /// <summary>
         /// Gets the number of results (workbooks).
