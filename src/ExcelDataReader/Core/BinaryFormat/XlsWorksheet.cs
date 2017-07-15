@@ -49,9 +49,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public string VisibleState { get; }
 
-        public string Header { get; private set; }
-
-        public string Footer { get; private set; }
+        public HeaderFooter HeaderFooter { get; private set; }
 
         /// <summary>
         /// Gets the worksheet data offset.
@@ -535,11 +533,14 @@ namespace ExcelDataReader.Core.BinaryFormat
                 rec = biffStream.Read();
             }
 
-            if (header != null)
-                Header = header.GetValue(Encoding);
-
-            if (footer != null)
-                Footer = footer.GetValue(Encoding);
+            if (header != null || footer != null)
+            {
+                HeaderFooter = new HeaderFooter(false, false)
+                {
+                    OddHeader = header?.GetValue(Encoding),
+                    OddFooter = footer?.GetValue(Encoding),
+                };
+            }
 
             // Handle when dimensions report less columns than used by cell records.
             int maxCellColumn = 0;

@@ -11,9 +11,7 @@ namespace ExcelDataReader.Core
 
         string VisibleState { get; }
 
-        string Header { get; }
-
-        string Footer { get; }
+        HeaderFooter HeaderFooter { get; }
 
         int FieldCount { get; }
 
