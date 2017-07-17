@@ -220,11 +220,14 @@ namespace ExcelDataReader.Core.BinaryFormat
             {
                 try
                 {
+                    var difSector = Header.DifFirstSector;
                     for (var i = 0; i < Header.DifSectorCount; ++i)
                     {
-                        var difSector = (uint)(Header.DifFirstSector + i);
                         var difContent = ReadSectorAsUInt32s(reader, difSector);
-                        difSectorChain.AddRange(difContent);
+                        difSectorChain.AddRange(difContent.GetRange(0, difContent.Count - 1));
+
+                        // The DIFAT sectors are linked together by the "Next DIFAT Sector Location" in each DIFAT sector:
+                        difSector = difContent[difContent.Count - 1];
                     }
                 }
                 catch (EndOfStreamException ex)
