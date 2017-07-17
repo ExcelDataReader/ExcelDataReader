@@ -1026,5 +1026,21 @@ namespace ExcelDataReader.Tests
                 Assert.That(reader.HeaderFooter?.EvenFooter, Is.EqualTo("&CEven page footer"), "Even Footer");
             }
         }
+
+        [TestMethod]
+        public void GitIssue_245_CodeName()
+        {
+            // Test no codename = null
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest10x10")))
+            {
+                Assert.AreEqual(null, reader.CodeName);
+            }
+
+            // Test CodeName is set
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Excel_Dataset")))
+            {
+                Assert.AreEqual("Sheet1", reader.CodeName);
+            }
+        }
     }
 }

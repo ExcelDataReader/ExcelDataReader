@@ -41,6 +41,8 @@ namespace ExcelDataReader
 
         public string Name => _worksheetIterator?.Current?.Name;
 
+        public string CodeName => _worksheetIterator?.Current?.CodeName;
+
         public string VisibleState => _worksheetIterator?.Current?.VisibleState;
 
         public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;

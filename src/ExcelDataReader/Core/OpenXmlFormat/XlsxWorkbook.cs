@@ -142,6 +142,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             {
                 if (reader.IsStartElement(ElementWorkbookProperties, NsSpreadsheetMl))
                 {
+                    // Workbook VBA CodeName: reader.GetAttribute("codeName");
                     IsDate1904 = reader.GetAttribute("date1904") == "1";
                     reader.Skip();
                 }

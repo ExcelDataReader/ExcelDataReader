@@ -1306,5 +1306,26 @@ namespace ExcelDataReader.Tests
                 Assert.That(reader.HeaderFooter?.OddFooter, Is.EqualTo("&LLeft åäö &P&CFooter åäö &P&RRight åäö &D"), "Footer");
             }
         }
+
+        [TestMethod]
+        public void GitIssue_245_CodeName()
+        {
+            // Test no CodeName = null
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test10x10")))
+            {
+                Assert.AreEqual(null, reader.CodeName);
+            }
+
+            // Test CodeName is set
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Excel_Dataset")))
+            {
+                Assert.AreEqual("Sheet1", reader.CodeName);
+            }
+
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_45")))
+            {
+                Assert.AreEqual("Hoja8", reader.CodeName);
+            }
+        }
     }
 }

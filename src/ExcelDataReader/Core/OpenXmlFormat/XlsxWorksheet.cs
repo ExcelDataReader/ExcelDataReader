@@ -35,6 +35,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string NEvenHeader = "evenHeader";
         private const string NEvenFooter = "evenFooter";
 
+        private const string NSheetProperties = "sheetPr";
+
         public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, XlsxBoundSheet refSheet)
         {
             Document = document;
@@ -58,6 +60,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         public int RowsCount => Dimension == null ? -1 : Dimension.LastRow - Dimension.FirstRow + 1;
 
         public string Name { get; }
+
+        public string CodeName { get; private set; }
 
         public string VisibleState { get; }
 
@@ -204,6 +208,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     var result = ReadHeaderFooter(xmlReader);
                     if (result != null)
                         yield return result;
+                }
+                else if (xmlReader.IsStartElement(NSheetProperties, NsSpreadsheetMl))
+                {
+                    var codeName = xmlReader.GetAttribute("codeName");
+                    if (!string.IsNullOrEmpty(codeName))
+                        CodeName = codeName;
+
+                    xmlReader.Skip();
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {

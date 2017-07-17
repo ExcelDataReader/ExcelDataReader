@@ -12,6 +12,11 @@ namespace ExcelDataReader
         string Name { get; }
 
         /// <summary>
+        /// Gets the sheet VBA code name.
+        /// </summary>
+        string CodeName { get; }
+
+        /// <summary>
         /// Gets the sheet visible state.
         /// </summary>
         string VisibleState { get; }

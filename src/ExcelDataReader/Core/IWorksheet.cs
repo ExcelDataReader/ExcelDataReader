@@ -9,6 +9,8 @@ namespace ExcelDataReader.Core
     {
         string Name { get; }
 
+        string CodeName { get; }
+
         string VisibleState { get; }
 
         HeaderFooter HeaderFooter { get; }

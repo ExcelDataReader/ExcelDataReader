@@ -44,6 +44,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public string Name { get; }
 
+        public string CodeName { get; private set; }
+
         /// <summary>
         /// Gets the visibility of worksheet
         /// </summary>
@@ -441,47 +443,26 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private void ReadWorksheetGlobals()
         {
-            XlsBiffIndex idx = null;
-
             var biffStream = new XlsBiffStream(Bytes, (int)DataOffset, Workbook.BiffVersion);
+            
+            // Check the expected BOF record was found in the BIFF stream
             if (biffStream.BiffVersion == 0 || biffStream.BiffType != BIFFTYPE.Worksheet)
                 return;
-
-            XlsBiffBOF bof = biffStream.Read() as XlsBiffBOF;
-            if (bof == null)
-                return;
-            XlsBiffRecord rec = biffStream.Read();
-            if (rec == null || rec is XlsBiffEof)
-                return;
-
-            if (rec is XlsBiffIndex)
-            {
-                idx = rec as XlsBiffIndex;
-            }
-            else if (rec is XlsBiffUncalced)
-            {
-                // Sometimes this come before the index...
-                rec = biffStream.Read();
-                if (rec == null || rec is XlsBiffEof)
-                    return;
-
-                idx = rec as XlsBiffIndex;
-            }
-
-            if (idx != null)
-            {
-                LogManager.Log(this).Debug("INDEX IsV8={0}", idx.IsV8);
-            }
 
             XlsBiffHeaderFooterString header = null;
             XlsBiffHeaderFooterString footer = null;
 
-            while (!(rec is XlsBiffRow) && !(rec is XlsBiffBlankCell))
+            // Handle when dimensions report less columns than used by cell records.
+            int maxCellColumn = 0;
+            Dictionary<int, bool> previousBlocksObservedRows = new Dictionary<int, bool>();
+            Dictionary<int, bool> observedRows = new Dictionary<int, bool>();
+
+            XlsBiffRecord rec = biffStream.Read();
+            while (rec != null && !(rec is XlsBiffEof))
             {
                 if (rec is XlsBiffDimensions dims)
                 {
                     FieldCount = dims.LastColumn;
-                    break;
                 }
 
                 if (rec.Id == BIFFRECORDTYPE.RECORD1904)
@@ -530,24 +511,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                     footer = (XlsBiffHeaderFooterString)rec;
                 }
 
-                rec = biffStream.Read();
-            }
-
-            if (header != null || footer != null)
-            {
-                HeaderFooter = new HeaderFooter(false, false)
+                if (rec.Id == BIFFRECORDTYPE.CODENAME)
                 {
-                    OddHeader = header?.GetValue(Encoding),
-                    OddFooter = footer?.GetValue(Encoding),
-                };
-            }
+                    var codeName = (XlsBiffCodeName)rec;
+                    CodeName = codeName.GetValue(Encoding);
+                }
 
-            // Handle when dimensions report less columns than used by cell records.
-            int maxCellColumn = 0;
-            Dictionary<int, bool> previousBlocksObservedRows = new Dictionary<int, bool>();
-            Dictionary<int, bool> observedRows = new Dictionary<int, bool>();
-            while (rec != null && !(rec is XlsBiffEof))
-            {
                 if (!RowContentInMultipleBlocks && rec is XlsBiffDbCell)
                 {
                     foreach (int row in observedRows.Keys)
@@ -576,6 +545,15 @@ namespace ExcelDataReader.Core.BinaryFormat
                 }
 
                 rec = biffStream.Read();
+            }
+
+            if (header != null || footer != null)
+            {
+                HeaderFooter = new HeaderFooter(false, false)
+                {
+                    OddHeader = header?.GetValue(Encoding),
+                    OddFooter = footer?.GetValue(Encoding),
+                };
             }
 
             if (FieldCount < maxCellColumn)
