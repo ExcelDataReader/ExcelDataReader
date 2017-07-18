@@ -130,6 +130,8 @@ namespace ExcelDataReader.Tests
             { "Test_git_issue_224_simple_biff", "Test_git_issue_224_simple.xls" },
             { "Test_git_issue_224_simple", "Test_git_issue_224_simple.xlsx" },
             { "Test_git_issue_224_firstoddeven", "Test_git_issue_224_firstoddeven.xlsx" },
+            { "Test_git_issue_250_richtext", "Test_git_issue_250_richtext.xls" },
+            { "xTest_git_issue_250_richtext", "Test_git_issue_250_richtext.xlsx" },
         };
 
         public static Stream GetTestWorkbook(string key)

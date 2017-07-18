@@ -1042,5 +1042,16 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("Sheet1", reader.CodeName);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_250_RichText()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_git_issue_250_richtext")))
+            {
+                reader.Read();
+                var text = reader.GetString(0);
+                Assert.AreEqual("Lorem ipsum dolor sit amet, ei pri verterem efficiantur, per id meis idque deterruisset.", text);
+            }
+        }
     }
 }
