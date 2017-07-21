@@ -139,6 +139,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// Returns string at specified index
         /// </summary>
         /// <param name="sstIndex">Index of string to get</param>
+        /// <param name="encoding">Workbook encoding</param>
         /// <returns>string value if it was found, empty string otherwise</returns>
         public string GetString(uint sstIndex, Encoding encoding)
         {

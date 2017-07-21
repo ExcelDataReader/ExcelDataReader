@@ -17,6 +17,7 @@
     <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net20' ">

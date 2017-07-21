@@ -6,7 +6,7 @@ using System.IO.Compression;
 
 namespace ExcelDataReader.Core
 {
-    public partial class ZipWorker : IDisposable
+    internal partial class ZipWorker : IDisposable
     {
         private const string FileSharedStrings = "xl/sharedStrings.{0}";
         private const string FileStyles = "xl/styles.{0}";
@@ -95,7 +95,7 @@ namespace ExcelDataReader.Core
         }
     }
 
-    public partial class ZipWorker
+    internal partial class ZipWorker
     {
         ~ZipWorker()
         {

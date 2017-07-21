@@ -1,9 +1,10 @@
-using System;
 using System.Data;
-using System.Text;
 
 namespace ExcelDataReader
 {
+    /// <summary>
+    /// The ExcelDataReader interface
+    /// </summary>
     public interface IExcelDataReader : IDataReader
     {
         /// <summary>

@@ -16,6 +16,7 @@
     <PackageProjectUrl>https://github.com/ExcelDataReader/ExcelDataReader</PackageProjectUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,7 +5,7 @@ using ICSharpCode.SharpZipLib.Zip;
 
 namespace ExcelDataReader.Core
 {
-    public sealed class ZipEntry
+    internal sealed class ZipEntry
     {
         private readonly ZipFile _handle;
         private readonly ICSharpCode.SharpZipLib.Zip.ZipEntry _entry;

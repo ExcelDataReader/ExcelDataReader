@@ -4,8 +4,17 @@ using System.Data;
 
 namespace ExcelDataReader
 {
+    /// <summary>
+    /// ExcelDataReader DataSet extensions
+    /// </summary>
     public static class ExcelDataReaderExtensions
     {
+        /// <summary>
+        /// Converts all sheets to a DataSet
+        /// </summary>
+        /// <param name="self">The IExcelDataReader instance</param>
+        /// <param name="configuration">An optional configuration object to modify the behavior of the conversion</param>
+        /// <returns>A dataset with all workbook contents</returns>
         public static DataSet AsDataSet(this IExcelDataReader self, ExcelDataSetConfiguration configuration = null)
         {
             if (configuration == null)
