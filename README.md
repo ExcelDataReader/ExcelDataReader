@@ -27,7 +27,7 @@ As of ExcelDataReader version 3.0, the project was split into multiple packages:
 
 Install the `ExcelDataReader` base package to use the "low level" reader interface. Compatible with net20, net45 and netstandard 1.3.
 
-Install the `ExcelDataReader.DataSet` extension package to use the AsDataSet() method and load spreadsheets into System.Data.DataSet. This will also pull in the base package. Compatible with net20 and net45.
+Install the `ExcelDataReader.DataSet` extension package to use the `AsDataSet()` method to populate a `System.Data.DataSet`. This will also pull in the base package. Compatible with net20 and net45.
 
 
 ## How to use
@@ -65,7 +65,9 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 - `NextResult()` advances the cursor to the next sheet.
 - `ResultsCount` returns the number of sheets in the current workbook.
 - `Name` returns the name of the current sheet.
+- `CodeName` returns the VBA code name identifier of the current sheet.
 - `FieldCount` returns the number of columns in the current sheet.
+- `HeaderFooter` returns an object with information about the headers and footers, or `null` if there are none.
 - `GetFieldType()` returns the type of a value in the current row. Always one of the types supported by Excel: `double`, `int`, `bool`, `DateTime`, `string`, or `null` if there is no value.
 - `IsDBNull()` checks if a value in the current row is null. 
 - `GetValue()` returns a value from the current row as an `object`, or `null` if there is no value.
@@ -73,7 +75,7 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 - The typed `Get*()` methods throw `InvalidCastException` unless the types match exactly.
 
 
-### CreateReader configuration options
+### CreateReader() configuration options
 
 The `ExcelReaderFactory.CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()` methods accept an optional configuration object to modify the behavior of the reader:
 
@@ -87,7 +89,7 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
 ```
 
 
-### AsDataSet configuration options
+### AsDataSet() configuration options
 
 The `AsDataSet()` method accepts an optional configuration object to modify the behavior of the DataSet conversion:
 
