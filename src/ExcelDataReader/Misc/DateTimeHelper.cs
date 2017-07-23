@@ -2,7 +2,7 @@
 
 namespace ExcelDataReader.Misc
 {
-    public static class DateTimeHelper
+    internal static class DateTimeHelper
     {
         // All OA dates must be greater than (not >=) OADateMinAsDouble
         public const double OADateMinAsDouble = -657435.0;

@@ -143,6 +143,11 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffMSODrawing(bytes, offset);
                 case BIFFRECORDTYPE.FILEPASS:
                     return new XlsBiffFilePass(bytes, offset);
+                case BIFFRECORDTYPE.HEADER:
+                case BIFFRECORDTYPE.FOOTER:
+                    return new XlsBiffHeaderFooterString(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.CODENAME:
+                    return new XlsBiffCodeName(bytes, offset);
 
                 default:
                     return new XlsBiffRecord(bytes, offset);

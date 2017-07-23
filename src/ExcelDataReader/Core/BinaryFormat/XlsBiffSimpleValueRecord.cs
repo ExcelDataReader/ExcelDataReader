@@ -11,7 +11,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Returns value
+        /// Gets the value
         /// </summary>
         public ushort Value => ReadUInt16(0x0);
     }

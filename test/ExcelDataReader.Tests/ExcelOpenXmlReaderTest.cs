@@ -997,5 +997,61 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(1000000000000D, dataset.Tables[0].Rows[0][0]);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_241_Simple()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_224_simple")))
+            {
+                Assert.That(reader.HeaderFooter?.OddHeader, Is.EqualTo("&LLeft едц &T&CCenter едц &D&RRight  едц &P"), "Header");
+                Assert.That(reader.HeaderFooter?.OddFooter, Is.EqualTo("&LLeft едц &P&CFooter едц &P&RRight едц &D"), "Footer");
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_241_FirstOddEven()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_224_firstoddeven")))
+            {
+                Assert.That(reader.HeaderFooter, Is.Not.Null);
+
+                Assert.That(reader.HeaderFooter?.HasDifferentFirst, Is.True, "HasDifferentFirst");
+                Assert.That(reader.HeaderFooter?.HasDifferentOddEven, Is.True, "HasDifferentOddEven");
+
+                Assert.That(reader.HeaderFooter?.FirstHeader, Is.EqualTo("&CFirst header center"), "First Header");
+                Assert.That(reader.HeaderFooter?.FirstFooter, Is.EqualTo("&CFirst footer center"), "First Footer");
+                Assert.That(reader.HeaderFooter?.OddHeader, Is.EqualTo("&LLeft едц &T&COdd page header&RRight  едц &P"), "Odd Header");
+                Assert.That(reader.HeaderFooter?.OddFooter, Is.EqualTo("&LLeft едц &P&COdd Footer едц &P&RRight едц &D"), "Odd Footer");
+                Assert.That(reader.HeaderFooter?.EvenHeader, Is.EqualTo("&L&A&CEven page header"), "Even Header");
+                Assert.That(reader.HeaderFooter?.EvenFooter, Is.EqualTo("&CEven page footer"), "Even Footer");
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_245_CodeName()
+        {
+            // Test no codename = null
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest10x10")))
+            {
+                Assert.AreEqual(null, reader.CodeName);
+            }
+
+            // Test CodeName is set
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Excel_Dataset")))
+            {
+                Assert.AreEqual("Sheet1", reader.CodeName);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_250_RichText()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_git_issue_250_richtext")))
+            {
+                reader.Read();
+                var text = reader.GetString(0);
+                Assert.AreEqual("Lorem ipsum dolor sit amet, ei pri verterem efficiantur, per id meis idque deterruisset.", text);
+            }
+        }
     }
 }

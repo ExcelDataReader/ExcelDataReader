@@ -1,14 +1,22 @@
-﻿using System;
-
-namespace ExcelDataReader.Core
+﻿namespace ExcelDataReader.Core
 {
+    /// <summary>
+    /// Helper class for working with Excel number format strings.
+    /// </summary>
     public class FormatReader
     {
         private const char EscapeChar = '\\';
         private const char EscapeCharacterWidth = '_';
 
+        /// <summary>
+        /// Gets or sets the number format string to analyze.
+        /// </summary>
         public string FormatString { get; set; }
 
+        /// <summary>
+        /// Check for date format
+        /// </summary>
+        /// <returns>true if FormatString is a date format</returns>
         public bool IsDateFormatString()
         {
             // it is a date if it contains y,m,d,s,h but only

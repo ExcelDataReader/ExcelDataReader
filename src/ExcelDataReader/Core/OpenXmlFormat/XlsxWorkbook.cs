@@ -12,6 +12,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string ElementSheets = "sheets";
         private const string ElementSheet = "sheet";
         private const string ElementT = "t";
+        private const string ElementR = "r";
         private const string ElementStringItem = "si";
         private const string ElementStyleSheet = "styleSheet";
         private const string ElementCellCrossReference = "cellXfs";
@@ -142,6 +143,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             {
                 if (reader.IsStartElement(ElementWorkbookProperties, NsSpreadsheetMl))
                 {
+                    // Workbook VBA CodeName: reader.GetAttribute("codeName");
                     IsDate1904 = reader.GetAttribute("date1904") == "1";
                     reader.Skip();
                 }
@@ -280,6 +282,33 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 if (reader.IsStartElement(ElementT, NsSpreadsheetMl))
                 {
                     // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
+                    result += reader.ReadElementContentAsString();
+                }
+                else if (reader.IsStartElement(ElementR, NsSpreadsheetMl))
+                {
+                    result += ReadRichTextRun(reader);
+                }
+                else if (!XmlReaderHelper.SkipContent(reader))
+                {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        private string ReadRichTextRun(XmlReader reader)
+        {
+            string result = string.Empty;
+            if (!XmlReaderHelper.ReadFirstContent(reader))
+            {
+                return result;
+            }
+
+            while (!reader.EOF)
+            {
+                if (reader.IsStartElement(ElementT, NsSpreadsheetMl))
+                {
                     result += reader.ReadElementContentAsString();
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))

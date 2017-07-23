@@ -6,7 +6,7 @@
     public static class LogManager
     {
         /// <summary>
-        /// Gets the logger for <see cref="T"/>.
+        /// Gets the logger for a type.
         /// </summary>
         /// <typeparam name="T">The type to fetch a logger for.</typeparam>
         /// <param name="type">The type to get the logger for.</param>

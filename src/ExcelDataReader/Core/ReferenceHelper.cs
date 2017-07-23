@@ -2,7 +2,7 @@
 
 namespace ExcelDataReader.Core
 {
-    public static class ReferenceHelper
+    internal static class ReferenceHelper
     {
         /// <summary>
         /// Logic for the Excel dimensions. Ex: A15

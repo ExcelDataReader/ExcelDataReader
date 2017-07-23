@@ -1287,6 +1287,56 @@ namespace ExcelDataReader.Tests
             }
         }
 
+        [TestMethod]
+        public void GitIssue_241_Simple()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_224_simple_biff")))
+            {
+                Assert.That(reader.HeaderFooter?.OddHeader, Is.EqualTo("&LLeft åäö &T&CCenter åäö &D&RRight  åäö &P"), "Header");
+                Assert.That(reader.HeaderFooter?.OddFooter, Is.EqualTo("&LLeft åäö &P&CFooter åäö &P&RRight åäö &D"), "Footer");
+            }
+        }
 
+        [TestMethod]
+        public void GitIssue_241_Simple95()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_224_simple_biff95")))
+            {
+                Assert.That(reader.HeaderFooter?.OddHeader, Is.EqualTo("&LLeft åäö &T&CCenter åäö &D&RRight  åäö &P"), "Header");
+                Assert.That(reader.HeaderFooter?.OddFooter, Is.EqualTo("&LLeft åäö &P&CFooter åäö &P&RRight åäö &D"), "Footer");
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_245_CodeName()
+        {
+            // Test no CodeName = null
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test10x10")))
+            {
+                Assert.AreEqual(null, reader.CodeName);
+            }
+
+            // Test CodeName is set
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Excel_Dataset")))
+            {
+                Assert.AreEqual("Sheet1", reader.CodeName);
+            }
+
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_45")))
+            {
+                Assert.AreEqual("Hoja8", reader.CodeName);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_250_RichText()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_250_richtext")))
+            {
+                reader.Read();
+                var text = reader.GetString(0);
+                Assert.AreEqual("Lorem ipsum dolor sit amet, ei pri verterem efficiantur, per id meis idque deterruisset.", text);
+            }
+        }
     }
 }

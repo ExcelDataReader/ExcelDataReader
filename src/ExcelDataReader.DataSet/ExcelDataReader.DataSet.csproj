@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>ExcelDataReader extension for reading Microsoft Excel files into System.Data.DataSet.</Description>
     <AssemblyTitle>ExcelDataReader.DataSet</AssemblyTitle>
-    <VersionPrefix>3.0.0</VersionPrefix>
+    <VersionPrefix>3.1.0</VersionPrefix>
     <Authors>ExcelDataReader developers</Authors>
     <TargetFrameworks>net20;net45</TargetFrameworks>
     <AssemblyName>ExcelDataReader.DataSet</AssemblyName>
@@ -16,6 +16,7 @@
     <PackageProjectUrl>https://github.com/ExcelDataReader/ExcelDataReader</PackageProjectUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
