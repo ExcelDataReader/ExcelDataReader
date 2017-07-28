@@ -70,7 +70,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffInterfaceHdr(bytes, offset);
 
                 case BIFFRECORDTYPE.SST:
-                    return new XlsBiffSST(bytes, offset, biffVersion);
+                    return new XlsBiffSST(bytes, offset);
 
                 case BIFFRECORDTYPE.INDEX:
                     return new XlsBiffIndex(bytes, offset, biffVersion == 8);

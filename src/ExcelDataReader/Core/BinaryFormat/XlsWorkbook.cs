@@ -185,7 +185,6 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private void ReadWorkbookGlobals(XlsBiffStream biffStream)
         {
-            bool sst = false;
             XlsBiffRecord rec;
             while ((rec = biffStream.Read()) != null)
             {
@@ -241,17 +240,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                         break;
                     case BIFFRECORDTYPE.SST:
                         SST = (XlsBiffSST)rec;
-                        sst = true;
+                        SST.ReadStrings(biffStream);
                         break;
                     case BIFFRECORDTYPE.CONTINUE:
-                        if (!sst)
-                            break;
-                        XlsBiffContinue contSST = (XlsBiffContinue)rec;
-                        SST.Append(contSST);
                         break;
                     case BIFFRECORDTYPE.EXTSST:
                         ExtSST = rec;
-                        sst = false;
                         break;
                     case BIFFRECORDTYPE.PASSWORD:
                         break;
@@ -263,11 +257,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                         IsDate1904 = ((XlsBiffSimpleValueRecord)rec).Value == 1;
                         break;
                     case BIFFRECORDTYPE.EOF:
-                        SST?.ReadStrings();
                         return;
-
                     default:
-                        continue;
+                        break;
                 }
             }
         }

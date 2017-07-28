@@ -9,14 +9,12 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffSST : XlsBiffRecord
     {
-        private readonly List<uint> _continues = new List<uint>();
         private readonly List<IXlsString> _strings;
 
-        internal XlsBiffSST(byte[] bytes, uint offset, int biffVersion)
+        internal XlsBiffSST(byte[] bytes, uint offset)
             : base(bytes, offset)
         {
             _strings = new List<IXlsString>();
-            BiffVersion = biffVersion;
         }
 
         /// <summary>
@@ -29,112 +27,20 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public uint UniqueCount => ReadUInt32(0x4);
 
-        public int BiffVersion { get; }
-
         /// <summary>
-        /// Reads strings from BIFF stream into SST array
+        /// Parses strings out of the SST record and subsequent Continue records from the BIFF stream
         /// </summary>
-        public void ReadStrings()
+        public void ReadStrings(XlsBiffStream biffStream)
         {
-            uint offset = (uint)RecordContentOffset + 8;
-            uint last = (uint)RecordContentOffset + RecordSize;
-            int lastcontinue = 0;
-            uint count = UniqueCount;
-            while (offset < last)
+            var reader = new XlsSSTReader(this, biffStream);
+
+            for (var i = 0; i < UniqueCount; i++)
             {
-                var str = CreateXlsString(Bytes, offset);
-                uint prefix = str.HeadSize;
-                uint postfix = str.TailSize;
-                uint len = str.CharacterCount;
-                uint size = prefix + postfix + len + (str.IsMultiByte ? len : 0);
-                if (offset + size > last)
-                {
-                    if (lastcontinue >= _continues.Count)
-                        break;
-                    uint contoffset = _continues[lastcontinue];
-
-                    byte[] buff = new byte[size * 2];
-                    Buffer.BlockCopy(Bytes, (int)offset, buff, 0, (int)(last - offset));
-
-                    // If we're past the string data then we won't have a unicode string option flags.
-                    if (offset + prefix + len + (str.IsMultiByte ? len : 0) <= last)
-                    {
-                        Buffer.BlockCopy(Bytes, (int)contoffset + 4, buff, (int)(last - offset), (int)(size - last + offset));
-                        offset = contoffset + 4 + size - last + offset;
-                    }
-                    else
-                    {
-                        bool isMultiByte = (Buffer.GetByte(Bytes, (int)contoffset + 4) & 0x1) == 1;
-                        if (!isMultiByte && str.IsMultiByte)
-                        {
-                            len -= (last - prefix - offset) / 2;
-                            byte[] tempbytes = new byte[len * 2];
-                            for (int i = 0; i < len; i++)
-                            {
-                                tempbytes[i * 2] = Bytes[contoffset + 5 + i];
-                            }
-
-                            Buffer.BlockCopy(tempbytes, 0, buff, (int)(last - offset), tempbytes.Length);
-                            Buffer.BlockCopy(Bytes, (int)(contoffset + 5 + len), buff, (int)(last - offset + tempbytes.Length), (int)postfix);
-                            offset = contoffset + 5 + len + postfix;
-                        }
-                        else if (isMultiByte && !str.IsMultiByte)
-                        {
-                            len -= last - offset - prefix;
-
-                            int templen = (int)(last - offset - prefix);
-                            byte[] tempbytes = new byte[templen * 2];
-                            for (int i = 0; i < templen; i++)
-                            {
-                                tempbytes[i * 2] = Bytes[offset + prefix + i];
-                            }
-
-                            Buffer.BlockCopy(tempbytes, 0, buff, (int)prefix, tempbytes.Length);
-                            int buffOffset = (int)(prefix + tempbytes.Length);
-
-                            Buffer.BlockCopy(Bytes, (int)(contoffset + 5), buff, buffOffset, (int)(len + len));
-                            Buffer.BlockCopy(Bytes, (int)(contoffset + 5 + len + len), buff, (int)(buffOffset + len + len), (int)postfix);
-                            buff[2] = (byte)((XlsFormattedUnicodeString.FormattedUnicodeStringFlags)buff[2] | XlsFormattedUnicodeString.FormattedUnicodeStringFlags.MultiByte);
-                            offset = contoffset + 5 + len + len + postfix;
-                        }
-                        else
-                        {
-                            Buffer.BlockCopy(Bytes, (int)contoffset + 5, buff, (int)(last - offset), (int)(size - last + offset));
-                            offset = contoffset + 5 + size - last + offset;
-                        }
-                    }
-
-                    last = contoffset + 4 + BitConverter.ToUInt16(Bytes, (int)contoffset + 2);
-                    lastcontinue++;
-
-                    str = new XlsFormattedUnicodeString(buff, 0);
-                }
-                else
-                {
-                    offset += size;
-                    if (offset == last)
-                    {
-                        if (lastcontinue < _continues.Count)
-                        {
-                            uint contoffset = _continues[lastcontinue];
-                            offset = contoffset + 4;
-                            last = offset + BitConverter.ToUInt16(Bytes, (int)contoffset + 2);
-                            lastcontinue++;
-                        }
-                        else
-                        {
-                            count = 1;
-                        }
-                    }
-                }
-
-                _strings.Add(str);
-                count--;
-                if (count == 0)
-                    break;
+                var s = reader.ReadString();
+                _strings.Add(s);
             }
         }
-
+        
         /// <summary>
         /// Returns string at specified index
         /// </summary>
@@ -147,26 +53,6 @@ namespace ExcelDataReader.Core.BinaryFormat
                 return _strings[(int)sstIndex].GetValue(encoding);
             
             return string.Empty;
-        }
-
-        /// <summary>
-        /// Appends Continue record to SST
-        /// </summary>
-        /// <param name="fragment">Continue record</param>
-        public void Append(XlsBiffContinue fragment)
-        {
-            _continues.Add((uint)fragment.Offset);
-        }
-
-        private IXlsString CreateXlsString(byte[] bytes, uint offset)
-        {
-            if (BiffVersion == 8)
-                return new XlsFormattedUnicodeString(bytes, offset);
-
-            if (BiffVersion == 5)
-                return new XlsByteString(bytes, offset);
-
-            throw new ArgumentException("Unexpected BIFF version " + BiffVersion.ToString(), nameof(BiffVersion));
         }
     }
 }
