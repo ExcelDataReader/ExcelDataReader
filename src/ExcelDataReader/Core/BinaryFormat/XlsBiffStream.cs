@@ -9,11 +9,9 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffStream
     {
-        private readonly byte[] _bytes;
-
-        public XlsBiffStream(byte[] bytes, int offset = 0, int explicitVersion = 0)
+        public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, RC4Key secretKey = null)
         {
-            _bytes = bytes;
+            BaseStream = baseStream;
             Position = offset;
 
             var bof = Read() as XlsBiffBOF;
@@ -23,12 +21,19 @@ namespace ExcelDataReader.Core.BinaryFormat
                 BiffType = bof.Type;
             }
 
-            var filePass = Read() as XlsBiffFilePass;
-            if (filePass == null)
-                filePass = Read() as XlsBiffFilePass;
+            if (secretKey != null)
+            {
+                SecretKey = secretKey;
+            }
+            else
+            {
+                var filePass = Read() as XlsBiffFilePass;
+                if (filePass == null)
+                    filePass = Read() as XlsBiffFilePass;
 
-            if (filePass != null)
-                ApplyFilePass(filePass);
+                if (filePass != null)
+                    SecretKey = new RC4Key("VelvetSweatshop", filePass.Salt);
+            }
 
             Position = offset;
         }
@@ -40,13 +45,17 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Gets the size of BIFF stream in bytes
         /// </summary>
-        public int Size => _bytes.Length;
+        public int Size => (int)BaseStream.Length;
 
         /// <summary>
-        /// Gets the current position in BIFF stream
+        /// Gets or sets the current position in BIFF stream
         /// </summary>
-        public int Position { get; private set; }
-        
+        public int Position { get => (int)BaseStream.Position; set => Seek(value, SeekOrigin.Begin); }
+
+        public Stream BaseStream { get; }
+
+        public RC4Key SecretKey { get; }
+
         /// <summary>
         /// Sets stream pointer to the specified offset
         /// </summary>
@@ -54,18 +63,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <param name="origin">Offset origin</param>
         public void Seek(int offset, SeekOrigin origin)
         {
-            switch (origin)
-            {
-                case SeekOrigin.Begin:
-                    Position = offset;
-                    break;
-                case SeekOrigin.Current:
-                    Position += offset;
-                    break;
-                case SeekOrigin.End:
-                    Position = Size - offset;
-                    break;
-            }
+            BaseStream.Seek(offset, origin);
 
             if (Position < 0)
                 throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalBefore, offset));
@@ -80,15 +78,10 @@ namespace ExcelDataReader.Core.BinaryFormat
         public XlsBiffRecord Read()
         {
             // Minimum record size is 4
-            if ((uint)Position + 4 >= _bytes.Length)
+            if ((uint)Position + 4 >= Size)
                 return null;
 
-            var record = XlsBiffRecord.GetRecord(_bytes, (uint)Position, BiffVersion);
-
-            if (record != null)
-            {
-                Position += record.Size;
-            }
+            var record = GetRecord(BaseStream);
 
             if (Position > Size)
             {
@@ -96,6 +89,127 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
 
             return record;
+        }
+
+        /// <summary>
+        /// Returns record at specified offset
+        /// </summary>
+        /// <param name="stream">The stream</param>
+        /// <returns>The record -or- null.</returns>
+        public XlsBiffRecord GetRecord(Stream stream)
+        {
+            var recordOffset = (int)stream.Position;
+            var header = new byte[4];
+            stream.Read(header, 0, 4);
+
+            var id = (BIFFRECORDTYPE)BitConverter.ToUInt16(header, 0);
+            int recordSize = BitConverter.ToUInt16(header, 2);
+
+            var bytes = new byte[4 + recordSize];
+            Array.Copy(header, bytes, 4);
+            stream.Read(bytes, 4, recordSize);
+
+            if (SecretKey != null)
+                DecryptRecord(recordOffset, id, bytes);
+
+            uint offset = 0;
+            int biffVersion = BiffVersion;
+
+            switch ((BIFFRECORDTYPE)id)
+            {
+                case BIFFRECORDTYPE.BOF_V2:
+                case BIFFRECORDTYPE.BOF_V3:
+                case BIFFRECORDTYPE.BOF_V4:
+                case BIFFRECORDTYPE.BOF:
+                    return new XlsBiffBOF(bytes, offset);
+                case BIFFRECORDTYPE.EOF:
+                    return new XlsBiffEof(bytes, offset);
+                case BIFFRECORDTYPE.INTERFACEHDR:
+                    return new XlsBiffInterfaceHdr(bytes, offset);
+
+                case BIFFRECORDTYPE.SST:
+                    return new XlsBiffSST(bytes, offset);
+
+                case BIFFRECORDTYPE.INDEX:
+                    return new XlsBiffIndex(bytes, offset, biffVersion == 8);
+                case BIFFRECORDTYPE.ROW:
+                    return new XlsBiffRow(bytes, offset);
+                case BIFFRECORDTYPE.DBCELL:
+                    return new XlsBiffDbCell(bytes, offset);
+
+                case BIFFRECORDTYPE.BOOLERR:
+                case BIFFRECORDTYPE.BOOLERR_OLD:
+                case BIFFRECORDTYPE.BLANK:
+                case BIFFRECORDTYPE.BLANK_OLD:
+                    return new XlsBiffBlankCell(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.MULBLANK:
+                    return new XlsBiffMulBlankCell(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.LABEL_OLD:
+                case BIFFRECORDTYPE.LABEL:
+                case BIFFRECORDTYPE.RSTRING:
+                    return new XlsBiffLabelCell(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.LABELSST:
+                    return new XlsBiffLabelSSTCell(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.INTEGER:
+                case BIFFRECORDTYPE.INTEGER_OLD:
+                    return new XlsBiffIntegerCell(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.NUMBER:
+                case BIFFRECORDTYPE.NUMBER_OLD:
+                    return new XlsBiffNumberCell(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.RK:
+                    return new XlsBiffRKCell(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.MULRK:
+                    return new XlsBiffMulRKCell(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.FORMULA:
+                case BIFFRECORDTYPE.FORMULA_V3:
+                case BIFFRECORDTYPE.FORMULA_V4:
+                    return new XlsBiffFormulaCell(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.FORMAT_V23:
+                case BIFFRECORDTYPE.FORMAT:
+                    return new XlsBiffFormatString(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.STRING:
+                case BIFFRECORDTYPE.STRING_OLD:
+                    return new XlsBiffFormulaString(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.CONTINUE:
+                    return new XlsBiffContinue(bytes, offset);
+                case BIFFRECORDTYPE.DIMENSIONS:
+                case BIFFRECORDTYPE.DIMENSIONS_V2:
+                    return new XlsBiffDimensions(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.BOUNDSHEET:
+                    return new XlsBiffBoundSheet(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.WINDOW1:
+                    return new XlsBiffWindow1(bytes, offset);
+                case BIFFRECORDTYPE.CODEPAGE:
+                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                case BIFFRECORDTYPE.FNGROUPCOUNT:
+                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                case BIFFRECORDTYPE.RECORD1904:
+                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                case BIFFRECORDTYPE.BOOKBOOL:
+                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                case BIFFRECORDTYPE.BACKUP:
+                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                case BIFFRECORDTYPE.HIDEOBJ:
+                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                case BIFFRECORDTYPE.USESELFS:
+                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                case BIFFRECORDTYPE.UNCALCED:
+                    return new XlsBiffUncalced(bytes, offset);
+                case BIFFRECORDTYPE.QUICKTIP:
+                    return new XlsBiffQuickTip(bytes, offset);
+                case BIFFRECORDTYPE.MSODRAWING:
+                    return new XlsBiffMSODrawing(bytes, offset);
+                case BIFFRECORDTYPE.FILEPASS:
+                    return new XlsBiffFilePass(bytes, offset);
+                case BIFFRECORDTYPE.HEADER:
+                case BIFFRECORDTYPE.FOOTER:
+                    return new XlsBiffHeaderFooterString(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.CODENAME:
+                    return new XlsBiffCodeName(bytes, offset);
+
+                default:
+                    return new XlsBiffRecord(bytes, offset);
+            }
         }
 
         private int GetBiffVersion(XlsBiffBOF bof)
@@ -119,53 +233,47 @@ namespace ExcelDataReader.Core.BinaryFormat
             return 0;
         }
 
-        private void ApplyFilePass(XlsBiffFilePass filePass)
+        private void DecryptRecord(int startPosition, BIFFRECORDTYPE id, byte[] bytes)
         {
-            RC4Key key = new RC4Key("VelvetSweatshop", filePass.Salt);
-
-            int blockNumber = 0;
-            RC4 rc4 = key.Create(blockNumber);
-
-            int position = 0;
-            while (position < _bytes.Length - 4)
+            // Decrypt the last read record, find it's start offset relative to the current stream position
+            int startDecrypt = 4;
+            int recordSize = bytes.Length;
+            switch (id)
             {
-                uint id = BitConverter.ToUInt16(_bytes, position);
-                int length = BitConverter.ToUInt16(_bytes, position + 2) + 4;
+                case BIFFRECORDTYPE.BOF:
+                case BIFFRECORDTYPE.FILEPASS:
+                case BIFFRECORDTYPE.INTERFACEHDR:
+                    startDecrypt = recordSize;
+                    break;
+                case BIFFRECORDTYPE.BOUNDSHEET:
+                    startDecrypt += 4; // For some reason the sheet offset is not encrypted
+                    break;
+            }
 
-                int startDecrypt = 4;
-                switch ((BIFFRECORDTYPE)id)
+            var position = 0;
+            while (position < recordSize)
+            {
+                var offset = startPosition + position;
+                int blockNumber = offset / 1024;
+                var blockOffset = offset % 1024;
+                RC4 rc4 = SecretKey.Create(blockNumber);
+
+                for (var i = 0; i < blockOffset; i++)
+                    rc4.Output();
+
+                var chunkSize = (int)Math.Min(recordSize - position, 1024 - blockOffset);
+                for (var i = 0; i < chunkSize; i++)
                 {
-                    case BIFFRECORDTYPE.BOF:
-                    case BIFFRECORDTYPE.FILEPASS:
-                    case BIFFRECORDTYPE.INTERFACEHDR:
-                        startDecrypt = length;
-                        break;
-                    case BIFFRECORDTYPE.BOUNDSHEET:
-                        startDecrypt += 4; // For some reason the sheet offset is not encrypted
-                        break;
-                }
-
-                for (int i = 0; i < length; i++)
-                {
-                    int currentBlock = position / 1024;
-                    if (blockNumber != currentBlock)
-                    {
-                        blockNumber = currentBlock;
-                        rc4 = key.Create(blockNumber);
-                    }
-
                     byte mask = rc4.Output();
-                    if (i >= startDecrypt)
-                    {
-                        _bytes[position] = (byte)(_bytes[position] ^ mask);
-                    }
+                    if (position >= startDecrypt)
+                        bytes[position] ^= mask;
 
                     position++;
                 }
             }
         }
 
-        private sealed class RC4Key
+        internal sealed class RC4Key
         {
             private readonly byte[] _key;
 
@@ -227,7 +335,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
-        private sealed class RC4
+        internal sealed class RC4
         {
             private readonly byte[] _s = new byte[256];
 

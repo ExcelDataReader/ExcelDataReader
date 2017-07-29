@@ -57,6 +57,37 @@ namespace ExcelDataReader.Core.CompoundFormat
         }
 
         /// <summary>
+        /// Creates a Stream instance to read from the compound document.
+        /// </summary>
+        internal Stream CreateStream(Stream stream, uint baseSector, int length, bool isMini)
+        {
+            return new CompoundStream(this, stream, baseSector, length, isMini);
+        }
+
+        internal long GetMiniSectorOffset(uint sector)
+        {
+            return Header.MiniSectorSize * sector;
+        }
+
+        internal long GetSectorOffset(uint sector)
+        {
+            return 512 + Header.SectorSize * sector;
+        }
+
+        internal List<uint> GetSectorChain(uint sector, List<uint> sectorTable)
+        {
+            List<uint> chain = new List<uint>();
+            while (sector != (uint)FATMARKERS.FAT_EndOfChain)
+            {
+                chain.Add(sector);
+                sector = GetNextSector(sector, sectorTable);
+            }
+
+            TrimSectorChain(chain, FATMARKERS.FAT_FreeSpace);
+            return chain;
+        }
+
+        /// <summary>
         /// Reads bytes from a regular or mini stream.
         /// </summary>
         internal byte[] ReadStream(Stream stream, uint baseSector, int length, bool isMini)
@@ -290,29 +321,6 @@ namespace ExcelDataReader.Core.CompoundFormat
             {
                 chain.RemoveAt(chain.Count - 1);
             }
-        }
-
-        private long GetMiniSectorOffset(uint sector)
-        {
-            return Header.MiniSectorSize * sector;
-        }
-
-        private long GetSectorOffset(uint sector)
-        {
-            return 512 + Header.SectorSize * sector;
-        }
-
-        private List<uint> GetSectorChain(uint sector, List<uint> sectorTable)
-        {
-            List<uint> chain = new List<uint>();
-            while (sector != (uint)FATMARKERS.FAT_EndOfChain)
-            {
-                chain.Add(sector);
-                sector = GetNextSector(sector, sectorTable);
-            }
-
-            TrimSectorChain(chain, FATMARKERS.FAT_FreeSpace);
-            return chain;
         }
 
         private uint GetNextSector(uint sector, List<uint> sectorTable)

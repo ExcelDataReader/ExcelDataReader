@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using ExcelDataReader.Log;
 
@@ -10,10 +11,10 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsWorksheet : IWorksheet
     {
-        public XlsWorksheet(XlsWorkbook workbook, XlsBiffBoundSheet refSheet, byte[] bytes)
+        public XlsWorksheet(XlsWorkbook workbook, XlsBiffBoundSheet refSheet, Stream stream)
         {
             Workbook = workbook;
-            Bytes = bytes;
+            Stream = stream;
 
             IsDate1904 = workbook.IsDate1904;
             Formats = new Dictionary<ushort, XlsBiffFormatString>(workbook.Formats);
@@ -58,7 +59,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public uint DataOffset { get; }
 
-        public byte[] Bytes { get; }
+        public Stream Stream { get; }
 
         public Dictionary<ushort, XlsBiffFormatString> Formats { get; }
 
@@ -92,7 +93,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public IEnumerable<object[]> ReadRows()
         {
             var rowIndex = 0;
-            var biffStream = new XlsBiffStream(Bytes, (int)DataOffset, Workbook.BiffVersion);
+            var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, Workbook.SecretKey);
 
             while (true)
             {
@@ -443,7 +444,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private void ReadWorksheetGlobals()
         {
-            var biffStream = new XlsBiffStream(Bytes, (int)DataOffset, Workbook.BiffVersion);
+            var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, Workbook.SecretKey);
             
             // Check the expected BOF record was found in the BIFF stream
             if (biffStream.BiffVersion == 0 || biffStream.BiffType != BIFFTYPE.Worksheet)

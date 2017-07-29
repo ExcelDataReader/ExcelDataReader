@@ -11,23 +11,16 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsWorkbook : IWorkbook<XlsWorksheet>
     {
-        private readonly byte[] _bytes;
-
-        internal XlsWorkbook(byte[] bytes, Encoding fallbackEncoding)
+        internal XlsWorkbook(Stream stream, Encoding fallbackEncoding)
         {
-            if (!IsRawBiffStream(bytes))
-            {
-                throw new HeaderException(Errors.ErrorHeaderSignature);
-            }
-
-            _bytes = bytes;
-
-            var biffStream = new XlsBiffStream(_bytes);
+            Stream = stream;
+            var biffStream = new XlsBiffStream(stream);
 
             if (biffStream.BiffVersion == 0)
                 throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
 
             BiffVersion = biffStream.BiffVersion;
+            SecretKey = biffStream.SecretKey;
             Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
 
             if (biffStream.BiffType == BIFFTYPE.WorkbookGlobals)
@@ -45,7 +38,11 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
+        public Stream Stream { get; }
+
         public int BiffVersion { get; }
+
+        public XlsBiffStream.RC4Key SecretKey { get; }
 
         public Encoding Encoding { get; private set; }
 
@@ -136,7 +133,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             for (var i = 0; i < Sheets.Count; ++i)
             {
-                yield return new XlsWorksheet(this, Sheets[i], _bytes);
+                yield return new XlsWorksheet(this, Sheets[i], Stream);
             }
         }
 
