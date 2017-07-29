@@ -11,29 +11,16 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsWorkbook : IWorkbook<XlsWorksheet>
     {
-        private const string DirectoryEntryWorkbook = "Workbook";
-        private const string DirectoryEntryBook = "Book";
-
         private readonly byte[] _bytes;
 
-        internal XlsWorkbook(Stream stream, Encoding fallbackEncoding)
+        internal XlsWorkbook(byte[] bytes, Encoding fallbackEncoding)
         {
-            var probe = new byte[8];
-            stream.Read(probe, 0, probe.Length);
-            stream.Seek(0, SeekOrigin.Begin);
-
-            if (IsCompoundDocument(probe))
-            {
-                _bytes = ReadCompoundDocument(stream);
-            }
-            else if (IsRawBiffStream(probe))
-            {
-                _bytes = ReadWorksheetDocument(stream);
-            }
-            else
+            if (!IsRawBiffStream(bytes))
             {
                 throw new HeaderException(Errors.ErrorHeaderSignature);
             }
+
+            _bytes = bytes;
 
             var biffStream = new XlsBiffStream(_bytes);
 
@@ -97,11 +84,6 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public int ResultsCount => Sheets?.Count ?? -1;
 
-        public static bool IsCompoundDocument(byte[] probe)
-        {
-            return BitConverter.ToUInt64(probe, 0) == 0xE11AB1A1E011CFD0;
-        }
-
         public static bool IsRawBiffStream(byte[] bytes)
         {
             if (bytes.Length < 8)
@@ -134,7 +116,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         return false;*/
                     return true;
                 case 0x0809: // BIFF5/BIFF8
-                    if (size != 8 || size != 16)
+                    if (size != 8 && size != 16)
                         return false;
                     if (bofVersion != 0x0500 && bofVersion != 0x600)
                         return false;
@@ -156,31 +138,6 @@ namespace ExcelDataReader.Core.BinaryFormat
             {
                 yield return new XlsWorksheet(this, Sheets[i], _bytes);
             }
-        }
-
-        private byte[] ReadCompoundDocument(Stream stream)
-        {
-            var document = new XlsDocument(stream);
-            XlsDirectoryEntry workbookEntry = document.FindEntry(DirectoryEntryWorkbook) ?? document.FindEntry(DirectoryEntryBook);
-
-            if (workbookEntry == null)
-            {
-                throw new ExcelReaderException(Errors.ErrorStreamWorkbookNotFound);
-            }
-
-            if (workbookEntry.EntryType != STGTY.STGTY_STREAM)
-            {
-                throw new ExcelReaderException(Errors.ErrorWorkbookIsNotStream);
-            }
-
-            return document.ReadStream(stream, workbookEntry.StreamFirstSector, (int)workbookEntry.StreamSize, workbookEntry.IsEntryMiniStream);
-        }
-
-        private byte[] ReadWorksheetDocument(Stream stream)
-        {
-            var result = new byte[stream.Length];
-            stream.Read(result, 0, (int)stream.Length);
-            return result;
         }
 
         private void ReadWorkbookGlobals(XlsBiffStream biffStream)

@@ -8,24 +8,18 @@ namespace ExcelDataReader
     /// </summary>
     internal class ExcelBinaryReader : ExcelDataReader<XlsWorkbook, XlsWorksheet>
     {
-        public ExcelBinaryReader(Stream stream, ExcelReaderConfiguration configuration)
+        public ExcelBinaryReader(byte[] bytes, ExcelReaderConfiguration configuration)
             : base(configuration)
         {
-            Stream = stream;
-            Workbook = new XlsWorkbook(stream, Configuration.FallbackEncoding);
+            Workbook = new XlsWorkbook(bytes, Configuration.FallbackEncoding);
 
             // By default, the data reader is positioned on the first result.
             Reset();
         }
 
-        private Stream Stream { get; set; }
-
         public override void Close()
         {
             base.Close();
-
-            Stream?.Dispose();
-            Stream = null;
             Workbook = null;
         }
     }

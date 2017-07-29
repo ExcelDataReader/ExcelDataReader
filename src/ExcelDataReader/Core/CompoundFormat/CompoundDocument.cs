@@ -4,11 +4,11 @@ using System.IO;
 using System.Text;
 using ExcelDataReader.Exceptions;
 
-namespace ExcelDataReader.Core.BinaryFormat
+namespace ExcelDataReader.Core.CompoundFormat
 {
-    internal class XlsDocument
+    internal class CompoundDocument
     {
-        public XlsDocument(Stream stream)
+        public CompoundDocument(Stream stream)
         {
             var reader = new BinaryReader(stream);
 
@@ -30,17 +30,22 @@ namespace ExcelDataReader.Core.BinaryFormat
             ReadDirectoryEntries(bytes);
         }
 
-        internal XlsHeader Header { get; }
+        internal CompoundHeader Header { get; }
 
         internal List<uint> SectorTable { get; }
 
         internal List<uint> MiniSectorTable { get; }
 
-        internal XlsDirectoryEntry RootEntry { get; set; }
+        internal CompoundDirectoryEntry RootEntry { get; set; }
 
-        internal List<XlsDirectoryEntry> Entries { get; set; }
+        internal List<CompoundDirectoryEntry> Entries { get; set; }
 
-        internal XlsDirectoryEntry FindEntry(string entryName)
+        internal static bool IsCompoundDocument(byte[] probe)
+        {
+            return BitConverter.ToUInt64(probe, 0) == 0xE11AB1A1E011CFD0;
+        }
+
+        internal CompoundDirectoryEntry FindEntry(string entryName)
         {
             foreach (var e in Entries)
             {
@@ -128,7 +133,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             try
             {
-                Entries = new List<XlsDirectoryEntry>();
+                Entries = new List<CompoundDirectoryEntry>();
                 using (var stream = new MemoryStream(bytes))
                 {
                     using (var reader = new BinaryReader(stream))
@@ -150,9 +155,9 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
-        private XlsDirectoryEntry ReadDirectoryEntry(BinaryReader reader)
+        private CompoundDirectoryEntry ReadDirectoryEntry(BinaryReader reader)
         {
-            var result = new XlsDirectoryEntry();
+            var result = new CompoundDirectoryEntry();
             var name = reader.ReadBytes(64);
             var nameLength = reader.ReadUInt16();
 
@@ -177,9 +182,9 @@ namespace ExcelDataReader.Core.BinaryFormat
             return result;
         }
 
-        private XlsHeader ReadHeader(BinaryReader reader)
+        private CompoundHeader ReadHeader(BinaryReader reader)
         {
-            var result = new XlsHeader();
+            var result = new CompoundHeader();
             result.Signature = reader.ReadUInt64();
             result.ClassId = new Guid(reader.ReadBytes(16));
             result.Version = reader.ReadUInt16();

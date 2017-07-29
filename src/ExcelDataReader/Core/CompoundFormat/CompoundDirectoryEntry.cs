@@ -1,11 +1,11 @@
 using System;
 
-namespace ExcelDataReader.Core.BinaryFormat
+namespace ExcelDataReader.Core.CompoundFormat
 {
     /// <summary>
     /// Represents single Root Directory record
     /// </summary>
-    internal class XlsDirectoryEntry
+    internal class CompoundDirectoryEntry
     {
         /// <summary>
         /// Gets or sets the name of directory entry

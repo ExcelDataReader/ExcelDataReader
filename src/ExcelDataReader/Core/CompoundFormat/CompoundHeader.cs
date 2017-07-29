@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 
-namespace ExcelDataReader.Core.BinaryFormat
+namespace ExcelDataReader.Core.CompoundFormat
 {
     /// <summary>
     /// Represents Excel file header
     /// </summary>
-    internal class XlsHeader
+    internal class CompoundHeader
     {
         /// <summary>
         /// Gets or sets the file signature
