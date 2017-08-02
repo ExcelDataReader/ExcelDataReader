@@ -30,7 +30,8 @@ namespace ExcelDataReader
             // Copy the configuration to prevent external changes
             Configuration = new ExcelReaderConfiguration()
             {
-                FallbackEncoding = configuration.FallbackEncoding
+                FallbackEncoding = configuration.FallbackEncoding,
+                Password = configuration.Password
             };
         }
 

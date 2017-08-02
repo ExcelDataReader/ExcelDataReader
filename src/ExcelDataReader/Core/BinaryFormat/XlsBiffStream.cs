@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using ExcelDataReader.Core.OfficeCrypto;
+using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
@@ -9,7 +11,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffStream
     {
-        public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, RC4Key secretKey = null)
+        public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, string password = null, byte[] secretKey = null, EncryptionInfo encryption = null)
         {
             BaseStream = baseStream;
             Position = offset;
@@ -21,9 +23,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                 BiffType = bof.Type;
             }
 
+            CipherBlock = -1;
             if (secretKey != null)
             {
                 SecretKey = secretKey;
+                Encryption = encryption;
+                Cipher = Encryption.CreateCipher();
             }
             else
             {
@@ -32,7 +37,22 @@ namespace ExcelDataReader.Core.BinaryFormat
                     filePass = Read() as XlsBiffFilePass;
 
                 if (filePass != null)
-                    SecretKey = new RC4Key("VelvetSweatshop", filePass.Salt);
+                {
+                    Encryption = filePass.EncryptionInfo;
+
+                    if (Encryption.VerifyPassword("VelvetSweatshop"))
+                    {
+                        // Magic password used for write-protected workbooks
+                        password = "VelvetSweatshop";
+                    }
+                    else if (!Encryption.VerifyPassword(password))
+                    {
+                        throw new InvalidPasswordException(Errors.ErrorInvalidPassword);
+                    }
+
+                    SecretKey = Encryption.GenerateSecretKey(password);
+                    Cipher = Encryption.CreateCipher();
+                }
             }
 
             Position = offset;
@@ -54,7 +74,21 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public Stream BaseStream { get; }
 
-        public RC4Key SecretKey { get; }
+        public byte[] SecretKey { get; }
+
+        public EncryptionInfo Encryption { get; }
+
+        public SymmetricAlgorithm Cipher { get; }
+
+        /// <summary>
+        /// Gets or sets the ICryptoTransform instance used to decrypt the current block
+        /// </summary>
+        public ICryptoTransform CipherTransform { get; set; }
+
+        /// <summary>
+        /// Gets or sets the current block number being decrypted with CipherTransform
+        /// </summary>
+        public int CipherBlock { get; set; }
 
         /// <summary>
         /// Sets stream pointer to the specified offset
@@ -69,6 +103,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                 throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalBefore, offset));
             if (Position > Size)
                 throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalAfter, offset));
+
+            if (SecretKey != null)
+            { 
+                CreateBlockDecryptor(offset / 1024);
+                AlignBlockDecryptor(offset % 1024);
+            }
         }
 
         /// <summary>
@@ -200,7 +240,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.MSODRAWING:
                     return new XlsBiffMSODrawing(bytes, offset);
                 case BIFFRECORDTYPE.FILEPASS:
-                    return new XlsBiffFilePass(bytes, offset);
+                    return new XlsBiffFilePass(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.HEADER:
                 case BIFFRECORDTYPE.FOOTER:
                     return new XlsBiffHeaderFooterString(bytes, offset, biffVersion);
@@ -233,6 +273,27 @@ namespace ExcelDataReader.Core.BinaryFormat
             return 0;
         }
 
+        /// <summary>
+        /// Create an ICryptoTransform instance to decrypt a 1024-byte block
+        /// </summary>
+        private void CreateBlockDecryptor(int blockNumber)
+        {
+            CipherTransform?.Dispose();
+
+            var blockKey = Encryption.GenerateBlockKey(blockNumber, SecretKey);
+            CipherTransform = Cipher.CreateDecryptor(blockKey, null);
+            CipherBlock = blockNumber;
+        }
+
+        /// <summary>
+        /// Decrypt some dummy bytes to align the decryptor with the position in the current 1024-byte block
+        /// </summary>
+        private void AlignBlockDecryptor(int blockOffset)
+        {
+            var bytes = new byte[blockOffset];
+            CryptoHelpers.DecryptBytes(CipherTransform, bytes);
+        }
+
         private void DecryptRecord(int startPosition, BIFFRECORDTYPE id, byte[] bytes)
         {
             // Decrypt the last read record, find it's start offset relative to the current stream position
@@ -256,124 +317,33 @@ namespace ExcelDataReader.Core.BinaryFormat
                 var offset = startPosition + position;
                 int blockNumber = offset / 1024;
                 var blockOffset = offset % 1024;
-                RC4 rc4 = SecretKey.Create(blockNumber);
 
-                for (var i = 0; i < blockOffset; i++)
-                    rc4.Output();
-
-                var chunkSize = (int)Math.Min(recordSize - position, 1024 - blockOffset);
-                for (var i = 0; i < chunkSize; i++)
+                if (blockNumber != CipherBlock)
                 {
-                    byte mask = rc4.Output();
-                    if (position >= startDecrypt)
-                        bytes[position] ^= mask;
+                    CreateBlockDecryptor(blockNumber);
+                }
 
+                if (Encryption.IsXor)
+                {
+                    // Bypass everything and hook into the XorTransform instance to set the XorArrayIndex pr record.
+                    // This is a hack to use the XorTransform otherwise transparently to the other encryption methods.
+                    var xorTransform = (XorManaged.XorTransform)CipherTransform;
+                    xorTransform.XorArrayIndex = offset + recordSize - 4;
+                }
+
+                // Decrypt at most up to the next 1024 byte boundary
+                var chunkSize = (int)Math.Min(recordSize - position, 1024 - blockOffset);
+                var block = new byte[chunkSize];
+
+                Array.Copy(bytes, position, block, 0, chunkSize);
+
+                var decryptedblock = CryptoHelpers.DecryptBytes(CipherTransform, block);
+                for (var i = 0; i < decryptedblock.Length; i++)
+                {
+                    if (position >= startDecrypt)
+                        bytes[position] = decryptedblock[i];
                     position++;
                 }
-            }
-        }
-
-        internal sealed class RC4Key
-        {
-            private readonly byte[] _key;
-
-            public RC4Key(string password, byte[] salt)
-            {
-                int length = Math.Min(password.Length, 16);
-                byte[] passwordData = new byte[length * 2];
-                for (int i = 0; i < length; i++)
-                {
-                    char ch = password[i];
-                    passwordData[i * 2 + 0] = (byte)((ch << 0) & 0xFF);
-                    passwordData[i * 2 + 1] = (byte)((ch << 8) & 0xFF);
-                }
-
-                using (MD5 md5 = MD5.Create())
-                {
-                    byte[] passwordHash = md5.ComputeHash(passwordData);
-
-                    md5.Initialize();
-
-                    const int truncateCount = 5;
-                    byte[] intermediateData = new byte[truncateCount * 16 + salt.Length * 16];
-
-                    int offset = 0;
-                    for (int i = 0; i < 16; i++)
-                    {
-                        Array.Copy(passwordHash, 0, intermediateData, offset, truncateCount);
-                        offset += truncateCount;
-                        Array.Copy(salt, 0, intermediateData, offset, salt.Length);
-                        offset += salt.Length;
-                    }
-
-                    const int keyLength = 5;
-
-                    byte[] finalHash = md5.ComputeHash(intermediateData);
-                    byte[] result = new byte[keyLength];
-                    Array.Copy(finalHash, 0, result, 0, keyLength);
-
-                    _key = result;
-                }
-            }
-            
-            public RC4 Create(int blockNumber)
-            {
-                byte[] data = new byte[4 + _key.Length];
-                data[data.Length - 1] = (byte)((blockNumber >> 24) & 0xFF);
-                data[data.Length - 2] = (byte)((blockNumber >> 16) & 0xFF);
-                data[data.Length - 3] = (byte)((blockNumber >> 8) & 0xFF);
-                data[data.Length - 4] = (byte)((blockNumber >> 0) & 0xFF);
-
-                Array.Copy(_key, 0, data, 0, _key.Length);
-
-                using (MD5 md5 = MD5.Create())
-                {
-                    byte[] blockKey = md5.ComputeHash(data);
-
-                    return new RC4(blockKey);
-                }
-            }
-        }
-
-        internal sealed class RC4
-        {
-            private readonly byte[] _s = new byte[256];
-
-            private int _index1;
-
-            private int _index2;
-
-            public RC4(byte[] key)
-            {
-                for (int i = 0; i < _s.Length; i++)
-                {
-                    _s[i] = (byte)i;
-                }
-
-                for (int i = 0, j = 0; i < 256; i++)
-                {
-                    j = (j + key[i % key.Length] + _s[i]) & 255;
-
-                    Swap(_s, i, j);
-                }
-            }
-
-            public byte Output()
-            {
-                _index1 = (_index1 + 1) & 255;
-                _index2 = (_index2 + _s[_index1]) & 255;
-
-                Swap(_s, _index1, _index2);
-
-                return _s[(_s[_index1] + _s[_index2]) & 255];
-            }
-
-            private static void Swap(byte[] s, int i, int j)
-            {
-                byte c = s[i];
-
-                s[i] = s[j];
-                s[j] = c;
             }
         }
     }

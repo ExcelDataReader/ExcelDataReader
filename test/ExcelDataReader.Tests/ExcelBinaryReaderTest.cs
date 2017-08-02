@@ -1338,5 +1338,41 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("Lorem ipsum dolor sit amet, ei pri verterem efficiantur, per id meis idque deterruisset.", text);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_242_Password()
+        {
+            // BIFF8 standard encryption cryptoapi rc4+sha 
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(
+                Configuration.GetTestWorkbook("Test_git_issue_242_std_rc4_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+
+            // Pre-BIFF8 xor obfuscation
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(
+                Configuration.GetTestWorkbook("Test_git_issue_242_xor_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+        }
+
+        [TestMethod]
+        public void BinaryThrowsInvalidPassword()
+        {
+            Assert.Throws<Exceptions.InvalidPasswordException>(() =>
+            {
+                using (var reader = ExcelReaderFactory.CreateBinaryReader(
+                    Configuration.GetTestWorkbook("Test_git_issue_242_xor_pwd_password"),
+                    new ExcelReaderConfiguration() { Password = "wrongpassword" }))
+                {
+                    reader.Read();
+                }
+            });
+        }
     }
 }

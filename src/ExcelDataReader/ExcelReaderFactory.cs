@@ -1,7 +1,7 @@
-using System;
 using System.IO;
 using ExcelDataReader.Core.BinaryFormat;
 using ExcelDataReader.Core.CompoundFormat;
+using ExcelDataReader.Core.OfficeCrypto;
 using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader
@@ -36,7 +36,7 @@ namespace ExcelDataReader
                 {
                     return new ExcelBinaryReader(stream, configuration);
                 }
-                else if (TryGetEncryptedPackage(fileStream, document, "password", out stream))
+                else if (TryGetEncryptedPackage(fileStream, document, configuration?.Password ?? string.Empty, out stream))
                 {
                     return new ExcelOpenXmlReader(stream, configuration);
                 }
@@ -110,7 +110,7 @@ namespace ExcelDataReader
             if (CompoundDocument.IsCompoundDocument(probe))
             {
                 var document = new CompoundDocument(fileStream);
-                if (TryGetEncryptedPackage(fileStream, document, "password", out var stream))
+                if (TryGetEncryptedPackage(fileStream, document, configuration?.Password, out var stream))
                 {
                     return new ExcelOpenXmlReader(stream, configuration);
                 }
@@ -159,15 +159,19 @@ namespace ExcelDataReader
                 return false;
             }
 
-            /*
-            var packageBytes = document.ReadStream(fileStream, encryptedPackage.StreamFirstSector, (int)encryptedPackage.StreamSize, encryptedPackage.IsEntryMiniStream);
             var infoBytes = document.ReadStream(fileStream, encryptionInfo.StreamFirstSector, (int)encryptionInfo.StreamSize, encryptionInfo.IsEntryMiniStream);
+            var encryption = EncryptionInfo.Create(infoBytes);
 
-            TODO ...
+            if (!encryption.VerifyPassword(password))
+            {
+                throw new InvalidPasswordException(Errors.ErrorInvalidPassword);
+            }
 
-            */
-            stream = null;
-            return false;
+            var secretKey = encryption.GenerateSecretKey(password);
+            var packageStream = document.CreateStream(fileStream, encryptedPackage.StreamFirstSector, (int)encryptedPackage.StreamSize, encryptedPackage.IsEntryMiniStream);
+
+            stream = encryption.CreateEncryptedPackageStream(packageStream, secretKey);
+            return true;
         }
     }
 }

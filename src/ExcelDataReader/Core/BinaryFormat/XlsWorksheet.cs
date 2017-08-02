@@ -93,7 +93,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public IEnumerable<object[]> ReadRows()
         {
             var rowIndex = 0;
-            var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, Workbook.SecretKey);
+            var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, null, Workbook.SecretKey, Workbook.Encryption);
 
             while (true)
             {
@@ -444,7 +444,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private void ReadWorksheetGlobals()
         {
-            var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, Workbook.SecretKey);
+            var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, null, Workbook.SecretKey, Workbook.Encryption);
             
             // Check the expected BOF record was found in the BIFF stream
             if (biffStream.BiffVersion == 0 || biffStream.BiffType != BIFFTYPE.Worksheet)

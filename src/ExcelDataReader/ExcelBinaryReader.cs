@@ -11,7 +11,7 @@ namespace ExcelDataReader
         public ExcelBinaryReader(Stream stream, ExcelReaderConfiguration configuration)
             : base(configuration)
         {
-            Workbook = new XlsWorkbook(stream, Configuration.FallbackEncoding);
+            Workbook = new XlsWorkbook(stream, Configuration.Password, Configuration.FallbackEncoding);
 
             // By default, the data reader is positioned on the first result.
             Reset();

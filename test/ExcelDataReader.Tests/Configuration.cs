@@ -132,6 +132,20 @@ namespace ExcelDataReader.Tests
             { "Test_git_issue_224_firstoddeven", "Test_git_issue_224_firstoddeven.xlsx" },
             { "Test_git_issue_250_richtext", "Test_git_issue_250_richtext.xls" },
             { "xTest_git_issue_250_richtext", "Test_git_issue_250_richtext.xlsx" },
+            { "Test_git_issue_242_std_rc4_pwd_password", "Test_git_issue_242_std_rc4_pwd_password.xls" },
+            { "Test_git_issue_242_xor_pwd_password", "Test_git_issue_242_xor_pwd_password.xls" },
+            { "standard_AES128_SHA1_ECB_pwd_password", "standard_AES128_SHA1_ECB_pwd_password.xlsx" },
+            { "standard_AES192_SHA1_ECB_pwd_password", "standard_AES192_SHA1_ECB_pwd_password.xlsx" },
+            { "standard_AES256_SHA1_ECB_pwd_password", "standard_AES256_SHA1_ECB_pwd_password.xlsx" },
+            { "agile_AES128_MD5_CBC_pwd_password", "agile_AES128_MD5_CBC_pwd_password.xlsx" },
+            { "agile_AES128_SHA1_CBC_pwd_password", "agile_AES128_SHA1_CBC_pwd_password.xlsx" },
+            { "agile_AES128_SHA384_CBC_pwd_password", "agile_AES128_SHA384_CBC_pwd_password.xlsx" },
+            { "agile_AES128_SHA512_CBC_pwd_password", "agile_AES128_SHA512_CBC_pwd_password.xlsx" },
+            { "agile_AES192_SHA512_CBC_pwd_password", "agile_AES192_SHA512_CBC_pwd_password.xlsx" },
+            { "agile_AES256_SHA512_CBC_pwd_password", "agile_AES256_SHA512_CBC_pwd_password.xlsx" },
+            { "agile_DES_MD5_CBC_pwd_password", "agile_DES_MD5_CBC_pwd_password.xlsx" },
+            { "agile_DESede_SHA384_CBC_pwd_password", "agile_DESede_SHA384_CBC_pwd_password.xlsx" },
+            { "agile_RC2_SHA1_CBC_pwd_password", "agile_RC2_SHA1_CBC_pwd_password.xlsx" },
         };
 
         public static Stream GetTestWorkbook(string key)

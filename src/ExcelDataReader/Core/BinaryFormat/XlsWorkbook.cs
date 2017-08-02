@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ExcelDataReader.Core.OfficeCrypto;
 using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.BinaryFormat
@@ -11,16 +12,17 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsWorkbook : IWorkbook<XlsWorksheet>
     {
-        internal XlsWorkbook(Stream stream, Encoding fallbackEncoding)
+        internal XlsWorkbook(Stream stream, string password, Encoding fallbackEncoding)
         {
             Stream = stream;
-            var biffStream = new XlsBiffStream(stream);
 
+            var biffStream = new XlsBiffStream(stream, 0, 0, password);
             if (biffStream.BiffVersion == 0)
                 throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
 
             BiffVersion = biffStream.BiffVersion;
             SecretKey = biffStream.SecretKey;
+            Encryption = biffStream.Encryption;
             Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
 
             if (biffStream.BiffType == BIFFTYPE.WorkbookGlobals)
@@ -42,7 +44,9 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public int BiffVersion { get; }
 
-        public XlsBiffStream.RC4Key SecretKey { get; }
+        public byte[] SecretKey { get; }
+
+        public EncryptionInfo Encryption { get; }
 
         public Encoding Encoding { get; private set; }
 
