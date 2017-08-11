@@ -1180,5 +1180,17 @@ namespace ExcelDataReader.Tests
                 }
             });
         }
+
+        [TestMethod]
+        public void OpenXmlThrowsEmptyZipfile()
+        {
+            Assert.Throws<Exceptions.HeaderException>(() =>
+            {
+                using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("EmptyZipFile")))
+                {
+                    reader.Read();
+                }
+            });
+        }
     }
 }

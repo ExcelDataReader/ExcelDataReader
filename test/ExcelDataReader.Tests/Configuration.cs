@@ -146,6 +146,7 @@ namespace ExcelDataReader.Tests
             { "agile_DES_MD5_CBC_pwd_password", "agile_DES_MD5_CBC_pwd_password.xlsx" },
             { "agile_DESede_SHA384_CBC_pwd_password", "agile_DESede_SHA384_CBC_pwd_password.xlsx" },
             { "agile_RC2_SHA1_CBC_pwd_password", "agile_RC2_SHA1_CBC_pwd_password.xlsx" },
+            { "EmptyZipFile", "EmptyZipFile.xlsx" },
         };
 
         public static Stream GetTestWorkbook(string key)

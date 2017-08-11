@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text;
 using System.Xml;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
@@ -120,6 +119,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         {
             using (var stream = _zipWorker.GetWorkbookStream())
             {
+                if (stream == null)
+                {
+                    throw new Exceptions.HeaderException(Errors.ErrorZipNoOpenXml);
+                }
+
                 using (XmlReader reader = XmlReader.Create(stream))
                 {
                     ReadWorkbook(reader);
@@ -187,6 +191,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         {
             using (var stream = _zipWorker.GetWorkbookRelsStream())
             {
+                if (stream == null)
+                {
+                    return;
+                }
+
                 using (XmlReader reader = XmlReader.Create(stream))
                 {
                     ReadWorkbookRels(reader);

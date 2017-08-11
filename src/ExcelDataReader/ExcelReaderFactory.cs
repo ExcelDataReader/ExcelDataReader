@@ -25,6 +25,7 @@ namespace ExcelDataReader
         public static IExcelDataReader CreateReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         { 
             var probe = new byte[8];
+            fileStream.Seek(0, SeekOrigin.Begin);
             fileStream.Read(probe, 0, probe.Length);
             fileStream.Seek(0, SeekOrigin.Begin);
 
@@ -69,6 +70,7 @@ namespace ExcelDataReader
         public static IExcelDataReader CreateBinaryReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
             var probe = new byte[8];
+            fileStream.Seek(0, SeekOrigin.Begin);
             fileStream.Read(probe, 0, probe.Length);
             fileStream.Seek(0, SeekOrigin.Begin);
 
@@ -103,6 +105,7 @@ namespace ExcelDataReader
         public static IExcelDataReader CreateOpenXmlReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
             var probe = new byte[8];
+            fileStream.Seek(0, SeekOrigin.Begin);
             fileStream.Read(probe, 0, probe.Length);
             fileStream.Seek(0, SeekOrigin.Begin);
 
