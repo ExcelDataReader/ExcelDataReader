@@ -1374,5 +1374,15 @@ namespace ExcelDataReader.Tests
                 }
             });
         }
+
+        [TestMethod]
+        public void GitIssue_263()
+        {
+            using (var reader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("Test_git_issue_263")))
+            {
+                var ds = reader.AsDataSet();
+                Assert.AreEqual("Economic Inactivity by age\n(Official statistics: not designated as National Statistics)", ds.Tables[1].Rows[3][0]);
+            }
+        }
     }
 }
