@@ -54,11 +54,10 @@ namespace ExcelDataReader.Core.BinaryFormat
                 var bytesPerCharacter = isMultiByte ? 2 : 1;
                 var maxRecordCharacters = (CurrentRecord.Size - CurrentRecordOffset) / bytesPerCharacter;
                 var readCharacters = Math.Min(maxRecordCharacters, remainingCharacters);
-                var readBytes = readCharacters * bytesPerCharacter;
-
+                
                 ReadUnicodeBytes(result, resultOffset, readCharacters, isMultiByte);
 
-                resultOffset += readBytes;
+                resultOffset += readCharacters * 2; // The result is always multibyte
                 remainingCharacters -= readCharacters;
 
                 if (remainingCharacters > 0)
