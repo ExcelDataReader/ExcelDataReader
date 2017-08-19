@@ -7,7 +7,6 @@
     <AssemblyName>ExcelDataReader.Tests</AssemblyName>
     <PackageId>ExcelDataReader.Tests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50;portable-net45+win8</PackageTargetFallback>
     <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
