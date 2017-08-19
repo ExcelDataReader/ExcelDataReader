@@ -5,7 +5,7 @@
     <AssemblyTitle>ExcelDataReader</AssemblyTitle>
     <VersionPrefix>3.2.0</VersionPrefix>
     <Authors>ExcelDataReader developers</Authors>
-    <TargetFrameworks>net20;net45;netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>net20;net45;netstandard1.3;netstandard2.0</TargetFrameworks>
     <AssemblyName>ExcelDataReader</AssemblyName>
     <AssemblyOriginatorKeyFile>..\ExcelDataReader.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
@@ -14,7 +14,6 @@
     <PackageTags>excel;xls;xlsx</PackageTags>
     <PackageIconUrl>https://nugetgallery.blob.core.windows.net/icons/ExcelDataReader.2.1.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/ExcelDataReader/ExcelDataReader</PackageProjectUrl>
-    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

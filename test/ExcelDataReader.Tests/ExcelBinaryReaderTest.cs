@@ -1,9 +1,10 @@
 ﻿using System;
-#if !NETCOREAPP1_0
+#if NET20 || NET45 || NETCOREAPP2_0
 using System.Data;
 #endif
 using System.IO;
 using ExcelDataReader.Exceptions;
+using ExcelDataReader.Tests;
 
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
@@ -11,8 +12,17 @@ using TestCleanup = NUnit.Framework.TearDownAttribute;
 using TestInitialize = NUnit.Framework.SetUpAttribute;
 using TestMethod = NUnit.Framework.TestAttribute;
 
-// ReSharper disable InconsistentNaming
-namespace ExcelDataReader.Tests
+#if EXCELDATAREADER_NET20
+namespace ExcelDataReader.Net20.Tests
+#elif NET45
+namespace ExcelDataReader.Net45.Tests
+#elif NETCOREAPP1_0
+namespace ExcelDataReader.Netstandard13.Tests
+#elif NETCOREAPP2_0
+namespace ExcelDataReader.Netstandard20.Tests
+#else
+#error "Tests do not support the selected target platform"
+#endif
 {
     [TestClass]
 
@@ -21,7 +31,7 @@ namespace ExcelDataReader.Tests
         [OneTimeSetUp]
         public void TestInitialize()
         {
-#if NETCOREAPP1_0
+#if NETCOREAPP1_0 || NETCOREAPP2_0
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 #endif
         }
@@ -1364,7 +1374,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void BinaryThrowsInvalidPassword()
         {
-            Assert.Throws<Exceptions.InvalidPasswordException>(() =>
+            Assert.Throws<InvalidPasswordException>(() =>
             {
                 using (var reader = ExcelReaderFactory.CreateBinaryReader(
                     Configuration.GetTestWorkbook("Test_git_issue_242_xor_pwd_password"),

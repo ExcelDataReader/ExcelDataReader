@@ -1,5 +1,5 @@
 ﻿using System;
-#if NET20 || NET45
+#if NET20 || NET45 || NETSTANDARD2_0
 using System.Runtime.Serialization;
 #endif
 
@@ -8,7 +8,7 @@ namespace ExcelDataReader.Exceptions
     /// <summary>
     /// Base class for exceptions thrown by ExcelDataReader
     /// </summary>
-#if NET20 || NET45
+#if NET20 || NET45 || NETSTANDARD2_0
     [Serializable]
 #endif
     public class ExcelReaderException : Exception
@@ -39,7 +39,7 @@ namespace ExcelDataReader.Exceptions
         {
         }
 
-#if NET20 || NET45
+#if NET20 || NET45 || NETSTANDARD2_0
         /// <summary>
         /// Initializes a new instance of the <see cref="ExcelReaderException"/> class.
         /// </summary>

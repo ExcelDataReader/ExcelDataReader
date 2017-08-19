@@ -1,14 +1,9 @@
 using System;
 using System.Globalization;
-#if !NETCOREAPP1_0
+#if NET20 || NET45 || NETCOREAPP2_0
 using System.Data;
 #endif
-#if !NET20
-using System.IO;
-#endif
-#if NET20 || NET45
-using System.Threading;
-#endif
+using ExcelDataReader.Tests;
 
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
@@ -16,8 +11,17 @@ using TestCleanup = NUnit.Framework.TearDownAttribute;
 using TestInitialize = NUnit.Framework.SetUpAttribute;
 using TestMethod = NUnit.Framework.TestAttribute;
 
-// ReSharper disable InconsistentNaming
-namespace ExcelDataReader.Tests
+#if EXCELDATAREADER_NET20
+namespace ExcelDataReader.Net20.Tests
+#elif NET45
+namespace ExcelDataReader.Net45.Tests
+#elif NETCOREAPP1_0
+namespace ExcelDataReader.Netstandard13.Tests
+#elif NETCOREAPP2_0
+namespace ExcelDataReader.Netstandard20.Tests
+#else
+#error "Tests do not support the selected target platform"
+#endif
 {
     [TestClass]
     public class ExcelOpenXmlReaderTest
@@ -25,7 +29,7 @@ namespace ExcelDataReader.Tests
         [TestInitialize]
         public void TestInitialize()
         {
-#if NETCOREAPP1_0
+#if NETCOREAPP1_0 || NETCOREAPP2_0
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 #endif
         }
@@ -764,8 +768,11 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11773_Exponential_Commas()
         {
-#if NET20 || NET45
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE", false);
+#if NETCOREAPP1_0
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+#else
+            System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE", false);
+#endif
 
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Issue_11773_Exponential")))
             {
@@ -773,7 +780,6 @@ namespace ExcelDataReader.Tests
 
                 Assert.AreEqual(2566.37168141593D, double.Parse(dataset.Tables[0].Rows[0][6].ToString()));
             }
-#endif
         }
 
         [TestMethod]
@@ -1145,8 +1151,8 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("Password: password", reader.GetString(0));
             }
 
-            // The following encryptions do not exist on netstandard yet (aug 2017)
-#if NET20 || NET45
+            // The following encryptions do not exist on netstandard1.3
+#if NET20 || NET45 || NETCOREAPP2_0
             // OpenXml agile encryption des+md5+cbc
             using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
                 Configuration.GetTestWorkbook("agile_DES_MD5_CBC_pwd_password"),
