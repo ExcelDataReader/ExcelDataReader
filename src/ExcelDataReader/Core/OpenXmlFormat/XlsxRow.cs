@@ -12,6 +12,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public int RowIndex { get; set; }
 
+        public double RowHeight { get; set; }
+
         public List<XlsxCell> Cells { get; set; } = new List<XlsxCell>();
 
         public int GetMaxColumnIndex()

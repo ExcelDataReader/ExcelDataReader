@@ -1192,5 +1192,24 @@ namespace ExcelDataReader.Tests
                 }
             });
         }
+
+        [TestMethod]
+        public void OpenXmlRowHeight()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xCollapsedHide")))
+            {
+                reader.Read();
+                Assert.Greater(reader.RowHeight, 0);
+
+                reader.Read();
+                Assert.Greater(reader.RowHeight, 0);
+
+                reader.Read();
+                Assert.Greater(reader.RowHeight, 0);
+
+                reader.Read();
+                Assert.AreEqual(reader.RowHeight, 0);
+           }
+        }
     }
 }

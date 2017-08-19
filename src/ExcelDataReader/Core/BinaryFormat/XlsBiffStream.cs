@@ -172,8 +172,12 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                 case BIFFRECORDTYPE.INDEX:
                     return new XlsBiffIndex(bytes, offset, biffVersion == 8);
+                case BIFFRECORDTYPE.DEFAULTROWHEIGHT_V2:
+                case BIFFRECORDTYPE.DEFAULTROWHEIGHT:
+                    return new XlsBiffDefaultRowHeight(bytes, offset, biffVersion);
+                case BIFFRECORDTYPE.ROW_V2:
                 case BIFFRECORDTYPE.ROW:
-                    return new XlsBiffRow(bytes, offset);
+                    return new XlsBiffRow(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.DBCELL:
                     return new XlsBiffDbCell(bytes, offset);
 

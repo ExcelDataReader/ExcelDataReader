@@ -36,6 +36,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string NEvenFooter = "evenFooter";
 
         private const string NSheetProperties = "sheetPr";
+        private const string NSheetFormatProperties = "sheetFormatPr";
+        private const string ADefaultRowHeight = "defaultRowHeight";
+        private const string AHidden = "hidden";
+        private const string ACustomHeight = "customHeight";
+        private const string AHt = "ht";
 
         public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, XlsxBoundSheet refSheet)
         {
@@ -47,6 +52,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             Rid = refSheet.Rid;
             VisibleState = refSheet.VisibleState;
             Path = refSheet.Path;
+            DefaultRowHeight = 12.75; // 255 twips
 
             ReadWorksheetGlobals();
         }
@@ -67,6 +73,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public HeaderFooter HeaderFooter { get; private set; }
 
+        public double DefaultRowHeight { get; private set; }
+
         public int Id { get; }
 
         public string Rid { get; set; }
@@ -77,7 +85,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         private XlsxWorkbook Workbook { get; }
 
-        public IEnumerable<object[]> ReadRows()
+        public IEnumerable<Row> ReadRows()
         {
             if (Dimension == null)
             {
@@ -93,7 +101,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
                     for (; rowIndex < rowBlock.RowIndex; ++rowIndex)
                     {
-                        yield return new object[FieldCount];
+                        yield return new Row()
+                        {
+                            Height = DefaultRowHeight,
+                            Values = new object[FieldCount]
+                        };
                     }
 
                     rowIndex++;
@@ -105,7 +117,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                             result[columnIndex] = cell.Value;
                     }
 
-                    yield return result;
+                    yield return new Row()
+                    {
+                        Height = rowBlock.RowHeight,
+                        Values = result
+                    };
                 }
             }
         }
@@ -217,6 +233,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
                     xmlReader.Skip();
                 }
+                else if (xmlReader.IsStartElement(NSheetFormatProperties, NsSpreadsheetMl))
+                {
+                    if (double.TryParse(xmlReader.GetAttribute(ADefaultRowHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out var defaultRowHeight))
+                        DefaultRowHeight = defaultRowHeight;
+
+                    xmlReader.Skip();
+                }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {
                     break;
@@ -319,6 +342,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 result.RowIndex = rowIndex;
             else
                 result.RowIndex = nextRowIndex;
+
+            int.TryParse(xmlReader.GetAttribute(AHidden), out int hidden);
+            int.TryParse(xmlReader.GetAttribute(ACustomHeight), out int customHeight);
+            double.TryParse(xmlReader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var height);
+
+            if (hidden == 0)
+                result.RowHeight = customHeight != 0 ? height : DefaultRowHeight;
 
             if (!XmlReaderHelper.ReadFirstContent(xmlReader))
             {

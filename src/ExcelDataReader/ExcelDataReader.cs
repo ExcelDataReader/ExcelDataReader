@@ -17,7 +17,7 @@ namespace ExcelDataReader
         where TWorksheet : IWorksheet
     {
         private IEnumerator<TWorksheet> _worksheetIterator;
-        private IEnumerator<object[]> _rowIterator;
+        private IEnumerator<Row> _rowIterator;
 
         protected ExcelDataReader(ExcelReaderConfiguration configuration)
         {
@@ -58,6 +58,8 @@ namespace ExcelDataReader
 
         public int RecordsAffected => throw new NotSupportedException();
 
+        public double RowHeight => _rowIterator?.Current.Height ?? 0;
+
         protected ExcelReaderConfiguration Configuration { get; }
 
         protected TWorkbook Workbook { get; set; }
@@ -68,7 +70,7 @@ namespace ExcelDataReader
             {
                 if (_rowIterator == null || _rowIterator.Current == null)
                     throw new InvalidOperationException("No data exists for the row/column.");
-                return _rowIterator?.Current;
+                return _rowIterator?.Current.Values;
             }
         }
 

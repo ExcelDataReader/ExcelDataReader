@@ -148,6 +148,8 @@ namespace ExcelDataReader.Tests
             { "agile_RC2_SHA1_CBC_pwd_password", "agile_RC2_SHA1_CBC_pwd_password.xlsx" },
             { "EmptyZipFile", "EmptyZipFile.xlsx" },
             { "Test_git_issue_263", "Test_git_issue_263.xls" },
+            { "CollapsedHide", "CollapsedHide.xls" },
+            { "xCollapsedHide", "CollapsedHide.xlsx" },
         };
 
         public static Stream GetTestWorkbook(string key)

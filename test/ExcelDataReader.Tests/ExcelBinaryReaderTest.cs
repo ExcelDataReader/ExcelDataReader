@@ -1384,5 +1384,28 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("Economic Inactivity by age\n(Official statistics: not designated as National Statistics)", ds.Tables[1].Rows[3][0]);
             }
         }
+
+        [TestMethod]
+        public void BinaryRowHeight()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("CollapsedHide")))
+            {
+                // Verify the row heights are set when expected, and converted to points from twips
+                reader.Read();
+                Assert.Greater(reader.RowHeight, 0); 
+                Assert.Less(reader.RowHeight, 20);
+
+                reader.Read();
+                Assert.Greater(reader.RowHeight, 0);
+                Assert.Less(reader.RowHeight, 20);
+
+                reader.Read();
+                Assert.Greater(reader.RowHeight, 0);
+                Assert.Less(reader.RowHeight, 20);
+
+                reader.Read();
+                Assert.AreEqual(0, reader.RowHeight);
+            }
+        }
     }
 }
