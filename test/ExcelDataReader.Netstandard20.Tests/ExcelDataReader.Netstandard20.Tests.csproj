@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyTitle>ExcelDataReader.Tests</AssemblyTitle>
+    <AssemblyTitle>ExcelDataReader.Netstandard20.Tests</AssemblyTitle>
     <Authors>ExcelDataReader developers</Authors>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <AssemblyName>ExcelDataReader.Tests</AssemblyName>
-    <PackageId>ExcelDataReader.Tests</PackageId>
+    <AssemblyName>ExcelDataReader.Netstandard20.Tests</AssemblyName>
+    <PackageId>ExcelDataReader.Netstandard20.Tests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
