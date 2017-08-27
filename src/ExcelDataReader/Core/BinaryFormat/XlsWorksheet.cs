@@ -107,29 +107,18 @@ namespace ExcelDataReader.Core.BinaryFormat
                 {
                     yield return new Row()
                     {
+                        RowIndex = rowIndex,
                         Height = DefaultRowHeight / 20.0,
-                        Values = new object[FieldCount]
+                        Cells = new List<Cell>()
                     };
                 }
 
                 rowIndex++;
-                var result = new object[FieldCount];
-                foreach (var cell in rowBlock.Cells)
-                {
-                    var columnIndex = cell.ColumnIndex;
-                    if (columnIndex < result.Length)
-                        result[columnIndex] = cell.Value;
-                }
-
-                yield return new Row()
-                {
-                    Height = rowBlock.Height,
-                    Values = result
-                };
+                yield return rowBlock;
             }
         }
 
-        private IEnumerable<XlsRow> ReadWorksheetRows(XlsBiffStream biffStream)
+        private IEnumerable<Row> ReadWorksheetRows(XlsBiffStream biffStream)
         {
             var rowIndex = 0;
 
@@ -154,7 +143,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private XlsRowBlock ReadNextBlock(XlsBiffStream biffStream, int startRow, int rows)
         {
-            var result = new XlsRowBlock { Rows = new Dictionary<int, XlsRow>() };
+            var result = new XlsRowBlock { Rows = new Dictionary<int, Row>() };
 
             XlsBiffRecord rec;
             XlsBiffRecord ixfe = null;
@@ -212,15 +201,15 @@ namespace ExcelDataReader.Core.BinaryFormat
             return result;
         }
 
-        private XlsRow EnsureRow(XlsRowBlock result, int rowIndex)
+        private Row EnsureRow(XlsRowBlock result, int rowIndex)
         {
             if (!result.Rows.TryGetValue(rowIndex, out var currentRow))
             {
-                currentRow = new XlsRow()
+                currentRow = new Row()
                 {
                     RowIndex = rowIndex,
                     Height = DefaultRowHeight / 20.0,
-                    Cells = new List<XlsCell>()
+                    Cells = new List<Cell>()
                 };
 
                 result.Rows.Add(rowIndex, currentRow);
@@ -229,11 +218,11 @@ namespace ExcelDataReader.Core.BinaryFormat
             return currentRow;
         }
 
-        private List<XlsCell> ReadMultiCell(XlsBiffBlankCell cell)
+        private List<Cell> ReadMultiCell(XlsBiffBlankCell cell)
         {
             LogManager.Log(this).Debug("ReadMultiCell {0}", cell.Id);
 
-            var result = new List<XlsCell>();
+            var result = new List<Cell>();
             switch (cell.Id)
             {
                 case BIFFRECORDTYPE.MULRK:
@@ -242,7 +231,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     ushort lastColumnIndex = rkCell.LastColumnIndex;
                     for (ushort j = cell.ColumnIndex; j <= lastColumnIndex; j++)
                     {
-                        var resultCell = new XlsCell()
+                        var resultCell = new Cell()
                         {
                             ColumnIndex = j,
                             Value = TryConvertOADateTime(rkCell.GetValue(j), rkCell.GetXF(j))
@@ -262,7 +251,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Reads additional records if needed: a string record might follow a formula result
         /// </summary>
-        private XlsCell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, ushort xFormat)
+        private Cell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, ushort xFormat)
         {
             LogManager.Log(this).Debug("ReadSingleCell {0}", cell.Id);
 
@@ -270,7 +259,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             int intValue;
             object objectValue;
 
-            var result = new XlsCell()
+            var result = new Cell()
             {
                 ColumnIndex = cell.ColumnIndex
             };
@@ -618,23 +607,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         internal class XlsRowBlock
         {
-            public Dictionary<int, XlsRow> Rows { get; set; }
-        }
-
-        internal class XlsRow
-        {
-            public int RowIndex { get; set; }
-
-            public double Height { get; set; }
-
-            public List<XlsCell> Cells { get; set; }
-        }
-
-        internal class XlsCell
-        {
-            public int ColumnIndex { get; set; }
-
-            public object Value { get; set; }
+            public Dictionary<int, Row> Rows { get; set; }
         }
     }
 }

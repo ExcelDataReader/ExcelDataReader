@@ -64,28 +64,20 @@ namespace ExcelDataReader
 
         protected TWorkbook Workbook { get; set; }
 
-        private object[] CellsValues
-        {
-            get
-            {
-                if (_rowIterator == null || _rowIterator.Current == null)
-                    throw new InvalidOperationException("No data exists for the row/column.");
-                return _rowIterator?.Current.Values;
-            }
-        }
+        protected Cell[] RowCells { get; set; }
 
-        public object this[int i] => CellsValues[i];
+        public object this[int i] => GetValue(i);
 
         public object this[string name] => throw new NotSupportedException();
 
-        public bool GetBoolean(int i) => (bool)CellsValues[i];
+        public bool GetBoolean(int i) => (bool)GetValue(i);
 
-        public byte GetByte(int i) => (byte)CellsValues[i];
+        public byte GetByte(int i) => (byte)GetValue(i);
 
         public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
             => throw new NotSupportedException();
 
-        public char GetChar(int i) => (char)CellsValues[i];
+        public char GetChar(int i) => (char)GetValue(i);
 
         public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
              => throw new NotSupportedException();
@@ -94,23 +86,23 @@ namespace ExcelDataReader
 
         public string GetDataTypeName(int i) => throw new NotSupportedException();
 
-        public DateTime GetDateTime(int i) => (DateTime)CellsValues[i];
+        public DateTime GetDateTime(int i) => (DateTime)GetValue(i);
 
-        public decimal GetDecimal(int i) => (decimal)CellsValues[i];
+        public decimal GetDecimal(int i) => (decimal)GetValue(i);
 
-        public double GetDouble(int i) => (double)CellsValues[i];
+        public double GetDouble(int i) => (double)GetValue(i);
 
-        public Type GetFieldType(int i) => CellsValues[i]?.GetType();
+        public Type GetFieldType(int i) => GetValue(i)?.GetType();
 
-        public float GetFloat(int i) => (float)CellsValues[i];
+        public float GetFloat(int i) => (float)GetValue(i);
 
-        public Guid GetGuid(int i) => (Guid)CellsValues[i];
+        public Guid GetGuid(int i) => (Guid)GetValue(i);
 
-        public short GetInt16(int i) => (short)CellsValues[i];
+        public short GetInt16(int i) => (short)GetValue(i);
 
-        public int GetInt32(int i) => (int)CellsValues[i];
+        public int GetInt32(int i) => (int)GetValue(i);
 
-        public long GetInt64(int i) => (long)CellsValues[i];
+        public long GetInt64(int i) => (long)GetValue(i);
 
         public string GetName(int i) => throw new NotSupportedException();
 
@@ -119,13 +111,18 @@ namespace ExcelDataReader
         /// <inheritdoc />
         public DataTable GetSchemaTable() => throw new NotSupportedException();
 
-        public string GetString(int i) => (string)CellsValues[i];
+        public string GetString(int i) => (string)GetValue(i);
 
-        public object GetValue(int i) => CellsValues[i];
+        public object GetValue(int i)
+        {
+            if (RowCells == null)
+                throw new InvalidOperationException("No data exists for the row/column.");
+            return RowCells[i]?.Value;
+        }
 
         public int GetValues(object[] values) => throw new NotSupportedException();
 
-        public bool IsDBNull(int i) => CellsValues[i] == null;
+        public bool IsDBNull(int i) => GetValue(i) == null;
 
         /// <inheritdoc />
         public void Reset()
@@ -162,6 +159,7 @@ namespace ExcelDataReader
 
             _worksheetIterator = null;
             _rowIterator = null;
+            RowCells = null;
             IsClosed = true;
         }
 
@@ -202,6 +200,8 @@ namespace ExcelDataReader
                 return false;
             }
 
+            ReadCurrentRow();
+
             Depth++;
             return true;
         }
@@ -222,6 +222,25 @@ namespace ExcelDataReader
         private void ResetSheetData()
         {
             Depth = -1;
+            RowCells = null;
+        }
+
+        private void ReadCurrentRow()
+        {
+            if (RowCells == null)
+            { 
+                RowCells = new Cell[FieldCount];
+            }
+
+            Array.Clear(RowCells, 0, RowCells.Length);
+
+            foreach (var cell in _rowIterator.Current.Cells)
+            {
+                if (cell.ColumnIndex < RowCells.Length)
+                { 
+                    RowCells[cell.ColumnIndex] = cell;
+                }
+            }
         }
     }
 }
