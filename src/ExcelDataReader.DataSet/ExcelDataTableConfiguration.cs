@@ -21,5 +21,10 @@ namespace ExcelDataReader
         /// Gets or sets a callback to determine which row is the header row. Only called when UseHeaderRow = true.
         /// </summary>
         public Action<IExcelDataReader> ReadHeaderRow { get; set; }
+
+        /// <summary>
+        /// Gets or sets a callback to determine whether to include the current row in the DataTable.
+        /// </summary>
+        public Func<IExcelDataReader, bool> FilterRow { get; set; }
     }
 }

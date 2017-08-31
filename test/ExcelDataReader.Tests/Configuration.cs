@@ -150,6 +150,8 @@ namespace ExcelDataReader.Tests
             { "Test_git_issue_263", "Test_git_issue_263.xls" },
             { "CollapsedHide", "CollapsedHide.xls" },
             { "xCollapsedHide", "CollapsedHide.xlsx" },
+            { "Test_git_issue_270", "Test_git_issue_270.xls" },
+            { "xTest_git_issue_270", "Test_git_issue_270.xlsx" },
         };
 
         public static Stream GetTestWorkbook(string key)

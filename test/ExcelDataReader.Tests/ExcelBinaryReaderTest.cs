@@ -1417,5 +1417,90 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual(0, reader.RowHeight);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_270_EmptyRowsAtTheEnd()
+        {
+            // AsDataSet() trims trailing blank rows
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_270")))
+            {
+                var dataset = reader.AsDataSet();
+                Assert.AreEqual(1, dataset.Tables[0].Rows.Count);
+            }
+
+            // Reader methods do not trim trailing blank rows
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_270")))
+            {
+                var rowCount = 0;
+                while (reader.Read())
+                    rowCount++;
+                Assert.AreEqual(65536, rowCount);
+            }
+        }
+
+        static bool IsEmptyOrHiddenRow(IExcelDataReader reader)
+        {
+            if (reader.RowHeight == 0)
+                return true;
+
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                if (reader.GetValue(i) != null)
+                    return false;
+            }
+
+            return true;
+        }
+
+        static bool IsEmptyRow(IExcelDataReader reader)
+        {
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                if (reader.GetValue(i) != null)
+                    return false;
+            }
+
+            return true;
+        }
+
+        [TestMethod]
+        public void GitIssue_160_FilterRow()
+        {
+            // Check there are four rows with data, including empty and hidden rows
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("CollapsedHide")))
+            {
+                var dataset = reader.AsDataSet();
+
+                Assert.AreEqual(2, dataset.Tables[0].Rows.Count);
+            }
+
+            // Check there are two rows with content
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("CollapsedHide")))
+            {
+                var dataset = reader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+                    {
+                        FilterRow = rowReader => !IsEmptyRow(rowReader)
+                    }
+                });
+
+                Assert.AreEqual(2, dataset.Tables[0].Rows.Count);
+            }
+
+            // Check there is one visible row with content
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("CollapsedHide")))
+            {
+                var dataset = reader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+                    {
+                        FilterRow = rowReader => !IsEmptyOrHiddenRow(rowReader)
+                    }
+                });
+
+                Assert.AreEqual(1, dataset.Tables[0].Rows.Count);
+            }
+        }
     }
 }

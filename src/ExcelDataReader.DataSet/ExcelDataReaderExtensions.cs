@@ -70,7 +70,8 @@ namespace ExcelDataReader
         {
             var result = new DataTable { TableName = self.Name };
             result.ExtendedProperties.Add("visiblestate", self.VisibleState);
-            bool first = true;
+            var first = true;
+            var emptyRows = 0;
             while (self.Read())
             {
                 if (first)
@@ -106,11 +107,28 @@ namespace ExcelDataReader
                     }
                 }
 
+                if (configuration.FilterRow != null && !configuration.FilterRow(self))
+                {
+                    continue;
+                }
+
+                if (IsEmptyRow(self))
+                {
+                    emptyRows++;
+                    continue;
+                }
+
+                for (var i = 0; i < emptyRows; i++)
+                {
+                    result.Rows.Add(result.NewRow());
+                }
+
+                emptyRows = 0;
+
                 var row = result.NewRow();
 
                 for (var i = 0; i < self.FieldCount; i++)
                 {
-                    // var name = self.GetName(i);
                     var value = self.GetValue(i);
                     row[i] = value;
                 }
@@ -120,6 +138,17 @@ namespace ExcelDataReader
 
             result.EndLoadData();
             return result;
+        }
+
+        private static bool IsEmptyRow(IExcelDataReader reader)
+        {
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                if (reader.GetValue(i) != null)
+                    return false;
+            }
+
+            return true;
         }
 
         private static void FixDataTypes(DataSet dataset)

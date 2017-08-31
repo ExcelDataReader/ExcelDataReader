@@ -803,7 +803,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 var dataset = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
                 Assert.AreEqual(7, dataset.Tables[0].Columns.Count); // 6 with data + 1 that is present but no data in it
-                Assert.AreEqual(19, dataset.Tables[0].Rows.Count);
+                Assert.AreEqual(0, dataset.Tables[0].Rows.Count);
             }
         }
 
@@ -1216,6 +1216,26 @@ namespace ExcelDataReader.Netstandard20.Tests
                 reader.Read();
                 Assert.AreEqual(reader.RowHeight, 0);
            }
+        }
+
+        [TestMethod]
+        public void GitIssue_270_EmptyRowsAtTheEnd()
+        {
+            // AsDataSet() trims trailing blank rows
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_git_issue_270")))
+            {
+                var dataset = reader.AsDataSet();
+                Assert.AreEqual(1, dataset.Tables[0].Rows.Count);
+            }
+
+            // Reader methods do not trim trailing blank rows
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_git_issue_270")))
+            {
+                var rowCount = 0;
+                while (reader.Read())
+                    rowCount++;
+                Assert.AreEqual(65536, rowCount);
+            }
         }
     }
 }
