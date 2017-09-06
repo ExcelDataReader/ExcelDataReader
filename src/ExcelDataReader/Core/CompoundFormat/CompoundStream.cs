@@ -40,7 +40,7 @@ namespace ExcelDataReader.Core.CompoundFormat
 
         public override long Position { get => Offset - SectorBytes.Length + SectorOffset; set => Seek(value, SeekOrigin.Begin); }
 
-        private Stream BaseStream { get; }
+        private Stream BaseStream { get; set; }
 
         private CompoundDocument Document { get; }
 
@@ -107,6 +107,17 @@ namespace ExcelDataReader.Core.CompoundFormat
         public override void Write(byte[] buffer, int offset, int count)
         {
             throw new NotImplementedException();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                BaseStream?.Dispose();
+                BaseStream = null;
+            }
+
+            base.Dispose(disposing);
         }
 
         private void ReadSector()

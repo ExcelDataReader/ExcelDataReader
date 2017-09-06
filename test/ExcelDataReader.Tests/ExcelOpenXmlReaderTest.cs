@@ -1237,5 +1237,48 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual(65536, rowCount);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_265_OpenXmlDisposed()
+        {
+            // Verify the file stream is closed and disposed by the reader
+            { 
+                var stream = Configuration.GetTestWorkbook("xTest10x10");
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+            }
+
+            // Verify streams used by standard encryption are closed
+            {
+                var stream = Configuration.GetTestWorkbook("standard_AES128_SHA1_ECB_pwd_password");
+
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(
+                    stream,
+                    new ExcelReaderConfiguration() { Password = "password" }))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+            }
+
+            // Verify streams used by agile encryption are closed
+            {
+                var stream = Configuration.GetTestWorkbook("agile_AES128_MD5_CBC_pwd_password");
+
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(
+                    stream,
+                    new ExcelReaderConfiguration() { Password = "password" }))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+            }
+        }
     }
 }

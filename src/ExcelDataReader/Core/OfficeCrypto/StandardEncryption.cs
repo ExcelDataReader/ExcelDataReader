@@ -161,14 +161,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         public override Stream CreateEncryptedPackageStream(Stream stream, byte[] secretKey)
         {
-            var cipher = CryptoHelpers.CreateCipher(CipherAlgorithm, KeySize, BlockSize, CipherMode.ECB);
-            var decryptor = cipher.CreateDecryptor(secretKey, SaltValue);
-            stream.Seek(8, SeekOrigin.Begin); // skip EncryptedPackage header
-
-            // TODO: should wrap CryptoStream in another stream using the length; and disposes cipher+transform 
-            // Zip readers scan backwards from the end for the central zip directory, and could fail if its too far away
-            // CryptoStream is forward-only, so assume the zip readers read everything to memory
-            return new CryptoStream(stream, decryptor, CryptoStreamMode.Read);
+            return new StandardEncryptedPackageStream(stream, secretKey, this);
         }
 
         public override byte[] GenerateBlockKey(int blockNumber, byte[] secretKey)

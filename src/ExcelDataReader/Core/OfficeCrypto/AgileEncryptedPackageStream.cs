@@ -32,7 +32,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         public override long Position { get => Offset - SegmentLength + SegmentOffset; set => Seek(value, SeekOrigin.Begin); }
 
-        private Stream Stream { get; }
+        private Stream Stream { get; set; }
 
         private byte[] Key { get; }
 
@@ -109,6 +109,17 @@ namespace ExcelDataReader.Core.OfficeCrypto
         public override void Write(byte[] buffer, int offset, int count)
         {
             throw new NotImplementedException();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Stream?.Dispose();
+                Stream = null;
+            }
+
+            base.Dispose(disposing);
         }
 
         private void ReadSegment()

@@ -1471,7 +1471,7 @@ namespace ExcelDataReader.Netstandard20.Tests
             {
                 var dataset = reader.AsDataSet();
 
-                Assert.AreEqual(2, dataset.Tables[0].Rows.Count);
+                Assert.AreEqual(4, dataset.Tables[0].Rows.Count);
             }
 
             // Check there are two rows with content
@@ -1501,6 +1501,19 @@ namespace ExcelDataReader.Netstandard20.Tests
 
                 Assert.AreEqual(1, dataset.Tables[0].Rows.Count);
             }
+        }
+
+        [TestMethod]
+        public void GitIssue_265_BinaryDisposed()
+        {
+            var stream = Configuration.GetTestWorkbook("Test10x10");
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(stream))
+            {
+                var result = excelReader.AsDataSet();
+            }
+
+            Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+            
         }
     }
 }

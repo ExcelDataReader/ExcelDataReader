@@ -20,6 +20,7 @@ namespace ExcelDataReader
         public override void Close()
         {
             base.Close();
+            Workbook.Stream?.Dispose();
             Workbook = null;
         }
     }

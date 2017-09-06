@@ -22,7 +22,10 @@ namespace ExcelDataReader.Core.OfficeCrypto
             else
                 throw new InvalidOperationException("Unsupported hash algorithm");
 
-            return hash.ComputeHash(bytes);
+            using (hash)
+            {
+                return hash.ComputeHash(bytes);
+            }
         }
 
         public static byte[] Combine(params byte[][] arrays)
