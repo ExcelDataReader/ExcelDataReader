@@ -99,22 +99,23 @@ namespace ExcelDataReader.Core.BinaryFormat
         public IEnumerable<Row> ReadRows()
         {
             var rowIndex = 0;
-            var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, null, Workbook.SecretKey, Workbook.Encryption);
-
-            foreach (var rowBlock in ReadWorksheetRows(biffStream))
+            using (var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, null, Workbook.SecretKey, Workbook.Encryption))
             {
-                for (; rowIndex < rowBlock.RowIndex; ++rowIndex)
+                foreach (var rowBlock in ReadWorksheetRows(biffStream))
                 {
-                    yield return new Row()
+                    for (; rowIndex < rowBlock.RowIndex; ++rowIndex)
                     {
-                        RowIndex = rowIndex,
-                        Height = DefaultRowHeight / 20.0,
-                        Cells = new List<Cell>()
-                    };
-                }
+                        yield return new Row()
+                        {
+                            RowIndex = rowIndex,
+                            Height = DefaultRowHeight / 20.0,
+                            Cells = new List<Cell>()
+                        };
+                    }
 
-                rowIndex++;
-                yield return rowBlock;
+                    rowIndex++;
+                    yield return rowBlock;
+                }
             }
         }
 
@@ -460,122 +461,123 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private void ReadWorksheetGlobals()
         {
-            var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, null, Workbook.SecretKey, Workbook.Encryption);
-            
-            // Check the expected BOF record was found in the BIFF stream
-            if (biffStream.BiffVersion == 0 || biffStream.BiffType != BIFFTYPE.Worksheet)
-                return;
-
-            XlsBiffHeaderFooterString header = null;
-            XlsBiffHeaderFooterString footer = null;
-
-            // Handle when dimensions report less columns than used by cell records.
-            int maxCellColumn = 0;
-            int maxRowCount = 0;
-            Dictionary<int, bool> previousBlocksObservedRows = new Dictionary<int, bool>();
-            Dictionary<int, bool> observedRows = new Dictionary<int, bool>();
-
-            var recordOffset = biffStream.Position;
-            XlsBiffRecord rec = biffStream.Read();
-            while (rec != null && !(rec is XlsBiffEof))
+            using (var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, null, Workbook.SecretKey, Workbook.Encryption))
             {
-                if (rec is XlsBiffDimensions dims)
-                {
-                    FieldCount = dims.LastColumn;
-                    RowCount = (int)dims.LastRow;
-                }
+                // Check the expected BOF record was found in the BIFF stream
+                if (biffStream.BiffVersion == 0 || biffStream.BiffType != BIFFTYPE.Worksheet)
+                    return;
 
-                if (rec.Id == BIFFRECORDTYPE.DEFAULTROWHEIGHT || rec.Id == BIFFRECORDTYPE.DEFAULTROWHEIGHT_V2)
-                {
-                    var defaultRowHeightRecord = (XlsBiffDefaultRowHeight)rec;
-                    DefaultRowHeight = defaultRowHeightRecord.RowHeight;
-                }
+                XlsBiffHeaderFooterString header = null;
+                XlsBiffHeaderFooterString footer = null;
 
-                if (rec.Id == BIFFRECORDTYPE.RECORD1904)
-                {
-                    IsDate1904 = ((XlsBiffSimpleValueRecord)rec).Value == 1;
-                }
+                // Handle when dimensions report less columns than used by cell records.
+                int maxCellColumn = 0;
+                int maxRowCount = 0;
+                Dictionary<int, bool> previousBlocksObservedRows = new Dictionary<int, bool>();
+                Dictionary<int, bool> observedRows = new Dictionary<int, bool>();
 
-                if (rec.Id == BIFFRECORDTYPE.XF_V2 || rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4)
+                var recordOffset = biffStream.Position;
+                XlsBiffRecord rec = biffStream.Read();
+                while (rec != null && !(rec is XlsBiffEof))
                 {
-                    ExtendedFormats.Add(rec);
-                }
-
-                if (rec.Id == BIFFRECORDTYPE.FORMAT)
-                {
-                    var fmt = (XlsBiffFormatString)rec;
-                    if (Workbook.BiffVersion >= 5)
+                    if (rec is XlsBiffDimensions dims)
                     {
-                        // fmt.Index exists on BIFF5+ only
-                        Formats.Add(fmt.Index, fmt);
+                        FieldCount = dims.LastColumn;
+                        RowCount = (int)dims.LastRow;
                     }
-                    else
+
+                    if (rec.Id == BIFFRECORDTYPE.DEFAULTROWHEIGHT || rec.Id == BIFFRECORDTYPE.DEFAULTROWHEIGHT_V2)
                     {
+                        var defaultRowHeightRecord = (XlsBiffDefaultRowHeight)rec;
+                        DefaultRowHeight = defaultRowHeightRecord.RowHeight;
+                    }
+
+                    if (rec.Id == BIFFRECORDTYPE.RECORD1904)
+                    {
+                        IsDate1904 = ((XlsBiffSimpleValueRecord)rec).Value == 1;
+                    }
+
+                    if (rec.Id == BIFFRECORDTYPE.XF_V2 || rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4)
+                    {
+                        ExtendedFormats.Add(rec);
+                    }
+
+                    if (rec.Id == BIFFRECORDTYPE.FORMAT)
+                    {
+                        var fmt = (XlsBiffFormatString)rec;
+                        if (Workbook.BiffVersion >= 5)
+                        {
+                            // fmt.Index exists on BIFF5+ only
+                            Formats.Add(fmt.Index, fmt);
+                        }
+                        else
+                        {
+                            Formats.Add((ushort)Formats.Count, fmt);
+                        }
+                    }
+
+                    if (rec.Id == BIFFRECORDTYPE.FORMAT_V23)
+                    {
+                        var fmt = (XlsBiffFormatString)rec;
                         Formats.Add((ushort)Formats.Count, fmt);
                     }
+
+                    if (rec.Id == BIFFRECORDTYPE.CODEPAGE)
+                    {
+                        var codePage = (XlsBiffSimpleValueRecord)rec;
+                        Encoding = EncodingHelper.GetEncoding(codePage.Value);
+                    }
+
+                    if (rec.Id == BIFFRECORDTYPE.HEADER && rec.RecordSize > 0)
+                    {
+                        header = (XlsBiffHeaderFooterString)rec;
+                    }
+
+                    if (rec.Id == BIFFRECORDTYPE.FOOTER && rec.RecordSize > 0)
+                    {
+                        footer = (XlsBiffHeaderFooterString)rec;
+                    }
+
+                    if (rec.Id == BIFFRECORDTYPE.CODENAME)
+                    {
+                        var codeName = (XlsBiffCodeName)rec;
+                        CodeName = codeName.GetValue(Encoding);
+                    }
+
+                    if (rec.Id == BIFFRECORDTYPE.ROW)
+                    {
+                        var rowRecord = (XlsBiffRow)rec;
+                        SetMinMaxRowOffset(rowRecord.RowIndex, recordOffset);
+                        maxRowCount = Math.Max(maxRowCount, rowRecord.RowIndex + 1);
+                    }
+
+                    if (rec.IsCell)
+                    {
+                        var cell = (XlsBiffBlankCell)rec;
+                        SetMinMaxRowOffset(cell.RowIndex, recordOffset);
+                        maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
+                        maxRowCount = Math.Max(maxRowCount, cell.RowIndex + 1);
+                    }
+
+                    recordOffset = biffStream.Position;
+                    rec = biffStream.Read();
                 }
 
-                if (rec.Id == BIFFRECORDTYPE.FORMAT_V23)
+                if (header != null || footer != null)
                 {
-                    var fmt = (XlsBiffFormatString)rec;
-                    Formats.Add((ushort)Formats.Count, fmt);
+                    HeaderFooter = new HeaderFooter(false, false)
+                    {
+                        OddHeader = header?.GetValue(Encoding),
+                        OddFooter = footer?.GetValue(Encoding),
+                    };
                 }
 
-                if (rec.Id == BIFFRECORDTYPE.CODEPAGE)
-                {
-                    var codePage = (XlsBiffSimpleValueRecord)rec;
-                    Encoding = EncodingHelper.GetEncoding(codePage.Value);
-                }
+                if (FieldCount < maxCellColumn)
+                    FieldCount = maxCellColumn;
 
-                if (rec.Id == BIFFRECORDTYPE.HEADER && rec.RecordSize > 0)
-                {
-                    header = (XlsBiffHeaderFooterString)rec;
-                }
-
-                if (rec.Id == BIFFRECORDTYPE.FOOTER && rec.RecordSize > 0)
-                {
-                    footer = (XlsBiffHeaderFooterString)rec;
-                }
-
-                if (rec.Id == BIFFRECORDTYPE.CODENAME)
-                {
-                    var codeName = (XlsBiffCodeName)rec;
-                    CodeName = codeName.GetValue(Encoding);
-                }
-
-                if (rec.Id == BIFFRECORDTYPE.ROW)
-                {
-                    var rowRecord = (XlsBiffRow)rec;
-                    SetMinMaxRowOffset(rowRecord.RowIndex, recordOffset);
-                    maxRowCount = Math.Max(maxRowCount, rowRecord.RowIndex + 1);
-                }
-
-                if (rec.IsCell)
-                {
-                    var cell = (XlsBiffBlankCell)rec;
-                    SetMinMaxRowOffset(cell.RowIndex, recordOffset);
-                    maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
-                    maxRowCount = Math.Max(maxRowCount, cell.RowIndex + 1);
-                }
-
-                recordOffset = biffStream.Position;
-                rec = biffStream.Read();
+                if (RowCount < maxRowCount)
+                    RowCount = maxRowCount;
             }
-
-            if (header != null || footer != null)
-            {
-                HeaderFooter = new HeaderFooter(false, false)
-                {
-                    OddHeader = header?.GetValue(Encoding),
-                    OddFooter = footer?.GetValue(Encoding),
-                };
-            }
-
-            if (FieldCount < maxCellColumn)
-                FieldCount = maxCellColumn;
-
-            if (RowCount < maxRowCount)
-                RowCount = maxRowCount;
         }
 
         private bool GetMinMaxOffsetsForRowBlock(int rowIndex, int rowCount, out int minOffset, out int maxOffset)

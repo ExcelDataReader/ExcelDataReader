@@ -16,27 +16,29 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             Stream = stream;
 
-            var biffStream = new XlsBiffStream(stream, 0, 0, password);
-            if (biffStream.BiffVersion == 0)
-                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+            using (var biffStream = new XlsBiffStream(stream, 0, 0, password))
+            {
+                if (biffStream.BiffVersion == 0)
+                    throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
 
-            BiffVersion = biffStream.BiffVersion;
-            SecretKey = biffStream.SecretKey;
-            Encryption = biffStream.Encryption;
-            Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
+                BiffVersion = biffStream.BiffVersion;
+                SecretKey = biffStream.SecretKey;
+                Encryption = biffStream.Encryption;
+                Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
 
-            if (biffStream.BiffType == BIFFTYPE.WorkbookGlobals)
-            {
-                ReadWorkbookGlobals(biffStream);
-            }
-            else if (biffStream.BiffType == BIFFTYPE.Worksheet)
-            {
-                // set up 'virtual' bound sheet pointing at this
-                Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
-            }
-            else
-            {
-                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+                if (biffStream.BiffType == BIFFTYPE.WorkbookGlobals)
+                {
+                    ReadWorkbookGlobals(biffStream);
+                }
+                else if (biffStream.BiffType == BIFFTYPE.Worksheet)
+                {
+                    // set up 'virtual' bound sheet pointing at this
+                    Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
+                }
+                else
+                {
+                    throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+                }
             }
         }
 

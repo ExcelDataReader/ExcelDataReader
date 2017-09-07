@@ -9,7 +9,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents a BIFF stream
     /// </summary>
-    internal class XlsBiffStream
+    internal class XlsBiffStream : IDisposable
     {
         public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, string password = null, byte[] secretKey = null, EncryptionInfo encryption = null)
         {
@@ -254,6 +254,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                 default:
                     return new XlsBiffRecord(bytes, offset);
             }
+        }
+
+        public void Dispose()
+        {
+            CipherTransform?.Dispose();
+            ((IDisposable)Cipher)?.Dispose();
         }
 
         private int GetBiffVersion(XlsBiffBOF bof)
