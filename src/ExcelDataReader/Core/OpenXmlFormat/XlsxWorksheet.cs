@@ -57,13 +57,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             ReadWorksheetGlobals();
         }
 
-        public XlsxDimension Dimension { get; set; }
-
-        public int ColumnsCount => Dimension?.LastCol ?? 0;
-
-        public int FieldCount => ColumnsCount;
-
-        public int RowsCount => Dimension == null ? -1 : Dimension.LastRow - Dimension.FirstRow + 1;
+        public int FieldCount { get; private set; }
 
         public string Name { get; }
 
@@ -87,11 +81,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public IEnumerable<Row> ReadRows()
         {
-            if (Dimension == null)
-            {
-                yield break;
-            }
-
             var rowIndex = 0;
             foreach (var sheetObject in ReadWorksheetStream(false))
             {
@@ -125,7 +114,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 switch (sheetObject.Type)
                 {
                     case XlsxElementType.Dimension:
-                        Dimension = (XlsxDimension)sheetObject;
+                        // Ignore dimensions
                         break;
                     case XlsxElementType.HeaderFooter:
                         XlsxHeaderFooter headerFooter = (XlsxHeaderFooter)sheetObject;
@@ -134,29 +123,29 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 }
             }
             
-            if (Dimension == null)
+            int rows = int.MinValue;
+            int cols = int.MinValue;
+            foreach (var sheetObject in ReadWorksheetStream(false))
             {
-                int rows = int.MinValue;
-                int cols = int.MinValue;
-                foreach (var sheetObject in ReadWorksheetStream(false))
+                if (sheetObject.Type == XlsxElementType.Row)
                 {
-                    if (sheetObject.Type == XlsxElementType.Row)
-                    {
-                        var rowBlock = ((XlsxRow)sheetObject).Row;
-                        rows = Math.Max(rows, rowBlock.RowIndex);
-                        cols = Math.Max(cols, rowBlock.GetMaxColumnIndex());
-                    }
+                    var rowBlock = ((XlsxRow)sheetObject).Row;
+                    rows = Math.Max(rows, rowBlock.RowIndex);
+                    cols = Math.Max(cols, rowBlock.GetMaxColumnIndex());
                 }
+            }
 
-                if (rows != int.MinValue && cols != int.MinValue)
-                {
-                    Dimension = new XlsxDimension(rows + 1, cols + 1); // Dimension is 1-based
-                }
+            if (rows != int.MinValue && cols != int.MinValue)
+            {
+                FieldCount = cols + 1;
             }
         }
 
         private IEnumerable<XlsxElement> ReadWorksheetStream(bool skipSheetData)
         {
+            if (string.IsNullOrEmpty(Path))
+                yield break;
+
             using (var sheetStream = Document.GetWorksheetStream(Path))
             {
                 if (sheetStream == null)

@@ -862,7 +862,7 @@ namespace ExcelDataReader.Netstandard20.Tests
 
                 Assert.IsTrue(result.Tables.Count > 0);
                 Assert.AreEqual(39, result.Tables[0].Rows.Count);
-                Assert.AreEqual(27, result.Tables[0].Columns.Count);
+                Assert.AreEqual(18, result.Tables[0].Columns.Count);
                 Assert.AreEqual("ROW NUMBER 5", result.Tables[0].Rows[4][4].ToString());
 
                 excelReader.Close();
@@ -1278,6 +1278,17 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
 
                 Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_271_InvalidDimension()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_271_InvalidDimension")))
+            {
+                var dataset = excelReader.AsDataSet();
+                Assert.AreEqual(3, dataset.Tables[0].Columns.Count);
+                Assert.AreEqual(9, dataset.Tables[0].Rows.Count);
             }
         }
     }
