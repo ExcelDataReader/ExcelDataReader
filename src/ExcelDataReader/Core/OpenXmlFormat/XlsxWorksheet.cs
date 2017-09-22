@@ -441,22 +441,39 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             switch (aT)
             {
                 case AS: //// if string
-                    return Helpers.ConvertEscapeChars(Workbook.SST[int.Parse(rawValue, invariantCulture)]);
+                    if (int.TryParse(rawValue, style, invariantCulture, out var sstIndex))
+                    {
+                        if (sstIndex >= 0 && sstIndex < Workbook.SST.Count)
+                        {
+                            return Helpers.ConvertEscapeChars(Workbook.SST[sstIndex]);
+                        }
+                    }
+
+                    return rawValue;
                 case NInlineStr: //// if string inline
                 case NStr: //// if cached formula string
                     return Helpers.ConvertEscapeChars(rawValue);
                 case "b": //// boolean
                     return rawValue == "1";
                 case "d": //// ISO 8601 date
-                    return DateTime.ParseExact(rawValue, "yyyy-MM-dd", invariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite);
+                    if (DateTime.TryParseExact(rawValue, "yyyy-MM-dd", invariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date))
+                        return date;
+
+                    return rawValue;
                 default:
                     bool isNumber = double.TryParse(rawValue, style, invariantCulture, out double number);
 
                     if (aS != null)
                     {
-                        XlsxXf xf = Workbook.Styles.CellXfs[int.Parse(aS)];
-                        if (isNumber && Workbook.IsDateTimeStyle(xf.NumFmtId))
-                            return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
+                        if (int.TryParse(aS, style, invariantCulture, out var styleIndex))
+                        {
+                            if (styleIndex >= 0 && styleIndex < Workbook.Styles.CellXfs.Count)
+                            {
+                                XlsxXf xf = Workbook.Styles.CellXfs[styleIndex];
+                                if (isNumber && Workbook.IsDateTimeStyle(xf.NumFmtId))
+                                    return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
+                            }
+                        }
 
                         // NOTE: Commented out to match behavior of the binary reader; 
                         // formatting should ultimately be applied by the caller
