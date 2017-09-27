@@ -68,6 +68,7 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 - `CodeName` returns the VBA code name identifier of the current sheet.
 - `FieldCount` returns the number of columns in the current sheet.
 - `HeaderFooter` returns an object with information about the headers and footers, or `null` if there are none.
+- `RowHeight` returns the visual height of the current row in points. May be 0 if the row is hidden.
 - `GetFieldType()` returns the type of a value in the current row. Always one of the types supported by Excel: `double`, `int`, `bool`, `DateTime`, `string`, or `null` if there is no value.
 - `IsDBNull()` checks if a value in the current row is null. 
 - `GetValue()` returns a value from the current row as an `object`, or `null` if there is no value.
