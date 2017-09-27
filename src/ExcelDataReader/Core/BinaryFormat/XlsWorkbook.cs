@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ExcelDataReader.Core.OfficeCrypto;
 using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.BinaryFormat
@@ -11,54 +12,43 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsWorkbook : IWorkbook<XlsWorksheet>
     {
-        private const string DirectoryEntryWorkbook = "Workbook";
-        private const string DirectoryEntryBook = "Book";
-
-        private readonly byte[] _bytes;
-
-        internal XlsWorkbook(Stream stream, Encoding fallbackEncoding)
+        internal XlsWorkbook(Stream stream, string password, Encoding fallbackEncoding)
         {
-            var probe = new byte[8];
-            stream.Read(probe, 0, probe.Length);
-            stream.Seek(0, SeekOrigin.Begin);
+            Stream = stream;
 
-            if (IsCompoundDocument(probe))
+            using (var biffStream = new XlsBiffStream(stream, 0, 0, password))
             {
-                _bytes = ReadCompoundDocument(stream);
-            }
-            else if (IsRawBiffStream(probe))
-            {
-                _bytes = ReadWorksheetDocument(stream);
-            }
-            else
-            {
-                throw new HeaderException(Errors.ErrorHeaderSignature);
-            }
+                if (biffStream.BiffVersion == 0)
+                    throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
 
-            var biffStream = new XlsBiffStream(_bytes);
+                BiffVersion = biffStream.BiffVersion;
+                SecretKey = biffStream.SecretKey;
+                Encryption = biffStream.Encryption;
+                Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
 
-            if (biffStream.BiffVersion == 0)
-                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
-
-            BiffVersion = biffStream.BiffVersion;
-            Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
-
-            if (biffStream.BiffType == BIFFTYPE.WorkbookGlobals)
-            {
-                ReadWorkbookGlobals(biffStream);
-            }
-            else if (biffStream.BiffType == BIFFTYPE.Worksheet)
-            {
-                // set up 'virtual' bound sheet pointing at this
-                Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
-            }
-            else
-            {
-                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+                if (biffStream.BiffType == BIFFTYPE.WorkbookGlobals)
+                {
+                    ReadWorkbookGlobals(biffStream);
+                }
+                else if (biffStream.BiffType == BIFFTYPE.Worksheet)
+                {
+                    // set up 'virtual' bound sheet pointing at this
+                    Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
+                }
+                else
+                {
+                    throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+                }
             }
         }
 
+        public Stream Stream { get; }
+
         public int BiffVersion { get; }
+
+        public byte[] SecretKey { get; }
+
+        public EncryptionInfo Encryption { get; }
 
         public Encoding Encoding { get; private set; }
 
@@ -97,11 +87,6 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public int ResultsCount => Sheets?.Count ?? -1;
 
-        public static bool IsCompoundDocument(byte[] probe)
-        {
-            return BitConverter.ToUInt64(probe, 0) == 0xE11AB1A1E011CFD0;
-        }
-
         public static bool IsRawBiffStream(byte[] bytes)
         {
             if (bytes.Length < 8)
@@ -134,7 +119,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         return false;*/
                     return true;
                 case 0x0809: // BIFF5/BIFF8
-                    if (size != 8 || size != 16)
+                    if (size != 8 && size != 16)
                         return false;
                     if (bofVersion != 0x0500 && bofVersion != 0x600)
                         return false;
@@ -154,38 +139,12 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             for (var i = 0; i < Sheets.Count; ++i)
             {
-                yield return new XlsWorksheet(this, Sheets[i], _bytes);
+                yield return new XlsWorksheet(this, Sheets[i], Stream);
             }
-        }
-
-        private byte[] ReadCompoundDocument(Stream stream)
-        {
-            var document = new XlsDocument(stream);
-            XlsDirectoryEntry workbookEntry = document.FindEntry(DirectoryEntryWorkbook) ?? document.FindEntry(DirectoryEntryBook);
-
-            if (workbookEntry == null)
-            {
-                throw new ExcelReaderException(Errors.ErrorStreamWorkbookNotFound);
-            }
-
-            if (workbookEntry.EntryType != STGTY.STGTY_STREAM)
-            {
-                throw new ExcelReaderException(Errors.ErrorWorkbookIsNotStream);
-            }
-
-            return document.ReadStream(stream, workbookEntry.StreamFirstSector, (int)workbookEntry.StreamSize, workbookEntry.IsEntryMiniStream);
-        }
-
-        private byte[] ReadWorksheetDocument(Stream stream)
-        {
-            var result = new byte[stream.Length];
-            stream.Read(result, 0, (int)stream.Length);
-            return result;
         }
 
         private void ReadWorkbookGlobals(XlsBiffStream biffStream)
         {
-            bool sst = false;
             XlsBiffRecord rec;
             while ((rec = biffStream.Read()) != null)
             {
@@ -241,17 +200,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                         break;
                     case BIFFRECORDTYPE.SST:
                         SST = (XlsBiffSST)rec;
-                        sst = true;
+                        SST.ReadStrings(biffStream);
                         break;
                     case BIFFRECORDTYPE.CONTINUE:
-                        if (!sst)
-                            break;
-                        XlsBiffContinue contSST = (XlsBiffContinue)rec;
-                        SST.Append(contSST);
                         break;
                     case BIFFRECORDTYPE.EXTSST:
                         ExtSST = rec;
-                        sst = false;
                         break;
                     case BIFFRECORDTYPE.PASSWORD:
                         break;
@@ -263,11 +217,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                         IsDate1904 = ((XlsBiffSimpleValueRecord)rec).Value == 1;
                         break;
                     case BIFFRECORDTYPE.EOF:
-                        SST?.ReadStrings();
                         return;
-
                     default:
-                        continue;
+                        break;
                 }
             }
         }

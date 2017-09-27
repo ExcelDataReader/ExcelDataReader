@@ -14,5 +14,8 @@ namespace ExcelDataReader
         public const string ErrorBiffIlegalAfter = "BIFF Stream error: Moving after stream end.";
 
         public const string ErrorDirectoryEntryArray = "Directory Entry error: Array is too small.";
+        public const string ErrorCompoundNoOpenXml = "Detected compound document, but not a valid OpenXml file.";
+        public const string ErrorZipNoOpenXml = "Detected ZIP file, but but not a valid OpenXml file.";
+        public const string ErrorInvalidPassword = "Invalid password.";
     }
 }

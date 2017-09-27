@@ -1,9 +1,10 @@
 ﻿using System;
-#if !NETCOREAPP1_0
+#if NET20 || NET45 || NETCOREAPP2_0
 using System.Data;
 #endif
 using System.IO;
 using ExcelDataReader.Exceptions;
+using ExcelDataReader.Tests;
 
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
@@ -11,8 +12,17 @@ using TestCleanup = NUnit.Framework.TearDownAttribute;
 using TestInitialize = NUnit.Framework.SetUpAttribute;
 using TestMethod = NUnit.Framework.TestAttribute;
 
-// ReSharper disable InconsistentNaming
-namespace ExcelDataReader.Tests
+#if EXCELDATAREADER_NET20
+namespace ExcelDataReader.Net20.Tests
+#elif NET45
+namespace ExcelDataReader.Net45.Tests
+#elif NETCOREAPP1_0
+namespace ExcelDataReader.Netstandard13.Tests
+#elif NETCOREAPP2_0
+namespace ExcelDataReader.Netstandard20.Tests
+#else
+#error "Tests do not support the selected target platform"
+#endif
 {
     [TestClass]
 
@@ -21,7 +31,7 @@ namespace ExcelDataReader.Tests
         [OneTimeSetUp]
         public void TestInitialize()
         {
-#if NETCOREAPP1_0
+#if NETCOREAPP1_0 || NETCOREAPP2_0
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 #endif
         }
@@ -1337,6 +1347,173 @@ namespace ExcelDataReader.Tests
                 var text = reader.GetString(0);
                 Assert.AreEqual("Lorem ipsum dolor sit amet, ei pri verterem efficiantur, per id meis idque deterruisset.", text);
             }
+        }
+
+        [TestMethod]
+        public void GitIssue_242_Password()
+        {
+            // BIFF8 standard encryption cryptoapi rc4+sha 
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(
+                Configuration.GetTestWorkbook("Test_git_issue_242_std_rc4_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+
+            // Pre-BIFF8 xor obfuscation
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(
+                Configuration.GetTestWorkbook("Test_git_issue_242_xor_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+        }
+
+        [TestMethod]
+        public void BinaryThrowsInvalidPassword()
+        {
+            Assert.Throws<InvalidPasswordException>(() =>
+            {
+                using (var reader = ExcelReaderFactory.CreateBinaryReader(
+                    Configuration.GetTestWorkbook("Test_git_issue_242_xor_pwd_password"),
+                    new ExcelReaderConfiguration() { Password = "wrongpassword" }))
+                {
+                    reader.Read();
+                }
+            });
+        }
+
+        [TestMethod]
+        public void GitIssue_263()
+        {
+            using (var reader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("Test_git_issue_263")))
+            {
+                var ds = reader.AsDataSet();
+                Assert.AreEqual("Economic Inactivity by age\n(Official statistics: not designated as National Statistics)", ds.Tables[1].Rows[3][0]);
+            }
+        }
+
+        [TestMethod]
+        public void BinaryRowHeight()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("CollapsedHide")))
+            {
+                // Verify the row heights are set when expected, and converted to points from twips
+                reader.Read();
+                Assert.Greater(reader.RowHeight, 0); 
+                Assert.Less(reader.RowHeight, 20);
+
+                reader.Read();
+                Assert.Greater(reader.RowHeight, 0);
+                Assert.Less(reader.RowHeight, 20);
+
+                reader.Read();
+                Assert.Greater(reader.RowHeight, 0);
+                Assert.Less(reader.RowHeight, 20);
+
+                reader.Read();
+                Assert.AreEqual(0, reader.RowHeight);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_270_EmptyRowsAtTheEnd()
+        {
+            // AsDataSet() trims trailing blank rows
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_270")))
+            {
+                var dataset = reader.AsDataSet();
+                Assert.AreEqual(1, dataset.Tables[0].Rows.Count);
+            }
+
+            // Reader methods do not trim trailing blank rows
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_270")))
+            {
+                var rowCount = 0;
+                while (reader.Read())
+                    rowCount++;
+                Assert.AreEqual(65536, rowCount);
+            }
+        }
+
+        static bool IsEmptyOrHiddenRow(IExcelDataReader reader)
+        {
+            if (reader.RowHeight == 0)
+                return true;
+
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                if (reader.GetValue(i) != null)
+                    return false;
+            }
+
+            return true;
+        }
+
+        static bool IsEmptyRow(IExcelDataReader reader)
+        {
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                if (reader.GetValue(i) != null)
+                    return false;
+            }
+
+            return true;
+        }
+
+        [TestMethod]
+        public void GitIssue_160_FilterRow()
+        {
+            // Check there are four rows with data, including empty and hidden rows
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("CollapsedHide")))
+            {
+                var dataset = reader.AsDataSet();
+
+                Assert.AreEqual(4, dataset.Tables[0].Rows.Count);
+            }
+
+            // Check there are two rows with content
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("CollapsedHide")))
+            {
+                var dataset = reader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+                    {
+                        FilterRow = rowReader => !IsEmptyRow(rowReader)
+                    }
+                });
+
+                Assert.AreEqual(2, dataset.Tables[0].Rows.Count);
+            }
+
+            // Check there is one visible row with content
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("CollapsedHide")))
+            {
+                var dataset = reader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+                    {
+                        FilterRow = rowReader => !IsEmptyOrHiddenRow(rowReader)
+                    }
+                });
+
+                Assert.AreEqual(1, dataset.Tables[0].Rows.Count);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_265_BinaryDisposed()
+        {
+            var stream = Configuration.GetTestWorkbook("Test10x10");
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(stream))
+            {
+                var result = excelReader.AsDataSet();
+            }
+
+            Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+            
         }
     }
 }

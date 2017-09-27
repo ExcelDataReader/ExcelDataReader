@@ -36,11 +36,6 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Gets the length of string value
-        /// </summary>
-        public ushort Length => _xlsString.CharacterCount;
-
-        /// <summary>
         /// Gets the cell value.
         /// </summary>
         public string GetValue(Encoding encoding)

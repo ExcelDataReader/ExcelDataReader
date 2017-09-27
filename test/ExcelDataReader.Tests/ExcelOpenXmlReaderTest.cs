@@ -1,14 +1,9 @@
 using System;
 using System.Globalization;
-#if !NETCOREAPP1_0
+#if NET20 || NET45 || NETCOREAPP2_0
 using System.Data;
 #endif
-#if !NET20
-using System.IO;
-#endif
-#if NET20 || NET45
-using System.Threading;
-#endif
+using ExcelDataReader.Tests;
 
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
@@ -16,8 +11,17 @@ using TestCleanup = NUnit.Framework.TearDownAttribute;
 using TestInitialize = NUnit.Framework.SetUpAttribute;
 using TestMethod = NUnit.Framework.TestAttribute;
 
-// ReSharper disable InconsistentNaming
-namespace ExcelDataReader.Tests
+#if EXCELDATAREADER_NET20
+namespace ExcelDataReader.Net20.Tests
+#elif NET45
+namespace ExcelDataReader.Net45.Tests
+#elif NETCOREAPP1_0
+namespace ExcelDataReader.Netstandard13.Tests
+#elif NETCOREAPP2_0
+namespace ExcelDataReader.Netstandard20.Tests
+#else
+#error "Tests do not support the selected target platform"
+#endif
 {
     [TestClass]
     public class ExcelOpenXmlReaderTest
@@ -25,7 +29,9 @@ namespace ExcelDataReader.Tests
         [TestInitialize]
         public void TestInitialize()
         {
-            // Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE", false);
+#if NETCOREAPP1_0 || NETCOREAPP2_0
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+#endif
         }
 
         [TestMethod]
@@ -284,11 +290,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Fail_Test()
         {
-#if NET20 || EXCELDATAREADER_NET20
-            var expectedException = typeof(ICSharpCode.SharpZipLib.Zip.ZipException);
-#else
-            var expectedException = typeof(InvalidDataException);
-#endif
+            var expectedException = typeof(Exceptions.HeaderException);
 
             var exception = Assert.Throws(expectedException, () =>
                 {
@@ -297,11 +299,7 @@ namespace ExcelDataReader.Tests
                     }
                 });
 
-#if NET20 || EXCELDATAREADER_NET20
-            Assert.AreEqual("Cannot find central directory", exception.Message);
-#else
-            Assert.AreEqual("End of Central Directory record could not be found.", exception.Message);
-#endif
+            Assert.AreEqual("Invalid file signature.", exception.Message);
         }
 
         [TestMethod]
@@ -770,8 +768,11 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Issue_11773_Exponential_Commas()
         {
-#if NET20 || NET45
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE", false);
+#if NETCOREAPP1_0
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+#else
+            System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE", false);
+#endif
 
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Issue_11773_Exponential")))
             {
@@ -779,7 +780,6 @@ namespace ExcelDataReader.Tests
 
                 Assert.AreEqual(2566.37168141593D, double.Parse(dataset.Tables[0].Rows[0][6].ToString()));
             }
-#endif
         }
 
         [TestMethod]
@@ -803,7 +803,7 @@ namespace ExcelDataReader.Tests
                 var dataset = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
                 Assert.AreEqual(7, dataset.Tables[0].Columns.Count); // 6 with data + 1 that is present but no data in it
-                Assert.AreEqual(19, dataset.Tables[0].Rows.Count);
+                Assert.AreEqual(0, dataset.Tables[0].Rows.Count);
             }
         }
 
@@ -862,7 +862,7 @@ namespace ExcelDataReader.Tests
 
                 Assert.IsTrue(result.Tables.Count > 0);
                 Assert.AreEqual(39, result.Tables[0].Rows.Count);
-                Assert.AreEqual(27, result.Tables[0].Columns.Count);
+                Assert.AreEqual(18, result.Tables[0].Columns.Count);
                 Assert.AreEqual("ROW NUMBER 5", result.Tables[0].Rows[4][4].ToString());
 
                 excelReader.Close();
@@ -1051,6 +1051,244 @@ namespace ExcelDataReader.Tests
                 reader.Read();
                 var text = reader.GetString(0);
                 Assert.AreEqual("Lorem ipsum dolor sit amet, ei pri verterem efficiantur, per id meis idque deterruisset.", text);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_242_StandardEncryption()
+        {
+            // OpenXml standard encryption aes128+sha1
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                Configuration.GetTestWorkbook("standard_AES128_SHA1_ECB_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+
+            // OpenXml standard encryption aes192+sha1
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                Configuration.GetTestWorkbook("standard_AES192_SHA1_ECB_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+
+            // OpenXml standard encryption aes256+sha1
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                Configuration.GetTestWorkbook("standard_AES256_SHA1_ECB_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_242_AgileEncryption()
+        {
+            // OpenXml agile encryption aes128+md5+cbc
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                Configuration.GetTestWorkbook("agile_AES128_MD5_CBC_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+
+            // OpenXml agile encryption aes128+sha1+cbc
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                Configuration.GetTestWorkbook("agile_AES128_SHA1_CBC_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+
+            // OpenXml agile encryption aes128+sha384+cbc
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                Configuration.GetTestWorkbook("agile_AES128_SHA384_CBC_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+
+            // OpenXml agile encryption aes128+sha512+cbc
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                Configuration.GetTestWorkbook("agile_AES128_SHA512_CBC_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+
+            // OpenXml agile encryption aes192+sha512+cbc
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                Configuration.GetTestWorkbook("agile_AES192_SHA512_CBC_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+
+            // OpenXml agile encryption aes256+sha512+cbc
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                Configuration.GetTestWorkbook("agile_AES256_SHA512_CBC_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+
+            // OpenXml agile encryption 3des+sha384+cbc
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                Configuration.GetTestWorkbook("agile_DESede_SHA384_CBC_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+
+            // The following encryptions do not exist on netstandard1.3
+#if NET20 || NET45 || NETCOREAPP2_0
+            // OpenXml agile encryption des+md5+cbc
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                Configuration.GetTestWorkbook("agile_DES_MD5_CBC_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+
+            // OpenXml agile encryption rc2+sha1+cbc
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                Configuration.GetTestWorkbook("agile_RC2_SHA1_CBC_pwd_password"),
+                new ExcelReaderConfiguration() { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual("Password: password", reader.GetString(0));
+            }
+#endif
+        }
+
+        [TestMethod]
+        public void OpenXmlThrowsInvalidPassword()
+        {
+            Assert.Throws<Exceptions.InvalidPasswordException>(() =>
+            {
+                using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                    Configuration.GetTestWorkbook("agile_AES128_MD5_CBC_pwd_password"),
+                    new ExcelReaderConfiguration() { Password = "wrongpassword" }))
+                {
+                    reader.Read();
+                }
+            });
+        }
+
+        [TestMethod]
+        public void OpenXmlThrowsEmptyZipfile()
+        {
+            Assert.Throws<Exceptions.HeaderException>(() =>
+            {
+                using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("EmptyZipFile")))
+                {
+                    reader.Read();
+                }
+            });
+        }
+
+        [TestMethod]
+        public void OpenXmlRowHeight()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xCollapsedHide")))
+            {
+                reader.Read();
+                Assert.Greater(reader.RowHeight, 0);
+
+                reader.Read();
+                Assert.Greater(reader.RowHeight, 0);
+
+                reader.Read();
+                Assert.Greater(reader.RowHeight, 0);
+
+                reader.Read();
+                Assert.AreEqual(reader.RowHeight, 0);
+           }
+        }
+
+        [TestMethod]
+        public void GitIssue_270_EmptyRowsAtTheEnd()
+        {
+            // AsDataSet() trims trailing blank rows
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_git_issue_270")))
+            {
+                var dataset = reader.AsDataSet();
+                Assert.AreEqual(1, dataset.Tables[0].Rows.Count);
+            }
+
+            // Reader methods do not trim trailing blank rows
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_git_issue_270")))
+            {
+                var rowCount = 0;
+                while (reader.Read())
+                    rowCount++;
+                Assert.AreEqual(65536, rowCount);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_265_OpenXmlDisposed()
+        {
+            // Verify the file stream is closed and disposed by the reader
+            { 
+                var stream = Configuration.GetTestWorkbook("xTest10x10");
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+            }
+
+            // Verify streams used by standard encryption are closed
+            {
+                var stream = Configuration.GetTestWorkbook("standard_AES128_SHA1_ECB_pwd_password");
+
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(
+                    stream,
+                    new ExcelReaderConfiguration() { Password = "password" }))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+            }
+
+            // Verify streams used by agile encryption are closed
+            {
+                var stream = Configuration.GetTestWorkbook("agile_AES128_MD5_CBC_pwd_password");
+
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(
+                    stream,
+                    new ExcelReaderConfiguration() { Password = "password" }))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_271_InvalidDimension()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_271_InvalidDimension")))
+            {
+                var dataset = excelReader.AsDataSet();
+                Assert.AreEqual(3, dataset.Tables[0].Columns.Count);
+                Assert.AreEqual(9, dataset.Tables[0].Rows.Count);
             }
         }
     }

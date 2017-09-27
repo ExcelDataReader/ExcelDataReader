@@ -25,10 +25,6 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public bool IsMultiByte => (_bytes[_offset + 2] & 0x01) != 0;
 
-        public uint HeadSize => throw new NotImplementedException();
-
-        public uint TailSize => throw new NotImplementedException();
-
         public string GetValue(Encoding encoding)
         {
             if (IsMultiByte)

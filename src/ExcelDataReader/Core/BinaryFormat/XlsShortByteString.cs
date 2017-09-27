@@ -19,12 +19,6 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public ushort CharacterCount => _bytes[_offset];
 
-        public bool IsMultiByte => false;
-
-        public uint HeadSize => throw new NotImplementedException();
-
-        public uint TailSize => throw new NotImplementedException();
-
         public string GetValue(Encoding encoding)
         {
             // Supposedly this is never multibyte, but technically could be

@@ -3,9 +3,9 @@
   <PropertyGroup>
     <Description>Lightweight and fast library written in C# for reading Microsoft Excel files (2.0-2007).</Description>
     <AssemblyTitle>ExcelDataReader</AssemblyTitle>
-    <VersionPrefix>3.1.0</VersionPrefix>
+    <VersionPrefix>3.2.0</VersionPrefix>
     <Authors>ExcelDataReader developers</Authors>
-    <TargetFrameworks>net20;net45;netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>net20;net45;netstandard1.3;netstandard2.0</TargetFrameworks>
     <AssemblyName>ExcelDataReader</AssemblyName>
     <AssemblyOriginatorKeyFile>..\ExcelDataReader.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
@@ -14,7 +14,6 @@
     <PackageTags>excel;xls;xlsx</PackageTags>
     <PackageIconUrl>https://nugetgallery.blob.core.windows.net/icons/ExcelDataReader.2.1.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/ExcelDataReader/ExcelDataReader</PackageProjectUrl>
-    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -52,6 +51,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta001" PrivateAssets="All" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta004" PrivateAssets="All" />
   </ItemGroup>
 </Project>

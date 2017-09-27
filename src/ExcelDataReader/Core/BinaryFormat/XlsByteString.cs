@@ -22,12 +22,6 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// </summary>
         public ushort CharacterCount => BitConverter.ToUInt16(_bytes, (int)_offset);
 
-        public uint HeadSize => 0;
-
-        public uint TailSize => 0;
-
-        public bool IsMultiByte => false;
-
         /// <summary>
         /// Gets the value.
         /// </summary>

@@ -1,44 +1,46 @@
 using System;
+using ExcelDataReader.Core.OfficeCrypto;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents FILEPASS record
+    /// Represents FILEPASS record containing XOR obfuscation details or a an EncryptionInfo structure
     /// </summary>
     internal class XlsBiffFilePass : XlsBiffRecord
     {
-        internal XlsBiffFilePass(byte[] bytes, uint offset)
+        internal XlsBiffFilePass(byte[] bytes, uint offset, int biffVersion)
             : base(bytes, offset)
         {
-            ushort type = ReadUInt16(0);
-            switch (type)
+            if (biffVersion >= 2 && biffVersion <= 5)
             {
-                case 0:
-                    throw new NotSupportedException("XOR obfuscation is not supported.");
-                case 1:
-                    break;
-                default:
-                    throw new NotSupportedException("Unknown encryption type: " + type);
+                // Cipher = EncryptionType.XOR;
+                var encryptionKey = ReadUInt16(0);
+                var hashValue = ReadUInt16(2);
+                EncryptionInfo = EncryptionInfo.Create(encryptionKey, hashValue);
             }
-
-            ushort rc4Type = ReadUInt16(2);
-            switch (rc4Type)
+            else
             {
-                case 1:
-                    break;
-                case 2:
-                case 3:
-                    throw new NotSupportedException("CryptAPI is not supported.");
-                default:
-                    throw new NotSupportedException("Unknown RC4 encryption type: " + rc4Type);
+                ushort type = ReadUInt16(0);
+
+                if (type == 0)
+                {
+                    var encryptionKey = ReadUInt16(2);
+                    var hashValue = ReadUInt16(4);
+                    EncryptionInfo = EncryptionInfo.Create(encryptionKey, hashValue);
+                }
+                else if (type == 1)
+                {
+                    var encryptionInfo = new byte[bytes.Length - 6]; // 6 = 4 + 2 = biffVersion header + filepass enryptiontype
+                    Array.Copy(bytes, 6, encryptionInfo, 0, bytes.Length - 6);
+                    EncryptionInfo = EncryptionInfo.Create(encryptionInfo);
+                }
+                else
+                {
+                    throw new NotSupportedException("Unknown encryption type: " + type);
+                }
             }
         }
 
-        public byte[] Salt => ReadArray(6, 16);
-
-        // Encryption info starts at byte 6.
-        // If standard encryption:
-        //   Two first bytes is 0x0001:  RC4 encryption header structure
-        //   Two first bytes is 0x0002, 0x0003 or 0x0004: RC4 CryptoAPI encryption header structure
+        public EncryptionInfo EncryptionInfo { get; }
     }
 }

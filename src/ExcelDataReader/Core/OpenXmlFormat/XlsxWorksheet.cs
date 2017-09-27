@@ -36,6 +36,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string NEvenFooter = "evenFooter";
 
         private const string NSheetProperties = "sheetPr";
+        private const string NSheetFormatProperties = "sheetFormatPr";
+        private const string ADefaultRowHeight = "defaultRowHeight";
+        private const string AHidden = "hidden";
+        private const string ACustomHeight = "customHeight";
+        private const string AHt = "ht";
 
         public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, XlsxBoundSheet refSheet)
         {
@@ -47,17 +52,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             Rid = refSheet.Rid;
             VisibleState = refSheet.VisibleState;
             Path = refSheet.Path;
+            DefaultRowHeight = 12.75; // 255 twips
 
             ReadWorksheetGlobals();
         }
 
-        public XlsxDimension Dimension { get; set; }
-
-        public int ColumnsCount => Dimension?.LastCol ?? 0;
-
-        public int FieldCount => ColumnsCount;
-
-        public int RowsCount => Dimension == null ? -1 : Dimension.LastRow - Dimension.FirstRow + 1;
+        public int FieldCount { get; private set; }
 
         public string Name { get; }
 
@@ -66,6 +66,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         public string VisibleState { get; }
 
         public HeaderFooter HeaderFooter { get; private set; }
+
+        public double DefaultRowHeight { get; private set; }
 
         public int Id { get; }
 
@@ -77,35 +79,27 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         private XlsxWorkbook Workbook { get; }
 
-        public IEnumerable<object[]> ReadRows()
+        public IEnumerable<Row> ReadRows()
         {
-            if (Dimension == null)
-            {
-                yield break;
-            }
-
-            var rowIndex = 1;
+            var rowIndex = 0;
             foreach (var sheetObject in ReadWorksheetStream(false))
             {
                 if (sheetObject.Type == XlsxElementType.Row)
                 {
-                    var rowBlock = (XlsxRow)sheetObject;
+                    var rowBlock = ((XlsxRow)sheetObject).Row;
 
                     for (; rowIndex < rowBlock.RowIndex; ++rowIndex)
                     {
-                        yield return new object[FieldCount];
+                        yield return new Row()
+                        {
+                            RowIndex = rowIndex,
+                            Height = DefaultRowHeight,
+                            Cells = new List<Cell>()
+                        };
                     }
 
                     rowIndex++;
-                    var result = new object[FieldCount];
-                    foreach (var cell in rowBlock.Cells)
-                    {
-                        var columnIndex = cell.ColumnIndex - 1; // from 1 to 0-based
-                        if (columnIndex < result.Length)
-                            result[columnIndex] = cell.Value;
-                    }
-
-                    yield return result;
+                    yield return rowBlock;
                 }
             }
         }
@@ -120,7 +114,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 switch (sheetObject.Type)
                 {
                     case XlsxElementType.Dimension:
-                        Dimension = (XlsxDimension)sheetObject;
+                        // Ignore dimensions
                         break;
                     case XlsxElementType.HeaderFooter:
                         XlsxHeaderFooter headerFooter = (XlsxHeaderFooter)sheetObject;
@@ -129,29 +123,29 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 }
             }
             
-            if (Dimension == null)
+            int rows = int.MinValue;
+            int cols = int.MinValue;
+            foreach (var sheetObject in ReadWorksheetStream(false))
             {
-                int rows = int.MinValue;
-                int cols = int.MinValue;
-                foreach (var sheetObject in ReadWorksheetStream(false))
+                if (sheetObject.Type == XlsxElementType.Row)
                 {
-                    if (sheetObject.Type == XlsxElementType.Row)
-                    {
-                        var rowBlock = (XlsxRow)sheetObject;
-                        rows = Math.Max(rows, rowBlock.RowIndex);
-                        cols = Math.Max(cols, rowBlock.GetMaxColumnIndex());
-                    }
+                    var rowBlock = ((XlsxRow)sheetObject).Row;
+                    rows = Math.Max(rows, rowBlock.RowIndex);
+                    cols = Math.Max(cols, rowBlock.GetMaxColumnIndex());
                 }
+            }
 
-                if (rows != int.MinValue && cols != int.MinValue)
-                {
-                    Dimension = new XlsxDimension(rows, cols);
-                }
+            if (rows != int.MinValue && cols != int.MinValue)
+            {
+                FieldCount = cols + 1;
             }
         }
 
         private IEnumerable<XlsxElement> ReadWorksheetStream(bool skipSheetData)
         {
+            if (string.IsNullOrEmpty(Path))
+                yield break;
+
             using (var sheetStream = Document.GetWorksheetStream(Path))
             {
                 if (sheetStream == null)
@@ -217,6 +211,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
                     xmlReader.Skip();
                 }
+                else if (xmlReader.IsStartElement(NSheetFormatProperties, NsSpreadsheetMl))
+                {
+                    if (double.TryParse(xmlReader.GetAttribute(ADefaultRowHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out var defaultRowHeight))
+                        DefaultRowHeight = defaultRowHeight;
+
+                    xmlReader.Skip();
+                }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {
                     break;
@@ -248,14 +249,17 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 yield break;
             }
 
-            int nextRowIndex = 1;
+            int nextRowIndex = 0;
             while (!xmlReader.EOF)
             {
                 if (xmlReader.IsStartElement(NRow, NsSpreadsheetMl))
                 {
                     var row = ReadRow(xmlReader, nextRowIndex);
                     nextRowIndex = row.RowIndex + 1;
-                    yield return row;
+                    yield return new XlsxRow()
+                    {
+                        Row = row
+                    };
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {
@@ -311,21 +315,31 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             return new XlsxHeaderFooter(headerFooter);
         }
 
-        private XlsxRow ReadRow(XmlReader xmlReader, int nextRowIndex)
+        private Row ReadRow(XmlReader xmlReader, int nextRowIndex)
         {
-            var result = new XlsxRow();
+            var result = new Row()
+            {
+                Cells = new List<Cell>()
+            };
 
             if (int.TryParse(xmlReader.GetAttribute(AR), out int rowIndex))
-                result.RowIndex = rowIndex;
+                result.RowIndex = rowIndex - 1; // The row attribute is 1-based
             else
                 result.RowIndex = nextRowIndex;
+
+            int.TryParse(xmlReader.GetAttribute(AHidden), out int hidden);
+            int.TryParse(xmlReader.GetAttribute(ACustomHeight), out int customHeight);
+            double.TryParse(xmlReader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var height);
+
+            if (hidden == 0)
+                result.Height = customHeight != 0 ? height : DefaultRowHeight;
 
             if (!XmlReaderHelper.ReadFirstContent(xmlReader))
             {
                 return result;
             }
 
-            int nextColumnIndex = 1;
+            int nextColumnIndex = 0;
             while (!xmlReader.EOF)
             {
                 if (xmlReader.IsStartElement(NC, NsSpreadsheetMl))
@@ -343,16 +357,16 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             return result;
         }
 
-        private XlsxCell ReadCell(XmlReader xmlReader, int nextColumnIndex)
+        private Cell ReadCell(XmlReader xmlReader, int nextColumnIndex)
         {
-            var result = new XlsxCell();
+            var result = new Cell();
 
             var aS = xmlReader.GetAttribute(AS);
             var aT = xmlReader.GetAttribute(AT);
             var aR = xmlReader.GetAttribute(AR);
 
             if (ReferenceHelper.ParseReference(aR, out int referenceColumn, out int referenceRow))
-                result.ColumnIndex = referenceColumn;
+                result.ColumnIndex = referenceColumn - 1; // ParseReference is 1-based
             else
                 result.ColumnIndex = nextColumnIndex;
 
@@ -416,22 +430,39 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             switch (aT)
             {
                 case AS: //// if string
-                    return Helpers.ConvertEscapeChars(Workbook.SST[int.Parse(rawValue, invariantCulture)]);
+                    if (int.TryParse(rawValue, style, invariantCulture, out var sstIndex))
+                    {
+                        if (sstIndex >= 0 && sstIndex < Workbook.SST.Count)
+                        {
+                            return Helpers.ConvertEscapeChars(Workbook.SST[sstIndex]);
+                        }
+                    }
+
+                    return rawValue;
                 case NInlineStr: //// if string inline
                 case NStr: //// if cached formula string
                     return Helpers.ConvertEscapeChars(rawValue);
                 case "b": //// boolean
                     return rawValue == "1";
                 case "d": //// ISO 8601 date
-                    return DateTime.ParseExact(rawValue, "yyyy-MM-dd", invariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite);
+                    if (DateTime.TryParseExact(rawValue, "yyyy-MM-dd", invariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date))
+                        return date;
+
+                    return rawValue;
                 default:
                     bool isNumber = double.TryParse(rawValue, style, invariantCulture, out double number);
 
                     if (aS != null)
                     {
-                        XlsxXf xf = Workbook.Styles.CellXfs[int.Parse(aS)];
-                        if (isNumber && Workbook.IsDateTimeStyle(xf.NumFmtId))
-                            return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
+                        if (int.TryParse(aS, style, invariantCulture, out var styleIndex))
+                        {
+                            if (styleIndex >= 0 && styleIndex < Workbook.Styles.CellXfs.Count)
+                            {
+                                XlsxXf xf = Workbook.Styles.CellXfs[styleIndex];
+                                if (isNumber && Workbook.IsDateTimeStyle(xf.NumFmtId))
+                                    return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
+                            }
+                        }
 
                         // NOTE: Commented out to match behavior of the binary reader; 
                         // formatting should ultimately be applied by the caller

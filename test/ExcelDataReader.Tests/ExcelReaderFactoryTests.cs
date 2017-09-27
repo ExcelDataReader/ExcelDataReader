@@ -1,11 +1,22 @@
 using System;
+using ExcelDataReader.Tests;
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
 using TestCleanup = NUnit.Framework.TearDownAttribute;
 using TestInitialize = NUnit.Framework.SetUpAttribute;
 using TestMethod = NUnit.Framework.TestAttribute;
 
-namespace ExcelDataReader.Tests
+#if EXCELDATAREADER_NET20
+namespace ExcelDataReader.Net20.Tests
+#elif NET45
+namespace ExcelDataReader.Net45.Tests
+#elif NETCOREAPP1_0
+namespace ExcelDataReader.Netstandard13.Tests
+#elif NETCOREAPP2_0
+namespace ExcelDataReader.Netstandard20.Tests
+#else
+#error "Tests do not support the selected target platform"
+#endif
 {
     [TestClass]
     public class ExcelReaderFactoryTests

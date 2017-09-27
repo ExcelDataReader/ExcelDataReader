@@ -57,7 +57,7 @@ namespace ExcelDataReader.Core
         public Stream GetWorkbookStream()
         {
             var zipEntry = _zipFile.GetEntry(string.Format(FileWorkbook, Format));
-            return zipEntry.Open();
+            return zipEntry?.Open();
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace ExcelDataReader.Core
         public Stream GetWorksheetStream(int sheetId)
         {
             var zipEntry = _zipFile.GetEntry(string.Format(FileSheet, sheetId, Format));
-            return zipEntry.Open();
+            return zipEntry?.Open();
         }
 
         public Stream GetWorksheetStream(string sheetPath)
@@ -81,7 +81,7 @@ namespace ExcelDataReader.Core
                 sheetPath = "xl/" + sheetPath;
 
             var zipEntry = _zipFile.GetEntry(sheetPath);
-            return zipEntry.Open();
+            return zipEntry?.Open();
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace ExcelDataReader.Core
         public Stream GetWorkbookRelsStream()
         {
             var zipEntry = _zipFile.GetEntry(string.Format(FileRels, Format));
-            return zipEntry.Open();
+            return zipEntry?.Open();
         }
     }
 

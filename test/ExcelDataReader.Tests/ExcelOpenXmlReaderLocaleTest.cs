@@ -1,4 +1,4 @@
-﻿#if NET20 || NET45
+﻿#if NET20 || NET45 || NETCOREAPP2_0
 using System.Data;
 using System.Globalization;
 using System.Threading;
@@ -49,9 +49,11 @@ namespace ExcelDataReader.Tests
         }
 
         [TestMethod]
-        [SetCulture("sv-SE")]
+        // [SetCulture("sv-SE")]
         public void CellFormat49()
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("sv-SE", false);
+
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Format49_@")))
             {
                 DataSet result = excelReader.AsDataSet();

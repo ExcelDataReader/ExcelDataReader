@@ -1,30 +1,6 @@
 // ReSharper disable InconsistentNaming
 namespace ExcelDataReader.Core.BinaryFormat
 {
-    internal enum STGTY : byte
-    {
-        STGTY_INVALID = 0,
-        STGTY_STORAGE = 1,
-        STGTY_STREAM = 2,
-        STGTY_LOCKBYTES = 3,
-        STGTY_PROPERTY = 4,
-        STGTY_ROOT = 5
-    }
-
-    internal enum DECOLOR : byte
-    {
-        DE_RED = 0,
-        DE_BLACK = 1
-    }
-
-    internal enum FATMARKERS : uint
-    {
-        FAT_EndOfChain = 0xFFFFFFFE,
-        FAT_FreeSpace = 0xFFFFFFFF,
-        FAT_FatSector = 0xFFFFFFFD,
-        FAT_DifSector = 0xFFFFFFFC
-    }
-
     internal enum BIFFTYPE : ushort
     {
         WorkbookGlobals = 0x0005,
@@ -107,6 +83,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         GUTS = 0x0080,
         WSBOOL = 0x0081,
         GRIDSET = 0x0082,
+        DEFAULTROWHEIGHT_V2 = 0x0025,
         DEFAULTROWHEIGHT = 0x0225,
         HEADER = 0x0014,
         FOOTER = 0x0015,
@@ -117,6 +94,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         DIMENSIONS = 0x0200, // Size of area used for data
         DIMENSIONS_V2 = 0x0000, // BIFF2
 
+        ROW_V2 = 0x0008, // Row record
         ROW = 0x0208, // Row record
 
         WINDOW2 = 0x023E,

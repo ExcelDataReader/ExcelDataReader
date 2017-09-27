@@ -17,6 +17,6 @@ namespace ExcelDataReader.Core
 
         int FieldCount { get; }
 
-        IEnumerable<object[]> ReadRows();
+        IEnumerable<Row> ReadRows();
     }
 }

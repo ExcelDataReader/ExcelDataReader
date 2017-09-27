@@ -33,6 +33,11 @@ namespace ExcelDataReader
         int ResultsCount { get; }
 
         /// <summary>
+        /// Gets the height of the current row in points.
+        /// </summary>
+        double RowHeight { get; }
+
+        /// <summary>
         /// Seeks to the first result.
         /// </summary>
         void Reset();
