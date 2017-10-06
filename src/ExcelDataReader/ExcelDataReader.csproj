@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>Lightweight and fast library written in C# for reading Microsoft Excel files (2.0-2007).</Description>
     <AssemblyTitle>ExcelDataReader</AssemblyTitle>
-    <VersionPrefix>3.2.0</VersionPrefix>
+    <VersionPrefix>3.2.1</VersionPrefix>
     <Authors>ExcelDataReader developers</Authors>
     <TargetFrameworks>net20;net45;netstandard1.3;netstandard2.0</TargetFrameworks>
     <AssemblyName>ExcelDataReader</AssemblyName>
