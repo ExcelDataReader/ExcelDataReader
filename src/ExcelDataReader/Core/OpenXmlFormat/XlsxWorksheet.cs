@@ -109,20 +109,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             if (string.IsNullOrEmpty(Path))
                 return;
 
-            foreach (var sheetObject in ReadWorksheetStream(true))
-            {
-                switch (sheetObject.Type)
-                {
-                    case XlsxElementType.Dimension:
-                        // Ignore dimensions
-                        break;
-                    case XlsxElementType.HeaderFooter:
-                        XlsxHeaderFooter headerFooter = (XlsxHeaderFooter)sheetObject;
-                        HeaderFooter = headerFooter.Value;
-                        break;
-                }
-            }
-            
             int rows = int.MinValue;
             int cols = int.MinValue;
             foreach (var sheetObject in ReadWorksheetStream(false))
@@ -132,6 +118,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     var rowBlock = ((XlsxRow)sheetObject).Row;
                     rows = Math.Max(rows, rowBlock.RowIndex);
                     cols = Math.Max(cols, rowBlock.GetMaxColumnIndex());
+                }
+                else if (sheetObject.Type == XlsxElementType.HeaderFooter)
+                {
+                    XlsxHeaderFooter headerFooter = (XlsxHeaderFooter)sheetObject;
+                    HeaderFooter = headerFooter.Value;
                 }
             }
 
@@ -231,7 +222,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             xmlReader.Skip();
 
             if (!string.IsNullOrEmpty(dimValue))
-            { 
+            {
                 var dimension = new XlsxDimension(dimValue);
                 if (dimension.IsRange)
                 {
