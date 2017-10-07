@@ -7,7 +7,7 @@ namespace ExcelDataReader.Core.CsvFormat
 {
     internal class CsvWorksheet : IWorksheet
     {
-        const char Separator = ',';
+        private const char Separator = ',';
 
         public CsvWorksheet(Stream stream, Encoding fallbackEncoding)
         {
