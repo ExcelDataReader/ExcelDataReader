@@ -133,6 +133,17 @@ namespace ExcelDataReader
             }
         }
 
+        /// <summary>
+        /// Creates an instance of ExcelCsvReader
+        /// </summary>
+        /// <param name="fileStream">The file stream.</param>
+        /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>
+        /// <returns>The excel data reader.</returns>
+        public static IExcelDataReader CreateCsvReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
+        {
+            return new ExcelCsvReader(fileStream, configuration);
+        }
+
         private static bool TryGetWorkbook(Stream fileStream, CompoundDocument document, out Stream stream)
         {
             var workbookEntry = document.FindEntry(DirectoryEntryWorkbook) ?? document.FindEntry(DirectoryEntryBook);

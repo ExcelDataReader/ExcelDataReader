@@ -160,6 +160,23 @@ namespace ExcelDataReader.Tests
             { "Test_MergedCell_Binary", "Test_MergedCell.xls" },
             { "Test_MergedCell_OpenXml", "Test_MergedCell.xlsx" },
             { "Test_git_issue_301_IgnoreCase", "Test_git_issue_301_IgnoreCase.xlsx" },
+            { "comma_in_quotes.csv", "csv/comma_in_quotes.csv" },
+            { "empty.csv", "csv/empty.csv" },
+            { "empty_crlf.csv", "csv/empty_crlf.csv" },
+            { "escaped_quotes.csv", "csv/escaped_quotes.csv" },
+            { "json.csv", "csv/json.csv" },
+            { "newlines.csv", "csv/newlines.csv" },
+            { "newlines_crlf.csv", "csv/newlines_crlf.csv" },
+            { "quotes_and_newlines.csv", "csv/quotes_and_newlines.csv" },
+            { "simple.csv", "csv/simple.csv" },
+            { "simple_crlf.csv", "csv/simple_crlf.csv" },
+            { "simple_whitespace_null.csv", "csv/simple_whitespace_null.csv" },
+            { "cp1252.csv", "csv/cp1252.csv" },
+            { "utf8.csv", "csv/utf8.csv" },
+            { "utf8_bom.csv", "csv/utf8_bom.csv" },
+            { "utf16le_bom.csv", "csv/utf16le_bom.csv" },
+            { "utf16be_bom.csv", "csv/utf16be_bom.csv" },
+            { "MOCK_DATA.csv", "csv/MOCK_DATA.csv" },
         };
 
         public static Stream GetTestWorkbook(string key)
