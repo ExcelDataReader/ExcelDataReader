@@ -7,27 +7,31 @@ namespace ExcelDataReader.Core.CsvFormat
 {
     internal class CsvWorksheet : IWorksheet
     {
-        private const char Separator = ',';
-
         public CsvWorksheet(Stream stream, Encoding fallbackEncoding)
         {
+            var autodetectSeparators = new char[] { ',', ';', '\t', '|', '#' };
+
             Stream = stream;
             Stream.Seek(0, SeekOrigin.Begin);
             try
             {
                 // Try as UTF-8 first, or use BOM if present
-                var reader = new CsvReader(Stream, Separator, Encoding.UTF8);
-                FieldCount = ReadFieldCount(reader);
-                Encoding = reader.Encoding;
+                CsvAnalyzer.Analyze(Stream, autodetectSeparators, Encoding.UTF8, out var fieldCount, out var separator, out var encoding, out var bomLength);
+                FieldCount = fieldCount;
+                Encoding = encoding;
+                Separator = separator;
+                BomLength = bomLength;
             }
             catch (DecoderFallbackException)
             {
                 // If cannot parse as UTF-8, try fallback encoding
                 Stream.Seek(0, SeekOrigin.Begin);
 
-                var reader = new CsvReader(Stream, Separator, fallbackEncoding);
-                FieldCount = ReadFieldCount(reader);
-                Encoding = reader.Encoding;
+                CsvAnalyzer.Analyze(Stream, autodetectSeparators, fallbackEncoding, out var fieldCount, out var separator, out var encoding, out var bomLength);
+                FieldCount = fieldCount;
+                Encoding = encoding;
+                Separator = separator;
+                BomLength = bomLength;
             }
         }
 
@@ -45,21 +49,45 @@ namespace ExcelDataReader.Core.CsvFormat
 
         public Encoding Encoding { get; }
 
+        public char Separator { get; }
+
+        private int BomLength { get; set; }
+
         public IEnumerable<Row> ReadRows()
         {
-            Stream.Seek(0, SeekOrigin.Begin);
-
-            var reader = new CsvReader(Stream, Separator, Encoding);
-
+            var bufferSize = 1024;
+            var buffer = new byte[bufferSize];
             var rowIndex = 0;
-            while (true)
+            var csv = new CsvParser(Separator, Encoding);
+            var skipBomBytes = BomLength;
+
+            Stream.Seek(0, SeekOrigin.Begin);
+            while (Stream.Position < Stream.Length)
             {
-                var row = reader.ReadRow();
-                if (row == null)
+                var bytesRead = Stream.Read(buffer, 0, bufferSize);
+                csv.ParseBuffer(buffer, skipBomBytes, bytesRead - skipBomBytes, out var bufferRows);
+
+                skipBomBytes = 0; // Only skip bom on first iteration
+
+                foreach (var row in GetReaderRows(rowIndex, bufferRows))
                 {
-                    break;
+                    yield return row;
                 }
 
+                rowIndex += bufferRows.Count;
+            }
+
+            csv.Flush(out var flushRows);
+            foreach (var row in GetReaderRows(rowIndex, flushRows))
+            {
+                yield return row;
+            }
+        }
+
+        private IEnumerable<Row> GetReaderRows(int rowIndex, List<List<string>> rows)
+        {
+            foreach (var row in rows)
+            {
                 var columnIndex = 0;
 
                 var cells = new List<Cell>();
@@ -80,24 +108,9 @@ namespace ExcelDataReader.Core.CsvFormat
                     Cells = cells,
                     RowIndex = rowIndex
                 };
+
+                rowIndex++;
             }
-        }
-
-        private int ReadFieldCount(CsvReader reader)
-        {
-            var result = 0;
-            while (true)
-            {
-                var row = reader.ReadRow();
-                if (row == null)
-                {
-                    break;
-                }
-
-                result = Math.Max(result, row.Count);
-            }
-
-            return result;
         }
     }
 }
