@@ -70,7 +70,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public Dictionary<ushort, XlsBiffFormatString> Formats { get; } = new Dictionary<ushort, XlsBiffFormatString>();
 
-        public List<XlsBiffRecord> ExtendedFormats { get; } = new List<XlsBiffRecord>();
+        public List<XlsBiffXF> ExtendedFormats { get; } = new List<XlsBiffXF>();
 
         public List<XlsBiffRecord> Styles { get; } = new List<XlsBiffRecord>();
 
@@ -196,7 +196,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case BIFFRECORDTYPE.XF_V4:
                     case BIFFRECORDTYPE.XF_V3:
                     case BIFFRECORDTYPE.XF_V2:
-                        ExtendedFormats.Add(rec);
+                        ExtendedFormats.Add((XlsBiffXF)rec);
                         break;
                     case BIFFRECORDTYPE.SST:
                         SST = (XlsBiffSST)rec;

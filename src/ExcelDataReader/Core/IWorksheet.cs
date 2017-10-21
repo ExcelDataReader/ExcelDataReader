@@ -18,5 +18,7 @@ namespace ExcelDataReader.Core
         int FieldCount { get; }
 
         IEnumerable<Row> ReadRows();
+
+        string GetNumberFormatString(int index);
     }
 }

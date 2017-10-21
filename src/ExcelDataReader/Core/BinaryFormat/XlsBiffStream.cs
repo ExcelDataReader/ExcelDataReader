@@ -250,6 +250,11 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffHeaderFooterString(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.CODENAME:
                     return new XlsBiffCodeName(bytes, offset);
+                case BIFFRECORDTYPE.XF:
+                case BIFFRECORDTYPE.XF_V2:
+                case BIFFRECORDTYPE.XF_V3:
+                case BIFFRECORDTYPE.XF_V4:
+                    return new XlsBiffXF(bytes, offset);
 
                 default:
                     return new XlsBiffRecord(bytes, offset);

@@ -104,6 +104,17 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
+        public string GetNumberFormatString(int numberFormatIndex)
+        {
+            var numFmt = Workbook.Styles.NumFmts.Find(x => x.Id == numberFormatIndex);
+            if (numFmt != null)
+            { 
+                return numFmt.FormatCode;
+            }
+
+            return BuiltinNumberFormat.GetBuiltinNumberFormat(numberFormatIndex);
+        }
+
         private void ReadWorksheetGlobals()
         {
             if (string.IsNullOrEmpty(Path))
@@ -361,6 +372,18 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             else
                 result.ColumnIndex = nextColumnIndex;
 
+            if (aS != null)
+            {
+                if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
+                {
+                    if (styleIndex >= 0 && styleIndex < Workbook.Styles.CellXfs.Count)
+                    {
+                        XlsxXf xf = Workbook.Styles.CellXfs[styleIndex];
+                        result.NumberFormatIndex = xf.NumFmtId;
+                    }
+                }
+            }
+
             if (!XmlReaderHelper.ReadFirstContent(xmlReader))
             {
                 return result;
@@ -372,13 +395,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 {
                     var rawValue = xmlReader.ReadElementContentAsString();
                     if (!string.IsNullOrEmpty(rawValue))
-                        result.Value = ConvertCellValue(rawValue, aT, aS);
+                        result.Value = ConvertCellValue(rawValue, aT, result.NumberFormatIndex);
                 }
                 else if (xmlReader.IsStartElement(NIs, NsSpreadsheetMl))
                 {
                     var rawValue = ReadInlineString(xmlReader);
                     if (!string.IsNullOrEmpty(rawValue))
-                        result.Value = ConvertCellValue(rawValue, aT, aS);
+                        result.Value = ConvertCellValue(rawValue, aT, result.NumberFormatIndex);
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {
@@ -413,7 +436,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             return result;
         }
 
-        private object ConvertCellValue(string rawValue, string aT, string aS)
+        private object ConvertCellValue(string rawValue, string aT, int numberFormatIndex)
         {
             const NumberStyles style = NumberStyles.Any;
             var invariantCulture = CultureInfo.InvariantCulture;
@@ -443,28 +466,22 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 default:
                     bool isNumber = double.TryParse(rawValue, style, invariantCulture, out double number);
 
-                    if (aS != null)
-                    {
-                        if (int.TryParse(aS, style, invariantCulture, out var styleIndex))
-                        {
-                            if (styleIndex >= 0 && styleIndex < Workbook.Styles.CellXfs.Count)
-                            {
-                                XlsxXf xf = Workbook.Styles.CellXfs[styleIndex];
-                                if (isNumber && Workbook.IsDateTimeStyle(xf.NumFmtId))
-                                    return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
-                            }
-                        }
-
-                        // NOTE: Commented out to match behavior of the binary reader; 
-                        // formatting should ultimately be applied by the caller
-                        // if (xf.NumFmtId == 49) // Text format but value is not stored as a string. If numeric convert to current culture. 
-                        //    return isNumber ? number.ToString() : rawValue;
-                    }
+                    if (isNumber && IsDateTimeStyle(numberFormatIndex))
+                        return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
 
                     if (isNumber)
                         return number;
                     return rawValue;
             }
+        }
+
+        private bool IsDateTimeStyle(int numberFormatIndex)
+        {
+            var formatReader = new FormatReader()
+            {
+                FormatString = GetNumberFormatString(numberFormatIndex)
+            };
+            return formatReader.IsDateFormatString();
         }
     }
 }

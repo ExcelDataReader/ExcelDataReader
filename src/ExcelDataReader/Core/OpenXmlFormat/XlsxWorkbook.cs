@@ -37,24 +37,16 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string NNumFmt = "numFmt";
         private const string AFormatCode = "formatCode";
 
-        private readonly List<int> _defaultDateTimeStyles;
         private ZipWorker _zipWorker;
 
         public XlsxWorkbook(ZipWorker zipWorker)
         {
-            _defaultDateTimeStyles = new List<int>(new[]
-            {
-                14, 15, 16, 17, 18, 19, 20, 21, 22, 45, 46, 47
-            });
-
             _zipWorker = zipWorker;
 
             ReadWorkbook();
             ReadWorkbookRels();
             ReadSharedStrings();
             ReadStyles();
-
-            CheckDateTimeNumFmts(Styles.NumFmts);
         }
 
         public List<XlsxBoundSheet> Sheets { get; } = new List<XlsxBoundSheet>();
@@ -72,46 +64,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             foreach (var sheet in Sheets)
             {
                 yield return new XlsxWorksheet(_zipWorker, this, sheet);
-            }
-        }
-
-        public bool IsDateTimeStyle(int styleId)
-        {
-            return _defaultDateTimeStyles.Contains(styleId);
-        }
-
-        private void CheckDateTimeNumFmts(List<XlsxNumFmt> list)
-        {
-            if (list.Count == 0)
-                return;
-
-            foreach (XlsxNumFmt numFmt in list)
-            {
-                if (string.IsNullOrEmpty(numFmt.FormatCode))
-                    continue;
-                string fc = numFmt.FormatCode.ToLower();
-
-                int pos;
-                while ((pos = fc.IndexOf('"')) > 0)
-                {
-                    int endPos = fc.IndexOf('"', pos + 1);
-
-                    if (endPos > 0)
-                        fc = fc.Remove(pos, endPos - pos + 1);
-                }
-
-                // it should only detect it as a date if it contains
-                // dd mm mmm yy yyyy
-                // h hh ss
-                // AM PM
-                // and only if these appear as "words" so either contained in [ ]
-                // or delimted in someway
-                // updated to not detect as date if format contains a #
-                var formatReader = new FormatReader { FormatString = fc };
-                if (formatReader.IsDateFormatString())
-                {
-                    _defaultDateTimeStyles.Add(numFmt.Id);
-                }
             }
         }
 

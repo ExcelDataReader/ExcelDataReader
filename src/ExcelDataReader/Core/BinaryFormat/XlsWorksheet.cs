@@ -18,7 +18,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             IsDate1904 = workbook.IsDate1904;
             Formats = new Dictionary<ushort, XlsBiffFormatString>(workbook.Formats);
-            ExtendedFormats = new List<XlsBiffRecord>(workbook.ExtendedFormats);
+            ExtendedFormats = new List<XlsBiffXF>(workbook.ExtendedFormats);
             Encoding = workbook.Encoding;
             RowMinMaxOffsets = new Dictionary<int, KeyValuePair<int, int>>();
             DefaultRowHeight = 255; // 12.75 points
@@ -65,7 +65,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public Dictionary<ushort, XlsBiffFormatString> Formats { get; }
 
-        public List<XlsBiffRecord> ExtendedFormats { get; }
+        public List<XlsBiffXF> ExtendedFormats { get; }
 
         public Encoding Encoding { get; private set; }
 
@@ -116,6 +116,18 @@ namespace ExcelDataReader.Core.BinaryFormat
                     rowIndex++;
                     yield return rowBlock;
                 }
+            }
+        }
+
+        public string GetNumberFormatString(int numberFormatIndex)
+        {
+            if (Formats.TryGetValue((ushort)numberFormatIndex, out XlsBiffFormatString fmtString))
+            {
+                return fmtString.GetValue(Encoding);
+            }
+            else
+            {
+                return BuiltinNumberFormat.GetBuiltinNumberFormat(numberFormatIndex);
             }
         }
 
@@ -191,7 +203,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                             xFormat = cell.XFormat;
                         }
 
-                        var cellValue = ReadSingleCell(biffStream, cell, xFormat);
+                        var numberFormatIndex = GetNumberFormatIndex(xFormat);
+                        var cellValue = ReadSingleCell(biffStream, cell, numberFormatIndex);
                         currentRow.Cells.Add(cellValue);
                     }
 
@@ -232,10 +245,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                     ushort lastColumnIndex = rkCell.LastColumnIndex;
                     for (ushort j = cell.ColumnIndex; j <= lastColumnIndex; j++)
                     {
+                        var numberFormatIndex = GetNumberFormatIndex(rkCell.GetXF(j));
                         var resultCell = new Cell()
                         {
                             ColumnIndex = j,
-                            Value = TryConvertOADateTime(rkCell.GetValue(j), rkCell.GetXF(j))
+                            Value = TryConvertOADateTime(rkCell.GetValue(j), numberFormatIndex),
+                            NumberFormatIndex = numberFormatIndex
                         };
 
                         result.Add(resultCell);
@@ -252,7 +267,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Reads additional records if needed: a string record might follow a formula result
         /// </summary>
-        private Cell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, ushort xFormat)
+        private Cell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, int numberFormatIndex)
         {
             LogManager.Log(this).Debug("ReadSingleCell {0}", cell.Id);
 
@@ -262,7 +277,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             var result = new Cell()
             {
-                ColumnIndex = cell.ColumnIndex
+                ColumnIndex = cell.ColumnIndex,
+                NumberFormatIndex = numberFormatIndex
             };
 
             switch (cell.Id)
@@ -278,12 +294,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.INTEGER:
                 case BIFFRECORDTYPE.INTEGER_OLD:
                     intValue = ((XlsBiffIntegerCell)cell).Value;
-                    result.Value = TryConvertOADateTime(intValue, xFormat);
+                    result.Value = TryConvertOADateTime(intValue, numberFormatIndex);
                     break;
                 case BIFFRECORDTYPE.NUMBER:
                 case BIFFRECORDTYPE.NUMBER_OLD:
                     doubleValue = ((XlsBiffNumberCell)cell).Value;
-                    result.Value = TryConvertOADateTime(doubleValue, xFormat);
+                    result.Value = TryConvertOADateTime(doubleValue, numberFormatIndex);
                     break;
                 case BIFFRECORDTYPE.LABEL:
                 case BIFFRECORDTYPE.LABEL_OLD:
@@ -295,7 +311,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     break;
                 case BIFFRECORDTYPE.RK:
                     doubleValue = ((XlsBiffRKCell)cell).Value;
-                    result.Value = TryConvertOADateTime(doubleValue, xFormat);
+                    result.Value = TryConvertOADateTime(doubleValue, numberFormatIndex);
                     break;
                 case BIFFRECORDTYPE.BLANK:
                 case BIFFRECORDTYPE.BLANK_OLD:
@@ -305,7 +321,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.FORMULA:
                 case BIFFRECORDTYPE.FORMULA_V3:
                 case BIFFRECORDTYPE.FORMULA_V4:
-                    objectValue = TryGetFormulaValue(biffStream, (XlsBiffFormulaCell)cell, xFormat);
+                    objectValue = TryGetFormulaValue(biffStream, (XlsBiffFormulaCell)cell, numberFormatIndex);
                     result.Value = objectValue;
                     break;
             }
@@ -315,7 +331,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             return result;
         }
 
-        private object TryGetFormulaValue(XlsBiffStream biffStream, XlsBiffFormulaCell formulaCell, ushort xFormat)
+        private object TryGetFormulaValue(XlsBiffStream biffStream, XlsBiffFormulaCell formulaCell, int numberFormatIndex)
         {
             switch (formulaCell.FormulaType)
             {
@@ -326,7 +342,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case XlsBiffFormulaCell.FormulaValueType.EmptyString:
                     return string.Empty;
                 case XlsBiffFormulaCell.FormulaValueType.Number:
-                    return TryConvertOADateTime(formulaCell.XNumValue, xFormat);
+                    return TryConvertOADateTime(formulaCell.XNumValue, numberFormatIndex);
                 case XlsBiffFormulaCell.FormulaValueType.String:
                     return TryGetFormulaString(biffStream);
             }
@@ -353,110 +369,44 @@ namespace ExcelDataReader.Core.BinaryFormat
             return null;
         }
 
-        private object TryConvertOADateTime(double value, ushort xFormat)
+        private object TryConvertOADateTime(double value, int numberFormatIndex)
         {
-            if (IsDateFormat(xFormat))
+            if (IsDateFormat(numberFormatIndex))
                 return Helpers.ConvertFromOATime(value, IsDate1904);
             return value;
         }
 
-        private object TryConvertOADateTime(int value, ushort xFormat)
+        private object TryConvertOADateTime(int value, int numberFormatIndex)
         {
-            if (IsDateFormat(xFormat))
+            if (IsDateFormat(numberFormatIndex))
                 return Helpers.ConvertFromOATime(value, IsDate1904);
             return value;
         }
 
-        private bool IsDateFormat(ushort xFormat)
+        private int GetNumberFormatIndex(int xFormat)
         {
-            ushort format;
+            int format;
             if (xFormat < ExtendedFormats.Count)
             {
                 // If a cell XF record does not contain explicit attributes in a group (if the attribute group flag is not set),
                 // it repeats the attributes of its style XF record.
-                var rec = ExtendedFormats[xFormat];
-                switch (rec.Id)
-                {
-                    case BIFFRECORDTYPE.XF_V2:
-                        format = (ushort)(rec.ReadByte(2) & 0x3F);
-                        break;
-                    case BIFFRECORDTYPE.XF_V3:
-                        format = rec.ReadByte(1);
-                        break;
-                    case BIFFRECORDTYPE.XF_V4:
-                        format = rec.ReadByte(1);
-                        break;
-
-                    default:
-                        format = rec.ReadUInt16(2);
-                        break;
-                }
+                format = ExtendedFormats[xFormat].Format;
             }
             else
             {
                 format = xFormat;
             }
 
-            // From BIFF5 on, the built-in number formats will be omitted. 
-            if (Workbook.BiffVersion >= 5)
+            return format;
+        }
+
+        private bool IsDateFormat(int numberFormatIndex)
+        {
+            var formatReader = new FormatReader()
             {
-                switch (format)
-                {
-                    // numeric built in formats
-                    case 0: // "General";
-                    case 1: // "0";
-                    case 2: // "0.00";
-                    case 3: // "#,##0";
-                    case 4: // "#,##0.00";
-                    case 5: // "\"$\"#,##0_);(\"$\"#,##0)";
-                    case 6: // "\"$\"#,##0_);[Red](\"$\"#,##0)";
-                    case 7: // "\"$\"#,##0.00_);(\"$\"#,##0.00)";
-                    case 8: // "\"$\"#,##0.00_);[Red](\"$\"#,##0.00)";
-                    case 9: // "0%";
-                    case 10: // "0.00%";
-                    case 11: // "0.00E+00";
-                    case 12: // "# ?/?";
-                    case 13: // "# ??/??";
-                    case 0x30: // "##0.0E+0";
-
-                    case 0x25: // "_(#,##0_);(#,##0)";
-                    case 0x26: // "_(#,##0_);[Red](#,##0)";
-                    case 0x27: // "_(#,##0.00_);(#,##0.00)";
-                    case 40: // "_(#,##0.00_);[Red](#,##0.00)";
-                    case 0x29: // "_(\"$\"* #,##0_);_(\"$\"* (#,##0);_(\"$\"* \"-\"_);_(@_)";
-                    case 0x2a: // "_(\"$\"* #,##0_);_(\"$\"* (#,##0);_(\"$\"* \"-\"_);_(@_)";
-                    case 0x2b: // "_(\"$\"* #,##0.00_);_(\"$\"* (#,##0.00);_(\"$\"* \"-\"??_);_(@_)";
-                    case 0x2c: // "_(* #,##0.00_);_(* (#,##0.00);_(* \"-\"??_);_(@_)";
-                        return false;
-
-                    // date formats
-                    case 14: // this.GetDefaultDateFormat();
-                    case 15: // "D-MM-YY";
-                    case 0x10: // "D-MMM";
-                    case 0x11: // "MMM-YY";
-                    case 0x12: // "h:mm AM/PM";
-                    case 0x13: // "h:mm:ss AM/PM";
-                    case 20: // "h:mm";
-                    case 0x15: // "h:mm:ss";
-                    case 0x16: // string.Format("{0} {1}", this.GetDefaultDateFormat(), this.GetDefaultTimeFormat());
-
-                    case 0x2d: // "mm:ss";
-                    case 0x2e: // "[h]:mm:ss";
-                    case 0x2f: // "mm:ss.0";
-                        return true;
-                    case 0x31: // "@";
-                        return false; // NOTE: was value.ToString();
-                }
-            }
-
-            if (Formats.TryGetValue(format, out XlsBiffFormatString fmtString))
-            {
-                var fmt = fmtString.GetValue(Encoding);
-                var formatReader = new FormatReader { FormatString = fmt };
-                return formatReader.IsDateFormatString();
-            }
-
-            return false;
+                FormatString = GetNumberFormatString(numberFormatIndex)
+            };
+            return formatReader.IsDateFormatString();
         }
 
         private void ReadWorksheetGlobals()
@@ -499,7 +449,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                     if (rec.Id == BIFFRECORDTYPE.XF_V2 || rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4)
                     {
-                        ExtendedFormats.Add(rec);
+                        ExtendedFormats.Add((XlsBiffXF)rec);
                     }
 
                     if (rec.Id == BIFFRECORDTYPE.FORMAT)
