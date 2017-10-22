@@ -19,6 +19,6 @@ namespace ExcelDataReader.Core
 
         IEnumerable<Row> ReadRows();
 
-        string GetNumberFormatString(int index);
+        NumberFormatString GetNumberFormatString(int index);
     }
 }

@@ -126,7 +126,7 @@ namespace ExcelDataReader
 
         public bool IsDBNull(int i) => GetValue(i) == null;
 
-        public string GetNumberFormatString(int i)
+        public NumberFormatString GetNumberFormatString(int i)
         {
             if (RowCells == null)
                 throw new InvalidOperationException("No data exists for the row/column.");

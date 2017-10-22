@@ -1,50 +1,56 @@
-﻿namespace ExcelDataReader.Core
+﻿using System.Collections.Generic;
+using ExcelDataReader.Core.NumberFormat;
+
+namespace ExcelDataReader.Core
 {
     internal static class BuiltinNumberFormat
     {
-        public static string GetBuiltinNumberFormat(int numFmtId)
+        private static Dictionary<int, NumberFormatString> Formats { get; } = new Dictionary<int, NumberFormatString>()
         {
-            switch (numFmtId)
-            {
-                case 0: return "General";
-                case 1: return "0";
-                case 2: return "0.00";
-                case 3: return "#,##0";
-                case 4: return "#,##0.00";
-                case 5: return "\"$\"#,##0_);(\"$\"#,##0)";
-                case 6: return "\"$\"#,##0_);[Red](\"$\"#,##0)";
-                case 7: return "\"$\"#,##0.00_);(\"$\"#,##0.00)";
-                case 8: return "\"$\"#,##0.00_);[Red](\"$\"#,##0.00)";
-                case 9: return "0%";
-                case 10: return "0.00%";
-                case 11: return "0.00E+00";
-                case 12: return "# ?/?";
-                case 13: return "# ??/??";
-                case 14: return "mm-dd-yy";
-                case 15: return "d-mmm-yy";
-                case 16: return "d-mmm";
-                case 17: return "mmm-yy";
-                case 18: return "h:mm AM/PM";
-                case 19: return "h:mm:ss AM/PM";
-                case 20: return "h:mm";
-                case 21: return "h:mm:ss";
-                case 22: return "m/d/yy h:mm";
+            { 0, new NumberFormatString("General") },
+            { 1, new NumberFormatString("0") },
+            { 2, new NumberFormatString("0.00") },
+            { 3, new NumberFormatString("#,##0") },
+            { 4, new NumberFormatString("#,##0.00") },
+            { 5, new NumberFormatString("\"$\"#,##0_);(\"$\"#,##0)") },
+            { 6, new NumberFormatString("\"$\"#,##0_);[Red](\"$\"#,##0)") },
+            { 7, new NumberFormatString("\"$\"#,##0.00_);(\"$\"#,##0.00)") },
+            { 8, new NumberFormatString("\"$\"#,##0.00_);[Red](\"$\"#,##0.00)") },
+            { 9, new NumberFormatString("0%") },
+            { 10, new NumberFormatString("0.00%") },
+            { 11, new NumberFormatString("0.00E+00") },
+            { 12, new NumberFormatString("# ?/?") },
+            { 13, new NumberFormatString("# ??/??") },
+            { 14, new NumberFormatString("mm-dd-yy") },
+            { 15, new NumberFormatString("d-mmm-yy") },
+            { 16, new NumberFormatString("d-mmm") },
+            { 17, new NumberFormatString("mmm-yy") },
+            { 18, new NumberFormatString("h:mm AM/PM") },
+            { 19, new NumberFormatString("h:mm:ss AM/PM") },
+            { 20, new NumberFormatString("h:mm") },
+            { 21, new NumberFormatString("h:mm:ss") },
+            { 22, new NumberFormatString("m/d/yy h:mm") },
 
-                // 23..36 international/unused
-                case 37: return "#,##0_);(#,##0)";
-                case 38: return "#,##0_);[Red](#,##0)";
-                case 39: return "#,##0.00_);(#,##0.00)";
-                case 40: return "#,##0.00_);[Red](#,##0.00)";
-                case 41: return "_(\"$\"* #,##0_);_(\"$\"* (#,##0);_(\"$\"* \"-\"_);_(@_)";
-                case 42: return "_(* #,##0_);_(* (#,##0);_(* \"-\"_);_(@_)";
-                case 43: return "_(\"$\"* #,##0.00_);_(\"$\"* (#,##0.00);_(\"$\"* \"-\"??_);_(@_)";
-                case 44: return "_(* #,##0.00_);_(* (#,##0.00);_(* \"-\"??_);_(@_)";
-                case 45: return "mm:ss";
-                case 46: return "[h]:mm:ss";
-                case 47: return "mm:ss.0";
-                case 48: return "##0.0E+0";
-                case 49: return "@";
-            }
+            // 23..36 international/unused
+            { 37, new NumberFormatString("#,##0_);(#,##0)") },
+            { 38, new NumberFormatString("#,##0_);[Red](#,##0)") },
+            { 39, new NumberFormatString("#,##0.00_);(#,##0.00)") },
+            { 40, new NumberFormatString("#,##0.00_);[Red](#,##0.00)") },
+            { 41, new NumberFormatString("_(\"$\"* #,##0_);_(\"$\"* (#,##0);_(\"$\"* \"-\"_);_(@_)") },
+            { 42, new NumberFormatString("_(* #,##0_);_(* (#,##0);_(* \"-\"_);_(@_)") },
+            { 43, new NumberFormatString("_(\"$\"* #,##0.00_);_(\"$\"* (#,##0.00);_(\"$\"* \"-\"??_);_(@_)") },
+            { 44, new NumberFormatString("_(* #,##0.00_);_(* (#,##0.00);_(* \"-\"??_);_(@_)") },
+            { 45, new NumberFormatString("mm:ss") },
+            { 46, new NumberFormatString("[h]:mm:ss") },
+            { 47, new NumberFormatString("mm:ss.0") },
+            { 48, new NumberFormatString("##0.0E+0") },
+            { 49, new NumberFormatString("@") },
+        };
+
+        public static NumberFormatString GetBuiltinNumberFormat(int numFmtId)
+        {
+            if (Formats.TryGetValue(numFmtId, out var result))
+                return result;
 
             return null;
         }

@@ -1,4 +1,3 @@
-// ReSharper disable InconsistentNaming
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -104,7 +103,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
-        public string GetNumberFormatString(int numberFormatIndex)
+        public NumberFormatString GetNumberFormatString(int numberFormatIndex)
         {
             var numFmt = Workbook.Styles.NumFmts.Find(x => x.Id == numberFormatIndex);
             if (numFmt != null)
@@ -477,11 +476,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         private bool IsDateTimeStyle(int numberFormatIndex)
         {
-            var formatReader = new FormatReader()
-            {
-                FormatString = GetNumberFormatString(numberFormatIndex)
-            };
-            return formatReader.IsDateFormatString();
+            var format = GetNumberFormatString(numberFormatIndex);
+            if (format == null)
+                return false;
+
+            return format.IsDateTimeFormat;
         }
     }
 }

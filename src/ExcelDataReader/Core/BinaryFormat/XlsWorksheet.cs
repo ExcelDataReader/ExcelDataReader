@@ -17,7 +17,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             Stream = stream;
 
             IsDate1904 = workbook.IsDate1904;
-            Formats = new Dictionary<ushort, XlsBiffFormatString>(workbook.Formats);
+            Formats = new Dictionary<ushort, NumberFormatString>(workbook.Formats);
             ExtendedFormats = new List<XlsBiffXF>(workbook.ExtendedFormats);
             Encoding = workbook.Encoding;
             RowMinMaxOffsets = new Dictionary<int, KeyValuePair<int, int>>();
@@ -63,7 +63,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public Stream Stream { get; }
 
-        public Dictionary<ushort, XlsBiffFormatString> Formats { get; }
+        public Dictionary<ushort, NumberFormatString> Formats { get; }
 
         public List<XlsBiffXF> ExtendedFormats { get; }
 
@@ -119,11 +119,11 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
-        public string GetNumberFormatString(int numberFormatIndex)
+        public NumberFormatString GetNumberFormatString(int numberFormatIndex)
         {
-            if (Formats.TryGetValue((ushort)numberFormatIndex, out XlsBiffFormatString fmtString))
+            if (Formats.TryGetValue((ushort)numberFormatIndex, out var fmtString))
             {
-                return fmtString.GetValue(Encoding);
+                return fmtString;
             }
             else
             {
@@ -402,11 +402,11 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private bool IsDateFormat(int numberFormatIndex)
         {
-            var formatReader = new FormatReader()
-            {
-                FormatString = GetNumberFormatString(numberFormatIndex)
-            };
-            return formatReader.IsDateFormatString();
+            var format = GetNumberFormatString(numberFormatIndex);
+            if (format == null)
+                return false;
+
+            return format.IsDateTimeFormat;
         }
 
         private void ReadWorksheetGlobals()
@@ -420,14 +420,13 @@ namespace ExcelDataReader.Core.BinaryFormat
                 XlsBiffHeaderFooterString header = null;
                 XlsBiffHeaderFooterString footer = null;
 
-                // Handle when dimensions report less columns than used by cell records.
                 int maxCellColumn = 0;
                 int maxRowCount = 0;
-                Dictionary<int, bool> previousBlocksObservedRows = new Dictionary<int, bool>();
-                Dictionary<int, bool> observedRows = new Dictionary<int, bool>();
 
+                var biffFormats = new Dictionary<ushort, XlsBiffFormatString>();
                 var recordOffset = biffStream.Position;
-                XlsBiffRecord rec = biffStream.Read();
+                var rec = biffStream.Read();
+
                 while (rec != null && !(rec is XlsBiffEof))
                 {
                     if (rec is XlsBiffDimensions dims)
@@ -458,18 +457,18 @@ namespace ExcelDataReader.Core.BinaryFormat
                         if (Workbook.BiffVersion >= 5)
                         {
                             // fmt.Index exists on BIFF5+ only
-                            Formats.Add(fmt.Index, fmt);
+                            biffFormats.Add(fmt.Index, fmt);
                         }
                         else
                         {
-                            Formats.Add((ushort)Formats.Count, fmt);
+                            biffFormats.Add((ushort)biffFormats.Count, fmt);
                         }
                     }
 
                     if (rec.Id == BIFFRECORDTYPE.FORMAT_V23)
                     {
                         var fmt = (XlsBiffFormatString)rec;
-                        Formats.Add((ushort)Formats.Count, fmt);
+                        biffFormats.Add((ushort)biffFormats.Count, fmt);
                     }
 
                     if (rec.Id == BIFFRECORDTYPE.CODEPAGE)
@@ -520,6 +519,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                         OddHeader = header?.GetValue(Encoding),
                         OddFooter = footer?.GetValue(Encoding),
                     };
+                }
+
+                foreach (var biffFormat in biffFormats)
+                {
+                    var formatString = biffFormat.Value.GetValue(Encoding);
+                    Formats.Add(biffFormat.Key, new NumberFormatString(formatString));
                 }
 
                 if (FieldCount < maxCellColumn)
