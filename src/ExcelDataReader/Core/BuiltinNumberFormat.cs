@@ -21,7 +21,7 @@ namespace ExcelDataReader.Core
             { 11, new NumberFormatString("0.00E+00") },
             { 12, new NumberFormatString("# ?/?") },
             { 13, new NumberFormatString("# ??/??") },
-            { 14, new NumberFormatString("mm-dd-yy") },
+            { 14, new NumberFormatString("d/m/yyyy") },
             { 15, new NumberFormatString("d-mmm-yy") },
             { 16, new NumberFormatString("d-mmm") },
             { 17, new NumberFormatString("mmm-yy") },

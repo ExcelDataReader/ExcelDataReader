@@ -15,6 +15,11 @@ namespace ExcelDataReader.Core.NumberFormat
 
         public static string Format(object value, NumberFormatString format, CultureInfo culture)
         {
+            if (value == null)
+            {
+                return string.Empty;
+            }
+
             var node = format.GetSection(value);
 
             if (node.Type == SectionType.Number)
@@ -23,7 +28,14 @@ namespace ExcelDataReader.Core.NumberFormat
             }
             else if (node.Type == SectionType.Date)
             {
-                return FormatDate(Convert.ToDateTime(value, culture), node.GeneralTextDateParts, culture);
+                try
+                {
+                    return FormatDate(Convert.ToDateTime(value, culture), node.GeneralTextDateParts, culture);
+                }
+                catch (FormatException)
+                {
+                    return Convert.ToString(value, culture);
+                }
             }
             else if (node.Type == SectionType.General || node.Type == SectionType.Text)
             {
@@ -211,6 +223,8 @@ namespace ExcelDataReader.Core.NumberFormat
                 var token = tokens[i];
                 if (token.StartsWith(startsWith))
                     return true;
+                if (Token.IsDatePart(token))
+                    return false;
             }
 
             return false;
@@ -218,11 +232,13 @@ namespace ExcelDataReader.Core.NumberFormat
 
         private static bool LookBackDatePart(List<string> tokens, int fromIndex, string startsWith)
         {
-            for (var i = fromIndex; i >= 0; i++)
+            for (var i = fromIndex; i >= 0; i--)
             {
                 var token = tokens[i];
                 if (token.StartsWith(startsWith))
                     return true;
+                if (Token.IsDatePart(token))
+                    return false;
             }
 
             return false;
@@ -649,11 +665,14 @@ namespace ExcelDataReader.Core.NumberFormat
 
         private static void FormatLiteral(string token, StringBuilder result)
         {
-            // TODO: two letter literals starting with '*', '_' or '\\'
             string literal = string.Empty;
             if (token == ",")
             {
                 // skip commas
+            }
+            else if (token.Length == 2 && (token[0] == '*' || token[0] == '_' || token[0] == '\\'))
+            {
+                literal = token[1].ToString();
             }
             else if (token.StartsWith("\""))
             {

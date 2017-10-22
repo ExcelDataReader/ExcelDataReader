@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System;
 using System.Globalization;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
 using TestMethod = NUnit.Framework.TestAttribute;
@@ -83,6 +84,13 @@ namespace ExcelDataReader.Netstandard20.Tests
             Assert.IsFalse(IsDateFormatString("0%"));
             Assert.IsFalse(IsDateFormatString("General"));
             Assert.IsFalse(IsDateFormatString(@"_-* #,##0\ _P_t_s_-;\-* #,##0\ _P_t_s_-;_-* "" - ""??\ _P_t_s_-;_-@_- "));
+        }
+
+        [TestMethod]
+        public void NumberFormat_TestDateTime()
+        {
+            Test(new DateTime(2000, 1, 1), "d-mmm-yy", "1-Jan-00");
+            Test(new DateTime(2000, 1, 1, 12, 34, 56), "m/d/yyyy\\ h:mm:ss;@", "1/1/2000 12:34:56");
         }
 
         void Test(object value, string format, string expected)
