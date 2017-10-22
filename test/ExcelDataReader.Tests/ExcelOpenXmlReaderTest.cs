@@ -1185,6 +1185,15 @@ namespace ExcelDataReader.Netstandard20.Tests
                     reader.Read();
                 }
             });
+
+            Assert.Throws<Exceptions.InvalidPasswordException>(() =>
+            {
+                using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
+                    Configuration.GetTestWorkbook("agile_AES128_MD5_CBC_pwd_password")))
+                {
+                    reader.Read();
+                }
+            });
         }
 
         [TestMethod]

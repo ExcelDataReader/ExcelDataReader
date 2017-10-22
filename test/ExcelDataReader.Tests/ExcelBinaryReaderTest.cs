@@ -1383,6 +1383,15 @@ namespace ExcelDataReader.Netstandard20.Tests
                     reader.Read();
                 }
             });
+
+            Assert.Throws<InvalidPasswordException>(() =>
+            {
+                using (var reader = ExcelReaderFactory.CreateBinaryReader(
+                    Configuration.GetTestWorkbook("Test_git_issue_242_xor_pwd_password")))
+                {
+                    reader.Read();
+                }
+            });
         }
 
         [TestMethod]

@@ -45,7 +45,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         // Magic password used for write-protected workbooks
                         password = "VelvetSweatshop";
                     }
-                    else if (!Encryption.VerifyPassword(password))
+                    else if (password == null || !Encryption.VerifyPassword(password))
                     {
                         throw new InvalidPasswordException(Errors.ErrorInvalidPassword);
                     }
