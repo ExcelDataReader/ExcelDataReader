@@ -1522,7 +1522,16 @@ namespace ExcelDataReader.Netstandard20.Tests
             }
 
             Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
-            
+        }
+
+        [TestMethod]
+        public void GitIssue_286_SSTStringHeader()
+        {
+            // Parse xls with SST containing string split exactly between its header and string data across the BIFF Continue records
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_286_SST")))
+            {
+                Assert.IsNotNull(reader);
+            }
         }
     }
 }
