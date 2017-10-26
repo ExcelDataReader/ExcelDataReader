@@ -9,6 +9,7 @@ namespace ExcelDataReader.Core.NumberFormat
         public static Section ParseSection(Tokenizer reader, out bool syntaxError)
         {
             bool hasDateParts = false;
+            bool hasDurationParts = false;
             bool hasGeneralPart = false;
             bool hasTextPart = false;
             Condition condition = null;
@@ -25,6 +26,7 @@ namespace ExcelDataReader.Core.NumberFormat
                 if (Token.IsDatePart(token))
                 {
                     hasDateParts |= true;
+                    hasDurationParts |= Token.IsDurationPart(token);
                     tokens.Add(token);
                 }
                 else if (Token.IsGeneral(token))
@@ -72,22 +74,30 @@ namespace ExcelDataReader.Core.NumberFormat
             FractionSection fraction = null;
             ExponentialSection exponential = null;
             DecimalSection number = null;
-            List<string> generalTextDate = null;
+            List<string> generalTextDateDuration = null;
 
             if (hasDateParts)
             {
-                type = SectionType.Date;
-                ParseDate(tokens, out generalTextDate);
+                if (hasDurationParts)
+                {
+                    type = SectionType.Duration;
+                    generalTextDateDuration = tokens;
+                }
+                else
+                {
+                    type = SectionType.Date;
+                    ParseDate(tokens, out generalTextDateDuration);
+                }
             }
             else if (hasGeneralPart)
             {
                 type = SectionType.General;
-                generalTextDate = tokens;
+                generalTextDateDuration = tokens;
             }
             else if (hasTextPart)
             {
                 type = SectionType.Text;
-                generalTextDate = tokens;
+                generalTextDateDuration = tokens;
             }
             else if (FractionSection.TryParse(tokens, out fraction))
             {
@@ -116,7 +126,7 @@ namespace ExcelDataReader.Core.NumberFormat
                 Fraction = fraction,
                 Exponential = exponential,
                 Number = number,
-                GeneralTextDateParts = generalTextDate
+                GeneralTextDateDurationParts = generalTextDateDuration
             };
         }
 

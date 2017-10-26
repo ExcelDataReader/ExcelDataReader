@@ -30,7 +30,7 @@ namespace ExcelDataReader.Core.NumberFormat
             {
                 try
                 {
-                    return FormatDate(Convert.ToDateTime(value, culture), node.GeneralTextDateParts, culture);
+                    return FormatDate(Convert.ToDateTime(value, culture), node.GeneralTextDateDurationParts, culture);
                 }
                 catch (FormatException)
                 {
@@ -39,7 +39,7 @@ namespace ExcelDataReader.Core.NumberFormat
             }
             else if (node.Type == SectionType.General || node.Type == SectionType.Text)
             {
-                return FormatGeneralText(Convert.ToString(value, culture), node.GeneralTextDateParts);
+                return FormatGeneralText(Convert.ToString(value, culture), node.GeneralTextDateDurationParts);
             }
             else if (node.Type == SectionType.Exponential)
             {

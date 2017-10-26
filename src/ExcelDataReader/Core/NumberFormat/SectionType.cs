@@ -7,6 +7,7 @@
         Fraction,
         Exponential,
         Date,
+        Duration,
         Text,
     }
 }

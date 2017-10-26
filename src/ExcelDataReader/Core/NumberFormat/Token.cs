@@ -70,11 +70,17 @@ namespace ExcelDataReader.Core.NumberFormat
                 token.StartsWith("s", StringComparison.OrdinalIgnoreCase) ||
                 token.StartsWith("h", StringComparison.OrdinalIgnoreCase) ||
                 (token.StartsWith("g", StringComparison.OrdinalIgnoreCase) && !IsGeneral(token)) ||
+                string.Compare(token, "am/pm", StringComparison.OrdinalIgnoreCase) == 0 ||
+                string.Compare(token, "a/p", StringComparison.OrdinalIgnoreCase) == 0 ||
+                IsDurationPart(token);
+        }
+
+        public static bool IsDurationPart(string token)
+        {
+            return
                 token.StartsWith("[h", StringComparison.OrdinalIgnoreCase) ||
                 token.StartsWith("[m", StringComparison.OrdinalIgnoreCase) ||
-                token.StartsWith("[s", StringComparison.OrdinalIgnoreCase) ||
-                string.Compare(token, "am/pm", StringComparison.OrdinalIgnoreCase) == 0 ||
-                string.Compare(token, "a/p", StringComparison.OrdinalIgnoreCase) == 0;
+                token.StartsWith("[s", StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool IsDigit09(string token)

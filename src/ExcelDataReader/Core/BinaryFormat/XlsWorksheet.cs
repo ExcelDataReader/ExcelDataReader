@@ -371,15 +371,29 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private object TryConvertOADateTime(double value, int numberFormatIndex)
         {
-            if (IsDateFormat(numberFormatIndex))
-                return Helpers.ConvertFromOATime(value, IsDate1904);
+            var format = GetNumberFormatString(numberFormatIndex);
+            if (format != null)
+            {
+                if (format.IsDateTimeFormat)
+                    return Helpers.ConvertFromOATime(value, IsDate1904);
+                if (format.IsTimeSpanFormat)
+                    return TimeSpan.FromDays(value);
+            }
+
             return value;
         }
 
         private object TryConvertOADateTime(int value, int numberFormatIndex)
         {
-            if (IsDateFormat(numberFormatIndex))
-                return Helpers.ConvertFromOATime(value, IsDate1904);
+            var format = GetNumberFormatString(numberFormatIndex);
+            if (format != null)
+            {
+                if (format.IsDateTimeFormat)
+                    return Helpers.ConvertFromOATime(value, IsDate1904);
+                if (format.IsTimeSpanFormat)
+                    return TimeSpan.FromDays(value);
+            }
+
             return value;
         }
 
@@ -398,15 +412,6 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
 
             return format;
-        }
-
-        private bool IsDateFormat(int numberFormatIndex)
-        {
-            var format = GetNumberFormatString(numberFormatIndex);
-            if (format == null)
-                return false;
-
-            return format.IsDateTimeFormat;
         }
 
         private void ReadWorksheetGlobals()
