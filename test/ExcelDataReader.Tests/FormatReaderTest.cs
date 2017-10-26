@@ -93,6 +93,13 @@ namespace ExcelDataReader.Netstandard20.Tests
             Test(new DateTime(2000, 1, 1, 12, 34, 56), "m/d/yyyy\\ h:mm:ss;@", "1/1/2000 12:34:56");
         }
 
+        [TestMethod]
+        public void NumberFormat_TestTimeSpan()
+        {
+            Test(new TimeSpan(100, 0, 0), "[hh]:mm:ss", "100:00:00");
+            Test(new TimeSpan(100, 0, 0), "[mm]:ss", "6000:00");
+        }
+
         void Test(object value, string format, string expected)
         {
             var result = Format(value, format, CultureInfo.InvariantCulture);

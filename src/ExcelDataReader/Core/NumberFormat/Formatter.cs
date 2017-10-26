@@ -37,6 +37,17 @@ namespace ExcelDataReader.Core.NumberFormat
                     return Convert.ToString(value, culture);
                 }
             }
+            else if (node.Type == SectionType.Duration)
+            {
+                try
+                {
+                    return FormatTimeSpan((TimeSpan)value, node.GeneralTextDateDurationParts, culture);
+                }
+                catch (InvalidCastException)
+                {
+                    return Convert.ToString(value, culture);
+                }
+            }
             else if (node.Type == SectionType.General || node.Type == SectionType.Text)
             {
                 return FormatGeneralText(Convert.ToString(value, culture), node.GeneralTextDateDurationParts);
@@ -62,6 +73,57 @@ namespace ExcelDataReader.Core.NumberFormat
                 if (Token.IsGeneral(token) || token == "@")
                 {
                     result.Append(text);
+                }
+                else
+                {
+                    FormatLiteral(token, result);
+                }
+            }
+
+            return result.ToString();
+        }
+
+        private static string FormatTimeSpan(TimeSpan timeSpan, List<string> tokens, CultureInfo culture)
+        {
+            // NOTE/TODO: assumes there is exactly one [hh], [mm] or [ss] using the integer part of TimeSpan.TotalXXX when formatting.
+            // The timeSpan input is then truncated to the remainder fraction, which is used to format mm and/or ss.
+            var result = new StringBuilder();
+            for (var i = 0; i < tokens.Count; i++)
+            {
+                var token = tokens[i];
+
+                if (token.StartsWith("m", StringComparison.OrdinalIgnoreCase))
+                {
+                    var value = timeSpan.Minutes;
+                    var digits = token.Length;
+                    result.Append(value.ToString("D" + digits));
+                }
+                else if (token.StartsWith("s", StringComparison.OrdinalIgnoreCase))
+                {
+                    var value = timeSpan.Seconds;
+                    var digits = token.Length;
+                    result.Append(value.ToString("D" + digits));
+                }
+                else if (token.StartsWith("[h", StringComparison.OrdinalIgnoreCase))
+                {
+                    var value = (int)timeSpan.TotalHours;
+                    var digits = token.Length - 2;
+                    result.Append(value.ToString("D" + digits));
+                    timeSpan = TimeSpan.FromHours(timeSpan.TotalHours - value);
+                }
+                else if (token.StartsWith("[m", StringComparison.OrdinalIgnoreCase))
+                {
+                    var value = (int)timeSpan.TotalMinutes;
+                    var digits = token.Length - 2;
+                    result.Append(value.ToString("D" + digits));
+                    timeSpan = TimeSpan.FromMinutes(timeSpan.TotalMinutes - value);
+                }
+                else if (token.StartsWith("[s", StringComparison.OrdinalIgnoreCase))
+                {
+                    var value = (int)timeSpan.TotalSeconds;
+                    var digits = token.Length - 2;
+                    result.Append(value.ToString("D" + digits));
+                    timeSpan = TimeSpan.FromSeconds(timeSpan.TotalSeconds - value);
                 }
                 else
                 {
@@ -164,24 +226,6 @@ namespace ExcelDataReader.Core.NumberFormat
                     {
                         result.Append(culture.DateTimeFormat.GetEraName(era));
                     }
-                }
-                else if (token.StartsWith("[h", StringComparison.OrdinalIgnoreCase))
-                {
-                    // TODO: elapsed hours
-                    var digits = token.Length - 2;
-                    result.Append(date.Hour.ToString("D" + digits));
-                }
-                else if (token.StartsWith("[m", StringComparison.OrdinalIgnoreCase))
-                {
-                    // TODO: elapsed minutes
-                    var digits = token.Length - 2;
-                    result.Append(date.Minute.ToString("D" + digits));
-                }
-                else if (token.StartsWith("[s", StringComparison.OrdinalIgnoreCase))
-                {
-                    // TODO: elapsed seconds
-                    var digits = token.Length - 2;
-                    result.Append(date.Second.ToString("D" + digits));
                 }
                 else if (string.Compare(token, "am/pm", true) == 0)
                 {
