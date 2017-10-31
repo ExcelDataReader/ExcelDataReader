@@ -10,58 +10,42 @@ namespace ExcelDataReader.Core.NumberFormat
         public static string Format(object value, string formatString, CultureInfo culture)
         {
             var format = new NumberFormatString(formatString);
-            return Format(value, format, culture);
+            if (!format.IsValid)
+                return Convert.ToString(value, culture);
+
+            var section = format.GetSection(value);
+            if (section == null)
+                return Convert.ToString(value, culture);
+
+            return Format(value, section, culture);
         }
 
-        public static string Format(object value, NumberFormatString format, CultureInfo culture)
+        public static string Format(object value, Section node, CultureInfo culture)
         {
-            if (value == null)
+            switch (node.Type)
             {
-                return string.Empty;
-            }
+                case SectionType.Number:
+                    return FormatNumber(Convert.ToDouble(value, culture), node.Number, culture);
 
-            var node = format.GetSection(value);
-
-            if (node.Type == SectionType.Number)
-            {
-                return FormatNumber(Convert.ToDouble(value, culture), node.Number, culture);
-            }
-            else if (node.Type == SectionType.Date)
-            {
-                try
-                {
+                case SectionType.Date:
                     return FormatDate(Convert.ToDateTime(value, culture), node.GeneralTextDateDurationParts, culture);
-                }
-                catch (FormatException)
-                {
-                    return Convert.ToString(value, culture);
-                }
-            }
-            else if (node.Type == SectionType.Duration)
-            {
-                try
-                {
-                    return FormatTimeSpan((TimeSpan)value, node.GeneralTextDateDurationParts, culture);
-                }
-                catch (InvalidCastException)
-                {
-                    return Convert.ToString(value, culture);
-                }
-            }
-            else if (node.Type == SectionType.General || node.Type == SectionType.Text)
-            {
-                return FormatGeneralText(Convert.ToString(value, culture), node.GeneralTextDateDurationParts);
-            }
-            else if (node.Type == SectionType.Exponential)
-            {
-                return FormatExponential(Convert.ToDouble(value, culture), node, culture);
-            }
-            else if (node.Type == SectionType.Fraction)
-            {
-                return FormatFraction(Convert.ToDouble(value, culture), node, culture);
-            }
 
-            return "Invalid format";
+                case SectionType.Duration:
+                    return FormatTimeSpan((TimeSpan)value, node.GeneralTextDateDurationParts, culture);
+
+                case SectionType.General:
+                case SectionType.Text:
+                    return FormatGeneralText(Convert.ToString(value, culture), node.GeneralTextDateDurationParts);
+
+                case SectionType.Exponential:
+                    return FormatExponential(Convert.ToDouble(value, culture), node, culture);
+
+                case SectionType.Fraction:
+                    return FormatFraction(Convert.ToDouble(value, culture), node, culture);
+
+                default:
+                    throw new InvalidOperationException("Unknown number format section");
+            }
         }
 
         private static string FormatGeneralText(string text, List<string> tokens)
@@ -714,9 +698,14 @@ namespace ExcelDataReader.Core.NumberFormat
             {
                 // skip commas
             }
-            else if (token.Length == 2 && (token[0] == '*' || token[0] == '_' || token[0] == '\\'))
+            else if (token.Length == 2 && (token[0] == '*' || token[0] == '\\'))
             {
+                // TODO: * = repeat to fill cell
                 literal = token[1].ToString();
+            }
+            else if (token.Length == 2 && token[0] == '_')
+            {
+                literal = " ";
             }
             else if (token.StartsWith("\""))
             {
