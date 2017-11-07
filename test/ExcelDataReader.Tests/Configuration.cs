@@ -156,6 +156,7 @@ namespace ExcelDataReader.Tests
             { "Test_git_issue_286_SST", "Test_git_issue_286_SST.xls" },
             { "Test_git_issue_283_TimeSpan", "Test_git_issue_283_TimeSpan.xls" },
             { "xTest_git_issue_283_TimeSpan", "Test_git_issue_283_TimeSpan.xlsx" },
+            { "Test_git_issue289", "Test_git_issue289.xlsx" },
         };
 
         public static Stream GetTestWorkbook(string key)

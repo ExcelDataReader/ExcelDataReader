@@ -165,7 +165,12 @@ namespace ExcelDataReader
             var infoBytes = document.ReadStream(fileStream, encryptionInfo.StreamFirstSector, (int)encryptionInfo.StreamSize, encryptionInfo.IsEntryMiniStream);
             var encryption = EncryptionInfo.Create(infoBytes);
 
-            if (password == null || !encryption.VerifyPassword(password))
+            if (encryption.VerifyPassword("VelvetSweatshop"))
+            {
+                // Magic password used for write-protected workbooks
+                password = "VelvetSweatshop";
+            }
+            else if (password == null || !encryption.VerifyPassword(password))
             {
                 throw new InvalidPasswordException(Errors.ErrorInvalidPassword);
             }
