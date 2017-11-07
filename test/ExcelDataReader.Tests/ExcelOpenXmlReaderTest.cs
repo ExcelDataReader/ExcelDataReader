@@ -1339,5 +1339,15 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1512, 0, 0, 0));
             }
         }
+
+        [TestMethod]
+        public void GitIssue_289_CompoundDocumentEncryptedWithDefaultPassword()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue289")))
+            {
+                reader.Read();
+                Assert.AreEqual("aaaaaaa", reader.GetValue(0));
+            }
+        }
     }
 }
