@@ -73,7 +73,7 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 - `IsDBNull()` checks if a value in the current row is null. 
 - `GetValue()` returns a value from the current row as an `object`, or `null` if there is no value.
 - `GetDouble()`, `GetInt32()`, `GetBoolean()`, `GetDateTime()`, `GetString()` return a value from the current row cast to their respective type.
-- `GetNumberFormatString()` returns a formatting object for a value in the current row, or `null` if there is no value. See also the Formatting section below.
+- `GetNumberFormatString()` returns a string containing the formatting codes for a value in the current row, or `null` if there is no value. See also the Formatting section below.
 - The typed `Get*()` methods throw `InvalidCastException` unless the types match exactly.
 
 
@@ -131,17 +131,29 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration() {
 });
 ```
 
+
 ## Formatting
 
-`IExcelDataReader.GetNumberFormatString(i)` returns an object of type `NumberFormatString` with the following public method and properties:
+ExcelDataReader does not support formatting directly. Users may retreive the number format string for a cell through `IExcelDataReader.GetNumberFormatString(i)` and use the third party ExcelNumberFormat library for formatting purposes.
 
-- `string Format(object value, CultureInfo culture)` applies the number format to a value - typically from `IExcelDataReader.GetValue(i)` - and returns the formatted string. Uses culture specific thousand and decimal separators when applicable.
-- `string FormatString` returns the number format string.
-- `bool IsValid` returns true if the number format string parsed.
-- `bool IsDateTimeFormat` returns true when the number format contains date formatting tokens and applies to a .NET `DateTime`.
-- `bool IsTimeSpanFormat` returns true when the number format contains duration formatting tokens [hh], [mm] or [ss] and applies to a .NET `TimeSpan`.
+Example helper method using ExcelDataReader and ExcelNumberFormat to format a value:
+
+```c#
+string GetFormattedValue(IExcelDataReader reader, int columnIndex, CultureInfo culture) {
+	var value = reader.GetValue(columnIndex);
+	var formatString = reader.GetNumberFormatString(columnIndex);
+	if (formatString != null) {
+    	var format = new NumberFormat(formatString);
+		return format.Format(value, culture);
+	}
+	return Convert.ToString(value, culture);
+}
+```
+
+See also:
+- https://github.com/andersnm/ExcelNumberFormat
+- https://www.nuget.org/packages/ExcelNumberFormat
  
-Please note, some advanced number format features are not supported currently: conditions, currencies, colors, variable font width. 
 
 ## Important note on .NET Core
 
