@@ -1,3 +1,5 @@
+using ExcelDataReader.Core.NumberFormat;
+
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
     internal class XlsxNumFmt

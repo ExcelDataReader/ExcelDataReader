@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core
 {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ExcelDataReader.Core.NumberFormat;
 using ExcelDataReader.Core.OfficeCrypto;
 using ExcelDataReader.Exceptions;
 

@@ -47,6 +47,6 @@ namespace ExcelDataReader
         /// </summary>
         /// <param name="i">The index of the field to find.</param>
         /// <returns>The number format string of the specified field.</returns>
-        NumberFormatString GetNumberFormatString(int i);
+        string GetNumberFormatString(int i);
     }
 }

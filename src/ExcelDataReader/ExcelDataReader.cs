@@ -126,13 +126,13 @@ namespace ExcelDataReader
 
         public bool IsDBNull(int i) => GetValue(i) == null;
 
-        public NumberFormatString GetNumberFormatString(int i)
+        public string GetNumberFormatString(int i)
         {
             if (RowCells == null)
                 throw new InvalidOperationException("No data exists for the row/column.");
             if (RowCells[i] == null)
                 return null;
-            return _worksheetIterator?.Current?.GetNumberFormatString(RowCells[i].NumberFormatIndex);
+            return _worksheetIterator?.Current?.GetNumberFormatString(RowCells[i].NumberFormatIndex)?.FormatString;
         }
 
         /// <inheritdoc />

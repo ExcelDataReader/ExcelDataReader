@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using ExcelDataReader.Core.NumberFormat;
+﻿using System.Collections.Generic;
 
-namespace ExcelDataReader
+namespace ExcelDataReader.Core.NumberFormat
 {
     /// <summary>
-    /// Parse ECMA-376 number format strings and format values like Excel and other spreadsheet softwares.
+    /// Parse ECMA-376 number format strings from Excel and other spreadsheet softwares.
     /// </summary>
     public class NumberFormatString
     {
@@ -72,48 +69,6 @@ namespace ExcelDataReader
 #else
         internal IReadOnlyList<Section> Sections { get; }
 #endif
-
-        /// <summary>
-        /// Formats a value with this number format in a specified culture.
-        /// </summary>
-        /// <param name="value">The value to format.</param>
-        /// <param name="culture">The culture to use for formatting.</param>
-        /// <returns>The formatted string.</returns>
-        public string Format(object value, CultureInfo culture)
-        {
-            if (!IsValid || string.IsNullOrEmpty(FormatString))
-                return Convert.ToString(value, culture);
-
-            var section = GetSection(value);
-            if (section == null)
-                return Convert.ToString(value, culture);
-
-            try
-            {
-                return Formatter.Format(value, section, culture);
-            }
-            catch (InvalidCastException)
-            {
-                // TimeSpan cast exception
-                return Convert.ToString(value, culture);
-            }
-            catch (FormatException)
-            {
-                // Convert.ToDouble/ToDateTime exceptions
-                return Convert.ToString(value, culture);
-            }
-        }
-
-        internal Section GetSection(object value)
-        {
-            // TODO:
-            // if datetime, return first datetime section, else null
-            // if string, return first text section, else null
-            // if double, int, check condition, order, negative etc, exponential, fraction
-            if (Sections.Count > 0)
-                return Sections[0];
-            return null;
-        }
 
         private Section GetFirstSection(SectionType type)
         {
