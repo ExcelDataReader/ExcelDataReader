@@ -143,7 +143,7 @@ string GetFormattedValue(IExcelDataReader reader, int columnIndex, CultureInfo c
 	var value = reader.GetValue(columnIndex);
 	var formatString = reader.GetNumberFormatString(columnIndex);
 	if (formatString != null) {
-    	var format = new NumberFormat(formatString);
+		var format = new NumberFormat(formatString);
 		return format.Format(value, culture);
 	}
 	return Convert.ToString(value, culture);
