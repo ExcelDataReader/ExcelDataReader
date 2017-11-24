@@ -37,7 +37,7 @@ namespace ExcelDataReader
                 {
                     return new ExcelBinaryReader(stream, configuration);
                 }
-                else if (TryGetEncryptedPackage(fileStream, document, configuration?.Password ?? string.Empty, out stream))
+                else if (TryGetEncryptedPackage(fileStream, document, configuration?.Password, out stream))
                 {
                     return new ExcelOpenXmlReader(stream, configuration);
                 }
@@ -165,7 +165,12 @@ namespace ExcelDataReader
             var infoBytes = document.ReadStream(fileStream, encryptionInfo.StreamFirstSector, (int)encryptionInfo.StreamSize, encryptionInfo.IsEntryMiniStream);
             var encryption = EncryptionInfo.Create(infoBytes);
 
-            if (!encryption.VerifyPassword(password))
+            if (encryption.VerifyPassword("VelvetSweatshop"))
+            {
+                // Magic password used for write-protected workbooks
+                password = "VelvetSweatshop";
+            }
+            else if (password == null || !encryption.VerifyPassword(password))
             {
                 throw new InvalidPasswordException(Errors.ErrorInvalidPassword);
             }

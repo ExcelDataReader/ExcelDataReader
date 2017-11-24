@@ -1,3 +1,5 @@
+using ExcelDataReader.Core.NumberFormat;
+
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
     internal class XlsxNumFmt
@@ -5,11 +7,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         public XlsxNumFmt(int id, string formatCode)
         {
             Id = id;
-            FormatCode = formatCode;
+            FormatCode = new NumberFormatString(formatCode);
         }
 
         public int Id { get; set; }
 
-        public string FormatCode { get; set; }
+        public NumberFormatString FormatCode { get; set; }
     }
 }

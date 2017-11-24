@@ -9,10 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Form1.resx" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\ExcelDataReader\ExcelDataReader.csproj" />
     <ProjectReference Include="..\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj" />
   </ItemGroup>
@@ -28,12 +24,6 @@
 
   <ItemGroup>
     <Compile Update="Form1.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Form1.Designer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Form2.cs">
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>

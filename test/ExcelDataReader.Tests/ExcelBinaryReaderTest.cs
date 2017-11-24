@@ -1383,6 +1383,15 @@ namespace ExcelDataReader.Netstandard20.Tests
                     reader.Read();
                 }
             });
+
+            Assert.Throws<InvalidPasswordException>(() =>
+            {
+                using (var reader = ExcelReaderFactory.CreateBinaryReader(
+                    Configuration.GetTestWorkbook("Test_git_issue_242_xor_pwd_password")))
+                {
+                    reader.Read();
+                }
+            });
         }
 
         [TestMethod]
@@ -1513,7 +1522,55 @@ namespace ExcelDataReader.Netstandard20.Tests
             }
 
             Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
-            
+        }
+
+        [TestMethod]
+        public void GitIssue_286_SSTStringHeader()
+        {
+            // Parse xls with SST containing string split exactly between its header and string data across the BIFF Continue records
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_286_SST")))
+            {
+                Assert.IsNotNull(reader);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_283_TimeSpan()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_283_TimeSpan")))
+            {
+                reader.Read();
+                Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0));
+                Assert.AreEqual((DateTime)reader[2], new DateTime(1899, 12, 31)); // Excel says 1/0/1900, not valid in .NET
+
+                reader.Read();
+                Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(1, 0, 0, 0, 0));
+                Assert.AreEqual((DateTime)reader[2], new DateTime(1900, 1, 1));
+
+                reader.Read();
+                Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(2, 0, 0, 0, 0));
+
+                reader.Read();
+                Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1392, 0, 0, 0));
+
+                reader.Read();
+                Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1416, 0, 0, 0));
+                Assert.AreEqual((DateTime)reader[2], new DateTime(1900, 2, 28));
+
+                reader.Read();
+                Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1440, 0, 0, 0));
+                Assert.AreEqual((DateTime)reader[2], new DateTime(1900, 2, 28)); // Excel says 2/29/1900, not valid in .NET
+
+                reader.Read();
+                Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1464, 0, 0, 0));
+                Assert.AreEqual((DateTime)reader[2], new DateTime(1900, 3, 1));
+
+                reader.Read();
+                Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1488, 0, 0, 0));
+
+                reader.Read();
+                Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1512, 0, 0, 0));
+            }
         }
     }
 }

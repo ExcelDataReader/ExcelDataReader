@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core
 {
@@ -18,5 +19,7 @@ namespace ExcelDataReader.Core
         int FieldCount { get; }
 
         IEnumerable<Row> ReadRows();
+
+        NumberFormatString GetNumberFormatString(int index);
     }
 }

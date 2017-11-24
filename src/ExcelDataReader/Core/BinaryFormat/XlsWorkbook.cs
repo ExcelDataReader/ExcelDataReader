@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ExcelDataReader.Core.NumberFormat;
 using ExcelDataReader.Core.OfficeCrypto;
 using ExcelDataReader.Exceptions;
 
@@ -68,9 +69,9 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public List<XlsBiffRecord> Fonts { get; } = new List<XlsBiffRecord>();
 
-        public Dictionary<ushort, XlsBiffFormatString> Formats { get; } = new Dictionary<ushort, XlsBiffFormatString>();
+        public Dictionary<ushort, NumberFormatString> Formats { get; } = new Dictionary<ushort, NumberFormatString>();
 
-        public List<XlsBiffRecord> ExtendedFormats { get; } = new List<XlsBiffRecord>();
+        public List<XlsBiffXF> ExtendedFormats { get; } = new List<XlsBiffXF>();
 
         public List<XlsBiffRecord> Styles { get; } = new List<XlsBiffRecord>();
 
@@ -146,7 +147,9 @@ namespace ExcelDataReader.Core.BinaryFormat
         private void ReadWorkbookGlobals(XlsBiffStream biffStream)
         {
             XlsBiffRecord rec;
-            while ((rec = biffStream.Read()) != null)
+            var biffFormats = new Dictionary<ushort, XlsBiffFormatString>();
+
+            while ((rec = biffStream.Read()) != null && rec.Id != BIFFRECORDTYPE.EOF)
             {
                 switch (rec.Id)
                 {
@@ -181,14 +184,14 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case BIFFRECORDTYPE.FORMAT_V23:
                         {
                             var fmt = (XlsBiffFormatString)rec;
-                            Formats.Add((ushort)Formats.Count, fmt);
+                            biffFormats.Add((ushort)biffFormats.Count, fmt);
                         }
 
                         break;
                     case BIFFRECORDTYPE.FORMAT:
                         {
                             var fmt = (XlsBiffFormatString)rec;
-                            Formats.Add(fmt.Index, fmt);
+                            biffFormats.Add(fmt.Index, fmt);
                         }
 
                         break;
@@ -196,7 +199,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case BIFFRECORDTYPE.XF_V4:
                     case BIFFRECORDTYPE.XF_V3:
                     case BIFFRECORDTYPE.XF_V2:
-                        ExtendedFormats.Add(rec);
+                        ExtendedFormats.Add((XlsBiffXF)rec);
                         break;
                     case BIFFRECORDTYPE.SST:
                         SST = (XlsBiffSST)rec;
@@ -216,11 +219,15 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case BIFFRECORDTYPE.RECORD1904:
                         IsDate1904 = ((XlsBiffSimpleValueRecord)rec).Value == 1;
                         break;
-                    case BIFFRECORDTYPE.EOF:
-                        return;
                     default:
                         break;
                 }
+            }
+
+            foreach (var biffFormat in biffFormats)
+            {
+                var formatString = biffFormat.Value.GetValue(Encoding);
+                Formats.Add(biffFormat.Key, new NumberFormatString(formatString));
             }
         }
     }

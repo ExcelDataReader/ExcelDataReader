@@ -51,6 +51,13 @@ namespace ExcelDataReader.Core.BinaryFormat
             bool isMultiByte = header.IsMultiByte;
             while (remainingCharacters > 0)
             {
+                if (EnsureRecord())
+                {
+                    // Continue records for string data start with a multibyte header
+                    var b = ReadByte();
+                    isMultiByte = b != 0;
+                }
+
                 var bytesPerCharacter = isMultiByte ? 2 : 1;
                 var maxRecordCharacters = (CurrentRecord.Size - CurrentRecordOffset) / bytesPerCharacter;
                 var readCharacters = Math.Min(maxRecordCharacters, remainingCharacters);
@@ -59,14 +66,6 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                 resultOffset += readCharacters * 2; // The result is always multibyte
                 remainingCharacters -= readCharacters;
-
-                if (remainingCharacters > 0)
-                {
-                    // Continue records for string data start with a multibyte header
-                    EnsureRecord();
-                    var b = ReadByte();
-                    isMultiByte = b != 0;
-                }
             }
 
             // Skip formatting runs and phonetic/extended data. Can also span
@@ -116,7 +115,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// If the read position is exactly at the end of a record:
         /// Read the next continue record and update the read position.
         /// </summary>
-        private void EnsureRecord()
+        private bool EnsureRecord()
         {
             if (CurrentRecordOffset == CurrentRecord.Size)
             {
@@ -127,7 +126,10 @@ namespace ExcelDataReader.Core.BinaryFormat
                 }
 
                 CurrentRecordOffset = 4; // +4 skips BIFF header
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>

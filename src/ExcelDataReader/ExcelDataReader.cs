@@ -18,6 +18,8 @@ namespace ExcelDataReader
     {
         private IEnumerator<TWorksheet> _worksheetIterator;
         private IEnumerator<Row> _rowIterator;
+        private IEnumerator<TWorksheet> _cachedWorksheetIterator = null;
+        private List<TWorksheet> _cachedWorksheets = null;
 
         protected ExcelDataReader(ExcelReaderConfiguration configuration)
         {
@@ -47,7 +49,7 @@ namespace ExcelDataReader
         public string VisibleState => _worksheetIterator?.Current?.VisibleState;
 
         public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
-        
+
         public int Depth { get; private set; }
 
         public int ResultsCount => Workbook?.ResultsCount ?? -1;
@@ -124,6 +126,15 @@ namespace ExcelDataReader
 
         public bool IsDBNull(int i) => GetValue(i) == null;
 
+        public string GetNumberFormatString(int i)
+        {
+            if (RowCells == null)
+                throw new InvalidOperationException("No data exists for the row/column.");
+            if (RowCells[i] == null)
+                return null;
+            return _worksheetIterator?.Current?.GetNumberFormatString(RowCells[i].NumberFormatIndex)?.FormatString;
+        }
+
         /// <inheritdoc />
         public void Reset()
         {
@@ -137,7 +148,7 @@ namespace ExcelDataReader
 
             if (Workbook != null)
             {
-                _worksheetIterator = Workbook.ReadWorksheets().GetEnumerator();
+                _worksheetIterator = ReadWorksheetsWithCache().GetEnumerator(); // Workbook.ReadWorksheets().GetEnumerator();
                 if (!_worksheetIterator.MoveNext())
                 {
                     _worksheetIterator.Dispose();
@@ -205,7 +216,7 @@ namespace ExcelDataReader
             Depth++;
             return true;
         }
-    
+
         public void Dispose()
         {
             Dispose(true);
@@ -219,6 +230,42 @@ namespace ExcelDataReader
                 Close();
         }
 
+        private IEnumerable<TWorksheet> ReadWorksheetsWithCache()
+        {
+            // Iterate TWorkbook.ReadWorksheets() only once and cache the 
+            // worksheet instances, which are expensive to create. 
+            if (_cachedWorksheets != null)
+            {
+                foreach (var worksheet in _cachedWorksheets)
+                {
+                    yield return worksheet;
+                }
+
+                if (_cachedWorksheetIterator == null)
+                {
+                    yield break;
+                }
+            }
+            else
+            {
+                _cachedWorksheets = new List<TWorksheet>();
+            }
+
+            if (_cachedWorksheetIterator == null)
+            {
+                _cachedWorksheetIterator = Workbook.ReadWorksheets().GetEnumerator();
+            }
+
+            while (_cachedWorksheetIterator.MoveNext())
+            {
+                _cachedWorksheets.Add(_cachedWorksheetIterator.Current);
+                yield return _cachedWorksheetIterator.Current;
+            }
+
+            _cachedWorksheetIterator.Dispose();
+            _cachedWorksheetIterator = null;
+        }
+
         private void ResetSheetData()
         {
             Depth = -1;
@@ -228,7 +275,7 @@ namespace ExcelDataReader
         private void ReadCurrentRow()
         {
             if (RowCells == null)
-            { 
+            {
                 RowCells = new Cell[FieldCount];
             }
 
@@ -237,7 +284,7 @@ namespace ExcelDataReader
             foreach (var cell in _rowIterator.Current.Cells)
             {
                 if (cell.ColumnIndex < RowCells.Length)
-                { 
+                {
                     RowCells[cell.ColumnIndex] = cell;
                 }
             }

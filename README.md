@@ -69,10 +69,11 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 - `FieldCount` returns the number of columns in the current sheet.
 - `HeaderFooter` returns an object with information about the headers and footers, or `null` if there are none.
 - `RowHeight` returns the visual height of the current row in points. May be 0 if the row is hidden.
-- `GetFieldType()` returns the type of a value in the current row. Always one of the types supported by Excel: `double`, `int`, `bool`, `DateTime`, `string`, or `null` if there is no value.
+- `GetFieldType()` returns the type of a value in the current row. Always one of the types supported by Excel: `double`, `int`, `bool`, `DateTime`, `TimeSpan`, `string`, or `null` if there is no value.
 - `IsDBNull()` checks if a value in the current row is null. 
 - `GetValue()` returns a value from the current row as an `object`, or `null` if there is no value.
 - `GetDouble()`, `GetInt32()`, `GetBoolean()`, `GetDateTime()`, `GetString()` return a value from the current row cast to their respective type.
+- `GetNumberFormatString()` returns a string containing the formatting codes for a value in the current row, or `null` if there is no value. See also the Formatting section below.
 - The typed `Get*()` methods throw `InvalidCastException` unless the types match exactly.
 
 
@@ -130,6 +131,29 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration() {
 });
 ```
 
+
+## Formatting
+
+ExcelDataReader does not support formatting directly. Users may retreive the number format string for a cell through `IExcelDataReader.GetNumberFormatString(i)` and use the third party ExcelNumberFormat library for formatting purposes.
+
+Example helper method using ExcelDataReader and ExcelNumberFormat to format a value:
+
+```c#
+string GetFormattedValue(IExcelDataReader reader, int columnIndex, CultureInfo culture) {
+	var value = reader.GetValue(columnIndex);
+	var formatString = reader.GetNumberFormatString(columnIndex);
+	if (formatString != null) {
+		var format = new NumberFormat(formatString);
+		return format.Format(value, culture);
+	}
+	return Convert.ToString(value, culture);
+}
+```
+
+See also:
+- https://github.com/andersnm/ExcelNumberFormat
+- https://www.nuget.org/packages/ExcelNumberFormat
+ 
 
 ## Important note on .NET Core
 

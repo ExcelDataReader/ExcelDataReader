@@ -41,5 +41,12 @@ namespace ExcelDataReader
         /// Seeks to the first result.
         /// </summary>
         void Reset();
+
+        /// <summary>
+        /// Gets the number format for the specified field -or- <see langword="null"/> if there is no value.
+        /// </summary>
+        /// <param name="i">The index of the field to find.</param>
+        /// <returns>The number format string of the specified field.</returns>
+        string GetNumberFormatString(int i);
     }
 }

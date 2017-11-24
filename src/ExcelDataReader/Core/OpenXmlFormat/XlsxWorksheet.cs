@@ -1,8 +1,8 @@
-// ReSharper disable InconsistentNaming
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Xml;
+using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
@@ -104,25 +104,22 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
+        public NumberFormatString GetNumberFormatString(int numberFormatIndex)
+        {
+            var numFmt = Workbook.Styles.NumFmts.Find(x => x.Id == numberFormatIndex);
+            if (numFmt != null)
+            { 
+                return numFmt.FormatCode;
+            }
+
+            return BuiltinNumberFormat.GetBuiltinNumberFormat(numberFormatIndex);
+        }
+
         private void ReadWorksheetGlobals()
         {
             if (string.IsNullOrEmpty(Path))
                 return;
 
-            foreach (var sheetObject in ReadWorksheetStream(true))
-            {
-                switch (sheetObject.Type)
-                {
-                    case XlsxElementType.Dimension:
-                        // Ignore dimensions
-                        break;
-                    case XlsxElementType.HeaderFooter:
-                        XlsxHeaderFooter headerFooter = (XlsxHeaderFooter)sheetObject;
-                        HeaderFooter = headerFooter.Value;
-                        break;
-                }
-            }
-            
             int rows = int.MinValue;
             int cols = int.MinValue;
             foreach (var sheetObject in ReadWorksheetStream(false))
@@ -132,6 +129,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     var rowBlock = ((XlsxRow)sheetObject).Row;
                     rows = Math.Max(rows, rowBlock.RowIndex);
                     cols = Math.Max(cols, rowBlock.GetMaxColumnIndex());
+                }
+                else if (sheetObject.Type == XlsxElementType.HeaderFooter)
+                {
+                    XlsxHeaderFooter headerFooter = (XlsxHeaderFooter)sheetObject;
+                    HeaderFooter = headerFooter.Value;
                 }
             }
 
@@ -231,7 +233,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             xmlReader.Skip();
 
             if (!string.IsNullOrEmpty(dimValue))
-            { 
+            {
                 var dimension = new XlsxDimension(dimValue);
                 if (dimension.IsRange)
                 {
@@ -370,6 +372,18 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             else
                 result.ColumnIndex = nextColumnIndex;
 
+            if (aS != null)
+            {
+                if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
+                {
+                    if (styleIndex >= 0 && styleIndex < Workbook.Styles.CellXfs.Count)
+                    {
+                        XlsxXf xf = Workbook.Styles.CellXfs[styleIndex];
+                        result.NumberFormatIndex = xf.NumFmtId;
+                    }
+                }
+            }
+
             if (!XmlReaderHelper.ReadFirstContent(xmlReader))
             {
                 return result;
@@ -381,13 +395,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 {
                     var rawValue = xmlReader.ReadElementContentAsString();
                     if (!string.IsNullOrEmpty(rawValue))
-                        result.Value = ConvertCellValue(rawValue, aT, aS);
+                        result.Value = ConvertCellValue(rawValue, aT, result.NumberFormatIndex);
                 }
                 else if (xmlReader.IsStartElement(NIs, NsSpreadsheetMl))
                 {
                     var rawValue = ReadInlineString(xmlReader);
                     if (!string.IsNullOrEmpty(rawValue))
-                        result.Value = ConvertCellValue(rawValue, aT, aS);
+                        result.Value = ConvertCellValue(rawValue, aT, result.NumberFormatIndex);
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {
@@ -422,7 +436,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             return result;
         }
 
-        private object ConvertCellValue(string rawValue, string aT, string aS)
+        private object ConvertCellValue(string rawValue, string aT, int numberFormatIndex)
         {
             const NumberStyles style = NumberStyles.Any;
             var invariantCulture = CultureInfo.InvariantCulture;
@@ -450,28 +464,20 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
                     return rawValue;
                 default:
-                    bool isNumber = double.TryParse(rawValue, style, invariantCulture, out double number);
-
-                    if (aS != null)
+                    if (double.TryParse(rawValue, style, invariantCulture, out double number))
                     {
-                        if (int.TryParse(aS, style, invariantCulture, out var styleIndex))
+                        var format = GetNumberFormatString(numberFormatIndex);
+                        if (format != null)
                         {
-                            if (styleIndex >= 0 && styleIndex < Workbook.Styles.CellXfs.Count)
-                            {
-                                XlsxXf xf = Workbook.Styles.CellXfs[styleIndex];
-                                if (isNumber && Workbook.IsDateTimeStyle(xf.NumFmtId))
-                                    return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
-                            }
+                            if (format.IsDateTimeFormat)
+                                return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
+                            if (format.IsTimeSpanFormat)
+                                return TimeSpan.FromDays(number);
                         }
 
-                        // NOTE: Commented out to match behavior of the binary reader; 
-                        // formatting should ultimately be applied by the caller
-                        // if (xf.NumFmtId == 49) // Text format but value is not stored as a string. If numeric convert to current culture. 
-                        //    return isNumber ? number.ToString() : rawValue;
+                        return number;
                     }
 
-                    if (isNumber)
-                        return number;
                     return rawValue;
             }
         }
