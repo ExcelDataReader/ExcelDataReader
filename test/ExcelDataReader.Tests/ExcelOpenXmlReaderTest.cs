@@ -1349,5 +1349,37 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual("aaaaaaa", reader.GetValue(0));
             }
         }
+
+        [TestMethod]
+        public void MergedCells()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_MergedCell_OpenXml")))
+            {
+                var ds = excelReader.AsDataSet();
+                CollectionAssert.AreEqual(new object[] {
+                    "Merge Cell 1",
+                    "Merge Cell 1",
+                    "Merge Cell 2"
+                }, ds.Tables[0].Rows[1].ItemArray);
+
+                CollectionAssert.AreEqual(new object[] {
+                    "Merge Cell 1",
+                    "Merge Cell 1",
+                    "Merge Cell 2"
+                }, ds.Tables[0].Rows[2].ItemArray);
+
+                CollectionAssert.AreEqual(new object[] {
+                    "Merge Cell 3",
+                    "B4",
+                    "Merge Cell 2"
+                }, ds.Tables[0].Rows[3].ItemArray);
+
+                CollectionAssert.AreEqual(new object[] {
+                    "Merge Cell 4",
+                    "Merge Cell 4",
+                    "Merge Cell 4"
+                }, ds.Tables[0].Rows[6].ItemArray);
+            }
+        }
     }
 }

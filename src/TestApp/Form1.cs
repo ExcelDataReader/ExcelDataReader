@@ -227,7 +227,7 @@ namespace TestApp
         private void Button2Click(object sender, EventArgs e)
         {
             var file = new FileInfo(textBox1.Text);
-            using (var stream = new FileStream(textBox1.Text, FileMode.Open))
+            using (var stream = new FileStream(textBox1.Text, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 IExcelDataReader reader = null;
                 if (file.Extension == ".xls")
