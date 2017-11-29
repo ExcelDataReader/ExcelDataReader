@@ -31,7 +31,7 @@ namespace ExcelDataReader
         /// <summary>
         /// Gets the list of merged cell ranges.
         /// </summary>
-        List<CellRange> MergedCells { get; }
+        CellRange[] MergedCells { get; }
 
         /// <summary>
         /// Gets the number of results (workbooks).

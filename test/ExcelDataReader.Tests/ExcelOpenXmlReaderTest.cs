@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 #if NET20 || NET45 || NETCOREAPP2_0
 using System.Data;
@@ -1356,7 +1357,7 @@ namespace ExcelDataReader.Netstandard20.Tests
             using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_MergedCell_OpenXml")))
             {
                 excelReader.Read();
-                var mergedCells = excelReader.MergedCells;
+                var mergedCells = new List<CellRange>(excelReader.MergedCells);
                 Assert.AreEqual(mergedCells.Count, 4, "Incorrect number of merged cells");
 
                 //Sort from top -> left, then down

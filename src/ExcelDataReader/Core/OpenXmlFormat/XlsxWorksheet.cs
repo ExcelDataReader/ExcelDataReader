@@ -45,6 +45,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string ACustomHeight = "customHeight";
         private const string AHt = "ht";
 
+        private List<CellRange> mergedCellsList = new List<CellRange>();
+
         public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, XlsxBoundSheet refSheet)
         {
             Document = document;
@@ -78,8 +80,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public string Path { get; set; }
 
-        public List<CellRange> MergedCells { get; private set; } = new List<CellRange>();
-
+        public CellRange[] MergedCells
+        {
+            get { return mergedCellsList.ToArray(); }
+        }
+                
         private ZipWorker Document { get; }
 
         private XlsxWorkbook Workbook { get; }
@@ -143,7 +148,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 else if (sheetObject.Type == XlsxElementType.MergeCell)
                 {
                     XlsxMergeCell mergedCell = (XlsxMergeCell)sheetObject;
-                    MergedCells.Add(mergedCell.Value);
+                    mergedCellsList.Add(mergedCell.Value);
                 }
             }
 

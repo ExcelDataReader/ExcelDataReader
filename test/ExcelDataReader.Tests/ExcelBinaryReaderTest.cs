@@ -2,6 +2,7 @@
 #if NET20 || NET45 || NETCOREAPP2_0
 using System.Data;
 #endif
+using System.Collections.Generic;
 using System.IO;
 using ExcelDataReader.Exceptions;
 using ExcelDataReader.Tests;
@@ -1594,7 +1595,7 @@ namespace ExcelDataReader.Netstandard20.Tests
             {
 
                 excelReader.Read();
-                var mergedCells = excelReader.MergedCells;
+                var mergedCells = new List<CellRange> (excelReader.MergedCells);
                 Assert.AreEqual(mergedCells.Count, 4, "Incorrect number of merged cells");
 
                 //Sort from top -> left, then down
