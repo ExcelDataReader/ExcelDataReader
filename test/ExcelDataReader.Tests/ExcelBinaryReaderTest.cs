@@ -1095,7 +1095,20 @@ namespace ExcelDataReader.Netstandard20.Tests
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Row1217NotRead")))
             {
                 var ds = excelReader.AsDataSet();
-                CollectionAssert.AreEqual(new object[] { DBNull.Value, "Año", "Mes", DBNull.Value, "Índice", "Variación Mensual", "Variación Acumulada", "Variación en 12 Meses", "Incidencia Mensual", "Incidencia Acumulada", "Incidencia a 12 Meses", DBNull.Value, DBNull.Value }, ds.Tables[0].Rows[1216].ItemArray);
+                CollectionAssert.AreEqual(new object[] {
+                    DBNull.Value,
+                    "Año",
+                    "Mes",
+                    "Mes", //Merged Cell
+                    "Índice",
+                    "Variación Mensual",
+                    "Variación Acumulada",
+                    "Variación en 12 Meses",
+                    "Incidencia Mensual",
+                    "Incidencia Acumulada", "" +
+                    "Incidencia a 12 Meses",
+                    "Incidencia a 12 Meses", //Merged Cell
+                    DBNull.Value }, ds.Tables[0].Rows[1216].ItemArray);
             }
         }
 
@@ -1570,6 +1583,39 @@ namespace ExcelDataReader.Netstandard20.Tests
 
                 reader.Read();
                 Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1512, 0, 0, 0));
+            }
+        }
+
+
+        [TestMethod]
+        public void MergedCells()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_MergedCell_Binary")))
+            {
+                var ds = excelReader.AsDataSet();
+                CollectionAssert.AreEqual(new object[] {
+                    "Merge Cell 1", 
+                    "Merge Cell 1",
+                    "Merge Cell 2"
+                }, ds.Tables[0].Rows[1].ItemArray);
+
+                CollectionAssert.AreEqual(new object[] {
+                    "Merge Cell 1",
+                    "Merge Cell 1",
+                    "Merge Cell 2"
+                }, ds.Tables[0].Rows[2].ItemArray);
+
+                CollectionAssert.AreEqual(new object[] {
+                    "Merge Cell 3",
+                    "B4",
+                    "Merge Cell 2"
+                }, ds.Tables[0].Rows[3].ItemArray);
+
+                CollectionAssert.AreEqual(new object[] {
+                    "Merge Cell 4",
+                    "Merge Cell 4",
+                    "Merge Cell 4"
+                }, ds.Tables[0].Rows[6].ItemArray);
             }
         }
     }
