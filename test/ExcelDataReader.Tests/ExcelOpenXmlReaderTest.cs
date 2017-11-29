@@ -1355,30 +1355,88 @@ namespace ExcelDataReader.Netstandard20.Tests
         {
             using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_MergedCell_OpenXml")))
             {
-                var ds = excelReader.AsDataSet();
-                CollectionAssert.AreEqual(new object[] {
-                    "Merge Cell 1",
-                    "Merge Cell 1",
-                    "Merge Cell 2"
-                }, ds.Tables[0].Rows[1].ItemArray);
+                excelReader.Read();
+                var mergedCells = excelReader.MergedCells;
+                Assert.AreEqual(mergedCells.Count, 4, "Incorrect number of merged cells");
 
-                CollectionAssert.AreEqual(new object[] {
-                    "Merge Cell 1",
-                    "Merge Cell 1",
-                    "Merge Cell 2"
-                }, ds.Tables[0].Rows[2].ItemArray);
+                //Sort from top -> left, then down
+                mergedCells.Sort(delegate (MergedCell c1, MergedCell c2)
+                {
+                    if (c1.FromRow == c2.FromRow)
+                    {
+                        return c1.FromColumn.CompareTo(c2.FromColumn);
+                    }
+                    return c1.FromRow.CompareTo(c2.FromRow);
+                });
 
-                CollectionAssert.AreEqual(new object[] {
-                    "Merge Cell 3",
-                    "B4",
-                    "Merge Cell 2"
-                }, ds.Tables[0].Rows[3].ItemArray);
+                CollectionAssert.AreEqual(
+                    new int[]
+                    {
+                        1,
+                        2,
+                        0,
+                        1
+                    },
+                    new int[]
+                    {
+                        mergedCells[0].FromRow,
+                        mergedCells[0].ToRow,
+                        mergedCells[0].FromColumn,
+                        mergedCells[0].ToColumn
+                    }
+                );
 
-                CollectionAssert.AreEqual(new object[] {
-                    "Merge Cell 4",
-                    "Merge Cell 4",
-                    "Merge Cell 4"
-                }, ds.Tables[0].Rows[6].ItemArray);
+                CollectionAssert.AreEqual(
+                    new int[]
+                    {
+                        1,
+                        5,
+                        2,
+                        2
+                    },
+                    new int[]
+                    {
+                        mergedCells[1].FromRow,
+                        mergedCells[1].ToRow,
+                        mergedCells[1].FromColumn,
+                        mergedCells[1].ToColumn
+                    }
+                );
+
+                CollectionAssert.AreEqual(
+                    new int[]
+                    {
+                        3,
+                        5,
+                        0,
+                        0
+                    },
+                    new int[]
+                    {
+                        mergedCells[2].FromRow,
+                        mergedCells[2].ToRow,
+                        mergedCells[2].FromColumn,
+                        mergedCells[2].ToColumn
+                    }
+                );
+
+                CollectionAssert.AreEqual(
+                    new int[]
+                    {
+                        6,
+                        6,
+                        0,
+                        2
+                    },
+                    new int[]
+                    {
+                        mergedCells[3].FromRow,
+                        mergedCells[3].ToRow,
+                        mergedCells[3].FromColumn,
+                        mergedCells[3].ToColumn
+                    }
+                );
+
             }
         }
     }

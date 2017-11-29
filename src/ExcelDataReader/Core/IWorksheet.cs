@@ -18,6 +18,8 @@ namespace ExcelDataReader.Core
 
         int FieldCount { get; }
 
+        List<MergedCell> MergedCells { get; }
+
         IEnumerable<Row> ReadRows();
 
         NumberFormatString GetNumberFormatString(int index);

@@ -1,4 +1,5 @@
 using System.Data;
+using System.Collections.Generic;
 
 namespace ExcelDataReader
 {
@@ -26,6 +27,11 @@ namespace ExcelDataReader
         /// Gets the sheet header and footer -or- <see langword="null"/> if none set.
         /// </summary>
         HeaderFooter HeaderFooter { get; }
+
+        /// <summary>
+        /// Gets the list of merged cell ranges.
+        /// </summary>
+        List<MergedCell> MergedCells { get; }
 
         /// <summary>
         /// Gets the number of results (workbooks).

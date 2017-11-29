@@ -57,6 +57,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public HeaderFooter HeaderFooter { get; private set; }
 
+        public List<MergedCell> MergedCells { get; private set; } = new List<MergedCell>();
+
         /// <summary>
         /// Gets the worksheet data offset.
         /// </summary>
@@ -96,9 +98,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         public bool IsDate1904 { get; private set; }
 
         public XlsWorkbook Workbook { get; }
-
         private List<MergedCell> MergedCells { get; set; } = new List<MergedCell>();
-
+        
         public IEnumerable<Row> ReadRows()
         {
             var rowIndex = 0;
@@ -215,60 +216,10 @@ namespace ExcelDataReader.Core.BinaryFormat
                 }
             }
 
-            ApplyMergedCells(result);
-
+            
             return result;
         }
-
-        /// <summary>
-        /// For each Merged Cell range, force the top left cell value across the merged range
-        /// </summary>
-        /// <param name="result">The worksheet with rows loaded</param>
-        private void ApplyMergedCells(XlsRowBlock result)
-        {
-            foreach (var merge in MergedCells)
-            {
-                for (var rowIndex = merge.FromRow; rowIndex <= merge.ToRow; ++rowIndex)
-                {
-                    Row row;
-                    if (result.Rows.TryGetValue(rowIndex, out row))
-                    {
-                        var rowCells = row.Cells;
-                        List<int> columnsToUpdate = new List<int>(); // Store list of all affected to mark off which have been handled
-                        for (int colIndex = merge.FromColumn; colIndex <= merge.ToColumn; ++colIndex)
-                        {
-                            columnsToUpdate.Add(colIndex);
-                        }
-
-                        for (var i = 0; i < rowCells.Count; ++i)
-                        {
-                            var c = rowCells[i];
-                            if (c.ColumnIndex >= merge.FromColumn && c.ColumnIndex <= merge.ToColumn)
-                            {
-                                Cell merged;
-                                columnsToUpdate.Remove(c.ColumnIndex);
-                                if (merge.GetSourceValue(c.ColumnIndex, row.RowIndex, c, out merged))
-                                {
-                                    rowCells[i] = merged;
-                                    break;
-                                }
-                            }
-                        }
-
-                        // Add cells in the merged range where no cell had been loaded
-                        foreach (var missingColumnCellIndex in columnsToUpdate)
-                        {
-                            Cell merged;
-                            if (merge.GetSourceValue(missingColumnCellIndex, row.RowIndex, null, out merged))
-                            {
-                                rowCells.Add(merged);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
+        
         private Row EnsureRow(XlsRowBlock result, int rowIndex)
         {
             if (!result.Rows.TryGetValue(rowIndex, out var currentRow))

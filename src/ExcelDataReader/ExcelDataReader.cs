@@ -50,6 +50,8 @@ namespace ExcelDataReader
 
         public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
 
+        public List<MergedCell> MergedCells => _worksheetIterator?.Current?.MergedCells;
+
         public int Depth { get; private set; }
 
         public int ResultsCount => Workbook?.ResultsCount ?? -1;
@@ -123,7 +125,7 @@ namespace ExcelDataReader
         }
 
         public int GetValues(object[] values) => throw new NotSupportedException();
-
+               
         public bool IsDBNull(int i) => GetValue(i) == null;
 
         public string GetNumberFormatString(int i)

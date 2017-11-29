@@ -78,11 +78,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public string Path { get; set; }
 
+        public List<MergedCell> MergedCells { get; private set; } = new List<MergedCell>();
+
         private ZipWorker Document { get; }
 
         private XlsxWorkbook Workbook { get; }
-
-        private List<MergedCell> MergedCells { get; set; } = new List<MergedCell>();
 
         public IEnumerable<Row> ReadRows()
         {
@@ -101,20 +101,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                             Height = DefaultRowHeight,
                             Cells = new List<Cell>()
                         };
-                    }
-
-                    for (int iCell = 0; iCell < rowBlock.Cells.Count; ++iCell)
-                    {
-                        var cell = rowBlock.Cells[iCell];
-                        foreach (var merge in MergedCells)
-                        {
-                            Cell merged;
-                            if (merge.GetSourceValue(cell.ColumnIndex, rowIndex, cell, out merged))
-                            {
-                                rowBlock.Cells[iCell] = merged;
-                                break;
-                            }
-                        }
                     }
 
                     rowIndex++;
