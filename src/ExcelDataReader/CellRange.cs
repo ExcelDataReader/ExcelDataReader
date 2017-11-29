@@ -4,11 +4,11 @@ using ExcelDataReader.Core;
 namespace ExcelDataReader
 {
     /// <summary>
-    /// Header and footer text. 
+    /// A range for cells using 0 index positions. 
     /// </summary>
-    public sealed class MergedCell
+    public sealed class CellRange
     {
-        internal MergedCell(string from, string to)
+        internal CellRange(string from, string to)
         {
             int fromColumn, fromRow, toColumn, toRow;
             ReferenceHelper.ParseReference(from, out fromColumn, out fromRow);
@@ -24,7 +24,7 @@ namespace ExcelDataReader
             ToRow = toRow - 1;
         }
 
-        internal MergedCell(int fromColumn, int fromRow, int toColumn, int toRow)
+        internal CellRange(int fromColumn, int fromRow, int toColumn, int toRow)
         {
             FromColumn = fromColumn;
             FromRow = fromRow;

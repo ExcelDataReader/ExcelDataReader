@@ -7,6 +7,6 @@
         {
         }
 
-        public MergedCell Value { get; set; }
+        public CellRange Value { get; set; }
     }
 }

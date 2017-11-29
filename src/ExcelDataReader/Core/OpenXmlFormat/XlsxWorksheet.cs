@@ -78,7 +78,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public string Path { get; set; }
 
-        public List<MergedCell> MergedCells { get; private set; } = new List<MergedCell>();
+        public List<CellRange> MergedCells { get; private set; } = new List<CellRange>();
 
         private ZipWorker Document { get; }
 
@@ -317,7 +317,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
                     yield return new XlsxMergeCell()
                     {
-                        Value = new MergedCell(from, to)
+                        Value = new CellRange(from, to)
                     };
 
                     xmlReader.Read();
@@ -340,7 +340,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
                             yield return new XlsxMergeCell()
                             {
-                                Value = new MergedCell(from, to)
+                                Value = new CellRange(from, to)
                             };
                         }
                         else if (!XmlReaderHelper.SkipContent(xmlReader))

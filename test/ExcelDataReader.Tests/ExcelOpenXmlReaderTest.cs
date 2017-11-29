@@ -1360,7 +1360,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual(mergedCells.Count, 4, "Incorrect number of merged cells");
 
                 //Sort from top -> left, then down
-                mergedCells.Sort(delegate (MergedCell c1, MergedCell c2)
+                mergedCells.Sort(delegate (CellRange c1, CellRange c2)
                 {
                     if (c1.FromRow == c2.FromRow)
                     {

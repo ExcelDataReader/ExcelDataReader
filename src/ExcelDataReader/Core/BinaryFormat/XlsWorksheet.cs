@@ -57,7 +57,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public HeaderFooter HeaderFooter { get; private set; }
 
-        public List<MergedCell> MergedCells { get; private set; } = new List<MergedCell>();
+        public List<CellRange> MergedCells { get; private set; } = new List<CellRange>();
 
         /// <summary>
         /// Gets the worksheet data offset.
@@ -98,7 +98,6 @@ namespace ExcelDataReader.Core.BinaryFormat
         public bool IsDate1904 { get; private set; }
 
         public XlsWorkbook Workbook { get; }
-        private List<MergedCell> MergedCells { get; set; } = new List<MergedCell>();
         
         public IEnumerable<Row> ReadRows()
         {
@@ -215,7 +214,6 @@ namespace ExcelDataReader.Core.BinaryFormat
                     ixfe = null;
                 }
             }
-
             
             return result;
         }
@@ -434,7 +432,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 var fromCol = BitConverter.ToInt16(xlsMergedCells.ReadArray(i + 4, 2), 0);
                 var toCol = BitConverter.ToInt16(xlsMergedCells.ReadArray(i + 6, 2), 0);
 
-                MergedCell mergedCell = new MergedCell(fromCol, fromRow, toCol, toRow);
+                CellRange mergedCell = new CellRange(fromCol, fromRow, toCol, toRow);
                 MergedCells.Add(mergedCell);
             }
         }

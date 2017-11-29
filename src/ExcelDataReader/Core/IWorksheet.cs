@@ -18,7 +18,7 @@ namespace ExcelDataReader.Core
 
         int FieldCount { get; }
 
-        List<MergedCell> MergedCells { get; }
+        List<CellRange> MergedCells { get; }
 
         IEnumerable<Row> ReadRows();
 
