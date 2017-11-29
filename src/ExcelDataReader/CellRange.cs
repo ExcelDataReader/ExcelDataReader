@@ -32,13 +32,24 @@ namespace ExcelDataReader
             ToRow = toRow;
         }
 
+        /// <summary>
+        /// Gets the column the range starts in
+        /// </summary>
         public int FromColumn { get; private set; }
 
+        /// <summary>
+        /// Gets the row the range starts in
+        /// </summary>
         public int FromRow { get; private set; }
 
+        /// <summary>
+        /// Gets the column the range ends in
+        /// </summary>
         public int ToColumn { get; private set; }
 
+        /// <summary>
+        /// Gets the row the range ends in
+        /// </summary>
         public int ToRow { get; private set; }
-
     }
 }
