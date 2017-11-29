@@ -70,11 +70,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public HeaderFooter HeaderFooter { get; private set; }
 
-        /// <summary>
-        /// List of all the Merged Cell ranges
-        /// </summary>
-        private List<MergedCell> MergedCells { get; set; } = new List<MergedCell>();
-
         public double DefaultRowHeight { get; private set; }
 
         public int Id { get; }
@@ -86,6 +81,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private ZipWorker Document { get; }
 
         private XlsxWorkbook Workbook { get; }
+
+        private List<MergedCell> MergedCells { get; set; } = new List<MergedCell>();
 
         public IEnumerable<Row> ReadRows()
         {
@@ -105,6 +102,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                             Cells = new List<Cell>()
                         };
                     }
+
                     for (int iCell = 0; iCell < rowBlock.Cells.Count; ++iCell)
                     {
                         var cell = rowBlock.Cells[iCell];
@@ -239,7 +237,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         }
                     }
                 }
-                
                 else if (xmlReader.IsStartElement(NHeaderFooter, NsSpreadsheetMl))
                 {
                     var result = ReadHeaderFooter(xmlReader);
@@ -323,13 +320,15 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 if (xmlReader.IsStartElement(NMergeCell, NsSpreadsheetMl))
                 {
                     var cellRefs = xmlReader.GetAttribute(ARef);
-                    string from = "", to = "";
+                    string from = string.Empty, to = string.Empty;
                     var fromTo = cellRefs.Split(':');
-                    if(fromTo.Length  == 2)
+
+                    if (fromTo.Length == 2)
                     {
                         from = fromTo[0];
                         to = fromTo[1];
                     }
+
                     yield return new XlsxMergeCell()
                     {
                         Value = new MergedCell(from, to)
@@ -342,9 +341,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         if (xmlReader.IsStartElement(NMergeCell, NsSpreadsheetMl))
                         {
                             cellRefs = xmlReader.GetAttribute(ARef);
-                            from = "";
-                            to = "";
-                             fromTo = cellRefs.Split(':');
+                            from = string.Empty;
+                            to = string.Empty;
+                            fromTo = cellRefs.Split(':');
                             if (fromTo.Length == 2)
                             {
                                 from = fromTo[0];

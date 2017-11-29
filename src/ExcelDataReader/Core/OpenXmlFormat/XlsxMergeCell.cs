@@ -8,6 +8,5 @@
         }
 
         public MergedCell Value { get; set; }
-        
     }
 }

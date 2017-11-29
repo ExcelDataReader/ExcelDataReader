@@ -68,11 +68,6 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public List<XlsBiffXF> ExtendedFormats { get; }
 
-        /// <summary>
-        /// Stores the Merged Cell ranges
-        /// </summary>
-        public List<MergedCell> MergedCells { get; private set; } = new List<MergedCell>();
-
         public Encoding Encoding { get; private set; }
 
         public double DefaultRowHeight { get; set; }
@@ -101,6 +96,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         public bool IsDate1904 { get; private set; }
 
         public XlsWorkbook Workbook { get; }
+
+        private List<MergedCell> MergedCells { get; set; } = new List<MergedCell>();
 
         public IEnumerable<Row> ReadRows()
         {
@@ -226,7 +223,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// For each Merged Cell range, force the top left cell value across the merged range
         /// </summary>
-        /// <param name="result"></param>
+        /// <param name="result">The worksheet with rows loaded</param>
         private void ApplyMergedCells(XlsRowBlock result)
         {
             foreach (var merge in MergedCells)
@@ -237,8 +234,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                     if (result.Rows.TryGetValue(rowIndex, out row))
                     {
                         var rowCells = row.Cells;
-                        List<int> columnsToUpdate = new List<int>(); //Store list of all affected to mark off which have been handled
-                        for(int colIndex = merge.FromColumn; colIndex <= merge.ToColumn; ++colIndex)
+                        List<int> columnsToUpdate = new List<int>(); // Store list of all affected to mark off which have been handled
+                        for (int colIndex = merge.FromColumn; colIndex <= merge.ToColumn; ++colIndex)
                         {
                             columnsToUpdate.Add(colIndex);
                         }
@@ -259,7 +256,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         }
 
                         // Add cells in the merged range where no cell had been loaded
-                        foreach(var missingColumnCellIndex in columnsToUpdate)
+                        foreach (var missingColumnCellIndex in columnsToUpdate)
                         {
                             Cell merged;
                             if (merge.GetSourceValue(missingColumnCellIndex, row.RowIndex, null, out merged))
@@ -269,7 +266,6 @@ namespace ExcelDataReader.Core.BinaryFormat
                         }
                     }
                 }
-
             }
         }
 
@@ -471,24 +467,22 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             return format;
         }
-
         
         /// <summary>
         /// Read the ranges of Merged Cells
         /// </summary>
-        /// <param name="xlsMergedCells"></param>
+        /// <param name="xlsMergedCells">The record for Merged Cells</param>
         private void ReadMergedCells(XlsBiffRecord xlsMergedCells)
         {
-            //Start at 2 due to the first 2 byte being a count
-            //Each 8 bytes are then the range (from row,to row, from col, to col)
-            for (int i= 2; i <= xlsMergedCells.RecordSize - 8; i+= 8)
+            // Start at 2 due to the first 2 byte being a count
+            // Each 8 bytes are then the range (from row,to row, from col, to col)
+            for (int i = 2; i <= xlsMergedCells.RecordSize - 8; i += 8)
             {
                 var fromRow = BitConverter.ToInt16(xlsMergedCells.ReadArray(i, 2), 0);
                 var toRow = BitConverter.ToInt16(xlsMergedCells.ReadArray(i + 2, 2), 0);
-
-
                 var fromCol = BitConverter.ToInt16(xlsMergedCells.ReadArray(i + 4, 2), 0);
-                var toCol = BitConverter.ToInt16(xlsMergedCells.ReadArray(i  +6, 2), 0);
+                var toCol = BitConverter.ToInt16(xlsMergedCells.ReadArray(i + 6, 2), 0);
+
                 MergedCell mergedCell = new MergedCell(fromCol, fromRow, toCol, toRow);
                 MergedCells.Add(mergedCell);
             }

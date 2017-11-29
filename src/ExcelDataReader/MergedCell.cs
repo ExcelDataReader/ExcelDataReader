@@ -1,5 +1,5 @@
-using ExcelDataReader.Core;
 using System;
+using ExcelDataReader.Core;
 
 namespace ExcelDataReader
 {
@@ -8,51 +8,48 @@ namespace ExcelDataReader
     /// </summary>
     internal sealed class MergedCell
     {
-        private string FromCell { get;  set; }
-        private string ToCell { get;  set; }
-
-        public int FromColumn { get; private set; }
-        public int FromRow { get; private set; }
-
-        public int ToColumn { get; private set; }
-        public int ToRow { get; private set; }
-
-        private Cell SourceCell { get; set; }
-
         internal MergedCell(string from, string to)
         {
-            FromCell = from;
-            ToCell = to;
-
             int fromColumn, fromRow, toColumn, toRow;
-            ReferenceHelper.ParseReference(FromCell, out  fromColumn, out  fromRow);
-            //0 indexed vs 1 indexed
+            ReferenceHelper.ParseReference(from, out fromColumn, out fromRow);
+
+            // 0 indexed vs 1 indexed
             FromColumn = fromColumn - 1;
             FromRow = fromRow - 1;
 
-            ReferenceHelper.ParseReference(ToCell, out  toColumn, out toRow);
-            //0 indexed vs 1 indexed
+            ReferenceHelper.ParseReference(to, out toColumn, out toRow);
+
+            // 0 indexed vs 1 indexed
             ToColumn = toColumn - 1;
             ToRow = toRow - 1;
         }
 
-        internal MergedCell(int fromColumn,int fromRow, int toColumn, int toRow)
+        internal MergedCell(int fromColumn, int fromRow, int toColumn, int toRow)
         {
-            FromColumn = fromColumn ;
-            FromRow = fromRow ;
-            ToColumn = toColumn ;
-            ToRow = toRow ;
+            FromColumn = fromColumn;
+            FromRow = fromRow;
+            ToColumn = toColumn;
+            ToRow = toRow;
         }
 
+        public int FromColumn { get; private set; }
+
+        public int FromRow { get; private set; }
+
+        public int ToColumn { get; private set; }
+
+        public int ToRow { get; private set; }
+
+        private Cell SourceCell { get; set; }
 
         /// <summary>
-        /// 
+        /// If this cell column/row index is part of a merged a cell, get the cell if not the top left (contains the data)
         /// </summary>
-        /// <param name="col"></param>
-        /// <param name="row"></param>
-        /// <param name="cell"></param>
-        /// <param name="merged"></param>
-        /// <returns></returns>
+        /// <param name="col">Cell column index</param>
+        /// <param name="row">Cell row index</param>
+        /// <param name="cell">Cell </param>
+        /// <param name="merged">The cloned source cell</param>
+        /// <returns>Whether this is a merged cell</returns>
         public bool GetSourceValue(int col, int row, Cell cell, out Cell merged)
         {
             merged = null;
@@ -62,7 +59,7 @@ namespace ExcelDataReader
                 return false;
             }
 
-            if(SourceCell != null && col >= FromColumn && col <= ToColumn 
+            if (SourceCell != null && col >= FromColumn && col <= ToColumn 
                 && row >= FromRow && row <= ToRow)
             {
                 merged = new Cell()
@@ -70,7 +67,6 @@ namespace ExcelDataReader
                     ColumnIndex = col,
                     NumberFormatIndex = SourceCell.NumberFormatIndex,
                     Value = SourceCell.Value
-
                 };
                 
                 return true;
@@ -78,6 +74,5 @@ namespace ExcelDataReader
 
             return false;
         }
-        
     }
 }
