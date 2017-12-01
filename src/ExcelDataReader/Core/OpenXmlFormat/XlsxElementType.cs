@@ -5,6 +5,6 @@
         Dimension,
         Row, 
         HeaderFooter,
-        MergeCell
+        MergeCells
     }
 }

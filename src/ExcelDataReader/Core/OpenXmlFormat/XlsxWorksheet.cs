@@ -22,7 +22,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string AT = "t";
         private const string AS = "s";
         private const string NSheetData = "sheetData";
-        private const string NMergedCells = "mergeCells";
+        private const string NMergeCells = "mergeCells";
         private const string NMergeCell = "mergeCell";
 
         private const string NInlineStr = "inlineStr";
@@ -44,8 +44,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string AHidden = "hidden";
         private const string ACustomHeight = "customHeight";
         private const string AHt = "ht";
-
-        private List<CellRange> mergedCellsList = new List<CellRange>();
 
         public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, XlsxBoundSheet refSheet)
         {
@@ -80,11 +78,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public string Path { get; set; }
 
-        public CellRange[] MergedCells
-        {
-            get { return mergedCellsList.ToArray(); }
-        }
-                
+        public CellRange[] MergeCells { get; private set; }
+
         private ZipWorker Document { get; }
 
         private XlsxWorkbook Workbook { get; }
@@ -145,10 +140,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     XlsxHeaderFooter headerFooter = (XlsxHeaderFooter)sheetObject;
                     HeaderFooter = headerFooter.Value;
                 }
-                else if (sheetObject.Type == XlsxElementType.MergeCell)
+                else if (sheetObject.Type == XlsxElementType.MergeCells)
                 {
-                    XlsxMergeCell mergedCell = (XlsxMergeCell)sheetObject;
-                    mergedCellsList.Add(mergedCell.Value);
+                    XlsxMergeCells mergeCells = (XlsxMergeCells)sheetObject;
+                    MergeCells = mergeCells.Value.ToArray();
                 }
             }
 
@@ -214,19 +209,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         }
                     }
                 }
-                else if (xmlReader.IsStartElement(NMergedCells, NsSpreadsheetMl))
+                else if (xmlReader.IsStartElement(NMergeCells, NsSpreadsheetMl))
                 {
-                    if (skipSheetData)
-                    {
-                        xmlReader.Skip();
-                    }
-                    else
-                    {
-                        foreach (var mergeCell in ReadMergedCellsData(xmlReader))
-                        {
-                            yield return mergeCell;
-                        }
-                    }
+                    var result = ReadMergeCells(xmlReader);
+                    if (result != null)
+                        yield return result;
                 }
                 else if (xmlReader.IsStartElement(NHeaderFooter, NsSpreadsheetMl))
                 {
@@ -299,12 +286,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
-        private IEnumerable<XlsxMergeCell> ReadMergedCellsData(XmlReader xmlReader)
+        private XlsxMergeCells ReadMergeCells(XmlReader xmlReader)
         {
             if (!XmlReaderHelper.ReadFirstContent(xmlReader))
             {
-                yield break;
+                return null;
             }
+
+            var ranges = new List<CellRange>();
 
             while (!xmlReader.EOF)
             {
@@ -320,45 +309,20 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         to = fromTo[1];
                     }
 
-                    yield return new XlsxMergeCell()
-                    {
-                        Value = new CellRange(from, to)
-                    };
+                    ranges.Add(new CellRange(from, to));
 
                     xmlReader.Read();
-
-                    while (!xmlReader.EOF)
-                    {
-                        if (xmlReader.IsStartElement(NMergeCell, NsSpreadsheetMl))
-                        {
-                            cellRefs = xmlReader.GetAttribute(ARef);
-                            from = string.Empty;
-                            to = string.Empty;
-                            fromTo = cellRefs.Split(':');
-                            if (fromTo.Length == 2)
-                            {
-                                from = fromTo[0];
-                                to = fromTo[1];
-                            }
-
-                            xmlReader.Read();
-
-                            yield return new XlsxMergeCell()
-                            {
-                                Value = new CellRange(from, to)
-                            };
-                        }
-                        else if (!XmlReaderHelper.SkipContent(xmlReader))
-                        {
-                            break;
-                        }
-                    }
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {
                     break;
                 }
             }
+
+            return new XlsxMergeCells()
+            {
+                Value = ranges
+            };
         }
 
         private XlsxHeaderFooter ReadHeaderFooter(XmlReader xmlReader)

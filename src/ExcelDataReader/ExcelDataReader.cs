@@ -50,7 +50,7 @@ namespace ExcelDataReader
 
         public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
 
-        public CellRange[] MergedCells => _worksheetIterator?.Current?.MergedCells;
+        public CellRange[] MergeCells => _worksheetIterator?.Current?.MergeCells;
 
         public int Depth { get; private set; }
 

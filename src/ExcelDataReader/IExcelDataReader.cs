@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Data;
 
 namespace ExcelDataReader
@@ -31,7 +30,7 @@ namespace ExcelDataReader
         /// <summary>
         /// Gets the list of merged cell ranges.
         /// </summary>
-        CellRange[] MergedCells { get; }
+        CellRange[] MergeCells { get; }
 
         /// <summary>
         /// Gets the number of results (workbooks).

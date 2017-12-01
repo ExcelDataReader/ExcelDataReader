@@ -1595,7 +1595,7 @@ namespace ExcelDataReader.Netstandard20.Tests
             {
 
                 excelReader.Read();
-                var mergedCells = new List<CellRange> (excelReader.MergedCells);
+                var mergedCells = new List<CellRange> (excelReader.MergeCells);
                 Assert.AreEqual(mergedCells.Count, 4, "Incorrect number of merged cells");
 
                 //Sort from top -> left, then down

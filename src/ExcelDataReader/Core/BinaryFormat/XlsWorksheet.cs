@@ -12,8 +12,6 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsWorksheet : IWorksheet
     {
-        private List<CellRange> mergedCellsList = new List<CellRange>();
-
         public XlsWorksheet(XlsWorkbook workbook, XlsBiffBoundSheet refSheet, Stream stream)
         {
             Workbook = workbook;
@@ -59,10 +57,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public HeaderFooter HeaderFooter { get; private set; }
 
-        public CellRange[] MergedCells
-        {
-            get { return mergedCellsList.ToArray(); }
-        }
+        public CellRange[] MergeCells { get; private set; }
 
         /// <summary>
         /// Gets the worksheet data offset.
@@ -425,21 +420,26 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Read the ranges of Merged Cells
         /// </summary>
-        /// <param name="xlsMergedCells">The record for Merged Cells</param>
-        private void ReadMergedCells(XlsBiffRecord xlsMergedCells)
+        /// <param name="xlsMergeCells">The record for Merged Cells</param>
+        private CellRange[] ReadMergeCells(XlsBiffRecord xlsMergeCells)
         {
+            // TODO: Implement in XlsBiffMergeCells class - [MS-XLS] 2.4.168 MergeCells
+            var mergeCells = new List<CellRange>();
+
             // Start at 2 due to the first 2 byte being a count
             // Each 8 bytes are then the range (from row,to row, from col, to col)
-            for (int i = 2; i <= xlsMergedCells.RecordSize - 8; i += 8)
+            for (int i = 2; i <= xlsMergeCells.RecordSize - 8; i += 8)
             {
-                var fromRow = BitConverter.ToInt16(xlsMergedCells.ReadArray(i, 2), 0);
-                var toRow = BitConverter.ToInt16(xlsMergedCells.ReadArray(i + 2, 2), 0);
-                var fromCol = BitConverter.ToInt16(xlsMergedCells.ReadArray(i + 4, 2), 0);
-                var toCol = BitConverter.ToInt16(xlsMergedCells.ReadArray(i + 6, 2), 0);
+                var fromRow = BitConverter.ToInt16(xlsMergeCells.ReadArray(i, 2), 0);
+                var toRow = BitConverter.ToInt16(xlsMergeCells.ReadArray(i + 2, 2), 0);
+                var fromCol = BitConverter.ToInt16(xlsMergeCells.ReadArray(i + 4, 2), 0);
+                var toCol = BitConverter.ToInt16(xlsMergeCells.ReadArray(i + 6, 2), 0);
 
-                CellRange mergedCell = new CellRange(fromCol, fromRow, toCol, toRow);
-                mergedCellsList.Add(mergedCell);
+                CellRange mergeCell = new CellRange(fromCol, fromRow, toCol, toRow);
+                mergeCells.Add(mergeCell);
             }
+
+            return mergeCells.ToArray();
         }
 
         private void ReadWorksheetGlobals()
@@ -484,9 +484,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                         ExtendedFormats.Add((XlsBiffXF)rec);
                     }
 
-                    if (rec.Id == BIFFRECORDTYPE.MERGEDCELLS)
+                    if (rec.Id == BIFFRECORDTYPE.MERGECELLS)
                     {
-                        ReadMergedCells(rec);
+                        MergeCells = ReadMergeCells(rec);
                     }
                     
                     if (rec.Id == BIFFRECORDTYPE.FORMAT)
