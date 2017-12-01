@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>ExcelDataReader extension for reading Microsoft Excel files into System.Data.DataSet.</Description>
     <AssemblyTitle>ExcelDataReader.DataSet</AssemblyTitle>
-    <VersionPrefix>3.3.0</VersionPrefix>
+    <VersionPrefix>3.4.0</VersionPrefix>
     <Authors>ExcelDataReader developers</Authors>
     <TargetFrameworks>net20;net45;netstandard2.0</TargetFrameworks>
     <AssemblyName>ExcelDataReader.DataSet</AssemblyName>
