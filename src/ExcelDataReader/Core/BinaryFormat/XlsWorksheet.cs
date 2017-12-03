@@ -416,31 +416,6 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             return format;
         }
-        
-        /// <summary>
-        /// Read the ranges of Merged Cells
-        /// </summary>
-        /// <param name="xlsMergeCells">The record for Merged Cells</param>
-        private CellRange[] ReadMergeCells(XlsBiffRecord xlsMergeCells)
-        {
-            // TODO: Implement in XlsBiffMergeCells class - [MS-XLS] 2.4.168 MergeCells
-            var mergeCells = new List<CellRange>();
-
-            // Start at 2 due to the first 2 byte being a count
-            // Each 8 bytes are then the range (from row,to row, from col, to col)
-            for (int i = 2; i <= xlsMergeCells.RecordSize - 8; i += 8)
-            {
-                var fromRow = BitConverter.ToInt16(xlsMergeCells.ReadArray(i, 2), 0);
-                var toRow = BitConverter.ToInt16(xlsMergeCells.ReadArray(i + 2, 2), 0);
-                var fromCol = BitConverter.ToInt16(xlsMergeCells.ReadArray(i + 4, 2), 0);
-                var toCol = BitConverter.ToInt16(xlsMergeCells.ReadArray(i + 6, 2), 0);
-
-                CellRange mergeCell = new CellRange(fromCol, fromRow, toCol, toRow);
-                mergeCells.Add(mergeCell);
-            }
-
-            return mergeCells.ToArray();
-        }
 
         private void ReadWorksheetGlobals()
         {
@@ -456,6 +431,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 int maxCellColumn = 0;
                 int maxRowCount = 0;
 
+                var mergeCells = new List<CellRange>();
                 var biffFormats = new Dictionary<ushort, XlsBiffFormatString>();
                 var recordOffset = biffStream.Position;
                 var rec = biffStream.Read();
@@ -486,7 +462,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                     if (rec.Id == BIFFRECORDTYPE.MERGECELLS)
                     {
-                        MergeCells = ReadMergeCells(rec);
+                        mergeCells.AddRange(((XlsBiffMergeCells)rec).MergeCells);
                     }
                     
                     if (rec.Id == BIFFRECORDTYPE.FORMAT)
@@ -564,6 +540,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                     var formatString = biffFormat.Value.GetValue(Encoding);
                     Formats.Add(biffFormat.Key, new NumberFormatString(formatString));
                 }
+
+                if (mergeCells.Count > 0)
+                    MergeCells = mergeCells.ToArray();
 
                 if (FieldCount < maxCellColumn)
                     FieldCount = maxCellColumn;
