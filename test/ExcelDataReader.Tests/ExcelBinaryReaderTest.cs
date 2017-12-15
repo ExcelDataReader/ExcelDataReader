@@ -1527,6 +1527,32 @@ namespace ExcelDataReader.Netstandard20.Tests
         }
 
         [TestMethod]
+        public void GitIssue_300_FilterColumn()
+        {
+            // Check there are two columns with data
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("CollapsedHide")))
+            {
+                var dataset = reader.AsDataSet();
+
+                Assert.AreEqual(2, dataset.Tables[0].Columns.Count);
+            }
+
+            // Check there is one column when skipping the first
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("CollapsedHide")))
+            {
+                var dataset = reader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+                    {
+                        FilterColumn = (rowReader, index) => index > 0
+                    }
+                });
+
+                Assert.AreEqual(1, dataset.Tables[0].Columns.Count);
+            }
+        }
+
+        [TestMethod]
         public void GitIssue_265_BinaryDisposed()
         {
             var stream = Configuration.GetTestWorkbook("Test10x10");
