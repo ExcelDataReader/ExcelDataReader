@@ -158,7 +158,8 @@ namespace ExcelDataReader.Tests
             { "xTest_git_issue_283_TimeSpan", "Test_git_issue_283_TimeSpan.xlsx" },
             { "Test_git_issue289", "Test_git_issue289.xlsx" },
             { "Test_MergedCell_Binary", "Test_MergedCell.xls" },
-            { "Test_MergedCell_OpenXml", "Test_MergedCell.xlsx" }
+            { "Test_MergedCell_OpenXml", "Test_MergedCell.xlsx" },
+            { "Test_git_issue_301_IgnoreCase", "Test_git_issue_301_IgnoreCase.xlsx" },
         };
 
         public static Stream GetTestWorkbook(string key)

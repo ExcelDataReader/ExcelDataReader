@@ -1440,5 +1440,19 @@ namespace ExcelDataReader.Netstandard20.Tests
 
             }
         }
+
+        [TestMethod]
+        public void GitIssue_301_IgnoreCase()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_301_IgnoreCase")))
+            {
+                DataTable result = reader.AsDataSet().Tables[0];
+
+                Assert.AreEqual(10, result.Rows.Count);
+                Assert.AreEqual(10, result.Columns.Count);
+                Assert.AreEqual("10x10", result.Rows[1][0]);
+                Assert.AreEqual("10x27", result.Rows[9][9]);
+            }
+        }
     }
 }

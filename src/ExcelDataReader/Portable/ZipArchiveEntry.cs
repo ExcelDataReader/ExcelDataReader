@@ -5,16 +5,18 @@ using ICSharpCode.SharpZipLib.Zip;
 
 namespace ExcelDataReader.Core
 {
-    internal sealed class ZipEntry
+    internal sealed class ZipArchiveEntry
     {
         private readonly ZipFile _handle;
         private readonly ICSharpCode.SharpZipLib.Zip.ZipEntry _entry;
 
-        internal ZipEntry(ZipFile handle, ICSharpCode.SharpZipLib.Zip.ZipEntry entry)
+        internal ZipArchiveEntry(ZipFile handle, ICSharpCode.SharpZipLib.Zip.ZipEntry entry)
         {
             _handle = handle;
             _entry = entry;
         }
+
+        public string FullName => _entry.Name;
 
         public Stream Open()
         {

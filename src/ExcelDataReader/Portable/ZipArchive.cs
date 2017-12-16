@@ -1,5 +1,7 @@
 ﻿#if NET20
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using ICSharpCode.SharpZipLib.Zip;
 
@@ -11,10 +13,10 @@ namespace ExcelDataReader.Core
 
         public ZipArchive(Stream stream)
         {
-            if (stream.CanSeek) 
+            if (stream.CanSeek)
             {
                 _handle = new ZipFile(stream);
-            } 
+            }
             else
             {
                 // Password protected xlsx using "Standard Encryption" come as a non-seekable CryptoStream.
@@ -22,18 +24,18 @@ namespace ExcelDataReader.Core
                 var memoryStream = ReadToMemoryStream(stream);
                 _handle = new ZipFile(memoryStream);
             }
+
+            var entries = new List<ZipArchiveEntry>();
+            foreach (ZipEntry entry in _handle)
+                entries.Add(new ZipArchiveEntry(_handle, entry));
+            Entries = new ReadOnlyCollection<ZipArchiveEntry>(entries);
         }
 
-        public ZipEntry GetEntry(string name)
-        {
-            var entry = _handle.GetEntry(name);
-            if (entry == null)
-                return null;
-            return new ZipEntry(_handle, entry);
-        }
+        public ReadOnlyCollection<ZipArchiveEntry> Entries { get; }
 
         public void Dispose()
         {
+            (_handle as IDisposable)?.Dispose();
         }
 
         private static MemoryStream ReadToMemoryStream(Stream input)
@@ -51,5 +53,4 @@ namespace ExcelDataReader.Core
         }
     }
 }
-
 #endif
