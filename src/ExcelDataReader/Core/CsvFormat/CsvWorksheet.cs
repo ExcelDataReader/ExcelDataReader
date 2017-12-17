@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core.CsvFormat
 {
@@ -43,6 +44,8 @@ namespace ExcelDataReader.Core.CsvFormat
 
         public HeaderFooter HeaderFooter => null;
 
+        public CellRange[] MergeCells => null;
+
         public int FieldCount { get; }
 
         public Stream Stream { get; }
@@ -52,6 +55,11 @@ namespace ExcelDataReader.Core.CsvFormat
         public char Separator { get; }
 
         private int BomLength { get; set; }
+
+        public NumberFormatString GetNumberFormatString(int index)
+        {
+            return null;
+        }
 
         public IEnumerable<Row> ReadRows()
         {
