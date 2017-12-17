@@ -233,6 +233,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
 
                 Assert.AreEqual(12, table.Rows.Count);
+                Assert.AreEqual(12, r.RowCount);
                 Assert.AreEqual(4, fieldCount);
                 Assert.AreEqual(1, table.Rows[11][3]);
 
@@ -250,6 +251,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
 
                 Assert.AreEqual(12, table.Rows.Count);
+                Assert.AreEqual(12, r.RowCount);
                 Assert.AreEqual(4, fieldCount);
                 Assert.AreEqual(2, table.Rows[11][3]);
 
@@ -265,6 +267,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
 
                 Assert.AreEqual(5, table.Rows.Count);
+                Assert.AreEqual(5, r.RowCount);
                 Assert.AreEqual(2, fieldCount);
                 Assert.AreEqual(3, table.Rows[4][1]);
 

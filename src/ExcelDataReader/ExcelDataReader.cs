@@ -60,6 +60,8 @@ namespace ExcelDataReader
 
         public int FieldCount => _worksheetIterator?.Current?.FieldCount ?? 0;
 
+        public int RowCount => _worksheetIterator?.Current?.RowCount ?? 0;
+
         public int RecordsAffected => throw new NotSupportedException();
 
         public double RowHeight => _rowIterator?.Current.Height ?? 0;

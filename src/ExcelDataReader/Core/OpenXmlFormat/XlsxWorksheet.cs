@@ -62,6 +62,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public int FieldCount { get; private set; }
 
+        public int RowCount { get; private set; }
+
         public string Name { get; }
 
         public string CodeName { get; private set; }
@@ -150,6 +152,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             if (rows != int.MinValue && cols != int.MinValue)
             {
                 FieldCount = cols + 1;
+                RowCount = rows + 1;
             }
         }
 
