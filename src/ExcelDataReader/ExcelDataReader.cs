@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Text;
 using ExcelDataReader.Core;
-using ExcelDataReader.Misc;
 
 namespace ExcelDataReader
 {
@@ -20,22 +18,6 @@ namespace ExcelDataReader
         private IEnumerator<Row> _rowIterator;
         private IEnumerator<TWorksheet> _cachedWorksheetIterator = null;
         private List<TWorksheet> _cachedWorksheets = null;
-
-        protected ExcelDataReader(ExcelReaderConfiguration configuration)
-        {
-            if (configuration == null)
-            {
-                // Use the defaults
-                configuration = new ExcelReaderConfiguration();
-            }
-
-            // Copy the configuration to prevent external changes
-            Configuration = new ExcelReaderConfiguration()
-            {
-                FallbackEncoding = configuration.FallbackEncoding,
-                Password = configuration.Password
-            };
-        }
 
         ~ExcelDataReader()
         {
@@ -65,8 +47,6 @@ namespace ExcelDataReader
         public int RecordsAffected => throw new NotSupportedException();
 
         public double RowHeight => _rowIterator?.Current.Height ?? 0;
-
-        protected ExcelReaderConfiguration Configuration { get; }
 
         protected TWorkbook Workbook { get; set; }
 

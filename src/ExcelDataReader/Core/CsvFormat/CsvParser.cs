@@ -33,12 +33,6 @@ namespace ExcelDataReader.Core.CsvFormat
             EndOfFile,
         }
 
-        private enum ChunkedValueType
-        {
-            Value,
-            EndOfData
-        }
-
         private CsvState State { get; set; }
 
         private char QuoteChar { get; set; }

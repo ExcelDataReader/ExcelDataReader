@@ -8,10 +8,8 @@ namespace ExcelDataReader.Core.CsvFormat
 {
     internal class CsvWorksheet : IWorksheet
     {
-        public CsvWorksheet(Stream stream, Encoding fallbackEncoding)
+        public CsvWorksheet(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators)
         {
-            var autodetectSeparators = new char[] { ',', ';', '\t', '|', '#' };
-
             Stream = stream;
             Stream.Seek(0, SeekOrigin.Begin);
             try
