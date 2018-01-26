@@ -1,4 +1,6 @@
-﻿using ExcelDataReader.Tests;
+﻿using System.IO;
+using System.Text;
+using ExcelDataReader.Tests;
 using NUnit.Framework;
 
 // Most CSV test data came from csv-spectrum: https://github.com/maxogden/csv-spectrum
@@ -23,7 +25,7 @@ namespace ExcelDataReader.Netstandard20.Tests
         public void TestInitialize()
         {
 #if NETCOREAPP1_0 || NETCOREAPP2_0
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 #endif
         }
 
@@ -65,74 +67,119 @@ namespace ExcelDataReader.Netstandard20.Tests
         [Test]
         public void CsvQuotesAndNewlines()
         {
-            using (var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("quotes_and_newlines.csv")))
+            using (var strm = new MemoryStream())
             {
-                var ds = excelReader.AsDataSet();
-                Assert.AreEqual("a", ds.Tables[0].Rows[0][0]);
-                Assert.AreEqual("b", ds.Tables[0].Rows[0][1]);
+                using (var writer = new StreamWriter(strm, Encoding.UTF8))
+                {
+                    writer.NewLine = "\n";
+                    writer.WriteLine("a,b");
+                    writer.WriteLine("1,\"ha ");
+                    writer.WriteLine("\"\"ha\"\" ");
+                    writer.WriteLine("ha\"");
+                    writer.WriteLine("3,4");
+                    writer.Flush();
 
-                Assert.AreEqual("1", ds.Tables[0].Rows[1][0]);
-                Assert.AreEqual("ha \n\"ha\" \nha", ds.Tables[0].Rows[1][1]);
+                    using (var excelReader = ExcelReaderFactory.CreateCsvReader(strm))
+                    {
+                        var ds = excelReader.AsDataSet();
+                        Assert.AreEqual("a", ds.Tables[0].Rows[0][0]);
+                        Assert.AreEqual("b", ds.Tables[0].Rows[0][1]);
 
-                Assert.AreEqual("3", ds.Tables[0].Rows[2][0]);
-                Assert.AreEqual("4", ds.Tables[0].Rows[2][1]);
+                        Assert.AreEqual("1", ds.Tables[0].Rows[1][0]);
+                        Assert.AreEqual("ha \n\"ha\" \nha", ds.Tables[0].Rows[1][1]);
+
+                        Assert.AreEqual("3", ds.Tables[0].Rows[2][0]);
+                        Assert.AreEqual("4", ds.Tables[0].Rows[2][1]);
+                    }
+                }
             }
         }
 
         [Test]
         public void CsvEmpty()
         {
-            TestEmpty("empty.csv");
-            TestEmpty("empty_crlf.csv");
+            // empty.csv
+            // empty_crlf.csv
+            TestEmpty("\n");
+            TestEmpty("\r\n");
         }
 
-        void TestEmpty(string workbook)
+        void TestEmpty(string linebreak)
         {
-            using (var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(workbook)))
+            using (var strm = new MemoryStream())
             {
-                var ds = excelReader.AsDataSet();
-                Assert.AreEqual("a", ds.Tables[0].Rows[0][0], workbook);
-                Assert.AreEqual("b", ds.Tables[0].Rows[0][1], workbook);
-                Assert.AreEqual("c", ds.Tables[0].Rows[0][2], workbook);
+                using (var writer = new StreamWriter(strm, Encoding.UTF8))
+                {
+                    writer.NewLine = linebreak;
+                    writer.WriteLine("a,b,c");
+                    writer.WriteLine("1,\"\",\"\"");
+                    writer.WriteLine("2,3,4");
+                    writer.Flush();
 
-                Assert.AreEqual("1", ds.Tables[0].Rows[1][0], workbook);
-                Assert.AreEqual("", ds.Tables[0].Rows[1][1], workbook);
-                Assert.AreEqual("", ds.Tables[0].Rows[1][2], workbook);
+                    using (var excelReader = ExcelReaderFactory.CreateCsvReader(strm))
+                    {
+                        var ds = excelReader.AsDataSet();
+                        Assert.AreEqual("a", ds.Tables[0].Rows[0][0]);
+                        Assert.AreEqual("b", ds.Tables[0].Rows[0][1]);
+                        Assert.AreEqual("c", ds.Tables[0].Rows[0][2]);
 
-                Assert.AreEqual("2", ds.Tables[0].Rows[2][0], workbook);
-                Assert.AreEqual("3", ds.Tables[0].Rows[2][1], workbook);
-                Assert.AreEqual("4", ds.Tables[0].Rows[2][2], workbook);
+                        Assert.AreEqual("1", ds.Tables[0].Rows[1][0]);
+                        Assert.AreEqual("", ds.Tables[0].Rows[1][1]);
+                        Assert.AreEqual("", ds.Tables[0].Rows[1][2]);
+
+                        Assert.AreEqual("2", ds.Tables[0].Rows[2][0]);
+                        Assert.AreEqual("3", ds.Tables[0].Rows[2][1]);
+                        Assert.AreEqual("4", ds.Tables[0].Rows[2][2]);
+                    }
+                }
             }
         }
 
         [Test]
         public void CsvNewlines()
         {
-            TestNewlines("newlines.csv", "\n");
-            TestNewlines("newlines_crlf.csv", "\r\n");
+            // newlines.csv
+            // newlines_crlf.csv
+            TestNewlines("\n");
+            TestNewlines("\r\n");
         }
 
-        void TestNewlines(string workbook, string linebreak)
+        void TestNewlines(string linebreak)
         {
-            using (var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(workbook)))
+            using (var strm = new MemoryStream())
             {
-                var ds = excelReader.AsDataSet();
-                Assert.AreEqual("a", ds.Tables[0].Rows[0][0], workbook);
-                Assert.AreEqual("b", ds.Tables[0].Rows[0][1], workbook);
-                Assert.AreEqual("c", ds.Tables[0].Rows[0][2], workbook);
+                using (var writer = new StreamWriter(strm, Encoding.UTF8))
+                {
+                    writer.NewLine = linebreak;
+                    writer.WriteLine("a,b,c");
+                    writer.WriteLine("1,2,3");
+                    writer.WriteLine("\"Once upon ");
+                    writer.WriteLine("a time\",5,6");
+                    writer.WriteLine("7,8,9");
+                    writer.Flush();
 
-                Assert.AreEqual("1", ds.Tables[0].Rows[1][0], workbook);
-                Assert.AreEqual("2", ds.Tables[0].Rows[1][1], workbook);
-                Assert.AreEqual("3", ds.Tables[0].Rows[1][2], workbook);
+                    using (var excelReader = ExcelReaderFactory.CreateCsvReader(strm))
+                    {
+                        var ds = excelReader.AsDataSet();
+                        Assert.AreEqual("a", ds.Tables[0].Rows[0][0]);
+                        Assert.AreEqual("b", ds.Tables[0].Rows[0][1]);
+                        Assert.AreEqual("c", ds.Tables[0].Rows[0][2]);
 
-                Assert.AreEqual("Once upon " + linebreak + "a time", ds.Tables[0].Rows[2][0], workbook);
-                Assert.AreEqual("5", ds.Tables[0].Rows[2][1], workbook);
-                Assert.AreEqual("6", ds.Tables[0].Rows[2][2], workbook);
+                        Assert.AreEqual("1", ds.Tables[0].Rows[1][0]);
+                        Assert.AreEqual("2", ds.Tables[0].Rows[1][1]);
+                        Assert.AreEqual("3", ds.Tables[0].Rows[1][2]);
 
-                Assert.AreEqual("7", ds.Tables[0].Rows[3][0], workbook);
-                Assert.AreEqual("8", ds.Tables[0].Rows[3][1], workbook);
-                Assert.AreEqual("9", ds.Tables[0].Rows[3][2], workbook);
+                        Assert.AreEqual("Once upon " + linebreak + "a time", ds.Tables[0].Rows[2][0]);
+                        Assert.AreEqual("5", ds.Tables[0].Rows[2][1]);
+                        Assert.AreEqual("6", ds.Tables[0].Rows[2][2]);
+
+                        Assert.AreEqual("7", ds.Tables[0].Rows[3][0]);
+                        Assert.AreEqual("8", ds.Tables[0].Rows[3][1]);
+                        Assert.AreEqual("9", ds.Tables[0].Rows[3][2]);
+                    }
+                }
             }
+
         }
 
         [Test]
