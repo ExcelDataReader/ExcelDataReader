@@ -7,10 +7,11 @@ namespace ExcelDataReader.Core.CsvFormat
     internal static class CsvAnalyzer
     {
         /// <summary>
-        /// Reads completely through a CSV stream to determine encoding, separator and field count. Uses fallbackEncoding if there is no BOM. Throws DecoderFallbackException if there are invalid characters in the stream.
+        /// Reads completely through a CSV stream to determine encoding, separator, field count and row count. 
+        /// Uses fallbackEncoding if there is no BOM. Throws DecoderFallbackException if there are invalid characters in the stream.
         /// Returns the separator whose average field count is closest to its max field count.
         /// </summary>
-        public static void Analyze(Stream stream, char[] separators, Encoding fallbackEncoding, out int fieldCount, out char autodetectSeparator, out Encoding autodetectEncoding, out int bomLength)
+        public static void Analyze(Stream stream, char[] separators, Encoding fallbackEncoding, out int fieldCount, out char autodetectSeparator, out Encoding autodetectEncoding, out int bomLength, out int rowCount)
         {
             var bufferSize = 1024;
             var probeSize = 16;
@@ -68,6 +69,7 @@ namespace ExcelDataReader.Core.CsvFormat
 
             autodetectSeparator = bestSeparator;
             fieldCount = bestSeparatorInfo?.MaxFieldCount ?? 0;
+            rowCount = bestSeparatorInfo?.RowCount ?? 0;
         }
 
         private static void ParseSeparatorsBuffer(byte[] bytes, int offset, int count, char[] separators, SeparatorInfo[] separatorInfos)

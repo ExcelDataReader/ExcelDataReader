@@ -15,8 +15,9 @@ namespace ExcelDataReader.Core.CsvFormat
             try
             {
                 // Try as UTF-8 first, or use BOM if present
-                CsvAnalyzer.Analyze(Stream, autodetectSeparators, Encoding.UTF8, out var fieldCount, out var separator, out var encoding, out var bomLength);
+                CsvAnalyzer.Analyze(Stream, autodetectSeparators, Encoding.UTF8, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
                 FieldCount = fieldCount;
+                RowCount = rowCount;
                 Encoding = encoding;
                 Separator = separator;
                 BomLength = bomLength;
@@ -26,8 +27,9 @@ namespace ExcelDataReader.Core.CsvFormat
                 // If cannot parse as UTF-8, try fallback encoding
                 Stream.Seek(0, SeekOrigin.Begin);
 
-                CsvAnalyzer.Analyze(Stream, autodetectSeparators, fallbackEncoding, out var fieldCount, out var separator, out var encoding, out var bomLength);
+                CsvAnalyzer.Analyze(Stream, autodetectSeparators, fallbackEncoding, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
                 FieldCount = fieldCount;
+                RowCount = rowCount;
                 Encoding = encoding;
                 Separator = separator;
                 BomLength = bomLength;
@@ -45,6 +47,8 @@ namespace ExcelDataReader.Core.CsvFormat
         public CellRange[] MergeCells => null;
 
         public int FieldCount { get; }
+
+        public int RowCount { get; }
 
         public Stream Stream { get; }
 
