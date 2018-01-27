@@ -24,6 +24,11 @@ namespace ExcelDataReader.Core.CsvFormat
                 autodetectEncoding = fallbackEncoding;
             }
 
+            if (separators == null || separators.Length == 0)
+            {
+                separators = new char[] { '\0' };
+            }
+
             var separatorInfos = new SeparatorInfo[separators.Length];
             for (var i = 0; i < separators.Length; i++)
             {
@@ -41,8 +46,8 @@ namespace ExcelDataReader.Core.CsvFormat
 
             FlushSeparatorsBuffers(separators, separatorInfos);
 
-            SeparatorInfo bestSeparatorInfo = null;
-            char bestSeparator = ',';
+            SeparatorInfo bestSeparatorInfo = separatorInfos[0];
+            char bestSeparator = separators[0];
             double bestDistance = double.MaxValue;
 
             for (var i = 0; i < separators.Length; i++)
@@ -56,7 +61,7 @@ namespace ExcelDataReader.Core.CsvFormat
                     continue;
                 }
 
-                var average = separatorInfo.SumFieldCount / separatorInfo.RowCount;
+                var average = separatorInfo.SumFieldCount / (double)separatorInfo.RowCount;
                 var dist = separatorInfo.MaxFieldCount - average;
 
                 if (dist < bestDistance)
@@ -68,8 +73,8 @@ namespace ExcelDataReader.Core.CsvFormat
             }
 
             autodetectSeparator = bestSeparator;
-            fieldCount = bestSeparatorInfo?.MaxFieldCount ?? 0;
-            rowCount = bestSeparatorInfo?.RowCount ?? 0;
+            fieldCount = bestSeparatorInfo.MaxFieldCount;
+            rowCount = bestSeparatorInfo.RowCount;
         }
 
         private static void ParseSeparatorsBuffer(byte[] bytes, int offset, int count, char[] separators, SeparatorInfo[] separatorInfos)

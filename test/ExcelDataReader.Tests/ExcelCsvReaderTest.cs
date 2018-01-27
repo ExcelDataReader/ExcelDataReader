@@ -242,5 +242,49 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual(1001, ds.Tables[0].Rows.Count);
             }
         }
+
+        [Test]
+        public void CsvNoSeparator()
+        {
+            TestNoSeparator(null);
+        }
+
+        [Test]
+        public void CsvMissingSeparator()
+        {
+            TestNoSeparator(new ExcelReaderConfiguration()
+            {
+                AutodetectSeparators = new char[0]
+            });
+
+            TestNoSeparator(new ExcelReaderConfiguration()
+            {
+                AutodetectSeparators = null
+            });
+        }
+
+        public void TestNoSeparator(ExcelReaderConfiguration configuration)
+        {
+            using (var strm = new MemoryStream())
+            {
+                using (var writer = new StreamWriter(strm, Encoding.UTF8))
+                {
+                    writer.WriteLine("This");
+                    writer.WriteLine("is");
+                    writer.WriteLine("a");
+                    writer.Write("test");
+                    writer.Flush();
+
+                    using (var excelReader = ExcelReaderFactory.CreateCsvReader(strm, configuration))
+                    {
+                        var ds = excelReader.AsDataSet();
+                        Assert.AreEqual("This", ds.Tables[0].Rows[0][0]);
+                        Assert.AreEqual("is", ds.Tables[0].Rows[1][0]);
+                        Assert.AreEqual("a", ds.Tables[0].Rows[2][0]);
+                        Assert.AreEqual("test", ds.Tables[0].Rows[3][0]);
+                    }
+                }
+            }
+        }
     }
 }
