@@ -18,6 +18,7 @@
     <Compile Include="..\ExcelDataReader.Tests\ExcelOpenXmlReaderLocaleTest.cs" Link="ExcelOpenXmlReaderLocaleTest.cs" />
     <Compile Include="..\ExcelDataReader.Tests\ExcelOpenXmlReaderTest.cs" Link="ExcelOpenXmlReaderTest.cs" />
     <Compile Include="..\ExcelDataReader.Tests\ExcelReaderFactoryTests.cs" Link="ExcelReaderFactoryTests.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\ExcelCsvReaderTest.cs" Link="ExcelCsvReaderTest.cs" />
     <Compile Include="..\ExcelDataReader.Tests\FormatReaderTest.cs" Link="FormatReaderTest.cs" />
     <Compile Include="..\ExcelDataReader.Tests\NunitLogFactory.cs" Link="NunitLogFactory.cs" />
     <Compile Include="..\ExcelDataReader.Tests\SeekErrorMemoryStream.cs" Link="SeekErrorMemoryStream.cs" />
