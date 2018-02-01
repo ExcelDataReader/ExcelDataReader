@@ -226,6 +226,22 @@ namespace ExcelDataReader.Netstandard20.Tests
         }
 
         [Test]
+        public void CsvWrongEncoding()
+        {
+            Assert.Throws(typeof(DecoderFallbackException), () =>
+            {
+                var configuration = new ExcelReaderConfiguration()
+                {
+                    FallbackEncoding = Encoding.UTF8
+                };
+
+                using (var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("cp1252.csv"), configuration))
+                {
+                }
+            });
+        }
+
+        [Test]
         public void CsvBigSheet()
         {
             using (var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("MOCK_DATA.csv")))

@@ -55,7 +55,7 @@ namespace TestApp
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
-            this.openFileDialog1.Filter = "xls|*.xls|xlsx|*.xlsx|All|*.*";
+            this.openFileDialog1.Filter = "xls|*.xls|xlsx|*.xlsx|csv|*.csv|All|*.*";
             // 
             // button1
             // 
@@ -226,17 +226,21 @@ namespace TestApp
 
         private void Button2Click(object sender, EventArgs e)
         {
-            var file = new FileInfo(textBox1.Text);
+            var extension = Path.GetExtension(textBox1.Text).ToLower();
             using (var stream = new FileStream(textBox1.Text, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 IExcelDataReader reader = null;
-                if (file.Extension == ".xls")
+                if (extension == ".xls")
                 {
                    reader = ExcelReaderFactory.CreateBinaryReader(stream);
                 }
-                else if (file.Extension == ".xlsx")
+                else if (extension == ".xlsx")
                 {
                     reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+                }
+                else if (extension == ".csv")
+                {
+                    reader = ExcelReaderFactory.CreateCsvReader(stream);
                 }
 
                 if (reader == null)
@@ -245,13 +249,16 @@ namespace TestApp
                 // reader.IsFirstRowAsColumnNames = firstRowNamesCheckBox.Checked;
                 var sw = new Stopwatch();
                 sw.Start();
-                ds = reader.AsDataSet(new ExcelDataSetConfiguration()
+                using (reader)
                 {
-                    ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
+                    ds = reader.AsDataSet(new ExcelDataSetConfiguration()
                     {
-                        UseHeaderRow = firstRowNamesCheckBox.Checked
-                    }
-                });
+                        ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
+                        {
+                            UseHeaderRow = firstRowNamesCheckBox.Checked
+                        }
+                    });
+                }
 
                 toolStripStatusLabel1.Text = "Elapsed: " + sw.ElapsedMilliseconds.ToString() + " ms";
 
