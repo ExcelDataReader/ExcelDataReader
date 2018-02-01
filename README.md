@@ -81,6 +81,7 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 - `FieldCount` returns the number of columns in the current sheet.
 - `RowCount` returns the number of rows in the current sheet. This includes terminal empty rows which are otherwise excluded by AsDataSet().
 - `HeaderFooter` returns an object with information about the headers and footers, or `null` if there are none.
+- `MergeCells` returns an array of merged cell ranges in the current sheet.
 - `RowHeight` returns the visual height of the current row in points. May be 0 if the row is hidden.
 - `GetFieldType()` returns the type of a value in the current row. Always one of the types supported by Excel: `double`, `int`, `bool`, `DateTime`, `TimeSpan`, `string`, or `null` if there is no value.
 - `IsDBNull()` checks if a value in the current row is null. 
@@ -147,6 +148,13 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration() {
 		FilterRow = (rowReader) => {
 			return true;
 		},
+		
+		// Gets or sets a callback to determine whether to include the specific
+		// column in the DataTable. Called once per column after reading the 
+		// headers.
+		FilterColumn = (rowReader, columnIndex) => {
+			return true;
+		}
 	}
 });
 ```
