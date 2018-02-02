@@ -192,24 +192,13 @@ namespace ExcelDataReader.Core.CompoundFormat
             var name = reader.ReadBytes(64);
             var nameLength = reader.ReadUInt16();
 
-            var entryType = (STGTY)reader.ReadByte();
-            if (entryType == STGTY.STGTY_INVALID)
-            {
-                // free/unused directory entry
-                // entire stream should be zeroes, except for child, right, left sid which should be NOSTREAM
-                reader.ReadBytes(61);
-                result.LeftSiblingSid = result.RightSiblingSid = result.ChildSid = 0xFFFFFFFF;
-                result.CreationTime = result.LastWriteTime = DateTime.FromFileTime(0);
-                return result;
-            }
-
             if (nameLength > 0)
             {
                 nameLength = Math.Min((ushort)64, nameLength);
                 result.EntryName = Encoding.Unicode.GetString(name, 0, nameLength).TrimEnd('\0');
             }
 
-            result.EntryType = entryType;
+            result.EntryType = (STGTY)reader.ReadByte();
             result.EntryColor = (DECOLOR)reader.ReadByte();
             result.LeftSiblingSid = reader.ReadUInt32();
             result.RightSiblingSid = reader.ReadUInt32();
