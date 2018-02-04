@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using ExcelDataReader.Core;
 using ExcelDataReader.Core.OpenXmlFormat;
@@ -7,8 +6,7 @@ namespace ExcelDataReader
 {
     internal class ExcelOpenXmlReader : ExcelDataReader<XlsxWorkbook, XlsxWorksheet>
     {
-        public ExcelOpenXmlReader(Stream stream, ExcelReaderConfiguration configuration)
-            : base(configuration)
+        public ExcelOpenXmlReader(Stream stream)
         {
             Document = new ZipWorker(stream);
             Workbook = new XlsxWorkbook(Document);

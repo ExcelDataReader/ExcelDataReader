@@ -26,5 +26,10 @@ namespace ExcelDataReader
         /// Gets or sets a callback to determine whether to include the current row in the DataTable.
         /// </summary>
         public Func<IExcelDataReader, bool> FilterRow { get; set; }
+
+        /// <summary>
+        /// Gets or sets a callback to determine whether to include the specific column in the DataTable. Called once per column after reading the headers.
+        /// </summary>
+        public Func<IExcelDataReader, int, bool> FilterColumn { get; set; }
     }
 }

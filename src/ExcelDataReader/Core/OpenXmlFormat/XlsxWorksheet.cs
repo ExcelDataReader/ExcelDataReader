@@ -22,6 +22,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string AT = "t";
         private const string AS = "s";
         private const string NSheetData = "sheetData";
+        private const string NMergeCells = "mergeCells";
+        private const string NMergeCell = "mergeCell";
+
         private const string NInlineStr = "inlineStr";
         private const string NStr = "str";
 
@@ -59,6 +62,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public int FieldCount { get; private set; }
 
+        public int RowCount { get; private set; }
+
         public string Name { get; }
 
         public string CodeName { get; private set; }
@@ -74,6 +79,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         public string Rid { get; set; }
 
         public string Path { get; set; }
+
+        public CellRange[] MergeCells { get; private set; }
 
         private ZipWorker Document { get; }
 
@@ -135,11 +142,17 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     XlsxHeaderFooter headerFooter = (XlsxHeaderFooter)sheetObject;
                     HeaderFooter = headerFooter.Value;
                 }
+                else if (sheetObject.Type == XlsxElementType.MergeCells)
+                {
+                    XlsxMergeCells mergeCells = (XlsxMergeCells)sheetObject;
+                    MergeCells = mergeCells.Value.ToArray();
+                }
             }
 
             if (rows != int.MinValue && cols != int.MinValue)
             {
                 FieldCount = cols + 1;
+                RowCount = rows + 1;
             }
         }
 
@@ -198,6 +211,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                             yield return row;
                         }
                     }
+                }
+                else if (xmlReader.IsStartElement(NMergeCells, NsSpreadsheetMl))
+                {
+                    var result = ReadMergeCells(xmlReader);
+                    if (result != null)
+                        yield return result;
                 }
                 else if (xmlReader.IsStartElement(NHeaderFooter, NsSpreadsheetMl))
                 {
@@ -268,6 +287,45 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     break;
                 }
             }
+        }
+
+        private XlsxMergeCells ReadMergeCells(XmlReader xmlReader)
+        {
+            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
+            {
+                return null;
+            }
+
+            var ranges = new List<CellRange>();
+
+            while (!xmlReader.EOF)
+            {
+                if (xmlReader.IsStartElement(NMergeCell, NsSpreadsheetMl))
+                {
+                    var cellRefs = xmlReader.GetAttribute(ARef);
+                    string from = string.Empty, to = string.Empty;
+                    var fromTo = cellRefs.Split(':');
+
+                    if (fromTo.Length == 2)
+                    {
+                        from = fromTo[0];
+                        to = fromTo[1];
+                    }
+
+                    ranges.Add(new CellRange(from, to));
+
+                    xmlReader.Read();
+                }
+                else if (!XmlReaderHelper.SkipContent(xmlReader))
+                {
+                    break;
+                }
+            }
+
+            return new XlsxMergeCells()
+            {
+                Value = ranges
+            };
         }
 
         private XlsxHeaderFooter ReadHeaderFooter(XmlReader xmlReader)

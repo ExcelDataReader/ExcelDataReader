@@ -82,6 +82,11 @@ namespace ExcelDataReader.Core.BinaryFormat
                 throw new InvalidOperationException("SST read position out of range");
             }
 
+            if (characterCount == 0)
+            {
+                throw new InvalidOperationException("Bad SST format");
+            }
+
             if (isMultiByte)
             {
                 Array.Copy(CurrentRecord.Bytes, CurrentRecord.Offset + CurrentRecordOffset, dest, offset, characterCount * 2);

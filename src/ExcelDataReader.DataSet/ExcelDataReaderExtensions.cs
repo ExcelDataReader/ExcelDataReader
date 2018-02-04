@@ -72,6 +72,7 @@ namespace ExcelDataReader
             result.ExtendedProperties.Add("visiblestate", self.VisibleState);
             var first = true;
             var emptyRows = 0;
+            var columnIndices = new List<int>();
             while (self.Read())
             {
                 if (first)
@@ -83,6 +84,11 @@ namespace ExcelDataReader
 
                     for (var i = 0; i < self.FieldCount; i++)
                     {
+                        if (configuration.FilterColumn != null && !configuration.FilterColumn(self, i))
+                        {
+                            continue;
+                        }
+
                         var name = configuration.UseHeaderRow
                             ? Convert.ToString(self.GetValue(i))
                             : null;
@@ -96,6 +102,7 @@ namespace ExcelDataReader
                         var columnName = GetUniqueColumnName(result, name);
                         var column = new DataColumn(columnName, typeof(object)) { Caption = name };
                         result.Columns.Add(column);
+                        columnIndices.Add(i);
                     }
 
                     result.BeginLoadData();
@@ -127,9 +134,10 @@ namespace ExcelDataReader
 
                 var row = result.NewRow();
 
-                for (var i = 0; i < self.FieldCount; i++)
+                for (var i = 0; i < columnIndices.Count; i++)
                 {
-                    var value = self.GetValue(i);
+                    var columnIndex = columnIndices[i];
+                    var value = self.GetValue(columnIndex);
                     row[i] = value;
                 }
                 

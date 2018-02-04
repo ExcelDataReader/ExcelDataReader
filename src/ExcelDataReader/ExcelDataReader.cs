@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Text;
 using ExcelDataReader.Core;
-using ExcelDataReader.Misc;
 
 namespace ExcelDataReader
 {
@@ -21,22 +19,6 @@ namespace ExcelDataReader
         private IEnumerator<TWorksheet> _cachedWorksheetIterator = null;
         private List<TWorksheet> _cachedWorksheets = null;
 
-        protected ExcelDataReader(ExcelReaderConfiguration configuration)
-        {
-            if (configuration == null)
-            {
-                // Use the defaults
-                configuration = new ExcelReaderConfiguration();
-            }
-
-            // Copy the configuration to prevent external changes
-            Configuration = new ExcelReaderConfiguration()
-            {
-                FallbackEncoding = configuration.FallbackEncoding,
-                Password = configuration.Password
-            };
-        }
-
         ~ExcelDataReader()
         {
             Dispose(false);
@@ -50,6 +32,8 @@ namespace ExcelDataReader
 
         public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
 
+        public CellRange[] MergeCells => _worksheetIterator?.Current?.MergeCells;
+
         public int Depth { get; private set; }
 
         public int ResultsCount => Workbook?.ResultsCount ?? -1;
@@ -58,11 +42,11 @@ namespace ExcelDataReader
 
         public int FieldCount => _worksheetIterator?.Current?.FieldCount ?? 0;
 
+        public int RowCount => _worksheetIterator?.Current?.RowCount ?? 0;
+
         public int RecordsAffected => throw new NotSupportedException();
 
         public double RowHeight => _rowIterator?.Current.Height ?? 0;
-
-        protected ExcelReaderConfiguration Configuration { get; }
 
         protected TWorkbook Workbook { get; set; }
 
@@ -123,7 +107,7 @@ namespace ExcelDataReader
         }
 
         public int GetValues(object[] values) => throw new NotSupportedException();
-
+               
         public bool IsDBNull(int i) => GetValue(i) == null;
 
         public string GetNumberFormatString(int i)

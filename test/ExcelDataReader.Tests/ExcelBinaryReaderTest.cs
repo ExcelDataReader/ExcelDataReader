@@ -2,6 +2,7 @@
 #if NET20 || NET45 || NETCOREAPP2_0
 using System.Data;
 #endif
+using System.Collections.Generic;
 using System.IO;
 using ExcelDataReader.Exceptions;
 using ExcelDataReader.Tests;
@@ -232,6 +233,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
 
                 Assert.AreEqual(12, table.Rows.Count);
+                Assert.AreEqual(12, r.RowCount);
                 Assert.AreEqual(4, fieldCount);
                 Assert.AreEqual(1, table.Rows[11][3]);
 
@@ -249,6 +251,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
 
                 Assert.AreEqual(12, table.Rows.Count);
+                Assert.AreEqual(12, r.RowCount);
                 Assert.AreEqual(4, fieldCount);
                 Assert.AreEqual(2, table.Rows[11][3]);
 
@@ -264,6 +267,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
 
                 Assert.AreEqual(5, table.Rows.Count);
+                Assert.AreEqual(5, r.RowCount);
                 Assert.AreEqual(2, fieldCount);
                 Assert.AreEqual(3, table.Rows[4][1]);
 
@@ -1095,7 +1099,20 @@ namespace ExcelDataReader.Netstandard20.Tests
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Row1217NotRead")))
             {
                 var ds = excelReader.AsDataSet();
-                CollectionAssert.AreEqual(new object[] { DBNull.Value, "Año", "Mes", DBNull.Value, "Índice", "Variación Mensual", "Variación Acumulada", "Variación en 12 Meses", "Incidencia Mensual", "Incidencia Acumulada", "Incidencia a 12 Meses", DBNull.Value, DBNull.Value }, ds.Tables[0].Rows[1216].ItemArray);
+                CollectionAssert.AreEqual(new object[] {
+                    DBNull.Value,
+                    "Año",
+                    "Mes",
+                    DBNull.Value, //Merged Cell
+                    "Índice",
+                    "Variación Mensual",
+                    "Variación Acumulada",
+                    "Variación en 12 Meses",
+                    "Incidencia Mensual",
+                    "Incidencia Acumulada", "" +
+                    "Incidencia a 12 Meses",
+                    DBNull.Value, //Merged Cell
+                    DBNull.Value }, ds.Tables[0].Rows[1216].ItemArray);
             }
         }
 
@@ -1513,6 +1530,32 @@ namespace ExcelDataReader.Netstandard20.Tests
         }
 
         [TestMethod]
+        public void GitIssue_300_FilterColumn()
+        {
+            // Check there are two columns with data
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("CollapsedHide")))
+            {
+                var dataset = reader.AsDataSet();
+
+                Assert.AreEqual(2, dataset.Tables[0].Columns.Count);
+            }
+
+            // Check there is one column when skipping the first
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("CollapsedHide")))
+            {
+                var dataset = reader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+                    {
+                        FilterColumn = (rowReader, index) => index > 0
+                    }
+                });
+
+                Assert.AreEqual(1, dataset.Tables[0].Columns.Count);
+            }
+        }
+
+        [TestMethod]
         public void GitIssue_265_BinaryDisposed()
         {
             var stream = Configuration.GetTestWorkbook("Test10x10");
@@ -1570,6 +1613,97 @@ namespace ExcelDataReader.Netstandard20.Tests
 
                 reader.Read();
                 Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1512, 0, 0, 0));
+            }
+        }
+
+
+        [TestMethod]
+        public void MergedCells()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_MergedCell_Binary")))
+            {
+
+                excelReader.Read();
+                var mergedCells = new List<CellRange> (excelReader.MergeCells);
+                Assert.AreEqual(mergedCells.Count, 4, "Incorrect number of merged cells");
+
+                //Sort from top -> left, then down
+                mergedCells.Sort(delegate (CellRange c1, CellRange c2)
+                {
+                    if(c1.FromRow == c2.FromRow)
+                    {
+                        return c1.FromColumn.CompareTo(c2.FromColumn);
+                    }
+                    return c1.FromRow.CompareTo(c2.FromRow);
+                });
+
+                CollectionAssert.AreEqual(
+                    new int []
+                    {
+                        1,
+                        2,
+                        0,
+                        1
+                    },
+                    new int[]
+                    {
+                        mergedCells[0].FromRow,
+                        mergedCells[0].ToRow,
+                        mergedCells[0].FromColumn,
+                        mergedCells[0].ToColumn
+                    }
+                );
+
+                CollectionAssert.AreEqual(
+                    new int[]
+                    {
+                        1,
+                        5,
+                        2,
+                        2
+                    },
+                    new int[]
+                    {
+                        mergedCells[1].FromRow,
+                        mergedCells[1].ToRow,
+                        mergedCells[1].FromColumn,
+                        mergedCells[1].ToColumn
+                    }
+                );
+
+                CollectionAssert.AreEqual(
+                    new int[]
+                    {
+                        3,
+                        5,
+                        0,
+                        0
+                    },
+                    new int[]
+                    {
+                        mergedCells[2].FromRow,
+                        mergedCells[2].ToRow,
+                        mergedCells[2].FromColumn,
+                        mergedCells[2].ToColumn
+                    }
+                );
+
+                CollectionAssert.AreEqual(
+                    new int[]
+                    {
+                        6,
+                        6,
+                        0,
+                        2
+                    },
+                    new int[]
+                    {
+                        mergedCells[3].FromRow,
+                        mergedCells[3].ToRow,
+                        mergedCells[3].FromColumn,
+                        mergedCells[3].ToColumn
+                    }
+                );
             }
         }
     }

@@ -194,6 +194,7 @@ namespace ExcelDataReader.Core.CompoundFormat
 
             if (nameLength > 0)
             {
+                nameLength = Math.Min((ushort)64, nameLength);
                 result.EntryName = Encoding.Unicode.GetString(name, 0, nameLength).TrimEnd('\0');
             }
 
@@ -204,13 +205,24 @@ namespace ExcelDataReader.Core.CompoundFormat
             result.ChildSid = reader.ReadUInt32();
             result.ClassId = new Guid(reader.ReadBytes(16));
             result.UserFlags = reader.ReadUInt32();
-            result.CreationTime = DateTime.FromFileTime(reader.ReadInt64());
-            result.LastWriteTime = DateTime.FromFileTime(reader.ReadInt64());
+            result.CreationTime = ReadFileTime(reader);
+            result.LastWriteTime = ReadFileTime(reader);
             result.StreamFirstSector = reader.ReadUInt32();
             result.StreamSize = reader.ReadUInt32();
             result.PropType = reader.ReadUInt32();
             result.IsEntryMiniStream = result.StreamSize < Header.MiniStreamCutoff;
             return result;
+        }
+
+        private DateTime ReadFileTime(BinaryReader reader)
+        {
+            var d = reader.ReadInt64();
+            if (d < 0 || d > DateTime.MaxValue.ToFileTime())
+            {
+                d = 0;
+            }
+
+            return DateTime.FromFileTime(d);
         }
 
         private CompoundHeader ReadHeader(BinaryReader reader)

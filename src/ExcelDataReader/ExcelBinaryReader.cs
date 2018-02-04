@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 using ExcelDataReader.Core.BinaryFormat;
 
 namespace ExcelDataReader
@@ -8,10 +9,9 @@ namespace ExcelDataReader
     /// </summary>
     internal class ExcelBinaryReader : ExcelDataReader<XlsWorkbook, XlsWorksheet>
     {
-        public ExcelBinaryReader(Stream stream, ExcelReaderConfiguration configuration)
-            : base(configuration)
+        public ExcelBinaryReader(Stream stream, string password, Encoding fallbackEncoding)
         {
-            Workbook = new XlsWorkbook(stream, Configuration.Password, Configuration.FallbackEncoding);
+            Workbook = new XlsWorkbook(stream, password, fallbackEncoding);
 
             // By default, the data reader is positioned on the first result.
             Reset();

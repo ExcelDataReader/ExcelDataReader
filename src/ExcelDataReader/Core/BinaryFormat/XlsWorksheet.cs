@@ -42,7 +42,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             ReadWorksheetGlobals();
         }
-
+                
         /// <summary>
         /// Gets the worksheet name
         /// </summary>
@@ -56,6 +56,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         public string VisibleState { get; }
 
         public HeaderFooter HeaderFooter { get; private set; }
+
+        public CellRange[] MergeCells { get; private set; }
 
         /// <summary>
         /// Gets the worksheet data offset.
@@ -96,7 +98,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public bool IsDate1904 { get; private set; }
 
         public XlsWorkbook Workbook { get; }
-
+                
         public IEnumerable<Row> ReadRows()
         {
             var rowIndex = 0;
@@ -212,10 +214,10 @@ namespace ExcelDataReader.Core.BinaryFormat
                     ixfe = null;
                 }
             }
-
+            
             return result;
         }
-
+        
         private Row EnsureRow(XlsRowBlock result, int rowIndex)
         {
             if (!result.Rows.TryGetValue(rowIndex, out var currentRow))
@@ -429,6 +431,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 int maxCellColumn = 0;
                 int maxRowCount = 0;
 
+                var mergeCells = new List<CellRange>();
                 var biffFormats = new Dictionary<ushort, XlsBiffFormatString>();
                 var recordOffset = biffStream.Position;
                 var rec = biffStream.Read();
@@ -457,6 +460,11 @@ namespace ExcelDataReader.Core.BinaryFormat
                         ExtendedFormats.Add((XlsBiffXF)rec);
                     }
 
+                    if (rec.Id == BIFFRECORDTYPE.MERGECELLS)
+                    {
+                        mergeCells.AddRange(((XlsBiffMergeCells)rec).MergeCells);
+                    }
+                    
                     if (rec.Id == BIFFRECORDTYPE.FORMAT)
                     {
                         var fmt = (XlsBiffFormatString)rec;
@@ -532,6 +540,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                     var formatString = biffFormat.Value.GetValue(Encoding);
                     Formats.Add(biffFormat.Key, new NumberFormatString(formatString));
                 }
+
+                if (mergeCells.Count > 0)
+                    MergeCells = mergeCells.ToArray();
 
                 if (FieldCount < maxCellColumn)
                     FieldCount = maxCellColumn;

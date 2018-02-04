@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 #if NET20 || NET45 || NETCOREAPP2_0
 using System.Data;
@@ -136,6 +137,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
 
                 Assert.AreEqual(12, table.Rows.Count);
+                Assert.AreEqual(12, r.RowCount);
                 Assert.AreEqual(4, fieldCount);
                 Assert.AreEqual(1, table.Rows[11][3]);
 
@@ -154,6 +156,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
 
                 Assert.AreEqual(12, table.Rows.Count);
+                Assert.AreEqual(12, r.RowCount);
                 Assert.AreEqual(4, fieldCount);
                 Assert.AreEqual(2, table.Rows[11][3]);
 
@@ -170,6 +173,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
 
                 Assert.AreEqual(5, table.Rows.Count);
+                Assert.AreEqual(5, r.RowCount);
                 Assert.AreEqual(2, fieldCount);
                 Assert.AreEqual(3, table.Rows[4][1]);
 
@@ -1347,6 +1351,110 @@ namespace ExcelDataReader.Netstandard20.Tests
             {
                 reader.Read();
                 Assert.AreEqual("aaaaaaa", reader.GetValue(0));
+            }
+        }
+
+        [TestMethod]
+        public void MergedCells()
+        {
+            using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_MergedCell_OpenXml")))
+            {
+                excelReader.Read();
+                var mergedCells = new List<CellRange>(excelReader.MergeCells);
+                Assert.AreEqual(mergedCells.Count, 4, "Incorrect number of merged cells");
+
+                //Sort from top -> left, then down
+                mergedCells.Sort(delegate (CellRange c1, CellRange c2)
+                {
+                    if (c1.FromRow == c2.FromRow)
+                    {
+                        return c1.FromColumn.CompareTo(c2.FromColumn);
+                    }
+                    return c1.FromRow.CompareTo(c2.FromRow);
+                });
+
+                CollectionAssert.AreEqual(
+                    new int[]
+                    {
+                        1,
+                        2,
+                        0,
+                        1
+                    },
+                    new int[]
+                    {
+                        mergedCells[0].FromRow,
+                        mergedCells[0].ToRow,
+                        mergedCells[0].FromColumn,
+                        mergedCells[0].ToColumn
+                    }
+                );
+
+                CollectionAssert.AreEqual(
+                    new int[]
+                    {
+                        1,
+                        5,
+                        2,
+                        2
+                    },
+                    new int[]
+                    {
+                        mergedCells[1].FromRow,
+                        mergedCells[1].ToRow,
+                        mergedCells[1].FromColumn,
+                        mergedCells[1].ToColumn
+                    }
+                );
+
+                CollectionAssert.AreEqual(
+                    new int[]
+                    {
+                        3,
+                        5,
+                        0,
+                        0
+                    },
+                    new int[]
+                    {
+                        mergedCells[2].FromRow,
+                        mergedCells[2].ToRow,
+                        mergedCells[2].FromColumn,
+                        mergedCells[2].ToColumn
+                    }
+                );
+
+                CollectionAssert.AreEqual(
+                    new int[]
+                    {
+                        6,
+                        6,
+                        0,
+                        2
+                    },
+                    new int[]
+                    {
+                        mergedCells[3].FromRow,
+                        mergedCells[3].ToRow,
+                        mergedCells[3].FromColumn,
+                        mergedCells[3].ToColumn
+                    }
+                );
+
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_301_IgnoreCase()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_301_IgnoreCase")))
+            {
+                DataTable result = reader.AsDataSet().Tables[0];
+
+                Assert.AreEqual(10, result.Rows.Count);
+                Assert.AreEqual(10, result.Columns.Count);
+                Assert.AreEqual("10x10", result.Rows[1][0]);
+                Assert.AreEqual("10x27", result.Rows[9][9]);
             }
         }
     }

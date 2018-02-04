@@ -17,6 +17,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         INTERFACEHDR = 0x00E1,
         MMS = 0x00C1,
+        MERGECELLS = 0x00E5, // Record containing list of merged cell ranges
         INTERFACEEND = 0x00E2,
         WRITEACCESS = 0x005C,
         CODEPAGE = 0x0042,

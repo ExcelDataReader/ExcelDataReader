@@ -23,7 +23,12 @@ namespace ExcelDataReader
         /// <param name="configuration">The configuration object.</param>
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
-        { 
+        {
+            if (configuration == null)
+            {
+                configuration = new ExcelReaderConfiguration();
+            }
+
             var probe = new byte[8];
             fileStream.Seek(0, SeekOrigin.Begin);
             fileStream.Read(probe, 0, probe.Length);
@@ -35,11 +40,11 @@ namespace ExcelDataReader
                 var document = new CompoundDocument(fileStream);
                 if (TryGetWorkbook(fileStream, document, out var stream))
                 {
-                    return new ExcelBinaryReader(stream, configuration);
+                    return new ExcelBinaryReader(stream, configuration.Password, configuration.FallbackEncoding);
                 }
-                else if (TryGetEncryptedPackage(fileStream, document, configuration?.Password, out stream))
+                else if (TryGetEncryptedPackage(fileStream, document, configuration.Password, out stream))
                 {
-                    return new ExcelOpenXmlReader(stream, configuration);
+                    return new ExcelOpenXmlReader(stream);
                 }
                 else
                 {
@@ -48,12 +53,12 @@ namespace ExcelDataReader
             }
             else if (XlsWorkbook.IsRawBiffStream(probe))
             {
-                return new ExcelBinaryReader(fileStream, configuration);
+                return new ExcelBinaryReader(fileStream, configuration.Password, configuration.FallbackEncoding);
             }
             else if (probe[0] == 0x50 && probe[1] == 0x4B)
             {
                 // zip files start with 'PK'
-                return new ExcelOpenXmlReader(fileStream, configuration);
+                return new ExcelOpenXmlReader(fileStream);
             }
             else
             {
@@ -69,6 +74,11 @@ namespace ExcelDataReader
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateBinaryReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
+            if (configuration == null)
+            {
+                configuration = new ExcelReaderConfiguration();
+            }
+
             var probe = new byte[8];
             fileStream.Seek(0, SeekOrigin.Begin);
             fileStream.Read(probe, 0, probe.Length);
@@ -79,7 +89,7 @@ namespace ExcelDataReader
                 var document = new CompoundDocument(fileStream);
                 if (TryGetWorkbook(fileStream, document, out var stream))
                 {
-                    return new ExcelBinaryReader(stream, configuration);
+                    return new ExcelBinaryReader(stream, configuration.Password, configuration.FallbackEncoding);
                 }
                 else
                 {
@@ -88,7 +98,7 @@ namespace ExcelDataReader
             }
             else if (XlsWorkbook.IsRawBiffStream(probe))
             {
-                return new ExcelBinaryReader(fileStream, configuration);
+                return new ExcelBinaryReader(fileStream, configuration.Password, configuration.FallbackEncoding);
             }
             else
             {
@@ -104,6 +114,11 @@ namespace ExcelDataReader
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateOpenXmlReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
+            if (configuration == null)
+            {
+                configuration = new ExcelReaderConfiguration();
+            }
+
             var probe = new byte[8];
             fileStream.Seek(0, SeekOrigin.Begin);
             fileStream.Read(probe, 0, probe.Length);
@@ -113,9 +128,9 @@ namespace ExcelDataReader
             if (CompoundDocument.IsCompoundDocument(probe))
             {
                 var document = new CompoundDocument(fileStream);
-                if (TryGetEncryptedPackage(fileStream, document, configuration?.Password, out var stream))
+                if (TryGetEncryptedPackage(fileStream, document, configuration.Password, out var stream))
                 {
-                    return new ExcelOpenXmlReader(stream, configuration);
+                    return new ExcelOpenXmlReader(stream);
                 }
                 else
                 {
@@ -125,12 +140,28 @@ namespace ExcelDataReader
             else if (probe[0] == 0x50 && probe[1] == 0x4B)
             {
                 // Zip files start with 'PK'
-                return new ExcelOpenXmlReader(fileStream, configuration);
+                return new ExcelOpenXmlReader(fileStream);
             }
             else
             {
                 throw new HeaderException(Errors.ErrorHeaderSignature);
             }
+        }
+
+        /// <summary>
+        /// Creates an instance of ExcelCsvReader
+        /// </summary>
+        /// <param name="fileStream">The file stream.</param>
+        /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>
+        /// <returns>The excel data reader.</returns>
+        public static IExcelDataReader CreateCsvReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
+        {
+            if (configuration == null)
+            {
+                configuration = new ExcelReaderConfiguration();
+            }
+
+            return new ExcelCsvReader(fileStream, configuration.FallbackEncoding, configuration.AutodetectSeparators);
         }
 
         private static bool TryGetWorkbook(Stream fileStream, CompoundDocument document, out Stream stream)

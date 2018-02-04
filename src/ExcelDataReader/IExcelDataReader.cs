@@ -28,9 +28,19 @@ namespace ExcelDataReader
         HeaderFooter HeaderFooter { get; }
 
         /// <summary>
+        /// Gets the list of merged cell ranges.
+        /// </summary>
+        CellRange[] MergeCells { get; }
+
+        /// <summary>
         /// Gets the number of results (workbooks).
         /// </summary>
         int ResultsCount { get; }
+
+        /// <summary>
+        /// Gets the number of rows in the current result.
+        /// </summary>
+        int RowCount { get; }
 
         /// <summary>
         /// Gets the height of the current row in points.

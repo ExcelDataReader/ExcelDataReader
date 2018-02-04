@@ -18,6 +18,10 @@ namespace ExcelDataReader.Core
 
         int FieldCount { get; }
 
+        int RowCount { get; }
+
+        CellRange[] MergeCells { get; }
+
         IEnumerable<Row> ReadRows();
 
         NumberFormatString GetNumberFormatString(int index);

@@ -157,6 +157,19 @@ namespace ExcelDataReader.Tests
             { "Test_git_issue_283_TimeSpan", "Test_git_issue_283_TimeSpan.xls" },
             { "xTest_git_issue_283_TimeSpan", "Test_git_issue_283_TimeSpan.xlsx" },
             { "Test_git_issue289", "Test_git_issue289.xlsx" },
+            { "Test_MergedCell_Binary", "Test_MergedCell.xls" },
+            { "Test_MergedCell_OpenXml", "Test_MergedCell.xlsx" },
+            { "Test_git_issue_301_IgnoreCase", "Test_git_issue_301_IgnoreCase.xlsx" },
+            { "comma_in_quotes.csv", "csv/comma_in_quotes.csv" },
+            { "escaped_quotes.csv", "csv/escaped_quotes.csv" },
+            { "json.csv", "csv/json.csv" },
+            { "simple_whitespace_null.csv", "csv/simple_whitespace_null.csv" },
+            { "cp1252.csv", "csv/cp1252.csv" },
+            { "utf8.csv", "csv/utf8.csv" },
+            { "utf8_bom.csv", "csv/utf8_bom.csv" },
+            { "utf16le_bom.csv", "csv/utf16le_bom.csv" },
+            { "utf16be_bom.csv", "csv/utf16be_bom.csv" },
+            { "MOCK_DATA.csv", "csv/MOCK_DATA.csv" },
         };
 
         public static Stream GetTestWorkbook(string key)
