@@ -457,33 +457,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 }
                 else if (xmlReader.IsStartElement(NIs, NsSpreadsheetMl))
                 {
-                    var rawValue = ReadInlineString(xmlReader);
+                    var rawValue = XlsxWorkbook.ReadStringItem(xmlReader);
                     if (!string.IsNullOrEmpty(rawValue))
                         result.Value = ConvertCellValue(rawValue, aT, result.NumberFormatIndex);
-                }
-                else if (!XmlReaderHelper.SkipContent(xmlReader))
-                {
-                    break;
-                }
-            }
-
-            return result;
-        }
-
-        private string ReadInlineString(XmlReader xmlReader)
-        {
-            string result = null;
-
-            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
-            {
-                return result;
-            }
-
-            while (!xmlReader.EOF)
-            {
-                if (xmlReader.IsStartElement(NT, NsSpreadsheetMl))
-                {
-                    result = xmlReader.ReadElementContentAsString();
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {

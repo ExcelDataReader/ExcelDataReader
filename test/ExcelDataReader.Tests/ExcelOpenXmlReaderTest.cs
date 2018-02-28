@@ -1457,5 +1457,16 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual("10x27", result.Rows[9][9]);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_319_InlineRichText()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue319")))
+            {
+                var result = reader.AsDataSet().Tables[0];
+
+                Assert.AreEqual("Text1", result.Rows[0][0]);
+            }
+        }
     }
 }
