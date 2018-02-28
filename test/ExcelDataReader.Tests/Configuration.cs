@@ -170,6 +170,7 @@ namespace ExcelDataReader.Tests
             { "utf16le_bom.csv", "csv/utf16le_bom.csv" },
             { "utf16be_bom.csv", "csv/utf16be_bom.csv" },
             { "MOCK_DATA.csv", "csv/MOCK_DATA.csv" },
+            { "Test_git_issue321", "Test_git_issue321.xls" },
         };
 
         public static Stream GetTestWorkbook(string key)
