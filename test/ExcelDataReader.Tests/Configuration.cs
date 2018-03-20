@@ -172,6 +172,7 @@ namespace ExcelDataReader.Tests
             { "MOCK_DATA.csv", "csv/MOCK_DATA.csv" },
             { "Test_git_issue319", "Test_git_issue319.xlsx" },
             { "Test_git_issue321", "Test_git_issue321.xls" },
+            { "Test_git_issue_324", "Test_git_issue_324.xlsx" },
         };
 
         public static Stream GetTestWorkbook(string key)
