@@ -270,22 +270,40 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 yield break;
             }
 
+            Row row = null;
+
             int nextRowIndex = 0;
             while (!xmlReader.EOF)
             {
                 if (xmlReader.IsStartElement(NRow, NsSpreadsheetMl))
                 {
-                    var row = ReadRow(xmlReader, nextRowIndex);
-                    nextRowIndex = row.RowIndex + 1;
-                    yield return new XlsxRow()
+                    var currentRow = ReadRow(xmlReader, nextRowIndex);
+
+                    if (row == null)
                     {
-                        Row = row
-                    };
+                        row = currentRow;
+                    }
+                    else if (currentRow.RowIndex != row.RowIndex)
+                    {
+                        yield return new XlsxRow { Row = row };
+                        row = currentRow;
+                    }
+                    else
+                    {
+                        row.Cells.AddRange(currentRow.Cells);
+                    }
+
+                    nextRowIndex = currentRow.RowIndex + 1;
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {
                     break;
                 }
+            }
+
+            if (row != null)
+            {
+                yield return new XlsxRow { Row = row };
             }
         }
 
