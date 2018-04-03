@@ -1479,7 +1479,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual(20, result.Rows.Count);
                 Assert.AreEqual(13, result.Columns.Count);
 
-                Assert.AreEqual(67024.6, result.Rows[10][12]);
+                Assert.That(result.Rows[10].ItemArray, Is.EqualTo(new object[] { DBNull.Value, DBNull.Value, "Other", 191036.15, 194489.45, 66106.32, 37167.88, 102589.54, 57467.94, 130721.93, 150752.67, 76300.69, 67024.6 }));
             }
         }
     }
