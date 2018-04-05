@@ -302,5 +302,15 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
             }
         }
+
+        [Test]
+        public void GitIssue_323_DoubleClose()
+        {
+            using (var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("MOCK_DATA.csv")))
+            {
+                reader.Read();
+                reader.Close();
+            }
+        }
     }
 }

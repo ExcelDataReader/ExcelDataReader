@@ -1482,5 +1482,15 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.That(result.Rows[10].ItemArray, Is.EqualTo(new object[] { DBNull.Value, DBNull.Value, "Other", 191036.15, 194489.45, 66106.32, 37167.88, 102589.54, 57467.94, 130721.93, 150752.67, 76300.69, 67024.6 }));
             }
         }
+
+        [TestMethod]
+        public void GitIssue_323_DoubleClose()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest10x10")))
+            {
+                reader.Read();
+                reader.Close();
+            }
+        }
     }
 }

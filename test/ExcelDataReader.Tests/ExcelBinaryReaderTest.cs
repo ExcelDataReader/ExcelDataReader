@@ -1722,5 +1722,15 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual(" MONETARY AGGREGATES FOR INSTITUTIONAL SECTORS", reader.GetString(1));
             }
         }
+
+        [TestMethod]
+        public void GitIssue_323_DoubleClose()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test10x10")))
+            {
+                reader.Read();
+                reader.Close();
+            }
+        }
     }
 }
