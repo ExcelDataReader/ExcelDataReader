@@ -515,6 +515,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         return date;
 
                     return rawValue;
+                case "e": //// error
+                    return null;
                 default:
                     if (double.TryParse(rawValue, style, invariantCulture, out double number))
                     {

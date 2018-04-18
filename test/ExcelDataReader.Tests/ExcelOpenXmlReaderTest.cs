@@ -1492,5 +1492,24 @@ namespace ExcelDataReader.Netstandard20.Tests
                 reader.Close();
             }
         }
+
+        [TestMethod]
+        public void GitIssue_329_Error()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_329_error.xlsx")))
+            {
+                var result = reader.AsDataSet().Tables[0];
+
+                // AsDataSet trims trailing empty rows
+                Assert.AreEqual(0, result.Rows.Count);
+
+                // Check errors on first row return null
+                reader.Read();
+                Assert.IsNull(reader.GetValue(0));
+                Assert.IsNull(reader.GetValue(1));
+                Assert.IsNull(reader.GetValue(2));
+                Assert.AreEqual(1, reader.RowCount);
+            }
+        }
     }
 }
