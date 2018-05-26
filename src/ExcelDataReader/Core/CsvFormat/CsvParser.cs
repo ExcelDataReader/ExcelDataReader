@@ -12,6 +12,7 @@ namespace ExcelDataReader.Core.CsvFormat
         public CsvParser(char separator, Encoding encoding)
         {
             Separator = separator;
+            QuoteChar = '"';
 
             Decoder = encoding.GetDecoder();
             Decoder.Fallback = new DecoderExceptionFallback();
@@ -35,7 +36,7 @@ namespace ExcelDataReader.Core.CsvFormat
 
         private CsvState State { get; set; }
 
-        private char QuoteChar { get; set; }
+        private char QuoteChar { get; }
 
         private int TrailingWhitespaceCount { get; set; }
 
@@ -141,9 +142,8 @@ namespace ExcelDataReader.Core.CsvFormat
             {
                 return true;
             }
-            else if (c == '"' || c == '\'')
+            else if (c == QuoteChar)
             {
-                QuoteChar = c;
                 State = CsvState.QuotedValue;
                 return true;
             }
@@ -228,7 +228,6 @@ namespace ExcelDataReader.Core.CsvFormat
             else
             {
                 // End of quote, read remainder of field as a regular value until separator
-                QuoteChar = '\0';
                 State = CsvState.Value;
                 return false;
             }
