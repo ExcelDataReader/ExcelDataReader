@@ -229,6 +229,8 @@ namespace TestApp
             var extension = Path.GetExtension(textBox1.Text).ToLower();
             using (var stream = new FileStream(textBox1.Text, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
+                var sw = new Stopwatch();
+                sw.Start();
                 IExcelDataReader reader = null;
                 if (extension == ".xls")
                 {
@@ -246,13 +248,13 @@ namespace TestApp
                 if (reader == null)
                     return;
 
+                var openTiming = sw.ElapsedMilliseconds;
                 // reader.IsFirstRowAsColumnNames = firstRowNamesCheckBox.Checked;
-                var sw = new Stopwatch();
-                sw.Start();
                 using (reader)
                 {
                     ds = reader.AsDataSet(new ExcelDataSetConfiguration()
                     {
+                        UseColumnDataType = false,
                         ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
                         {
                             UseHeaderRow = firstRowNamesCheckBox.Checked
@@ -260,7 +262,7 @@ namespace TestApp
                     });
                 }
 
-                toolStripStatusLabel1.Text = "Elapsed: " + sw.ElapsedMilliseconds.ToString() + " ms";
+                toolStripStatusLabel1.Text = "Elapsed: " + sw.ElapsedMilliseconds.ToString() + " ms (" + openTiming.ToString() + " ms to open)";
 
                 var tablenames = GetTablenames(ds.Tables);
                 sheetCombo.DataSource = tablenames;
