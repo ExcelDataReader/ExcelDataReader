@@ -8,10 +8,27 @@ namespace ExcelDataReader
     public class ExcelReaderConfiguration
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="ExcelReaderConfiguration" /> class.
+        /// </summary>
+        public ExcelReaderConfiguration()
+        {
+            this.FallbackEncoding = Encoding.GetEncoding(1252);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ExcelReaderConfiguration" /> class.
+        /// </summary>
+        /// <param name="fallbackEncoding">Fallback encoding for parsing XLS and CSV files.</param>
+        public ExcelReaderConfiguration(Encoding fallbackEncoding)
+        {
+            this.FallbackEncoding = fallbackEncoding;
+        }
+
+        /// <summary>
         /// Gets or sets a value indicating the encoding to use when the input XLS lacks a CodePage record, 
         /// or when the input CSV lacks a BOM and does not parse as UTF8. Default: cp1252. (XLS BIFF2-5 and CSV only)
         /// </summary>
-        public Encoding FallbackEncoding { get; set; } = Encoding.GetEncoding(1252);
+        public Encoding FallbackEncoding { get; set; }
 
         /// <summary>
         /// Gets or sets the password used to open password protected workbooks.
