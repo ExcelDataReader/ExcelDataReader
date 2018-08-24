@@ -5,7 +5,7 @@
     <AssemblyTitle>ExcelDataReader</AssemblyTitle>
     <VersionPrefix>3.4.1</VersionPrefix>
     <Authors>ExcelDataReader developers</Authors>
-    <TargetFrameworks>net20;net45;netstandard1.3;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net20;net40;net45;netstandard1.3;netstandard2.0</TargetFrameworks>
     <AssemblyName>ExcelDataReader</AssemblyName>
     <AssemblyOriginatorKeyFile>..\ExcelDataReader.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
@@ -36,7 +36,7 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net20'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net20' OR '$(TargetFramework)' == 'net40'">
     <PackageReference Include="SharpZipLib">
       <Version>0.86.0</Version>
     </PackageReference>

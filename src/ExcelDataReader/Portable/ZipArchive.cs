@@ -1,4 +1,4 @@
-﻿#if NET20
+﻿#if NET20 || NET40
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

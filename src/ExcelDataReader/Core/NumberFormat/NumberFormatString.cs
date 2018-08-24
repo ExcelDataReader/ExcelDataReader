@@ -64,7 +64,7 @@ namespace ExcelDataReader.Core.NumberFormat
         /// </summary>
         public bool IsTimeSpanFormat { get; }
 
-#if NET20
+#if NET20 || NET40
         internal IList<Section> Sections { get; }
 #else
         internal IReadOnlyList<Section> Sections { get; }
