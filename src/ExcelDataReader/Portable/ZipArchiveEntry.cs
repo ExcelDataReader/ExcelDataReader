@@ -1,4 +1,4 @@
-﻿#if NET20
+﻿#if NET20 || NET40
 using System.IO;
 
 using ICSharpCode.SharpZipLib.Zip;

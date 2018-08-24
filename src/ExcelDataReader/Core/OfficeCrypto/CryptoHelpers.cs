@@ -53,7 +53,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
                     return new RC4Managed();
                 case CipherIdentifier.DES3:
                     return InitCipher(TripleDES.Create(), keySize, blockSize, mode);
-#if NET20 || NET45 || NETSTANDARD2_0
+#if NET20 || NET40 || NET45 || NETSTANDARD2_0
                 case CipherIdentifier.RC2:
                     return InitCipher(RC2.Create(), keySize, blockSize, mode);
                 case CipherIdentifier.DES:

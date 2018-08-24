@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-#if NET20 || NET45 || NETCOREAPP2_0
+#if NET20 || NET40 || NET45 || NETCOREAPP2_0
 using System.Data;
 #endif
 using ExcelDataReader.Tests;
@@ -14,6 +14,8 @@ using TestMethod = NUnit.Framework.TestAttribute;
 
 #if EXCELDATAREADER_NET20
 namespace ExcelDataReader.Net20.Tests
+#elif EXCELDATAREADER_NET40
+namespace ExcelDataReader.Net40.Tests
 #elif NET45
 namespace ExcelDataReader.Net45.Tests
 #elif NETCOREAPP1_0
@@ -1092,6 +1094,7 @@ namespace ExcelDataReader.Netstandard20.Tests
         [TestMethod]
         public void GitIssue_242_AgileEncryption()
         {
+          int k = 0;
             // OpenXml agile encryption aes128+md5+cbc
             using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
                 Configuration.GetTestWorkbook("agile_AES128_MD5_CBC_pwd_password"),
@@ -1156,7 +1159,7 @@ namespace ExcelDataReader.Netstandard20.Tests
             }
 
             // The following encryptions do not exist on netstandard1.3
-#if NET20 || NET45 || NETCOREAPP2_0
+#if NET20 || NET40 || NET45 || NETCOREAPP2_0
             // OpenXml agile encryption des+md5+cbc
             using (var reader = ExcelReaderFactory.CreateOpenXmlReader(
                 Configuration.GetTestWorkbook("agile_DES_MD5_CBC_pwd_password"),
