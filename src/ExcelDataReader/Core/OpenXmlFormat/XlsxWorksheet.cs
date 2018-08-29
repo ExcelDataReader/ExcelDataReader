@@ -270,22 +270,40 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 yield break;
             }
 
+            Row row = null;
+
             int nextRowIndex = 0;
             while (!xmlReader.EOF)
             {
                 if (xmlReader.IsStartElement(NRow, NsSpreadsheetMl))
                 {
-                    var row = ReadRow(xmlReader, nextRowIndex);
-                    nextRowIndex = row.RowIndex + 1;
-                    yield return new XlsxRow()
+                    var currentRow = ReadRow(xmlReader, nextRowIndex);
+
+                    if (row == null)
                     {
-                        Row = row
-                    };
+                        row = currentRow;
+                    }
+                    else if (currentRow.RowIndex != row.RowIndex)
+                    {
+                        yield return new XlsxRow { Row = row };
+                        row = currentRow;
+                    }
+                    else
+                    {
+                        row.Cells.AddRange(currentRow.Cells);
+                    }
+
+                    nextRowIndex = currentRow.RowIndex + 1;
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {
                     break;
                 }
+            }
+
+            if (row != null)
+            {
+                yield return new XlsxRow { Row = row };
             }
         }
 
@@ -457,33 +475,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 }
                 else if (xmlReader.IsStartElement(NIs, NsSpreadsheetMl))
                 {
-                    var rawValue = ReadInlineString(xmlReader);
+                    var rawValue = XlsxWorkbook.ReadStringItem(xmlReader);
                     if (!string.IsNullOrEmpty(rawValue))
                         result.Value = ConvertCellValue(rawValue, aT, result.NumberFormatIndex);
-                }
-                else if (!XmlReaderHelper.SkipContent(xmlReader))
-                {
-                    break;
-                }
-            }
-
-            return result;
-        }
-
-        private string ReadInlineString(XmlReader xmlReader)
-        {
-            string result = null;
-
-            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
-            {
-                return result;
-            }
-
-            while (!xmlReader.EOF)
-            {
-                if (xmlReader.IsStartElement(NT, NsSpreadsheetMl))
-                {
-                    result = xmlReader.ReadElementContentAsString();
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {
@@ -521,6 +515,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         return date;
 
                     return rawValue;
+                case "e": //// error
+                    return null;
                 default:
                     if (double.TryParse(rawValue, style, invariantCulture, out double number))
                     {

@@ -1457,5 +1457,59 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual("10x27", result.Rows[9][9]);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_319_InlineRichText()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue319")))
+            {
+                var result = reader.AsDataSet().Tables[0];
+
+                Assert.AreEqual("Text1", result.Rows[0][0]);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_324_MultipleRowElementsPerRow()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_324")))
+            {
+                var result = reader.AsDataSet().Tables[0];
+
+                Assert.AreEqual(20, result.Rows.Count);
+                Assert.AreEqual(13, result.Columns.Count);
+
+                Assert.That(result.Rows[10].ItemArray, Is.EqualTo(new object[] { DBNull.Value, DBNull.Value, "Other", 191036.15, 194489.45, 66106.32, 37167.88, 102589.54, 57467.94, 130721.93, 150752.67, 76300.69, 67024.6 }));
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_323_DoubleClose()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest10x10")))
+            {
+                reader.Read();
+                reader.Close();
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_329_Error()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_329_error.xlsx")))
+            {
+                var result = reader.AsDataSet().Tables[0];
+
+                // AsDataSet trims trailing empty rows
+                Assert.AreEqual(0, result.Rows.Count);
+
+                // Check errors on first row return null
+                reader.Read();
+                Assert.IsNull(reader.GetValue(0));
+                Assert.IsNull(reader.GetValue(1));
+                Assert.IsNull(reader.GetValue(2));
+                Assert.AreEqual(1, reader.RowCount);
+            }
+        }
     }
 }

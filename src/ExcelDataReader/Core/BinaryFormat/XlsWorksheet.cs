@@ -524,6 +524,10 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                     recordOffset = biffStream.Position;
                     rec = biffStream.Read();
+
+                    // Stop if we find the start out a new substream. Not always that files have the required EOF before a substream BOF.
+                    if (rec is XlsBiffBOF)
+                        break;
                 }
 
                 if (header != null || footer != null)

@@ -1706,5 +1706,50 @@ namespace ExcelDataReader.Netstandard20.Tests
                 );
             }
         }
+
+        [TestMethod]
+        public void GitIssue_321_MissingEOF()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue321")))
+            {
+                for (int i = 0; i < 7; i++)
+                {
+                    reader.Read();
+                    Assert.IsTrue(string.IsNullOrEmpty(reader.GetString(1)), "Row = " + i);
+                }
+
+                reader.Read();
+                Assert.AreEqual(" MONETARY AGGREGATES FOR INSTITUTIONAL SECTORS", reader.GetString(1));
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_323_DoubleClose()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test10x10")))
+            {
+                reader.Read();
+                reader.Close();
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_329_Error()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_329_error.xls")))
+            {
+                var result = reader.AsDataSet().Tables[0];
+
+                // AsDataSet trims trailing empty rows
+                Assert.AreEqual(0, result.Rows.Count);
+
+                // Check errors on first row return null
+                reader.Read();
+                Assert.IsNull(reader.GetValue(0));
+                Assert.IsNull(reader.GetValue(1));
+                Assert.IsNull(reader.GetValue(2));
+                Assert.AreEqual(1, reader.RowCount);
+            }
+        }
     }
 }

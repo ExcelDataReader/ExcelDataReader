@@ -302,5 +302,26 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
             }
         }
+
+        [Test]
+        public void GitIssue_323_DoubleClose()
+        {
+            using (var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("MOCK_DATA.csv")))
+            {
+                reader.Read();
+                reader.Close();
+            }
+        }
+
+        [Test]
+        public void GitIssue_333_EAN_Quotes()
+        {
+            using (var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("ean.txt")))
+            {
+                reader.Read();
+                Assert.AreEqual(2, reader.RowCount);
+                Assert.AreEqual(24, reader.FieldCount);
+            }
+        }
     }
 }

@@ -12,12 +12,13 @@ namespace ExcelDataReader.Core.CsvFormat
         public CsvParser(char separator, Encoding encoding)
         {
             Separator = separator;
+            QuoteChar = '"';
 
             Decoder = encoding.GetDecoder();
             Decoder.Fallback = new DecoderExceptionFallback();
 
-            MaxCharBytes = encoding.GetMaxByteCount(1);
-            Buffer = new byte[MaxCharBytes];
+            var bufferSize = 1024;
+            CharBuffer = new char[bufferSize];
 
             State = CsvState.PreValue;
         }
@@ -35,21 +36,17 @@ namespace ExcelDataReader.Core.CsvFormat
 
         private CsvState State { get; set; }
 
-        private char QuoteChar { get; set; }
+        private char QuoteChar { get; }
 
         private int TrailingWhitespaceCount { get; set; }
 
         private Decoder Decoder { get; }
 
-        private int MaxCharBytes { get; }
-
         private bool HasCarriageReturn { get; set; }
 
         private char Separator { get; }
 
-        private byte[] Buffer { get; set; }
-
-        private int BufferWritePosition { get; set; }
+        private char[] CharBuffer { get; set; }
 
         private StringBuilder ValueResult { get; set; } = new StringBuilder();
 
@@ -59,8 +56,18 @@ namespace ExcelDataReader.Core.CsvFormat
 
         public void ParseBuffer(byte[] bytes, int offset, int count, out List<List<string>> rows)
         {
-            for (var i = 0; i < count; i++)
-                ParseByte(bytes[offset + i]);
+            while (count > 0)
+            {
+                Decoder.Convert(bytes, offset, count, CharBuffer, 0, CharBuffer.Length, false, out var bytesUsed, out var charsUsed, out var completed);
+
+                offset += bytesUsed;
+                count -= bytesUsed;
+
+                for (var i = 0; i < charsUsed; i++)
+                {
+                    ParseChar(CharBuffer[i], 1);
+                }
+            }
 
             rows = RowsResult;
             RowsResult = new List<List<string>>();
@@ -68,11 +75,6 @@ namespace ExcelDataReader.Core.CsvFormat
 
         public void Flush(out List<List<string>> rows)
         {
-            while (BufferWritePosition > 0)
-            {
-                DecodeChar();
-            }
-
             if (State != CsvState.PreValue)
             {
                 AddValueToRow();
@@ -81,27 +83,6 @@ namespace ExcelDataReader.Core.CsvFormat
 
             rows = RowsResult;
             RowsResult = new List<List<string>>();
-        }
-
-        private void ParseByte(byte b)
-        {
-            Buffer[BufferWritePosition] = b;
-            BufferWritePosition++;
-
-            if (BufferWritePosition == MaxCharBytes)
-            {
-                DecodeChar();
-            }
-        }
-
-        private void DecodeChar()
-        {
-            var c = new char[1];
-            Decoder.Convert(Buffer, 0, BufferWritePosition, c, 0, 1, true, out var bytesUsed, out var charsUsed, out var completed);
-            ParseChar(c[0], bytesUsed);
-
-            Array.Copy(Buffer, bytesUsed, Buffer, 0, BufferWritePosition - bytesUsed);
-            BufferWritePosition -= bytesUsed;
         }
 
         private void ParseChar(char c, int bytesUsed)
@@ -141,9 +122,8 @@ namespace ExcelDataReader.Core.CsvFormat
             {
                 return true;
             }
-            else if (c == '"' || c == '\'')
+            else if (c == QuoteChar)
             {
-                QuoteChar = c;
                 State = CsvState.QuotedValue;
                 return true;
             }
@@ -228,7 +208,6 @@ namespace ExcelDataReader.Core.CsvFormat
             else
             {
                 // End of quote, read remainder of field as a regular value until separator
-                QuoteChar = '\0';
                 State = CsvState.Value;
                 return false;
             }
