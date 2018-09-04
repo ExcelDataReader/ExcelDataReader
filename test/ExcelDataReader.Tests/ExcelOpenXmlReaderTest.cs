@@ -307,6 +307,20 @@ namespace ExcelDataReader.Netstandard20.Tests
         }
 
         [TestMethod]
+        public void _GitIssue_350__Invalid_Date_and_Time_Test()
+        {
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_350_bad_dates")))
+            {
+                DataSet dataSet = excelReader.AsDataSet(new ExcelDataSetConfiguration { UseColumnDataType = false });
+
+                var tbl = dataSet.Tables[0];
+                var val1 = tbl.Rows[1][0].ToString();
+
+                Assert.AreEqual("00/01/1900", val1);
+            }
+        }
+
+        [TestMethod]
         public void Issue_Date_and_Time_1468_Test()
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Encoding_1520")))
