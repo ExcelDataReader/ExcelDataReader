@@ -7,6 +7,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
     {
         private const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
         private const string NsRelationship = "http://schemas.openxmlformats.org/package/2006/relationships";
+        private const string NsDocumentRelationship = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
         private const string ElementSst = "sst";
         private const string ElementSheets = "sheets";
         private const string ElementSheet = "sheet";
@@ -22,7 +23,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string AttributeSheetId = "sheetId";
         private const string AttributeVisibleState = "state";
         private const string AttributeName = "name";
-        private const string AttributeRelationshipId = "r:id";
+        private const string AttributeRelationshipId = "id";
 
         private const string ElementRelationship = "Relationship";
         private const string ElementRelationships = "Relationships";
@@ -179,7 +180,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     Sheets.Add(new XlsxBoundSheet(
                         reader.GetAttribute(AttributeName),
                         int.Parse(reader.GetAttribute(AttributeSheetId)),
-                        reader.GetAttribute(AttributeRelationshipId),
+                        reader.GetAttribute(AttributeRelationshipId, NsDocumentRelationship),
                         reader.GetAttribute(AttributeVisibleState)));
                     reader.Skip();
                 }
