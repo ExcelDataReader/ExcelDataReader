@@ -75,7 +75,7 @@ namespace ExcelDataReader.Core.CsvFormat
 
         public void Flush(out List<List<string>> rows)
         {
-            if (State != CsvState.PreValue)
+            if (ValueResult.Length > 0 || RowResult.Count > 0)
             {
                 AddValueToRow();
                 AddRowToResult();

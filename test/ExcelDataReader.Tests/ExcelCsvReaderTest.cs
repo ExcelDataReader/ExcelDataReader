@@ -323,5 +323,25 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual(24, reader.FieldCount);
             }
         }
+        [Test]
+        public void GitIssue_351_Last_Line_Without_Line_Feed()
+        {
+            using (var strm = new MemoryStream())
+            {
+                using (var writer = new StreamWriter(strm, Encoding.UTF8))
+                {
+                    writer.NewLine = "\n";
+                    writer.WriteLine("5;6;1;Test");
+                    writer.Write("Test;;;");
+                    writer.Flush();
+                    using (var reader = ExcelReaderFactory.CreateCsvReader(strm))
+                    {
+                        var ds = reader.AsDataSet();
+                        Assert.AreEqual(2, ds.Tables[0].Rows.Count);
+                        Assert.AreEqual(4, reader.FieldCount);
+                    }
+                }
+            }
+        }
     }
 }
