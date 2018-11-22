@@ -119,6 +119,15 @@ namespace ExcelDataReader
             return _worksheetIterator?.Current?.GetNumberFormatString(RowCells[i].NumberFormatIndex)?.FormatString;
         }
 
+        public int GetNumberFormatIndex(int i)
+        {
+            if (RowCells == null)
+                throw new InvalidOperationException("No data exists for the row/column.");
+            if (RowCells[i] == null)
+                return -1;
+            return RowCells[i].NumberFormatIndex;
+        }
+
         /// <inheritdoc />
         public void Reset()
         {
