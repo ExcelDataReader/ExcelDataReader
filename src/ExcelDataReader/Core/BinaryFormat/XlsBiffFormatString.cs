@@ -13,14 +13,14 @@ namespace ExcelDataReader.Core.BinaryFormat
         internal XlsBiffFormatString(byte[] bytes, uint offset, int biffVersion)
             : base(bytes, offset)
         {
-            if (biffVersion == 2 || biffVersion == 3)
+            if (Id == BIFFRECORDTYPE.FORMAT_V23)
             {
                 // BIFF2-3
                 _xlsString = new XlsShortByteString(bytes, offset + 4);
             }
-            else if (biffVersion == 4 || biffVersion == 5)
+            else if (biffVersion >= 2 && biffVersion <= 5)
             {
-                // BIFF4-5
+                // BIFF4-5, or if there is a newer format record in a BIFF2-3 stream
                 _xlsString = new XlsShortByteString(bytes, offset + 4 + 2);
             }
             else if (biffVersion == 8)

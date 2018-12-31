@@ -206,7 +206,18 @@ namespace ExcelDataReader.Core.BinaryFormat
                             xFormat = cell.XFormat;
                         }
 
-                        var numberFormatIndex = GetNumberFormatIndex(xFormat);
+                        int numberFormatIndex;
+
+                        if (Workbook.BiffVersion == 2 && ixfe == null && xFormat >= ExtendedFormats.Count && cell.IsBiff2Cell)
+                        {
+                            // Use FORMAT reference directly from cell attributes, BIFF2 only
+                            numberFormatIndex = cell.Format;
+                        }
+                        else
+                        {
+                            numberFormatIndex = GetNumberFormatIndex(xFormat);
+                        }
+
                         var cellValue = ReadSingleCell(biffStream, cell, numberFormatIndex);
                         currentRow.Cells.Add(cellValue);
                     }

@@ -120,9 +120,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                         return false;*/
                     return true;
                 case 0x0809: // BIFF5/BIFF8
-                    if (size != 8 && size != 16)
+                    if (size < 4)
                         return false;
-                    if (bofVersion != 0x0500 && bofVersion != 0x600)
+                    if (bofVersion != 0 && bofVersion != 0x0200 && bofVersion != 0x0300 && bofVersion != 0x0400 && bofVersion != 0x0500 && bofVersion != 0x600)
                         return false;
                     if (type != 0x5 && type != 0x6 && type != 0x10 && type != 0x20 && type != 0x40 && type != 0x0100)
                         return false;
