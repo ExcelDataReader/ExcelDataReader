@@ -113,13 +113,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public NumberFormatString GetNumberFormatString(int numberFormatIndex)
         {
-            var numFmt = Workbook.Styles.NumFmts.Find(x => x.Id == numberFormatIndex);
-            if (numFmt != null)
-            { 
-                return numFmt.FormatCode;
+            if (Workbook.Formats.TryGetValue(numberFormatIndex, out var result))
+            {
+                return result;
             }
 
-            return BuiltinNumberFormat.GetBuiltinNumberFormat(numberFormatIndex);
+            return null;
         }
 
         private void ReadWorksheetGlobals()
@@ -452,11 +451,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             {
                 if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
                 {
-                    if (styleIndex >= 0 && styleIndex < Workbook.Styles.CellXfs.Count)
-                    {
-                        XlsxXf xf = Workbook.Styles.CellXfs[styleIndex];
-                        result.NumberFormatIndex = xf.NumFmtId;
-                    }
+                    result.NumberFormatIndex = Workbook.GetNumberFormatFromXF(styleIndex);
                 }
             }
 

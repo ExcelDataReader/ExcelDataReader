@@ -3,7 +3,7 @@ using System.Xml;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
-    internal class XlsxWorkbook : IWorkbook<XlsxWorksheet>
+    internal class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
     {
         private const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
         private const string NsRelationship = "http://schemas.openxmlformats.org/package/2006/relationships";
@@ -53,8 +53,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         public List<XlsxBoundSheet> Sheets { get; } = new List<XlsxBoundSheet>();
 
         public XlsxSST SST { get; } = new XlsxSST();
-
-        public XlsxStyles Styles { get; } = new XlsxStyles();
 
         public bool IsDate1904 { get; private set; }
 
@@ -336,14 +334,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             {
                 if (reader.IsStartElement(NXF, NsSpreadsheetMl))
                 {
-                    var xfId = reader.GetAttribute(AXFId);
-                    var numFmtId = reader.GetAttribute(ANumFmtId);
-
-                    Styles.CellXfs.Add(
-                        new XlsxXf(
-                            xfId == null ? -1 : int.Parse(xfId),
-                            numFmtId == null ? -1 : int.Parse(numFmtId),
-                            reader.GetAttribute(AApplyNumberFormat)));
+                    int.TryParse(reader.GetAttribute(AXFId), out var xfId);
+                    int.TryParse(reader.GetAttribute(ANumFmtId), out var numFmtId);
+                    var applyNumberFormat = reader.GetAttribute(AApplyNumberFormat) != "0";
+                    AddExtendedFormat(xfId, numFmtId, applyNumberFormat);
                     reader.Skip();
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))
@@ -364,10 +358,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             {
                 if (reader.IsStartElement(NNumFmt, NsSpreadsheetMl))
                 {
-                    Styles.NumFmts.Add(
-                        new XlsxNumFmt(
-                            int.Parse(reader.GetAttribute(ANumFmtId)),
-                            reader.GetAttribute(AFormatCode)));
+                    int.TryParse(reader.GetAttribute(ANumFmtId), out var numFmtId);
+                    var formatCode = reader.GetAttribute(AFormatCode);
+
+                    AddNumberFormat(numFmtId, formatCode);
                     reader.Skip();
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))
