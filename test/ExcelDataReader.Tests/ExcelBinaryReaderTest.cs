@@ -1839,7 +1839,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 reader.Read();
                 Assert.AreEqual("Same with XF 70 (ignored by Excel)", reader[0]);
                 // TODO:
-                // Assert.AreEqual("General", reader.GetNumberFormatString(0));
+                Assert.AreEqual("General", reader.GetNumberFormatString(0));
 
                 reader.Read();
                 Assert.AreEqual("Same with XF 70 via IXFE", reader[0]);
