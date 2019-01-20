@@ -185,6 +185,7 @@ namespace ExcelDataReader.Tests
             { "column_widths_test.csv", @"csv/column_widths_test.csv" },
             { "ColumnWidthsTest.xlsx", @"ColumnWidthsTest.xlsx" },
             { "ColumnWidthsTest.xls", @"ColumnWidthsTest.xls" },
+            { "Test_git_issue_375_ixfe_rowmap.xls", "Test_git_issue_375_ixfe_rowmap.xls" },
         };
 
         public static Stream GetTestWorkbook(string key)
