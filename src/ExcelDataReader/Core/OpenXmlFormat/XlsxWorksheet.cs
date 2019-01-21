@@ -45,6 +45,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string ACustomHeight = "customHeight";
         private const string AHt = "ht";
 
+        private const string NCols = "cols";
+        private const string AMin = "min";
+        private const string AMax = "max";
+        private const string AWidth = "width";
+        private const string ACustomWidth = "customWidth";
+
         public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, XlsxBoundSheet refSheet)
         {
             Document = document;
@@ -81,6 +87,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         public string Path { get; set; }
 
         public CellRange[] MergeCells { get; private set; }
+
+        public double[] ColumnWidths { get; private set; }
 
         private ZipWorker Document { get; }
 
@@ -145,6 +153,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 {
                     XlsxMergeCells mergeCells = (XlsxMergeCells)sheetObject;
                     MergeCells = mergeCells.Value.ToArray();
+                }
+                else if (sheetObject.Type == XlsxElementType.Cols)
+                {
+                    XlsxCols sheetCols = (XlsxCols)sheetObject;
+                    var colWidths = new List<double>();
+                    sheetCols.Value.ForEach(fe => colWidths.Add(fe.Width));
+                    ColumnWidths = colWidths.ToArray();
                 }
             }
 
@@ -220,6 +235,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 else if (xmlReader.IsStartElement(NHeaderFooter, NsSpreadsheetMl))
                 {
                     var result = ReadHeaderFooter(xmlReader);
+                    if (result != null)
+                        yield return result;
+                }
+                else if (xmlReader.IsStartElement(NCols, NsSpreadsheetMl))
+                {
+                    var result = ReadCols(xmlReader);
                     if (result != null)
                         yield return result;
                 }
@@ -304,6 +325,46 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             {
                 yield return new XlsxRow { Row = row };
             }
+        }
+
+        private XlsxCols ReadCols(XmlReader xmlReader)
+        {
+            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
+            {
+                return null;
+            }
+
+            var cols = new List<Col>();
+
+            while (!xmlReader.EOF)
+            {
+                if (xmlReader.IsStartElement(NCol, NsSpreadsheetMl))
+                {
+                    var min = xmlReader.GetAttribute(AMin);
+                    var max = xmlReader.GetAttribute(AMax);
+                    var width = xmlReader.GetAttribute(AWidth);
+                    var customWidth = xmlReader.GetAttribute(ACustomWidth);
+
+                    cols.Add(new Col
+                    {
+                        CustomWidth = customWidth == "1",
+                        Max = int.Parse(max),
+                        Min = int.Parse(min),
+                        Width = double.Parse(width)
+                    });
+
+                    xmlReader.Read();
+                }
+                else if (!XmlReaderHelper.SkipContent(xmlReader))
+                {
+                    break;
+                }
+            }
+
+            return new XlsxCols
+            {
+                Value = cols
+            };
         }
 
         private XlsxMergeCells ReadMergeCells(XmlReader xmlReader)

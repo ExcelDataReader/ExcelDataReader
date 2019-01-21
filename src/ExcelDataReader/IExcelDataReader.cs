@@ -48,6 +48,11 @@ namespace ExcelDataReader
         double RowHeight { get; }
 
         /// <summary>
+        /// Gets the width of each of the columns in the current result.
+        /// </summary>
+        double[] ColumnWidths { get; }
+
+        /// <summary>
         /// Seeks to the first result.
         /// </summary>
         void Reset();
