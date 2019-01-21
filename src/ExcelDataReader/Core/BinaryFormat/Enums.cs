@@ -193,7 +193,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// This occurs if the sheet changed, the Manual calculation option was on, and the Recalculate Before Save option was off.
         /// </summary>
         UNCALCED = 0x005E,
-        QUICKTIP = 0x0800
+        QUICKTIP = 0x0800,
+        COLINFO = 0x007D
     }
 
     internal enum FORMULAERROR : byte

@@ -433,6 +433,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 var biffFormats = new Dictionary<ushort, XlsBiffFormatString>();
                 var recordOffset = biffStream.Position;
                 var rec = biffStream.Read();
+                var columnWidths = new List<Col>();
 
                 while (rec != null && !(rec is XlsBiffEof))
                 {
@@ -463,6 +464,11 @@ namespace ExcelDataReader.Core.BinaryFormat
                     if (rec.Id == BIFFRECORDTYPE.MERGECELLS)
                     {
                         mergeCells.AddRange(((XlsBiffMergeCells)rec).MergeCells);
+                    }
+
+                    if (rec.Id == BIFFRECORDTYPE.COLINFO)
+                    {
+                        columnWidths.Add(((XlsBiffColInfo)rec).Value);
                     }
                     
                     if (rec.Id == BIFFRECORDTYPE.FORMAT)
@@ -552,6 +558,13 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                 if (RowCount < maxRowCount)
                     RowCount = maxRowCount;
+
+                if (columnWidths.Count > 0)
+                {
+                    var columnWidthList = new List<double>();
+                    columnWidths.ForEach(fe => columnWidthList.Add(fe.Width));
+                    ColumnWidths = columnWidthList.ToArray();
+                }
             }
         }
 
