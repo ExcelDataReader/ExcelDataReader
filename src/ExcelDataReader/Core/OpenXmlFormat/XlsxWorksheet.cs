@@ -345,12 +345,16 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     var width = xmlReader.GetAttribute(AWidth);
                     var customWidth = xmlReader.GetAttribute(ACustomWidth);
 
+                    var maxVal = int.Parse(max);
+                    var minVal = int.Parse(min);
+                    var widthVal = double.Parse(width, CultureInfo.InvariantCulture);
+
                     cols.Add(new Col
                     {
                         CustomWidth = customWidth == "1",
-                        Max = int.Parse(max),
-                        Min = int.Parse(min),
-                        Width = double.Parse(width)
+                        Max = maxVal,
+                        Min = minVal,
+                        Width = widthVal
                     });
 
                     xmlReader.Read();

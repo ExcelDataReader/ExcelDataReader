@@ -257,7 +257,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffXF(bytes, offset);
                 case BIFFRECORDTYPE.MERGECELLS:
                     return new XlsBiffMergeCells(bytes, offset);
-
+                case BIFFRECORDTYPE.COLINFO:
+                    return new XlsBiffColInfo(bytes, offset);
                 default:
                     return new XlsBiffRecord(bytes, offset);
             }
