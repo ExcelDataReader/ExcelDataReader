@@ -57,6 +57,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public CellRange[] MergeCells { get; private set; }
 
+        public double[] ColumnWidths { get; private set; }
+
         /// <summary>
         /// Gets the worksheet data offset.
         /// </summary>

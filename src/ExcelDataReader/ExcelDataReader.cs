@@ -48,6 +48,8 @@ namespace ExcelDataReader
 
         public double RowHeight => _rowIterator?.Current.Height ?? 0;
 
+        public double[] ColumnWidths => _worksheetIterator?.Current?.ColumnWidths ?? null;
+
         protected TWorkbook Workbook { get; set; }
 
         protected Cell[] RowCells { get; set; }
