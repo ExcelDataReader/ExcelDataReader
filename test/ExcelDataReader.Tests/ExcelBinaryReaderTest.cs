@@ -1846,5 +1846,28 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual("\\A@\\B", reader.GetNumberFormatString(0));
             }
         }
+
+        [TestMethod]
+        public void ColumnWidthsTest()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("ColumnWidthsTest.xls")))
+            {
+                reader.Read();
+
+                Assert.AreEqual(8.43, reader.GetColumnWidth(0));
+                Assert.AreEqual(0, reader.GetColumnWidth(1));
+                Assert.AreEqual(15.140625, reader.GetColumnWidth(2));
+                Assert.AreEqual(28.7109375, reader.GetColumnWidth(3));
+
+                var expectedException = typeof(ArgumentException);
+                var exception = Assert.Throws(expectedException, () =>
+                {
+                    reader.GetColumnWidth(4);
+                });
+
+                Assert.AreEqual($"Column at index 4 does not exist.{Environment.NewLine}Parameter name: i",
+                    exception.Message);
+            }
+        }
     }
 }

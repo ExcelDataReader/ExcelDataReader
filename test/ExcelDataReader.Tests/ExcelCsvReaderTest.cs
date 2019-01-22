@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 using ExcelDataReader.Tests;
 using NUnit.Framework;
@@ -323,6 +324,7 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual(24, reader.FieldCount);
             }
         }
+
         [Test]
         public void GitIssue_351_Last_Line_Without_Line_Feed()
         {
@@ -341,6 +343,30 @@ namespace ExcelDataReader.Netstandard20.Tests
                         Assert.AreEqual(4, reader.FieldCount);
                     }
                 }
+            }
+        }
+
+        [Test]
+        public void ColumnWidthsTest()
+        {
+            using (var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("column_widths_test.csv")))
+            {
+                reader.Read();
+                Assert.AreEqual(8.43, reader.GetColumnWidth(0));
+                Assert.AreEqual(8.43, reader.GetColumnWidth(1));
+                Assert.AreEqual(8.43, reader.GetColumnWidth(2));
+                Assert.AreEqual(8.43, reader.GetColumnWidth(3));
+                Assert.AreEqual(8.43, reader.GetColumnWidth(4));
+
+                var expectedException = typeof(ArgumentException);
+
+                var exception = Assert.Throws(expectedException, () =>
+                {
+                    reader.GetColumnWidth(5);
+                });
+
+                Assert.AreEqual($"Column at index 5 does not exist.{Environment.NewLine}Parameter name: i", 
+                    exception.Message);
             }
         }
     }
