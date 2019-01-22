@@ -12,13 +12,15 @@ namespace ExcelDataReader.Core.BinaryFormat
             var colDx = ReadUInt16(0x4);
             var flags = (ColInfoSettings)ReadUInt16(0x8);
             var userSet = (flags & ColInfoSettings.UserSet) != 0;
+            var hidden = (flags & ColInfoSettings.Hidden) != 0;
 
             Value = new Col
             {
                 CustomWidth = userSet,
                 Max = colLast,
                 Min = colFirst,
-                Width = (double)colDx / 256
+                Width = (double)colDx / 256,
+                Hidden = hidden
             };
         }
 

@@ -145,7 +145,9 @@ namespace ExcelDataReader
                     var columnWidth = columnWidths[colWidthIndex];
                     if (i >= columnWidth.Min && i <= columnWidth.Max)
                     {
-                        retWidth = columnWidth.Width;
+                        retWidth = columnWidth.Hidden
+                            ? 0
+                            : columnWidth.Width;
                     }
                     else
                     {

@@ -9,5 +9,7 @@
         public double Width { get; set; }
 
         public bool CustomWidth { get; set; }
+
+        public bool Hidden { get; set; }
     }
 }

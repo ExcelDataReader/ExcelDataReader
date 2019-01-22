@@ -342,16 +342,19 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     var max = xmlReader.GetAttribute(AMax);
                     var width = xmlReader.GetAttribute(AWidth);
                     var customWidth = xmlReader.GetAttribute(ACustomWidth);
+                    var hidden = xmlReader.GetAttribute(AHidden);
 
                     var maxVal = int.Parse(max);
                     var minVal = int.Parse(min);
                     var widthVal = double.Parse(width, CultureInfo.InvariantCulture);
 
+                    // Note: column indexes need to be converted to be zero-indexed
                     cols.Add(new Col
                     {
                         CustomWidth = customWidth == "1",
-                        Max = maxVal,
-                        Min = minVal,
+                        Hidden = hidden == "1",
+                        Max = maxVal - 1,
+                        Min = minVal - 1,
                         Width = widthVal
                     });
 
