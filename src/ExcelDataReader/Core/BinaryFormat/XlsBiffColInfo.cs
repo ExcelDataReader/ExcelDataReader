@@ -10,8 +10,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             var colFirst = ReadUInt16(0x0);
             var colLast = ReadUInt16(0x2);
             var colDx = ReadUInt16(0x4);
-            var flags = (ColInfoFlags)ReadUInt16(0x8);
-            var userSet = (flags & ColInfoFlags.UserSet) != 0;
+            var flags = (ColInfoSettings)ReadUInt16(0x8);
+            var userSet = (flags & ColInfoSettings.UserSet) != 0;
 
             Value = new Col
             {
@@ -22,13 +22,13 @@ namespace ExcelDataReader.Core.BinaryFormat
             };
         }
 
-        public Col Value { get; }
-
         [Flags]
-        private enum ColInfoFlags
+        private enum ColInfoSettings
         {
             Hidden = 0x01,
             UserSet = 0x10
         }
+
+        public Col Value { get; }
     }
 }
