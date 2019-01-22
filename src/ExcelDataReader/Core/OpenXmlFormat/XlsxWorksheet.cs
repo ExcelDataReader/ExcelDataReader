@@ -88,7 +88,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public CellRange[] MergeCells { get; private set; }
 
-        public double[] ColumnWidths { get; private set; }
+        public Col[] ColumnWidths { get; private set; }
 
         private ZipWorker Document { get; }
 
@@ -157,9 +157,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 else if (sheetObject.Type == XlsxElementType.Cols)
                 {
                     XlsxCols sheetCols = (XlsxCols)sheetObject;
-                    var colWidths = new List<double>();
-                    sheetCols.Value.ForEach(fe => colWidths.Add(fe.Width));
-                    ColumnWidths = colWidths.ToArray();
+                    ColumnWidths = sheetCols.Value.ToArray();
                 }
             }
 

@@ -22,7 +22,7 @@ namespace ExcelDataReader.Core
 
         CellRange[] MergeCells { get; }
 
-        double[] ColumnWidths { get; }
+        Col[] ColumnWidths { get; }
 
         IEnumerable<Row> ReadRows();
 

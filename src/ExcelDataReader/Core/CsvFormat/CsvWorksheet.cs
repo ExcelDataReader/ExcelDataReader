@@ -56,7 +56,7 @@ namespace ExcelDataReader.Core.CsvFormat
 
         public char Separator { get; }
 
-        public double[] ColumnWidths => null;
+        public Col[] ColumnWidths => null;
 
         private int BomLength { get; set; }
 

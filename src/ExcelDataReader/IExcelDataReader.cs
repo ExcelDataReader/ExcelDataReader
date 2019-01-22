@@ -48,11 +48,6 @@ namespace ExcelDataReader
         double RowHeight { get; }
 
         /// <summary>
-        /// Gets the width of each of the columns in the current result.
-        /// </summary>
-        double[] ColumnWidths { get; }
-
-        /// <summary>
         /// Seeks to the first result.
         /// </summary>
         void Reset();
@@ -70,5 +65,12 @@ namespace ExcelDataReader
         /// <param name="i">The index of the field to find.</param>
         /// <returns>The number format index of the specified field.</returns>
         int GetNumberFormatIndex(int i);
+
+        /// <summary>
+        /// Gets the width the specified column.
+        /// </summary>
+        /// <param name="i">The index of the column to find.</param>
+        /// <returns>The width of the specified column.</returns>
+        double GetColumnWidth(int i);
     }
 }
