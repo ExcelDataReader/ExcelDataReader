@@ -57,7 +57,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public CellRange[] MergeCells { get; private set; }
 
-        public double[] ColumnWidths { get; private set; }
+        public Col[] ColumnWidths { get; private set; }
 
         /// <summary>
         /// Gets the worksheet data offset.
@@ -561,9 +561,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                 if (columnWidths.Count > 0)
                 {
-                    var columnWidthList = new List<double>();
-                    columnWidths.ForEach(fe => columnWidthList.Add(fe.Width));
-                    ColumnWidths = columnWidthList.ToArray();
+                    ColumnWidths = columnWidths.ToArray();
                 }
             }
         }
