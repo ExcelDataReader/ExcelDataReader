@@ -27,6 +27,11 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public string GetValue(Encoding encoding)
         {
+            if (CharacterCount == 0)
+            {
+                return string.Empty;
+            }
+
             if (IsMultiByte)
             {
                 return Encoding.Unicode.GetString(_bytes, (int)_offset + 3, CharacterCount * 2);

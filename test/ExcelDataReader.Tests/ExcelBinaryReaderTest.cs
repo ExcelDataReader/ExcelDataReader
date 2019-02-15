@@ -1898,5 +1898,19 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
             });
         }
+
+        [TestMethod]
+        public void GitIssue_392_OOB()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_392_oob.xls")))
+            {
+                var result = reader.AsDataSet().Tables[0];
+
+                Assert.AreEqual(10, result.Rows.Count);
+                Assert.AreEqual(10, result.Columns.Count);
+                Assert.AreEqual("10x10", result.Rows[1][0]);
+                Assert.AreEqual("10x27", result.Rows[9][9]);
+            }
+        }
     }
 }
