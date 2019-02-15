@@ -908,7 +908,7 @@ namespace ExcelDataReader.Netstandard20.Tests
         [TestMethod]
         public void Issue_12556_corrupt()
         {
-            Assert.Throws<InvalidOperationException>(() =>
+            Assert.Throws<CompoundDocumentException>(() =>
             {
                 // Excel.Log.Log.InitializeWith<Log4NetLog>();
                 using (var forwardStream = Configuration.GetTestWorkbook("Test_Issue_12556_corrupt"))
@@ -1144,7 +1144,7 @@ namespace ExcelDataReader.Netstandard20.Tests
         public void GitIssue5()
         {
             using (var stream = Configuration.GetTestWorkbook("Test_git_issue_5"))
-                Assert.Throws<InvalidOperationException>(() => ExcelReaderFactory.CreateBinaryReader(stream));
+                Assert.Throws<CompoundDocumentException>(() => ExcelReaderFactory.CreateBinaryReader(stream));
         }
 
         [TestCase]
@@ -1890,7 +1890,7 @@ namespace ExcelDataReader.Netstandard20.Tests
         [TestMethod]
         public void GitIssue_382_OOM()
         {
-            var exception = Assert.Throws(typeof(InvalidOperationException), () =>
+            var exception = Assert.Throws(typeof(CompoundDocumentException), () =>
             {
                 using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_382_oom.xls")))
                 {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.CompoundFormat
 {
@@ -151,7 +152,13 @@ namespace ExcelDataReader.Core.CompoundFormat
             var sector = SectorChain[SectorChainOffset];
             var miniStreamOffset = (int)Document.GetMiniSectorOffset(sector);
 
-            var rootSector = RootSectorChain[miniStreamOffset / Document.Header.SectorSize];
+            var rootSectorIndex = miniStreamOffset / Document.Header.SectorSize;
+            if (rootSectorIndex >= RootSectorChain.Count)
+            {
+                throw new CompoundDocumentException(Errors.ErrorEndOfFile);
+            }
+
+            var rootSector = RootSectorChain[rootSectorIndex];
             var rootOffset = miniStreamOffset % Document.Header.SectorSize;
 
             BaseStream.Seek(Document.GetSectorOffset(rootSector) + rootOffset, SeekOrigin.Begin);
@@ -160,7 +167,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             SectorBytes = new byte[chunkSize];
             if (BaseStream.Read(SectorBytes, 0, chunkSize) < chunkSize)
             {
-                throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.");
+                throw new CompoundDocumentException(Errors.ErrorEndOfFile);
             }
 
             Offset += chunkSize;
@@ -176,7 +183,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             SectorBytes = new byte[chunkSize];
             if (BaseStream.Read(SectorBytes, 0, chunkSize) < chunkSize)
             {
-                throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.");
+                throw new CompoundDocumentException(Errors.ErrorEndOfFile);
             }
 
             Offset += chunkSize;

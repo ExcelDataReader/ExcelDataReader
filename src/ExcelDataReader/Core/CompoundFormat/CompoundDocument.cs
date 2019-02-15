@@ -17,7 +17,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             if (!Header.IsSignatureValid)
                 throw new HeaderException(Errors.ErrorHeaderSignature);
             if (Header.ByteOrder != 0xFFFE && Header.ByteOrder != 0xFFFF) // Some broken xls files uses 0xFFFF
-                throw new FormatException(Errors.ErrorHeaderOrder);
+                throw new HeaderException(Errors.ErrorHeaderOrder);
 
             var difSectorChain = ReadDifSectorChain(reader);
             SectorTable = ReadSectorTable(reader, difSectorChain);
@@ -76,7 +76,7 @@ namespace ExcelDataReader.Core.CompoundFormat
 
                 if (chain.Contains(sector))
                 {
-                    throw new InvalidOperationException(Errors.ErrorCyclicSectorChain);
+                    throw new CompoundDocumentException(Errors.ErrorCyclicSectorChain);
                 }
             }
 
@@ -129,7 +129,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             }
             catch (EndOfStreamException ex)
             {
-                throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.", ex);
+                throw new CompoundDocumentException(Errors.ErrorEndOfFile, ex);
             }
         }
 
@@ -227,7 +227,7 @@ namespace ExcelDataReader.Core.CompoundFormat
                 }
                 catch (EndOfStreamException ex)
                 {
-                    throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.", ex);
+                    throw new CompoundDocumentException(Errors.ErrorEndOfFile, ex);
                 }
             }
 
@@ -253,7 +253,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             }
             catch (EndOfStreamException ex)
             {
-                throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.", ex);
+                throw new CompoundDocumentException(Errors.ErrorEndOfFile, ex);
             }
 
             TrimSectorChain(sectorTable, FATMARKERS.FAT_FreeSpace);
