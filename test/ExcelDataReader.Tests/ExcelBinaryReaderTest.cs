@@ -1886,5 +1886,17 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
             }
         }
+
+        [TestMethod]
+        public void GitIssue_382_OOM()
+        {
+            var exception = Assert.Throws(typeof(InvalidOperationException), () =>
+            {
+                using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_382_oom.xls")))
+                {
+                    reader.AsDataSet();
+                }
+            });
+        }
     }
 }

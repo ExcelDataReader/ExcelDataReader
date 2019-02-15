@@ -73,6 +73,11 @@ namespace ExcelDataReader.Core.CompoundFormat
             {
                 chain.Add(sector);
                 sector = GetNextSector(sector, sectorTable);
+
+                if (chain.Contains(sector))
+                {
+                    throw new InvalidOperationException(Errors.ErrorCyclicSectorChain);
+                }
             }
 
             TrimSectorChain(chain, FATMARKERS.FAT_FreeSpace);

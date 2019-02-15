@@ -7,6 +7,8 @@ namespace ExcelDataReader
         public const string ErrorWorkbookGlobalsInvalidData = "Error reading Workbook Globals - Stream has invalid data.";
         public const string ErrorFatBadSector = "Error reading as FAT table : There's no such sector in FAT.";
         public const string ErrorFatRead = "Error reading stream from FAT area.";
+        public const string ErrorEndOfFile = "The excel file may be corrupt or truncated. We've read past the end of the file.";
+        public const string ErrorCyclicSectorChain = "Cyclic sector chain in compound document.";
         public const string ErrorHeaderSignature = "Invalid file signature.";
         public const string ErrorHeaderOrder = "Invalid byte order specified in header.";
         public const string ErrorBiffRecordSize = "Buffer size is less than minimum BIFF record size.";
