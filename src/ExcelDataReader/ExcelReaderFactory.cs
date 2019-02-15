@@ -174,7 +174,7 @@ namespace ExcelDataReader
                     throw new ExcelReaderException(Errors.ErrorWorkbookIsNotStream);
                 }
 
-                stream = document.CreateStream(fileStream, workbookEntry.StreamFirstSector, (int)workbookEntry.StreamSize, workbookEntry.IsEntryMiniStream);
+                stream = new CompoundStream(document, fileStream, workbookEntry.StreamFirstSector, (int)workbookEntry.StreamSize, workbookEntry.IsEntryMiniStream, false);
                 return true;
             }
 
@@ -207,7 +207,7 @@ namespace ExcelDataReader
             }
 
             var secretKey = encryption.GenerateSecretKey(password);
-            var packageStream = document.CreateStream(fileStream, encryptedPackage.StreamFirstSector, (int)encryptedPackage.StreamSize, encryptedPackage.IsEntryMiniStream);
+            var packageStream = new CompoundStream(document, fileStream, encryptedPackage.StreamFirstSector, (int)encryptedPackage.StreamSize, encryptedPackage.IsEntryMiniStream, false);
 
             stream = encryption.CreateEncryptedPackageStream(packageStream, secretKey);
             return true;

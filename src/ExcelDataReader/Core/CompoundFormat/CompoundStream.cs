@@ -6,12 +6,24 @@ namespace ExcelDataReader.Core.CompoundFormat
 {
     internal class CompoundStream : Stream
     {
-        public CompoundStream(CompoundDocument document, Stream baseStream, uint baseSector, int length, bool isMini)
+        public CompoundStream(CompoundDocument document, Stream baseStream, List<uint> sectorChain, int length, bool leaveOpen)
+        {
+            Document = document;
+            BaseStream = baseStream;
+            IsMini = false;
+            LeaveOpen = leaveOpen;
+            Length = length;
+            SectorChain = sectorChain;
+            ReadSector();
+        }
+
+        public CompoundStream(CompoundDocument document, Stream baseStream, uint baseSector, int length, bool isMini, bool leaveOpen)
         {
             Document = document;
             BaseStream = baseStream;
             IsMini = isMini;
             Length = length;
+            LeaveOpen = leaveOpen;
 
             if (IsMini)
             {
@@ -45,6 +57,8 @@ namespace ExcelDataReader.Core.CompoundFormat
         private CompoundDocument Document { get; }
 
         private bool IsMini { get; }
+
+        private bool LeaveOpen { get; }
 
         private int SectorChainOffset { get; set; }
 
@@ -111,7 +125,7 @@ namespace ExcelDataReader.Core.CompoundFormat
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && !LeaveOpen)
             {
                 BaseStream?.Dispose();
                 BaseStream = null;
