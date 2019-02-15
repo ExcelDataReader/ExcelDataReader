@@ -96,6 +96,20 @@ namespace ExcelDataReader.Netstandard20.Tests
         }
 
         [TestMethod]
+        public void GitIssue_389_FilterSheetByVisibility()
+        {
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Excel_Dataset")))
+            {
+                var result = excelReader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    FilterSheet = (r, index) => r.VisibleState == "visible"
+                });
+
+                Assert.AreEqual(1, result.Tables.Count);
+            }
+        }
+
+        [TestMethod]
         public void GitIssue_45()
         {
             using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_45")))
