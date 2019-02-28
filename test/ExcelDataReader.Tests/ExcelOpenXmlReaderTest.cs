@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 #if NET20 || NET45 || NETCOREAPP2_0
 using System.Data;
 #endif
@@ -1291,6 +1292,26 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
 
                 Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+            }
+        }
+
+        [TestMethod]
+        public void OpenXmlLeaveOpen()
+        {
+            // Verify the file stream is closed and disposed by the reader
+            {
+                var stream = Configuration.GetTestWorkbook("xTest10x10");
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream, new ExcelReaderConfiguration()
+                {
+                    LeaveOpen = true
+                }))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                stream.Seek(0, SeekOrigin.Begin);
+                stream.ReadByte();
+                stream.Dispose();
             }
         }
 

@@ -22,5 +22,10 @@ namespace ExcelDataReader
         /// Gets or sets an array of CSV separator candidates. The reader autodetects which best fits the input data. Default: , ; TAB | # (CSV only)
         /// </summary>
         public char[] AutodetectSeparators { get; set; } = new char[] { ',', ';', '\t', '|', '#' };
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to leave the stream open after the IExcelDataReader object is disposed. Default: false
+        /// </summary>
+        public bool LeaveOpen { get; set; }
     }
 }

@@ -369,5 +369,40 @@ namespace ExcelDataReader.Netstandard20.Tests
                     exception.Message);
             }
         }
+
+        [Test]
+        public void CsvDisposed()
+        {
+            // Verify the file stream is closed and disposed by the reader
+            {
+                var stream = Configuration.GetTestWorkbook("MOCK_DATA.csv");
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateCsvReader(stream))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+            }
+        }
+
+        [Test]
+        public void CsvLeaveOpen()
+        {
+            // Verify the file stream is not disposed by the reader
+            {
+                var stream = Configuration.GetTestWorkbook("MOCK_DATA.csv");
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
+                {
+                    LeaveOpen = true
+                }))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                stream.Seek(0, SeekOrigin.Begin);
+                stream.ReadByte();
+                stream.Dispose();
+            }
+        }
     }
 }

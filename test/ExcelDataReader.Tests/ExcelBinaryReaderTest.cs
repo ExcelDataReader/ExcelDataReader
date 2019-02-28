@@ -1582,6 +1582,46 @@ namespace ExcelDataReader.Netstandard20.Tests
         }
 
         [TestMethod]
+        public void BinaryCompoundLeaveOpen()
+        {
+            // Verify compound stream is not disposed by the reader
+            {
+                var stream = Configuration.GetTestWorkbook("Test10x10");
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(stream, new ExcelReaderConfiguration()
+                {
+                    LeaveOpen = true
+                }))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                stream.Seek(0, SeekOrigin.Begin);
+                stream.ReadByte();
+                stream.Dispose();
+            }
+        }
+
+        [TestMethod]
+        public void BinaryRawLeaveOpen()
+        {
+            // Verify raw stream is not disposed by the reader
+            {
+                var stream = Configuration.GetTestWorkbook("biff3");
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(stream, new ExcelReaderConfiguration()
+                {
+                    LeaveOpen = true
+                }))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                stream.Seek(0, SeekOrigin.Begin);
+                stream.ReadByte();
+                stream.Dispose();
+            }
+        }
+
+        [TestMethod]
         public void GitIssue_286_SSTStringHeader()
         {
             // Parse xls with SST containing string split exactly between its header and string data across the BIFF Continue records
