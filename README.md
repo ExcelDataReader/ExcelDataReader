@@ -83,11 +83,13 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 - `HeaderFooter` returns an object with information about the headers and footers, or `null` if there are none.
 - `MergeCells` returns an array of merged cell ranges in the current sheet.
 - `RowHeight` returns the visual height of the current row in points. May be 0 if the row is hidden.
+- `GetColumnWidth()` returns the width of a column in character units. May be 0 if the column is hidden.
 - `GetFieldType()` returns the type of a value in the current row. Always one of the types supported by Excel: `double`, `int`, `bool`, `DateTime`, `TimeSpan`, `string`, or `null` if there is no value.
 - `IsDBNull()` checks if a value in the current row is null. 
 - `GetValue()` returns a value from the current row as an `object`, or `null` if there is no value.
 - `GetDouble()`, `GetInt32()`, `GetBoolean()`, `GetDateTime()`, `GetString()` return a value from the current row cast to their respective type.
 - `GetNumberFormatString()` returns a string containing the formatting codes for a value in the current row, or `null` if there is no value. See also the Formatting section below.
+- `GetNumberFormatIndex()` returns the number format index for a value in the current row. Index values below 164 refer to built-in number formats, otherwise indicate a custom number format.
 - The typed `Get*()` methods throw `InvalidCastException` unless the types match exactly.
 
 
@@ -102,14 +104,18 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
 	// record, or when the input CSV lacks a BOM and does not parse as UTF8. 
 	// Default: cp1252. (XLS BIFF2-5 and CSV only)
 	FallbackEncoding = Encoding.GetEncoding(1252),
-	
+
 	// Gets or sets the password used to open password protected workbooks.
 	Password = "password",
 
 	// Gets or sets an array of CSV separator candidates. The reader 
 	// autodetects which best fits the input data. Default: , ; TAB | # 
 	// (CSV only)
-	AutodetectSeparators = new char[] { ',', ';', '\t', '|', '#' };
+	AutodetectSeparators = new char[] { ',', ';', '\t', '|', '#' },
+
+	// Gets or sets a value indicating whether to leave the stream open after
+	// the IExcelDataReader object is disposed. Default: false
+	LeaveOpen = false,
 
 });
 ```
@@ -125,7 +131,11 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration() {
 	// Gets or sets a value indicating whether to set the DataColumn.DataType 
 	// property in a second pass.
 	UseColumnDataType = true,
-	
+
+	// Gets or sets a callback to determine whether to include the current sheet
+	// in the DataSet. Called once per sheet before ConfigureDataTable.
+	FilterSheet = (tableReader, sheetIndex) => true,
+
 	// Gets or sets a callback to obtain configuration options for a DataTable. 
 	ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration() {
 		
