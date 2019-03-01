@@ -5,10 +5,10 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffRow : XlsBiffRecord
     {
-        internal XlsBiffRow(byte[] bytes, uint offset, int biffVersion)
+        internal XlsBiffRow(byte[] bytes, uint offset)
             : base(bytes, offset)
         {
-            if (biffVersion == 2)
+            if (Id == BIFFRECORDTYPE.ROW_V2)
             {
                 RowIndex = ReadUInt16(0x0);
                 FirstDefinedColumn = ReadUInt16(0x2);

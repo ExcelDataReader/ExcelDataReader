@@ -1,17 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.CompoundFormat
 {
     internal class CompoundStream : Stream
     {
-        public CompoundStream(CompoundDocument document, Stream baseStream, uint baseSector, int length, bool isMini)
+        public CompoundStream(CompoundDocument document, Stream baseStream, List<uint> sectorChain, int length, bool leaveOpen)
+        {
+            Document = document;
+            BaseStream = baseStream;
+            IsMini = false;
+            LeaveOpen = leaveOpen;
+            Length = length;
+            SectorChain = sectorChain;
+            ReadSector();
+        }
+
+        public CompoundStream(CompoundDocument document, Stream baseStream, uint baseSector, int length, bool isMini, bool leaveOpen)
         {
             Document = document;
             BaseStream = baseStream;
             IsMini = isMini;
             Length = length;
+            LeaveOpen = leaveOpen;
 
             if (IsMini)
             {
@@ -45,6 +58,8 @@ namespace ExcelDataReader.Core.CompoundFormat
         private CompoundDocument Document { get; }
 
         private bool IsMini { get; }
+
+        private bool LeaveOpen { get; }
 
         private int SectorChainOffset { get; set; }
 
@@ -111,7 +126,7 @@ namespace ExcelDataReader.Core.CompoundFormat
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && !LeaveOpen)
             {
                 BaseStream?.Dispose();
                 BaseStream = null;
@@ -137,7 +152,13 @@ namespace ExcelDataReader.Core.CompoundFormat
             var sector = SectorChain[SectorChainOffset];
             var miniStreamOffset = (int)Document.GetMiniSectorOffset(sector);
 
-            var rootSector = RootSectorChain[miniStreamOffset / Document.Header.SectorSize];
+            var rootSectorIndex = miniStreamOffset / Document.Header.SectorSize;
+            if (rootSectorIndex >= RootSectorChain.Count)
+            {
+                throw new CompoundDocumentException(Errors.ErrorEndOfFile);
+            }
+
+            var rootSector = RootSectorChain[rootSectorIndex];
             var rootOffset = miniStreamOffset % Document.Header.SectorSize;
 
             BaseStream.Seek(Document.GetSectorOffset(rootSector) + rootOffset, SeekOrigin.Begin);
@@ -146,7 +167,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             SectorBytes = new byte[chunkSize];
             if (BaseStream.Read(SectorBytes, 0, chunkSize) < chunkSize)
             {
-                throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.");
+                throw new CompoundDocumentException(Errors.ErrorEndOfFile);
             }
 
             Offset += chunkSize;
@@ -162,7 +183,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             SectorBytes = new byte[chunkSize];
             if (BaseStream.Read(SectorBytes, 0, chunkSize) < chunkSize)
             {
-                throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.");
+                throw new CompoundDocumentException(Errors.ErrorEndOfFile);
             }
 
             Offset += chunkSize;

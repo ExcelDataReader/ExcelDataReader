@@ -11,7 +11,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents Globals section of workbook
     /// </summary>
-    internal class XlsWorkbook : IWorkbook<XlsWorksheet>
+    internal class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
     {
         internal XlsWorkbook(Stream stream, string password, Encoding fallbackEncoding)
         {
@@ -69,12 +69,6 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public List<XlsBiffRecord> Fonts { get; } = new List<XlsBiffRecord>();
 
-        public Dictionary<ushort, NumberFormatString> Formats { get; } = new Dictionary<ushort, NumberFormatString>();
-
-        public List<XlsBiffXF> ExtendedFormats { get; } = new List<XlsBiffXF>();
-
-        public List<XlsBiffRecord> Styles { get; } = new List<XlsBiffRecord>();
-
         public List<XlsBiffBoundSheet> Sheets { get; } = new List<XlsBiffBoundSheet>();
 
         /// <summary>
@@ -120,9 +114,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                         return false;*/
                     return true;
                 case 0x0809: // BIFF5/BIFF8
-                    if (size != 8 && size != 16)
+                    if (size < 4)
                         return false;
-                    if (bofVersion != 0x0500 && bofVersion != 0x600)
+                    if (bofVersion != 0 && bofVersion != 0x0200 && bofVersion != 0x0300 && bofVersion != 0x0400 && bofVersion != 0x0500 && bofVersion != 0x600)
                         return false;
                     if (type != 0x5 && type != 0x6 && type != 0x10 && type != 0x20 && type != 0x40 && type != 0x0100)
                         return false;
@@ -199,7 +193,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case BIFFRECORDTYPE.XF_V4:
                     case BIFFRECORDTYPE.XF_V3:
                     case BIFFRECORDTYPE.XF_V2:
-                        ExtendedFormats.Add((XlsBiffXF)rec);
+                        AddExtendedFormat(GetExtendedFormatCount(), ((XlsBiffXF)rec).Format, true);
                         break;
                     case BIFFRECORDTYPE.SST:
                         SST = (XlsBiffSST)rec;
@@ -226,8 +220,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             foreach (var biffFormat in biffFormats)
             {
-                var formatString = biffFormat.Value.GetValue(Encoding);
-                Formats.Add(biffFormat.Key, new NumberFormatString(formatString));
+                AddNumberFormat(biffFormat.Key, biffFormat.Value.GetValue(Encoding));
             }
         }
     }

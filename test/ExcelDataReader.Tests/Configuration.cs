@@ -177,6 +177,18 @@ namespace ExcelDataReader.Tests
             { "Test_git_issue_329_error.xlsx", "Test_git_issue_329_error.xlsx" },
             { "Test_git_issue_329_error.xls", "Test_git_issue_329_error.xls" },
             { "test_git_issue_354.xlsx", "test_git_issue_354.xlsx" },
+            { "test_git_issue_364.xlsx", "test_git_issue_364.xlsx" },
+            { "Test_git_issue_368_header.xls", "Test_git_issue_368_header.xls" },
+            { "Test_git_issue_368_formats.xls", "Test_git_issue_368_formats.xls" },
+            { "Test_git_issue_368_ixfe.xls", "Test_git_issue_368_ixfe.xls" },
+            { "Test_git_issue_368_label_xf.xls", "Test_git_issue_368_label_xf.xls" },
+            { "column_widths_test.csv", @"csv/column_widths_test.csv" },
+            { "ColumnWidthsTest.xlsx", @"ColumnWidthsTest.xlsx" },
+            { "ColumnWidthsTest.xls", @"ColumnWidthsTest.xls" },
+            { "Test_git_issue_375_ixfe_rowmap.xls", "Test_git_issue_375_ixfe_rowmap.xls" },
+            { "Test_git_issue_382_oom.xls", "Test_git_issue_382_oom.xls" },
+            { "Test_git_issue_385_backslash.xlsx", "Test_git_issue_385_backslash.xlsx" },
+            { "Test_git_issue_392_oob.xls", "Test_git_issue_392_oob.xls" },
         };
 
         public static Stream GetTestWorkbook(string key)

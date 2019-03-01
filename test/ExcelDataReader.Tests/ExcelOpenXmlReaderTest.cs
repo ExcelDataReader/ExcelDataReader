@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 #if NET20 || NET45 || NETCOREAPP2_0
 using System.Data;
 #endif
@@ -198,9 +199,9 @@ namespace ExcelDataReader.Netstandard20.Tests
                 {
                     fieldCount = r.FieldCount;
                     table.Rows.Add(
-                        Convert.ToInt32(r.GetValue(0)), 
+                        Convert.ToInt32(r.GetValue(0)),
                         Convert.ToDouble(r.GetValue(1)),
-                        r.GetDateTime(2), 
+                        r.GetDateTime(2),
                         r.IsDBNull(4));
                 }
 
@@ -683,41 +684,41 @@ namespace ExcelDataReader.Netstandard20.Tests
             }
         }
 
-/*
-#if !LEGACY
-        [TestMethod]
-        public void ZipWorker_Extract_Test()
-        {
-            var zipper = new ZipWorker(FileSystem.Current, new FileConfiguration.));
+        /*
+        #if !LEGACY
+                [TestMethod]
+                public void ZipWorker_Extract_Test()
+                {
+                    var zipper = new ZipWorker(FileSystem.Current, new FileConfiguration.));
 
-            //this first one isn't a valid xlsx so we are expecting no side effects in the directory tree
-            zipper.Extract(Configuration.GetTestWorkbook("TestChess"));
-            Assert.AreEqual(false, Directory.Exists(zipper.TempPath));
-            Assert.AreEqual(false, zipper.IsValid);
+                    //this first one isn't a valid xlsx so we are expecting no side effects in the directory tree
+                    zipper.Extract(Configuration.GetTestWorkbook("TestChess"));
+                    Assert.AreEqual(false, Directory.Exists(zipper.TempPath));
+                    Assert.AreEqual(false, zipper.IsValid);
 
-            //this one is valid so we expect to find the files
-            zipper.Extract(Configuration.GetTestWorkbook("xTestOpenXml"));
+                    //this one is valid so we expect to find the files
+                    zipper.Extract(Configuration.GetTestWorkbook("xTestOpenXml"));
 
-            Assert.AreEqual(true, Directory.Exists(zipper.TempPath));
-            Assert.AreEqual(true, zipper.IsValid);
+                    Assert.AreEqual(true, Directory.Exists(zipper.TempPath));
+                    Assert.AreEqual(true, zipper.IsValid);
 
-            string tPath = zipper.TempPath;
+                    string tPath = zipper.TempPath;
 
-            //make sure that dispose gets rid of the files
-            zipper.Dispose();
+                    //make sure that dispose gets rid of the files
+                    zipper.Dispose();
 
-            Assert.AreEqual(false, Directory.Exists(tPath));
-        }
+                    Assert.AreEqual(false, Directory.Exists(tPath));
+                }
 
-        private class FileConfiguration.: IFileConfiguration.
-        {
-            public string GetTempPath()
-            {
-                return System.IO.Path.GetTempPath();
-            }
-        }
-#endif
-*/
+                private class FileConfiguration.: IFileConfiguration.
+                {
+                    public string GetTempPath()
+                    {
+                        return System.IO.Path.GetTempPath();
+                    }
+                }
+        #endif
+        */
 
         [TestMethod]
         public void Issue_DateFormatButNotDate()
@@ -943,7 +944,7 @@ namespace ExcelDataReader.Netstandard20.Tests
         }
 
         [TestMethod]
-//        [Ignore("Pending fix")]
+        //        [Ignore("Pending fix")]
         public void GitIssue_82_Date1904_OpenXml()
         {
             using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xroo_1904_base")))
@@ -1228,7 +1229,7 @@ namespace ExcelDataReader.Netstandard20.Tests
 
                 reader.Read();
                 Assert.AreEqual(reader.RowHeight, 0);
-           }
+            }
         }
 
         [TestMethod]
@@ -1255,7 +1256,7 @@ namespace ExcelDataReader.Netstandard20.Tests
         public void GitIssue_265_OpenXmlDisposed()
         {
             // Verify the file stream is closed and disposed by the reader
-            { 
+            {
                 var stream = Configuration.GetTestWorkbook("xTest10x10");
                 using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream))
                 {
@@ -1291,6 +1292,26 @@ namespace ExcelDataReader.Netstandard20.Tests
                 }
 
                 Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+            }
+        }
+
+        [TestMethod]
+        public void OpenXmlLeaveOpen()
+        {
+            // Verify the file stream is closed and disposed by the reader
+            {
+                var stream = Configuration.GetTestWorkbook("xTest10x10");
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream, new ExcelReaderConfiguration()
+                {
+                    LeaveOpen = true
+                }))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                stream.Seek(0, SeekOrigin.Begin);
+                stream.ReadByte();
+                stream.Dispose();
             }
         }
 
@@ -1521,6 +1542,58 @@ namespace ExcelDataReader.Netstandard20.Tests
 
                 Assert.AreEqual(1, result.Rows.Count);
                 Assert.AreEqual("cell data", result.Rows[0][0]);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_364()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("test_git_issue_364.xlsx")))
+            {
+                Assert.AreEqual(1, reader.RowCount);
+                reader.Read();
+
+                Assert.AreEqual(0, reader.GetNumberFormatIndex(0));
+                Assert.AreEqual(-1, reader.GetNumberFormatIndex(1));
+                Assert.AreEqual(14, reader.GetNumberFormatIndex(2));
+                Assert.AreEqual(164, reader.GetNumberFormatIndex(3));
+            }
+        }
+
+        [TestMethod]
+        public void ColumnWidthsTest()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("ColumnWidthsTest.xlsx")))
+            {
+                reader.Read();
+
+                Assert.AreEqual(8.43, reader.GetColumnWidth(0));
+                Assert.AreEqual(0, reader.GetColumnWidth(1));
+                Assert.AreEqual(15.140625, reader.GetColumnWidth(2));
+                Assert.AreEqual(28.7109375, reader.GetColumnWidth(3));
+
+                var expectedException = typeof(ArgumentException);
+                var exception = Assert.Throws(expectedException, () =>
+                {
+                    reader.GetColumnWidth(4);
+                });
+
+                Assert.AreEqual($"Column at index 4 does not exist.{Environment.NewLine}Parameter name: i",
+                    exception.Message);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_385_Backslash()
+        {
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_385_backslash.xlsx")))
+            {
+                var result = reader.AsDataSet().Tables[0];
+
+                Assert.AreEqual(10, result.Rows.Count);
+                Assert.AreEqual(10, result.Columns.Count);
+                Assert.AreEqual("10x10", result.Rows[1][0]);
+                Assert.AreEqual("10x27", result.Rows[9][9]);
             }
         }
     }

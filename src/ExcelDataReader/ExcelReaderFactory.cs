@@ -3,6 +3,7 @@ using ExcelDataReader.Core.BinaryFormat;
 using ExcelDataReader.Core.CompoundFormat;
 using ExcelDataReader.Core.OfficeCrypto;
 using ExcelDataReader.Exceptions;
+using ExcelDataReader.Misc;
 
 namespace ExcelDataReader
 {
@@ -27,6 +28,11 @@ namespace ExcelDataReader
             if (configuration == null)
             {
                 configuration = new ExcelReaderConfiguration();
+            }
+
+            if (configuration.LeaveOpen)
+            {
+                fileStream = new LeaveOpenStream(fileStream);
             }
 
             var probe = new byte[8];
@@ -79,6 +85,11 @@ namespace ExcelDataReader
                 configuration = new ExcelReaderConfiguration();
             }
 
+            if (configuration.LeaveOpen)
+            {
+                fileStream = new LeaveOpenStream(fileStream);
+            }
+
             var probe = new byte[8];
             fileStream.Seek(0, SeekOrigin.Begin);
             fileStream.Read(probe, 0, probe.Length);
@@ -117,6 +128,11 @@ namespace ExcelDataReader
             if (configuration == null)
             {
                 configuration = new ExcelReaderConfiguration();
+            }
+
+            if (configuration.LeaveOpen)
+            {
+                fileStream = new LeaveOpenStream(fileStream);
             }
 
             var probe = new byte[8];
@@ -161,6 +177,11 @@ namespace ExcelDataReader
                 configuration = new ExcelReaderConfiguration();
             }
 
+            if (configuration.LeaveOpen)
+            {
+                fileStream = new LeaveOpenStream(fileStream);
+            }
+
             return new ExcelCsvReader(fileStream, configuration.FallbackEncoding, configuration.AutodetectSeparators);
         }
 
@@ -174,7 +195,7 @@ namespace ExcelDataReader
                     throw new ExcelReaderException(Errors.ErrorWorkbookIsNotStream);
                 }
 
-                stream = document.CreateStream(fileStream, workbookEntry.StreamFirstSector, (int)workbookEntry.StreamSize, workbookEntry.IsEntryMiniStream);
+                stream = new CompoundStream(document, fileStream, workbookEntry.StreamFirstSector, (int)workbookEntry.StreamSize, workbookEntry.IsEntryMiniStream, false);
                 return true;
             }
 
@@ -207,7 +228,7 @@ namespace ExcelDataReader
             }
 
             var secretKey = encryption.GenerateSecretKey(password);
-            var packageStream = document.CreateStream(fileStream, encryptedPackage.StreamFirstSector, (int)encryptedPackage.StreamSize, encryptedPackage.IsEntryMiniStream);
+            var packageStream = new CompoundStream(document, fileStream, encryptedPackage.StreamFirstSector, (int)encryptedPackage.StreamSize, encryptedPackage.IsEntryMiniStream, false);
 
             stream = encryption.CreateEncryptedPackageStream(packageStream, secretKey);
             return true;

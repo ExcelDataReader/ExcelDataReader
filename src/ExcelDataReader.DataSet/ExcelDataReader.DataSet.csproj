@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>ExcelDataReader extension for reading Microsoft Excel files into System.Data.DataSet.</Description>
     <AssemblyTitle>ExcelDataReader.DataSet</AssemblyTitle>
-    <VersionPrefix>3.4.2</VersionPrefix>
+    <VersionPrefix>3.5.0</VersionPrefix>
     <Authors>ExcelDataReader developers</Authors>
     <TargetFrameworks>net20;net35;netstandard2.0</TargetFrameworks>
     <AssemblyName>ExcelDataReader.DataSet</AssemblyName>
@@ -17,6 +17,8 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +31,7 @@
 
   <ItemGroup>
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta001" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05" PrivateAssets="All"/>
   </ItemGroup>
 
   <ItemGroup>

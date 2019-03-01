@@ -24,9 +24,16 @@ namespace ExcelDataReader
 
             self.Reset();
 
+            var tableIndex = -1;
             var result = new DataSet();
             do
             {
+                tableIndex++;
+                if (configuration.FilterSheet != null && !configuration.FilterSheet(self, tableIndex))
+                {
+                    continue;
+                }
+
                 var tableConfiguration = configuration.ConfigureDataTable != null
                     ? configuration.ConfigureDataTable(self)
                     : null;

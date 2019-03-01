@@ -96,6 +96,20 @@ namespace ExcelDataReader.Netstandard20.Tests
         }
 
         [TestMethod]
+        public void GitIssue_389_FilterSheetByVisibility()
+        {
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Excel_Dataset")))
+            {
+                var result = excelReader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    FilterSheet = (r, index) => r.VisibleState == "visible"
+                });
+
+                Assert.AreEqual(1, result.Tables.Count);
+            }
+        }
+
+        [TestMethod]
         public void GitIssue_45()
         {
             using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_45")))
@@ -908,7 +922,7 @@ namespace ExcelDataReader.Netstandard20.Tests
         [TestMethod]
         public void Issue_12556_corrupt()
         {
-            Assert.Throws<InvalidOperationException>(() =>
+            Assert.Throws<CompoundDocumentException>(() =>
             {
                 // Excel.Log.Log.InitializeWith<Log4NetLog>();
                 using (var forwardStream = Configuration.GetTestWorkbook("Test_Issue_12556_corrupt"))
@@ -1144,7 +1158,7 @@ namespace ExcelDataReader.Netstandard20.Tests
         public void GitIssue5()
         {
             using (var stream = Configuration.GetTestWorkbook("Test_git_issue_5"))
-                Assert.Throws<InvalidOperationException>(() => ExcelReaderFactory.CreateBinaryReader(stream));
+                Assert.Throws<CompoundDocumentException>(() => ExcelReaderFactory.CreateBinaryReader(stream));
         }
 
         [TestCase]
@@ -1568,6 +1582,46 @@ namespace ExcelDataReader.Netstandard20.Tests
         }
 
         [TestMethod]
+        public void BinaryCompoundLeaveOpen()
+        {
+            // Verify compound stream is not disposed by the reader
+            {
+                var stream = Configuration.GetTestWorkbook("Test10x10");
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(stream, new ExcelReaderConfiguration()
+                {
+                    LeaveOpen = true
+                }))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                stream.Seek(0, SeekOrigin.Begin);
+                stream.ReadByte();
+                stream.Dispose();
+            }
+        }
+
+        [TestMethod]
+        public void BinaryRawLeaveOpen()
+        {
+            // Verify raw stream is not disposed by the reader
+            {
+                var stream = Configuration.GetTestWorkbook("biff3");
+                using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(stream, new ExcelReaderConfiguration()
+                {
+                    LeaveOpen = true
+                }))
+                {
+                    var result = excelReader.AsDataSet();
+                }
+
+                stream.Seek(0, SeekOrigin.Begin);
+                stream.ReadByte();
+                stream.Dispose();
+            }
+        }
+
+        [TestMethod]
         public void GitIssue_286_SSTStringHeader()
         {
             // Parse xls with SST containing string split exactly between its header and string data across the BIFF Continue records
@@ -1749,6 +1803,167 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.IsNull(reader.GetValue(1));
                 Assert.IsNull(reader.GetValue(2));
                 Assert.AreEqual(1, reader.RowCount);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_368_Header()
+        {
+            // This reads a specially crafted XLS which loads in Excel:
+            // - Raw BIFF5/8 BIFF stream
+            // - Non-standard header with size=6, and version=0
+            // - Mixes record identifiers from different BIFF versions:
+            // - Uses NUMBER (BIFF3-8) and NUMBER_OLD (BIFF2) records
+            // - Uses LABEL (BIFF3-5) and LABEL_OLD (BIFF2) records
+            // - Uses RK (BIFF3-5) and INTEGER (BIFF2) records
+            // - Uses FORMAT_V23 (BIFF2-3) and FORMAT (BIFF4-8) records
+
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_368_header.xls")))
+            {
+                reader.Read();
+                Assert.AreEqual("BIFF2", reader[0]);
+                Assert.AreEqual(1234.5678, reader[1]);
+                Assert.AreEqual(1234, reader[2]);
+                Assert.AreEqual("00.0", reader.GetNumberFormatString(1));
+                Assert.AreEqual("00.0", reader.GetNumberFormatString(2));
+
+                reader.Read();
+                Assert.AreEqual("BIFF3-5", reader[0]);
+                Assert.AreEqual(8765.4321, reader[1]);
+                Assert.AreEqual(4321, reader[2]);
+                Assert.AreEqual("0000.00", reader.GetNumberFormatString(1));
+                Assert.AreEqual("0000.00", reader.GetNumberFormatString(2));
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_368_Formats()
+        {
+            // This reads a BIFF2 XLS worksheet created with Excel 2.0 containing 63 number formats, the maximum allowed by the UI.
+            // Excel 2.0/2.1 does not write XF/IXFE records, but writes the FORMAT index as 6 bits in the cell attributes.
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_368_formats.xls")))
+            {
+                for (var i = 0; i < 42; i++)
+                {
+                    reader.Read();
+                    Assert.AreEqual(i % 10, reader[0]);
+                    Assert.AreEqual("\"" + i + "\" 0.00", reader.GetNumberFormatString(0));
+                }
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_368_Ixfe()
+        {
+            // This reads a specially crafted XLS which loads in Excel:
+            // - BIFF2 worksheet, only BIFF2 records
+            // - Uses IXFE records to set format
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_368_ixfe.xls")))
+            {
+                reader.Read();
+                Assert.AreEqual("BIFF2", reader[0]);
+                Assert.AreEqual(1234.5678, reader[1]);
+                Assert.AreEqual(1234, reader[2]);
+                Assert.AreEqual("00.0", reader.GetNumberFormatString(1));
+                Assert.AreEqual("00.0", reader.GetNumberFormatString(2));
+
+                reader.Read();
+                Assert.AreEqual("BIFF2!", reader[0]);
+                Assert.AreEqual(8765.4321, reader[1]);
+                Assert.AreEqual(4321, reader[2]);
+                Assert.AreEqual("0000.00", reader.GetNumberFormatString(1));
+                Assert.AreEqual("0000.00", reader.GetNumberFormatString(2));
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_368_Label_Xf()
+        {
+            // This reads a specially crafted XLS which loads in Excel:
+            // - BIFF2 worksheet, with mixed version FORMAT records, BIFF3-5 label records and 16 bit XF index
+            // - Contains 80 XF records
+            // - Excel uses only 6 bits of the BIFF3-5 XF index when present in a BIFF2 worksheet, must use IXFE for >62
+            // - Excel 2.0 does not write XF>63, but newer Excels read these records
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_368_label_xf.xls")))
+            {
+                reader.Read();
+                Assert.AreEqual("BIFF3-5 record in BIFF2 worksheet with XF 60", reader[0]);
+                Assert.AreEqual("\\A@\\B", reader.GetNumberFormatString(0));
+
+                reader.Read();
+                Assert.AreEqual("Same with XF 70 (ignored by Excel)", reader[0]);
+                // TODO:
+                Assert.AreEqual("General", reader.GetNumberFormatString(0));
+
+                reader.Read();
+                Assert.AreEqual("Same with XF 70 via IXFE", reader[0]);
+                Assert.AreEqual("\\A@\\B", reader.GetNumberFormatString(0));
+            }
+        }
+
+        [TestMethod]
+        public void ColumnWidthsTest()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("ColumnWidthsTest.xls")))
+            {
+                reader.Read();
+
+                Assert.AreEqual(8.43, reader.GetColumnWidth(0));
+                Assert.AreEqual(0, reader.GetColumnWidth(1));
+                Assert.AreEqual(15.140625, reader.GetColumnWidth(2));
+                Assert.AreEqual(28.7109375, reader.GetColumnWidth(3));
+
+                var expectedException = typeof(ArgumentException);
+                var exception = Assert.Throws(expectedException, () =>
+                {
+                    reader.GetColumnWidth(4);
+                });
+
+                Assert.AreEqual($"Column at index 4 does not exist.{Environment.NewLine}Parameter name: i",
+                    exception.Message);
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_375_Ixfe_RowMap()
+        {
+            // This reads a specially crafted XLS which loads in Excel:
+            // - 100 rows with IXFE records
+            // Verify the internal map of cell offsets used for buffering includes the preceding IXFE records
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_375_ixfe_rowmap.xls")))
+            {
+                for (var i = 0; i < 100; i++)
+                {
+                    reader.Read();
+                    Assert.AreEqual(1234.0 + i + (i / 10.0), reader[0]);
+                    Assert.AreEqual("0.000", reader.GetNumberFormatString(0));
+                }
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_382_OOM()
+        {
+            var exception = Assert.Throws(typeof(CompoundDocumentException), () =>
+            {
+                using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_382_oom.xls")))
+                {
+                    reader.AsDataSet();
+                }
+            });
+        }
+
+        [TestMethod]
+        public void GitIssue_392_OOB()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_392_oob.xls")))
+            {
+                var result = reader.AsDataSet().Tables[0];
+
+                Assert.AreEqual(10, result.Rows.Count);
+                Assert.AreEqual(10, result.Columns.Count);
+                Assert.AreEqual("10x10", result.Rows[1][0]);
+                Assert.AreEqual("10x27", result.Rows[9][9]);
             }
         }
     }

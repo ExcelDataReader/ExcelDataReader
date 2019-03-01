@@ -98,7 +98,8 @@ namespace ExcelDataReader.Core
         {
             foreach (var entry in _zipFile.Entries)
             {
-                if (entry.FullName.Equals(name, StringComparison.OrdinalIgnoreCase))
+                var entryName = entry.FullName.Replace('\\', '/');
+                if (entryName.Equals(name, StringComparison.OrdinalIgnoreCase))
                     return entry;
             }
 

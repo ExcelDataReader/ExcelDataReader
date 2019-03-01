@@ -17,7 +17,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             if (!Header.IsSignatureValid)
                 throw new HeaderException(Errors.ErrorHeaderSignature);
             if (Header.ByteOrder != 0xFFFE && Header.ByteOrder != 0xFFFF) // Some broken xls files uses 0xFFFF
-                throw new FormatException(Errors.ErrorHeaderOrder);
+                throw new HeaderException(Errors.ErrorHeaderOrder);
 
             var difSectorChain = ReadDifSectorChain(reader);
             SectorTable = ReadSectorTable(reader, difSectorChain);
@@ -26,7 +26,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             MiniSectorTable = ReadSectorTable(reader, miniChain);
 
             var directoryChain = GetSectorChain(Header.RootDirectoryEntryStart, SectorTable);
-            var bytes = ReadRegularStream(stream, directoryChain, directoryChain.Count * Header.SectorSize);
+            var bytes = ReadStream(stream, directoryChain, directoryChain.Count * Header.SectorSize);
             ReadDirectoryEntries(bytes);
         }
 
@@ -56,14 +56,6 @@ namespace ExcelDataReader.Core.CompoundFormat
             return null;
         }
 
-        /// <summary>
-        /// Creates a Stream instance to read from the compound document.
-        /// </summary>
-        internal Stream CreateStream(Stream stream, uint baseSector, int length, bool isMini)
-        {
-            return new CompoundStream(this, stream, baseSector, length, isMini);
-        }
-
         internal long GetMiniSectorOffset(uint sector)
         {
             return Header.MiniSectorSize * sector;
@@ -81,6 +73,11 @@ namespace ExcelDataReader.Core.CompoundFormat
             {
                 chain.Add(sector);
                 sector = GetNextSector(sector, sectorTable);
+
+                if (chain.Contains(sector))
+                {
+                    throw new CompoundDocumentException(Errors.ErrorCyclicSectorChain);
+                }
             }
 
             TrimSectorChain(chain, FATMARKERS.FAT_FreeSpace);
@@ -92,72 +89,22 @@ namespace ExcelDataReader.Core.CompoundFormat
         /// </summary>
         internal byte[] ReadStream(Stream stream, uint baseSector, int length, bool isMini)
         {
-            if (isMini)
+            using (var cfb = new CompoundStream(this, stream, baseSector, length, isMini, true))
             {
-                return ReadMiniStream(stream, baseSector, length);
-            }
-            else
-            {
-                return ReadRegularStream(stream, baseSector, length);
+                var bytes = new byte[length];
+                cfb.Read(bytes, 0, length);
+                return bytes;
             }
         }
 
-        /// <summary>
-        /// Reads bytes from the mini stream stored inside the Root Entry's stream.
-        /// </summary>
-        private byte[] ReadMiniStream(Stream stream, uint baseSector, int length)
+        internal byte[] ReadStream(Stream stream, List<uint> sectors, int length)
         {
-            var chain = GetSectorChain(baseSector, MiniSectorTable);
-            var rootStreamChain = GetSectorChain(RootEntry.StreamFirstSector, SectorTable);
-
-            var result = new byte[length];
-            int resultOffset = 0;
-            foreach (var sector in chain)
+            using (var cfb = new CompoundStream(this, stream, sectors, length, true))
             {
-                // Convert to sector+offset in the root stream
-                var miniStreamOffset = (int)GetMiniSectorOffset(sector);
-
-                var rootSector = rootStreamChain[miniStreamOffset / Header.SectorSize];
-                var rootOffset = miniStreamOffset % Header.SectorSize;
-
-                stream.Seek(GetSectorOffset(rootSector) + rootOffset, SeekOrigin.Begin);
-
-                var chunkSize = Math.Min(length - resultOffset, Header.MiniSectorSize);
-                if (stream.Read(result, resultOffset, chunkSize) < chunkSize)
-                {
-                    throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.");
-                }
-
-                resultOffset += chunkSize;
+                var bytes = new byte[length];
+                cfb.Read(bytes, 0, length);
+                return bytes;
             }
-
-            return result;
-        }
-
-        private byte[] ReadRegularStream(Stream stream, uint baseSector, int length)
-        {
-            var chain = GetSectorChain(baseSector, SectorTable);
-            return ReadRegularStream(stream, chain, length);
-        }
-
-        private byte[] ReadRegularStream(Stream stream, List<uint> chain, int length)
-        {
-            var result = new byte[length];
-            int resultOffset = 0;
-            foreach (var sector in chain)
-            {
-                stream.Seek(GetSectorOffset(sector), SeekOrigin.Begin);
-
-                var chunkSize = Math.Min(length - resultOffset, Header.SectorSize);
-                if (stream.Read(result, resultOffset, chunkSize) < chunkSize)
-                {
-                    throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.");
-                }
-
-                resultOffset += chunkSize;
-            }
-
-            return result;
         }
 
         private void ReadDirectoryEntries(byte[] bytes)
@@ -182,7 +129,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             }
             catch (EndOfStreamException ex)
             {
-                throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.", ex);
+                throw new CompoundDocumentException(Errors.ErrorEndOfFile, ex);
             }
         }
 
@@ -280,7 +227,7 @@ namespace ExcelDataReader.Core.CompoundFormat
                 }
                 catch (EndOfStreamException ex)
                 {
-                    throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.", ex);
+                    throw new CompoundDocumentException(Errors.ErrorEndOfFile, ex);
                 }
             }
 
@@ -306,7 +253,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             }
             catch (EndOfStreamException ex)
             {
-                throw new InvalidOperationException("The excel file may be corrupt or truncated. We've read past the end of the file.", ex);
+                throw new CompoundDocumentException(Errors.ErrorEndOfFile, ex);
             }
 
             TrimSectorChain(sectorTable, FATMARKERS.FAT_FreeSpace);

@@ -18,10 +18,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             Stream = stream;
 
             IsDate1904 = workbook.IsDate1904;
-            Formats = new Dictionary<ushort, NumberFormatString>(workbook.Formats);
-            ExtendedFormats = new List<XlsBiffXF>(workbook.ExtendedFormats);
             Encoding = workbook.Encoding;
-            RowMinMaxOffsets = new Dictionary<int, KeyValuePair<int, int>>();
+            RowOffsetMap = new Dictionary<int, XlsRowOffset>();
             DefaultRowHeight = 255; // 12.75 points
 
             Name = refSheet.GetSheetName(workbook.Encoding);
@@ -59,6 +57,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public CellRange[] MergeCells { get; private set; }
 
+        public Col[] ColumnWidths { get; private set; }
+
         /// <summary>
         /// Gets the worksheet data offset.
         /// </summary>
@@ -66,15 +66,11 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public Stream Stream { get; }
 
-        public Dictionary<ushort, NumberFormatString> Formats { get; }
-
-        public List<XlsBiffXF> ExtendedFormats { get; }
-
         public Encoding Encoding { get; private set; }
 
         public double DefaultRowHeight { get; set; }
 
-        public Dictionary<int, KeyValuePair<int, int>> RowMinMaxOffsets { get; }
+        public Dictionary<int, XlsRowOffset> RowOffsetMap { get; }
 
 /*
     TODO: populate these in ReadWorksheetGlobals() if needed
@@ -124,13 +120,42 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public NumberFormatString GetNumberFormatString(int numberFormatIndex)
         {
-            if (Formats.TryGetValue((ushort)numberFormatIndex, out var fmtString))
+            if (Workbook.Formats.TryGetValue(numberFormatIndex, out var fmtString))
             {
                 return fmtString;
             }
-            else
+
+            return null;
+        }
+
+        /// <summary>
+        /// Find how many rows to read at a time and their offset in the file.
+        /// If rows are stored sequentially in the file, returns a block size of up to 32 rows.
+        /// If rows are stored non-sequentially, the block size may extend up to the entire worksheet stream
+        /// </summary>
+        private void GetBlockSize(int startRow, out int blockRowCount, out int minOffset, out int maxOffset)
+        {
+            minOffset = int.MaxValue;
+            maxOffset = int.MinValue;
+
+            var i = 0;
+            blockRowCount = Math.Min(32, RowCount - startRow);
+
+            while (i < blockRowCount)
             {
-                return BuiltinNumberFormat.GetBuiltinNumberFormat(numberFormatIndex);
+                if (RowOffsetMap.TryGetValue(startRow + i, out var rowOffset))
+                {
+                    minOffset = Math.Min(rowOffset.MinCellOffset, minOffset);
+                    maxOffset = Math.Max(rowOffset.MaxCellOffset, maxOffset);
+
+                    if (rowOffset.MaxOverlapRowIndex != int.MinValue)
+                    {
+                        var maxOverlapRowCount = rowOffset.MaxOverlapRowIndex + 1;
+                        blockRowCount = Math.Max(blockRowCount, maxOverlapRowCount - startRow);
+                    }
+                }
+
+                i++;
             }
         }
 
@@ -140,10 +165,9 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             while (rowIndex < RowCount)
             {
-                // Read up to 32 rows at a time
-                var blockRowCount = Math.Min(32, RowCount - rowIndex);
+                GetBlockSize(rowIndex, out var blockRowCount, out var minOffset, out var maxOffset);
 
-                var block = ReadNextBlock(biffStream, rowIndex, blockRowCount);
+                var block = ReadNextBlock(biffStream, rowIndex, blockRowCount, minOffset, maxOffset);
                 
                 for (var i = 0; i < blockRowCount; ++i)
                 {
@@ -157,27 +181,30 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
-        private XlsRowBlock ReadNextBlock(XlsBiffStream biffStream, int startRow, int rows)
+        private XlsRowBlock ReadNextBlock(XlsBiffStream biffStream, int startRow, int rows, int minOffset, int maxOffset)
         {
             var result = new XlsRowBlock { Rows = new Dictionary<int, Row>() };
 
-            XlsBiffRecord rec;
-            XlsBiffRecord ixfe = null;
+            // Ensure rows with physical records are initialized with height
+            for (var i = 0; i < rows; i++)
+            {
+                if (RowOffsetMap.TryGetValue(startRow + i, out var rowOffset))
+                {
+                    EnsureRow(result, startRow + i);
+                }
+            }
 
-            if (!GetMinMaxOffsetsForRowBlock(startRow, rows, out var minOffset, out var maxOffset))
+            if (minOffset == int.MaxValue)
+            {
                 return result;
+            }
 
             biffStream.Position = minOffset;
 
+            XlsBiffRecord rec;
+            XlsBiffRecord ixfe = null;
             while (biffStream.Position <= maxOffset && (rec = biffStream.Read()) != null)
             {
-                if (rec.Id == BIFFRECORDTYPE.ROW || rec.Id == BIFFRECORDTYPE.ROW_V2)
-                {
-                    var rowRecord = (XlsBiffRow)rec;
-                    var currentRow = EnsureRow(result, rowRecord.RowIndex);
-                    currentRow.Height = (rowRecord.UseDefaultRowHeight ? DefaultRowHeight : rowRecord.RowHeight) / 20.0;
-                }
-
                 if (rec.Id == BIFFRECORDTYPE.IXFE)
                 {
                     // BIFF2: If cell.xformat == 63, this contains the actual XF index >= 63
@@ -196,17 +223,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     }
                     else
                     {
-                        ushort xFormat;
-                        if (Workbook.BiffVersion == 2 && cell.XFormat == 63 && ixfe != null)
-                        {
-                            xFormat = ixfe.ReadUInt16(0);
-                        }
-                        else
-                        {
-                            xFormat = cell.XFormat;
-                        }
-
-                        var numberFormatIndex = GetNumberFormatIndex(xFormat);
+                        var numberFormatIndex = GetFormatIndexForCell(cell, ixfe);
                         var cellValue = ReadSingleCell(biffStream, cell, numberFormatIndex);
                         currentRow.Cells.Add(cellValue);
                     }
@@ -217,15 +234,21 @@ namespace ExcelDataReader.Core.BinaryFormat
             
             return result;
         }
-        
+
         private Row EnsureRow(XlsRowBlock result, int rowIndex)
         {
             if (!result.Rows.TryGetValue(rowIndex, out var currentRow))
             {
+                var height = DefaultRowHeight / 20.0;
+                if (RowOffsetMap.TryGetValue(rowIndex, out var rowOffset) && rowOffset.Record != null)
+                {
+                    height = (rowOffset.Record.UseDefaultRowHeight ? DefaultRowHeight : rowOffset.Record.RowHeight) / 20.0;
+                }
+
                 currentRow = new Row()
                 {
                     RowIndex = rowIndex,
-                    Height = DefaultRowHeight / 20.0,
+                    Height = height,
                     Cells = new List<Cell>()
                 };
 
@@ -248,7 +271,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     ushort lastColumnIndex = rkCell.LastColumnIndex;
                     for (ushort j = cell.ColumnIndex; j <= lastColumnIndex; j++)
                     {
-                        var numberFormatIndex = GetNumberFormatIndex(rkCell.GetXF(j));
+                        var numberFormatIndex = Workbook.GetNumberFormatFromXF(rkCell.GetXF(j));
                         var resultCell = new Cell()
                         {
                             ColumnIndex = j,
@@ -400,21 +423,35 @@ namespace ExcelDataReader.Core.BinaryFormat
             return value;
         }
 
-        private int GetNumberFormatIndex(int xFormat)
+        /// <summary>
+        /// Returns an index into Workbook.Formats for the given cell and preceding ixfe record.
+        /// </summary>
+        private int GetFormatIndexForCell(XlsBiffBlankCell cell, XlsBiffRecord ixfe)
         {
-            int format;
-            if (xFormat < ExtendedFormats.Count)
+            if (Workbook.BiffVersion == 2)
             {
-                // If a cell XF record does not contain explicit attributes in a group (if the attribute group flag is not set),
-                // it repeats the attributes of its style XF record.
-                format = ExtendedFormats[xFormat].Format;
-            }
-            else
-            {
-                format = xFormat;
+                if (cell.XFormat == 63 && ixfe != null)
+                {
+                    var xFormat = ixfe.ReadUInt16(0);
+                    return Workbook.GetNumberFormatFromXF(xFormat);
+                }
+                else if (cell.XFormat > 63)
+                {
+                    // Invalid XF ref on cell in BIFF2 stream, default to built-in "General"
+                    return 0;
+                }
+                else if (cell.XFormat < Workbook.GetExtendedFormatCount())
+                {
+                    return Workbook.GetNumberFormatFromXF(cell.XFormat);
+                }
+                else
+                {
+                    // Either the file has no XFs, or XF was out of range. Use the cell attributes' format reference.
+                    return Workbook.GetNumberFormatFromFileIndex(cell.Format);
+                }
             }
 
-            return format;
+            return Workbook.GetNumberFormatFromXF(cell.XFormat);
         }
 
         private void ReadWorksheetGlobals()
@@ -427,14 +464,17 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                 XlsBiffHeaderFooterString header = null;
                 XlsBiffHeaderFooterString footer = null;
+                var ixfeOffset = -1;
 
                 int maxCellColumn = 0;
-                int maxRowCount = 0;
+                int maxRowCount = 0; // number of rows with cell records
+                int maxRowCountFromRowRecord = 0; // number of rows with row records
 
                 var mergeCells = new List<CellRange>();
                 var biffFormats = new Dictionary<ushort, XlsBiffFormatString>();
                 var recordOffset = biffStream.Position;
                 var rec = biffStream.Read();
+                var columnWidths = new List<Col>();
 
                 while (rec != null && !(rec is XlsBiffEof))
                 {
@@ -457,12 +497,19 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                     if (rec.Id == BIFFRECORDTYPE.XF_V2 || rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4)
                     {
-                        ExtendedFormats.Add((XlsBiffXF)rec);
+                        // NOTE: XF records should only occur in raw BIFF2-4 single worksheet documents without the workbook stream, or globally in the workbook stream.
+                        // It is undefined behavior if multiple worksheets in a workbook declare XF records.
+                        Workbook.AddExtendedFormat(-1, ((XlsBiffXF)rec).Format, true);
                     }
 
                     if (rec.Id == BIFFRECORDTYPE.MERGECELLS)
                     {
                         mergeCells.AddRange(((XlsBiffMergeCells)rec).MergeCells);
+                    }
+
+                    if (rec.Id == BIFFRECORDTYPE.COLINFO)
+                    {
+                        columnWidths.Add(((XlsBiffColInfo)rec).Value);
                     }
                     
                     if (rec.Id == BIFFRECORDTYPE.FORMAT)
@@ -507,19 +554,33 @@ namespace ExcelDataReader.Core.BinaryFormat
                         CodeName = codeName.GetValue(Encoding);
                     }
 
-                    if (rec.Id == BIFFRECORDTYPE.ROW)
+                    if (rec.Id == BIFFRECORDTYPE.ROW || rec.Id == BIFFRECORDTYPE.ROW_V2)
                     {
                         var rowRecord = (XlsBiffRow)rec;
-                        SetMinMaxRowOffset(rowRecord.RowIndex, recordOffset);
-                        maxRowCount = Math.Max(maxRowCount, rowRecord.RowIndex + 1);
+                        SetMinMaxRow(rowRecord.RowIndex, rowRecord);
+                        
+                        // Count rows by row records without affecting the overlap in OffsetMap
+                        maxRowCountFromRowRecord = Math.Max(maxRowCountFromRowRecord, rowRecord.RowIndex + 1);
+                    }
+
+                    if (rec.Id == BIFFRECORDTYPE.IXFE)
+                    {
+                        ixfeOffset = recordOffset;
                     }
 
                     if (rec.IsCell)
                     {
                         var cell = (XlsBiffBlankCell)rec;
-                        SetMinMaxRowOffset(cell.RowIndex, recordOffset);
                         maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
                         maxRowCount = Math.Max(maxRowCount, cell.RowIndex + 1);
+
+                        if (ixfeOffset != -1)
+                        {
+                            SetMinMaxRowOffset(cell.RowIndex, ixfeOffset, maxRowCount - 1);
+                            ixfeOffset = -1;
+                        }
+
+                        SetMinMaxRowOffset(cell.RowIndex, recordOffset, maxRowCount - 1);
                     }
 
                     recordOffset = biffStream.Position;
@@ -541,8 +602,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                 foreach (var biffFormat in biffFormats)
                 {
-                    var formatString = biffFormat.Value.GetValue(Encoding);
-                    Formats.Add(biffFormat.Key, new NumberFormatString(formatString));
+                    Workbook.AddNumberFormat(biffFormat.Key, biffFormat.Value.GetValue(Encoding));
                 }
 
                 if (mergeCells.Count > 0)
@@ -551,41 +611,61 @@ namespace ExcelDataReader.Core.BinaryFormat
                 if (FieldCount < maxCellColumn)
                     FieldCount = maxCellColumn;
 
+                maxRowCount = Math.Max(maxRowCount, maxRowCountFromRowRecord);
                 if (RowCount < maxRowCount)
                     RowCount = maxRowCount;
-            }
-        }
 
-        private bool GetMinMaxOffsetsForRowBlock(int rowIndex, int rowCount, out int minOffset, out int maxOffset)
-        {
-            minOffset = int.MaxValue;
-            maxOffset = int.MinValue;
-
-            for (var i = 0; i < rowCount; i++)
-            {
-                if (RowMinMaxOffsets.TryGetValue(rowIndex + i, out var minMax))
+                if (columnWidths.Count > 0)
                 {
-                    minOffset = Math.Min(minOffset, minMax.Key);
-                    maxOffset = Math.Max(maxOffset, minMax.Value);
+                    ColumnWidths = columnWidths.ToArray();
                 }
             }
-
-            return minOffset != int.MaxValue;
         }
 
-        private void SetMinMaxRowOffset(int rowIndex, int recordOffset)
+        private void SetMinMaxRow(int rowIndex, XlsBiffRow row)
         {
-            if (!RowMinMaxOffsets.TryGetValue(rowIndex, out var minMax))
-                minMax = new KeyValuePair<int, int>(int.MaxValue, int.MinValue);
+            if (!RowOffsetMap.TryGetValue(rowIndex, out var rowOffset))
+            {
+                rowOffset = new XlsRowOffset();
+                rowOffset.MinCellOffset = int.MaxValue;
+                rowOffset.MaxCellOffset = int.MinValue;
+                rowOffset.MaxOverlapRowIndex = int.MinValue;
+                RowOffsetMap.Add(rowIndex, rowOffset);
+            }
 
-            RowMinMaxOffsets[rowIndex] = new KeyValuePair<int, int>(
-                Math.Min(minMax.Key, recordOffset),
-                Math.Max(minMax.Value, recordOffset));
+            rowOffset.Record = row;
+        }
+
+        private void SetMinMaxRowOffset(int rowIndex, int recordOffset, int maxOverlapRow)
+        {
+            if (!RowOffsetMap.TryGetValue(rowIndex, out var rowOffset))
+            {
+                rowOffset = new XlsRowOffset();
+                rowOffset.MinCellOffset = int.MaxValue;
+                rowOffset.MaxCellOffset = int.MinValue;
+                rowOffset.MaxOverlapRowIndex = int.MinValue;
+                RowOffsetMap.Add(rowIndex, rowOffset);
+            }
+
+            rowOffset.MinCellOffset = Math.Min(recordOffset, rowOffset.MinCellOffset);
+            rowOffset.MaxCellOffset = Math.Max(recordOffset, rowOffset.MaxCellOffset);
+            rowOffset.MaxOverlapRowIndex = Math.Max(maxOverlapRow, rowOffset.MaxOverlapRowIndex);
         }
 
         internal class XlsRowBlock
         {
             public Dictionary<int, Row> Rows { get; set; }
+        }
+
+        internal class XlsRowOffset
+        {
+            public XlsBiffRow Record { get; set; }
+
+            public int MinCellOffset { get; set; }
+
+            public int MaxCellOffset { get; set; }
+
+            public int MaxOverlapRowIndex { get; set; }
         }
     }
 }

@@ -177,7 +177,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffDefaultRowHeight(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.ROW_V2:
                 case BIFFRECORDTYPE.ROW:
-                    return new XlsBiffRow(bytes, offset, biffVersion);
+                    return new XlsBiffRow(bytes, offset);
                 case BIFFRECORDTYPE.DBCELL:
                     return new XlsBiffDbCell(bytes, offset);
 
@@ -257,7 +257,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                     return new XlsBiffXF(bytes, offset);
                 case BIFFRECORDTYPE.MERGECELLS:
                     return new XlsBiffMergeCells(bytes, offset);
-
+                case BIFFRECORDTYPE.COLINFO:
+                    return new XlsBiffColInfo(bytes, offset);
                 default:
                     return new XlsBiffRecord(bytes, offset);
             }
@@ -280,7 +281,13 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.BOF_V4:
                     return 4;
                 case BIFFRECORDTYPE.BOF:
-                    if (bof.Version == 0x500)
+                    if (bof.Version == 0x200)
+                        return 2;
+                    else if (bof.Version == 0x300)
+                        return 3;
+                    else if (bof.Version == 0x400)
+                        return 4;
+                    else if (bof.Version == 0x500 || bof.Version == 0)
                         return 5;
                     if (bof.Version == 0x600)
                         return 8;

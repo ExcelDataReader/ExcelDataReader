@@ -8,7 +8,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         internal XlsBiffIntegerCell(byte[] bytes, uint offset, int biffVersion)
             : base(bytes, offset, biffVersion)
         {
-            if (biffVersion == 2)
+            if (Id == BIFFRECORDTYPE.INTEGER_OLD)
             {
                 Value = ReadUInt16(0x7);
             }

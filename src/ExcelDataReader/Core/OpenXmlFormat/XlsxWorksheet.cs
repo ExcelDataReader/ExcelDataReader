@@ -45,6 +45,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string ACustomHeight = "customHeight";
         private const string AHt = "ht";
 
+        private const string NCols = "cols";
+        private const string AMin = "min";
+        private const string AMax = "max";
+        private const string AWidth = "width";
+        private const string ACustomWidth = "customWidth";
+
         public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, XlsxBoundSheet refSheet)
         {
             Document = document;
@@ -82,6 +88,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public CellRange[] MergeCells { get; private set; }
 
+        public Col[] ColumnWidths { get; private set; }
+
         private ZipWorker Document { get; }
 
         private XlsxWorkbook Workbook { get; }
@@ -113,13 +121,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public NumberFormatString GetNumberFormatString(int numberFormatIndex)
         {
-            var numFmt = Workbook.Styles.NumFmts.Find(x => x.Id == numberFormatIndex);
-            if (numFmt != null)
-            { 
-                return numFmt.FormatCode;
+            if (Workbook.Formats.TryGetValue(numberFormatIndex, out var result))
+            {
+                return result;
             }
 
-            return BuiltinNumberFormat.GetBuiltinNumberFormat(numberFormatIndex);
+            return null;
         }
 
         private void ReadWorksheetGlobals()
@@ -146,6 +153,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 {
                     XlsxMergeCells mergeCells = (XlsxMergeCells)sheetObject;
                     MergeCells = mergeCells.Value.ToArray();
+                }
+                else if (sheetObject.Type == XlsxElementType.Cols)
+                {
+                    XlsxCols sheetCols = (XlsxCols)sheetObject;
+                    ColumnWidths = sheetCols.Value.ToArray();
                 }
             }
 
@@ -221,6 +233,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 else if (xmlReader.IsStartElement(NHeaderFooter, NsSpreadsheetMl))
                 {
                     var result = ReadHeaderFooter(xmlReader);
+                    if (result != null)
+                        yield return result;
+                }
+                else if (xmlReader.IsStartElement(NCols, NsSpreadsheetMl))
+                {
+                    var result = ReadCols(xmlReader);
                     if (result != null)
                         yield return result;
                 }
@@ -305,6 +323,53 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             {
                 yield return new XlsxRow { Row = row };
             }
+        }
+
+        private XlsxCols ReadCols(XmlReader xmlReader)
+        {
+            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
+            {
+                return null;
+            }
+
+            var cols = new List<Col>();
+
+            while (!xmlReader.EOF)
+            {
+                if (xmlReader.IsStartElement(NCol, NsSpreadsheetMl))
+                {
+                    var min = xmlReader.GetAttribute(AMin);
+                    var max = xmlReader.GetAttribute(AMax);
+                    var width = xmlReader.GetAttribute(AWidth);
+                    var customWidth = xmlReader.GetAttribute(ACustomWidth);
+                    var hidden = xmlReader.GetAttribute(AHidden);
+
+                    var maxVal = int.Parse(max);
+                    var minVal = int.Parse(min);
+                    var widthVal = double.Parse(width, CultureInfo.InvariantCulture);
+
+                    // Note: column indexes need to be converted to be zero-indexed
+                    cols.Add(new Col
+                    {
+                        CustomWidth = customWidth == "1",
+                        Hidden = hidden == "1",
+                        Max = maxVal - 1,
+                        Min = minVal - 1,
+                        Width = widthVal
+                    });
+
+                    xmlReader.Read();
+                }
+                else if (!XmlReaderHelper.SkipContent(xmlReader))
+                {
+                    break;
+                }
+            }
+
+            return new XlsxCols
+            {
+                Value = cols
+            };
         }
 
         private XlsxMergeCells ReadMergeCells(XmlReader xmlReader)
@@ -452,11 +517,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             {
                 if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
                 {
-                    if (styleIndex >= 0 && styleIndex < Workbook.Styles.CellXfs.Count)
-                    {
-                        XlsxXf xf = Workbook.Styles.CellXfs[styleIndex];
-                        result.NumberFormatIndex = xf.NumFmtId;
-                    }
+                    result.NumberFormatIndex = Workbook.GetNumberFormatFromXF(styleIndex);
                 }
             }
 
