@@ -358,7 +358,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         Width = widthVal
                     });
 
-                    xmlReader.Read();
+                    xmlReader.Skip();
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {
@@ -397,7 +397,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
                     ranges.Add(new CellRange(from, to));
 
-                    xmlReader.Read();
+                    xmlReader.Skip();
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {

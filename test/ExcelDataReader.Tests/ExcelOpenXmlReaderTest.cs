@@ -1378,6 +1378,7 @@ namespace ExcelDataReader.Netstandard20.Tests
         [TestMethod]
         public void MergedCells()
         {
+            // XLSX was manually edited to include a <mergecell></mergecell> element with closing tag
             using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_MergedCell_OpenXml")))
             {
                 excelReader.Read();
@@ -1563,6 +1564,7 @@ namespace ExcelDataReader.Netstandard20.Tests
         [TestMethod]
         public void ColumnWidthsTest()
         {
+            // XLSX was manually edited to include a <col></col> element with closing tag
             using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("ColumnWidthsTest.xlsx")))
             {
                 reader.Read();
