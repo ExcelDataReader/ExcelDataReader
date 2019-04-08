@@ -8,14 +8,14 @@ namespace ExcelDataReader.Core.CsvFormat
 {
     internal class CsvWorksheet : IWorksheet
     {
-        public CsvWorksheet(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators)
+        public CsvWorksheet(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
         {
             Stream = stream;
             Stream.Seek(0, SeekOrigin.Begin);
             try
             {
                 // Try as UTF-8 first, or use BOM if present
-                CsvAnalyzer.Analyze(Stream, autodetectSeparators, Encoding.UTF8, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
+                CsvAnalyzer.Analyze(Stream, autodetectSeparators, Encoding.UTF8, analyzeInitialCsvRows, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
                 FieldCount = fieldCount;
                 RowCount = rowCount;
                 Encoding = encoding;
@@ -27,7 +27,7 @@ namespace ExcelDataReader.Core.CsvFormat
                 // If cannot parse as UTF-8, try fallback encoding
                 Stream.Seek(0, SeekOrigin.Begin);
 
-                CsvAnalyzer.Analyze(Stream, autodetectSeparators, fallbackEncoding, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
+                CsvAnalyzer.Analyze(Stream, autodetectSeparators, fallbackEncoding, analyzeInitialCsvRows, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
                 FieldCount = fieldCount;
                 RowCount = rowCount;
                 Encoding = encoding;
@@ -103,7 +103,7 @@ namespace ExcelDataReader.Core.CsvFormat
                 var cells = new List<Cell>(row.Count);
                 for (var index = 0; index < row.Count; index++)
                 {
-                    cells.Add( new Cell()
+                    cells.Add(new Cell()
                     {
                         ColumnIndex = index,
                         Value = row[index]

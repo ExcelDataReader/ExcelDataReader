@@ -11,7 +11,7 @@ namespace ExcelDataReader.Core.CsvFormat
         /// Uses fallbackEncoding if there is no BOM. Throws DecoderFallbackException if there are invalid characters in the stream.
         /// Returns the separator whose average field count is closest to its max field count.
         /// </summary>
-        public static void Analyze(Stream stream, char[] separators, Encoding fallbackEncoding, out int fieldCount, out char autodetectSeparator, out Encoding autodetectEncoding, out int bomLength, out int rowCount)
+        public static void Analyze(Stream stream, char[] separators, Encoding fallbackEncoding, int analyzeInitialCsvRows, out int fieldCount, out char autodetectSeparator, out Encoding autodetectEncoding, out int bomLength, out int rowCount)
         {
             var bufferSize = 1024;
             var probeSize = 16;
@@ -36,13 +36,7 @@ namespace ExcelDataReader.Core.CsvFormat
                 separatorInfos[i].Buffer = new CsvParser(separators[i], autodetectEncoding);
             }
 
-            ParseSeparatorsBuffer(buffer, bomLength, bytesRead - bomLength, separators, separatorInfos);
-
-            while (stream.Position < stream.Length)
-            {
-                bytesRead = stream.Read(buffer, 0, bufferSize);
-                ParseSeparatorsBuffer(buffer, 0, bytesRead, separators, separatorInfos);
-            }
+            AnalyzeCsvRows(stream, buffer, bytesRead, bomLength, analyzeInitialCsvRows, separators, separatorInfos);
 
             FlushSeparatorsBuffers(separators, separatorInfos);
 
@@ -74,7 +68,45 @@ namespace ExcelDataReader.Core.CsvFormat
 
             autodetectSeparator = bestSeparator;
             fieldCount = bestSeparatorInfo.MaxFieldCount;
-            rowCount = bestSeparatorInfo.RowCount;
+            rowCount = analyzeInitialCsvRows == 0 ? bestSeparatorInfo.RowCount : -1;
+        }
+
+        private static void AnalyzeCsvRows(Stream inputStream, byte[] buffer, int initialBytesRead, int bomLength, int analyzeInitialCsvRows, char[] separators, SeparatorInfo[] separatorInfos)
+        {
+            ParseSeparatorsBuffer(buffer, bomLength, initialBytesRead - bomLength, separators, separatorInfos);
+
+            if (IsMinNumberOfRowAnalyzed(analyzeInitialCsvRows, separatorInfos))
+            {
+                return;
+            }
+
+            while (inputStream.Position < inputStream.Length)
+            {
+                var bytesRead = inputStream.Read(buffer, 0, buffer.Length);
+                ParseSeparatorsBuffer(buffer, 0, bytesRead, separators, separatorInfos);
+                if (IsMinNumberOfRowAnalyzed(analyzeInitialCsvRows, separatorInfos))
+                {
+                    return;
+                }
+            }
+        }
+
+        private static bool IsMinNumberOfRowAnalyzed(
+            int analyzeInitialCsvRows,
+            SeparatorInfo[] separatorInfos)
+        {
+            if (analyzeInitialCsvRows > 0)
+            {
+                foreach (var separatorInfo in separatorInfos)
+                {
+                    if (separatorInfo.RowCount >= analyzeInitialCsvRows)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private static void ParseSeparatorsBuffer(byte[] bytes, int offset, int count, char[] separators, SeparatorInfo[] separatorInfos)
