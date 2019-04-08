@@ -6,9 +6,9 @@ namespace ExcelDataReader
 {
     internal class ExcelCsvReader : ExcelDataReader<CsvWorkbook, CsvWorksheet>
     {
-        public ExcelCsvReader(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators)
+        public ExcelCsvReader(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
         {
-            Workbook = new CsvWorkbook(stream, fallbackEncoding, autodetectSeparators);
+            Workbook = new CsvWorkbook(stream, fallbackEncoding, autodetectSeparators, analyzeInitialCsvRows);
 
             // By default, the data reader is positioned on the first result.
             Reset();

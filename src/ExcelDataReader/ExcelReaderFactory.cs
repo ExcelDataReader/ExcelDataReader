@@ -182,7 +182,7 @@ namespace ExcelDataReader
                 fileStream = new LeaveOpenStream(fileStream);
             }
 
-            return new ExcelCsvReader(fileStream, configuration.FallbackEncoding, configuration.AutodetectSeparators);
+            return new ExcelCsvReader(fileStream, configuration.FallbackEncoding, configuration.AutodetectSeparators, configuration.AnalyzeInitialCsvRows);
         }
 
         private static bool TryGetWorkbook(Stream fileStream, CompoundDocument document, out Stream stream)
