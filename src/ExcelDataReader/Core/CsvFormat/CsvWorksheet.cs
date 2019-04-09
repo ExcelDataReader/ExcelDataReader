@@ -100,18 +100,14 @@ namespace ExcelDataReader.Core.CsvFormat
         {
             foreach (var row in rows)
             {
-                var columnIndex = 0;
-
-                var cells = new List<Cell>();
-                foreach (var item in row)
+                var cells = new List<Cell>(row.Count);
+                for (var index = 0; index < row.Count; index++)
                 {
-                    cells.Add(new Cell()
+                    cells.Add( new Cell()
                     {
-                        ColumnIndex = columnIndex,
-                        Value = item
+                        ColumnIndex = index,
+                        Value = row[index]
                     });
-
-                    columnIndex++;
                 }
 
                 yield return new Row()
