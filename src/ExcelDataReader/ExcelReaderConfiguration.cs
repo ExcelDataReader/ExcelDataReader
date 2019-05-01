@@ -29,9 +29,9 @@ namespace ExcelDataReader
         public bool LeaveOpen { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating the number of row to analyze within a csv file. 
-        /// 0 -> will analyze the enter file.
-        /// > 0 will analyze at a minimum the number of row specified and will not return row count, it will be set to -1
+        /// Gets or sets a value indicating the number of rows to analyze for encoding, separator and field count in a CSV.
+        /// When set, this option causes the IExcelDataReader.RowCount property to throw an exception.
+        /// Default: 0 - analyzes the entire file (CSV only, has no effect on other formats)
         /// </summary>
         public int AnalyzeInitialCsvRows { get; set; }
     }

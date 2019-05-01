@@ -404,5 +404,23 @@ namespace ExcelDataReader.Netstandard20.Tests
                 stream.Dispose();
             }
         }
+
+        [Test]
+        public void CsvRowCountAnalyzeRowsThrows()
+        {
+            {
+                var stream = Configuration.GetTestWorkbook("MOCK_DATA.csv");
+                using (IExcelDataReader reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
+                {
+                    AnalyzeInitialCsvRows = 100
+                }))
+                {
+                    Assert.Throws(typeof(InvalidOperationException), () =>
+                    {
+                        var count = reader.RowCount;
+                    });
+                }
+            }
+        }
     }
 }

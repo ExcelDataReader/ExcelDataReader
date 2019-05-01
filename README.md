@@ -86,7 +86,7 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 - `Name` returns the name of the current sheet.
 - `CodeName` returns the VBA code name identifier of the current sheet.
 - `FieldCount` returns the number of columns in the current sheet.
-- `RowCount` returns the number of rows in the current sheet. This includes terminal empty rows which are otherwise excluded by AsDataSet().
+- `RowCount` returns the number of rows in the current sheet. This includes terminal empty rows which are otherwise excluded by AsDataSet(). Throws `InvalidOperationException` on CSV files when used with `AnalyzeInitialCsvRows`.
 - `HeaderFooter` returns an object with information about the headers and footers, or `null` if there are none.
 - `MergeCells` returns an array of merged cell ranges in the current sheet.
 - `RowHeight` returns the visual height of the current row in points. May be 0 if the row is hidden.
@@ -108,7 +108,7 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
 {
     // Gets or sets the encoding to use when the input XLS lacks a CodePage
     // record, or when the input CSV lacks a BOM and does not parse as UTF8. 
-    // Default: cp1252. (XLS BIFF2-5 and CSV only)
+    // Default: cp1252 (XLS BIFF2-5 and CSV only)
     FallbackEncoding = Encoding.GetEncoding(1252),
 
     // Gets or sets the password used to open password protected workbooks.
@@ -122,6 +122,13 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
     // Gets or sets a value indicating whether to leave the stream open after
     // the IExcelDataReader object is disposed. Default: false
     LeaveOpen = false,
+
+    // Gets or sets a value indicating the number of rows to analyze for
+    // encoding, separator and field count in a CSV. When set, this option
+    // causes the IExcelDataReader.RowCount property to throw an exception.
+    // Default: 0 - analyzes the entire file (CSV only, has no effect on other
+    // formats)
+    AnalyzeInitialCsvRows = 0,
 });
 ```
 
