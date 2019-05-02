@@ -7,11 +7,12 @@ namespace ExcelDataReader.Core.CsvFormat
 {
     internal class CsvWorkbook : IWorkbook<CsvWorksheet>
     {
-        public CsvWorkbook(Stream stream, Encoding encoding, char[] autodetectSeparators)
+        public CsvWorkbook(Stream stream, Encoding encoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
         {
             Stream = stream;
             Encoding = encoding;
             AutodetectSeparators = autodetectSeparators;
+            AnalyzeInitialCsvRows = analyzeInitialCsvRows;
         }
 
         public int ResultsCount => 1;
@@ -22,9 +23,11 @@ namespace ExcelDataReader.Core.CsvFormat
 
         public char[] AutodetectSeparators { get; }
 
+        public int AnalyzeInitialCsvRows { get; }
+
         public IEnumerable<CsvWorksheet> ReadWorksheets()
         {
-            yield return new CsvWorksheet(Stream, Encoding, AutodetectSeparators);
+            yield return new CsvWorksheet(Stream, Encoding, AutodetectSeparators, AnalyzeInitialCsvRows);
         }
     }
 }

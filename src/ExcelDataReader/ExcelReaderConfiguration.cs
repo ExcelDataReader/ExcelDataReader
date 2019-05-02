@@ -27,5 +27,12 @@ namespace ExcelDataReader
         /// Gets or sets a value indicating whether to leave the stream open after the IExcelDataReader object is disposed. Default: false
         /// </summary>
         public bool LeaveOpen { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating the number of rows to analyze for encoding, separator and field count in a CSV.
+        /// When set, this option causes the IExcelDataReader.RowCount property to throw an exception.
+        /// Default: 0 - analyzes the entire file (CSV only, has no effect on other formats)
+        /// </summary>
+        public int AnalyzeInitialCsvRows { get; set; }
     }
 }

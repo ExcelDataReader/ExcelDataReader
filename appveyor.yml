@@ -20,9 +20,9 @@ test_script:
     dotnet test test\ExcelDataReader.Net45.Tests\ExcelDataReader.Net45.Tests.csproj --no-build --logger "trx;LogFileName=tests.trx" -c $Env:CONFIGURATION
     # upload results to AppVeyor
     $wc = New-Object 'System.Net.WebClient'
-    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test\ExcelDataReader.Tests\TestResults\tests.trx))
-    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test\ExcelDataReader.Netstandard20.Tests\TestResults\tests.trx))
-    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test\ExcelDataReader.Net20.Tests\TestResults\tests.trx))
-    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test\ExcelDataReader.Net45.Tests\TestResults\tests.trx))
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test\ExcelDataReader.Tests\TestResults\tests*.trx))
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test\ExcelDataReader.Netstandard20.Tests\TestResults\tests*.trx))
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test\ExcelDataReader.Net20.Tests\TestResults\tests*.trx))
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test\ExcelDataReader.Net45.Tests\TestResults\tests*.trx))
 artifacts:
 - path: '**\*.nupkg'

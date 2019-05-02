@@ -8,16 +8,17 @@ namespace ExcelDataReader.Core.CsvFormat
 {
     internal class CsvWorksheet : IWorksheet
     {
-        public CsvWorksheet(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators)
+        public CsvWorksheet(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
         {
             Stream = stream;
             Stream.Seek(0, SeekOrigin.Begin);
             try
             {
                 // Try as UTF-8 first, or use BOM if present
-                CsvAnalyzer.Analyze(Stream, autodetectSeparators, Encoding.UTF8, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
+                CsvAnalyzer.Analyze(Stream, autodetectSeparators, Encoding.UTF8, analyzeInitialCsvRows, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
                 FieldCount = fieldCount;
-                RowCount = rowCount;
+                AnalyzedRowCount = rowCount;
+                AnalyzedPartial = analyzeInitialCsvRows > 0;
                 Encoding = encoding;
                 Separator = separator;
                 BomLength = bomLength;
@@ -27,9 +28,10 @@ namespace ExcelDataReader.Core.CsvFormat
                 // If cannot parse as UTF-8, try fallback encoding
                 Stream.Seek(0, SeekOrigin.Begin);
 
-                CsvAnalyzer.Analyze(Stream, autodetectSeparators, fallbackEncoding, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
+                CsvAnalyzer.Analyze(Stream, autodetectSeparators, fallbackEncoding, analyzeInitialCsvRows, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
                 FieldCount = fieldCount;
-                RowCount = rowCount;
+                AnalyzedRowCount = rowCount;
+                AnalyzedPartial = analyzeInitialCsvRows > 0;
                 Encoding = encoding;
                 Separator = separator;
                 BomLength = bomLength;
@@ -48,7 +50,18 @@ namespace ExcelDataReader.Core.CsvFormat
 
         public int FieldCount { get; }
 
-        public int RowCount { get; }
+        public int RowCount
+        {
+            get
+            {
+                if (AnalyzedPartial)
+                {
+                    throw new InvalidOperationException("Cannot use RowCount with AnalyzeInitialCsvRows > 0");
+                }
+
+                return AnalyzedRowCount;
+            }
+        }
 
         public Stream Stream { get; }
 
@@ -59,6 +72,10 @@ namespace ExcelDataReader.Core.CsvFormat
         public Col[] ColumnWidths => null;
 
         private int BomLength { get; set; }
+
+        private bool AnalyzedPartial { get; }
+
+        private int AnalyzedRowCount { get; }
 
         public NumberFormatString GetNumberFormatString(int index)
         {
@@ -100,18 +117,14 @@ namespace ExcelDataReader.Core.CsvFormat
         {
             foreach (var row in rows)
             {
-                var columnIndex = 0;
-
-                var cells = new List<Cell>();
-                foreach (var item in row)
+                var cells = new List<Cell>(row.Count);
+                for (var index = 0; index < row.Count; index++)
                 {
                     cells.Add(new Cell()
                     {
-                        ColumnIndex = columnIndex,
-                        Value = item
+                        ColumnIndex = index,
+                        Value = row[index]
                     });
-
-                    columnIndex++;
                 }
 
                 yield return new Row()
