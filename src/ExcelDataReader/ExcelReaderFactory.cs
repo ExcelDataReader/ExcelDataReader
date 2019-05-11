@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using ExcelDataReader.Core.BinaryFormat;
 using ExcelDataReader.Core.CompoundFormat;
 using ExcelDataReader.Core.OfficeCrypto;
@@ -10,7 +12,7 @@ namespace ExcelDataReader
     /// <summary>
     /// The ExcelReader Factory
     /// </summary>
-    public static class ExcelReaderFactory
+    public static class ExcelReaderFactory 
     {
         private const string DirectoryEntryWorkbook = "Workbook";
         private const string DirectoryEntryBook = "Book";
@@ -185,6 +187,61 @@ namespace ExcelDataReader
             return new ExcelCsvReader(fileStream, configuration.FallbackEncoding, configuration.AutodetectSeparators);
         }
 
+        /// <summary>
+        /// Creates an instance of CreateOpenXMLReader and returns the properties of Excel (Supports .Net Framework 4.5 or .Net Standard 2.0 only)
+        /// </summary>
+        /// <param name="fileStream">The file stream.</param>
+        /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>
+        /// <param name="excelSpecialDetails">The flag of enabling the Excel Details. Should be set to true</param>
+        /// <returns>The excel data reader.</returns>
+        public static string CreateOpenXmlReader(Stream fileStream, bool excelSpecialDetails, ExcelReaderConfiguration configuration = null)
+        {
+            if (excelSpecialDetails)
+            {
+                if (configuration == null)
+                {
+                    configuration = new ExcelReaderConfiguration();
+                }
+
+                if (configuration.LeaveOpen)
+                {
+                    fileStream = new LeaveOpenStream(fileStream);
+                }
+
+                var probe = new byte[8];
+                fileStream.Seek(0, SeekOrigin.Begin);
+                fileStream.Read(probe, 0, probe.Length);
+                fileStream.Seek(0, SeekOrigin.Begin);
+
+                // Probe for password protected compound document or zip file
+                if (CompoundDocument.IsCompoundDocument(probe))
+                {
+                    var document = new CompoundDocument(fileStream);
+                    if (TryGetEncryptedPackage(fileStream, document, configuration.Password, out var stream))
+                    {
+                        return ExcelSpecialDetailsHelper(stream);
+                    }
+                    else
+                    {
+                        throw new ExcelReaderException(Errors.ErrorCompoundNoOpenXml);
+                    }
+                }
+                else if (probe[0] == 0x50 && probe[1] == 0x4B)
+                {
+                    // Zip files start with 'PK'
+                    return ExcelSpecialDetailsHelper(fileStream);
+                }
+                else
+                {
+                    throw new HeaderException(Errors.ErrorHeaderSignature);
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         private static bool TryGetWorkbook(Stream fileStream, CompoundDocument document, out Stream stream)
         {
             var workbookEntry = document.FindEntry(DirectoryEntryWorkbook) ?? document.FindEntry(DirectoryEntryBook);
@@ -233,5 +290,40 @@ namespace ExcelDataReader
             stream = encryption.CreateEncryptedPackageStream(packageStream, secretKey);
             return true;
         }
+
+        private static string ExcelSpecialDetailsHelper(Stream stream)
+        {
+             string creater=string.Empty;
+             var Zipworker = new Core.ZipWorker(stream);
+             var archive = Zipworker.MyZipWorker(stream);
+             foreach (var entry in archive.Entries)
+            {
+                if (entry.ToString().Contains("docProps/core.xml"))
+                {
+                    FileInfo metadataFileInfo = new FileInfo(entry.FullName);
+                    string metadataFileName = metadataFileInfo.Name.Replace(metadataFileInfo.Extension, String.Empty);
+                   
+                    using (var newstream = entry.Open())
+                    {
+                        using (var reader = new StreamReader(newstream))
+                        {
+                            string metaDataContents = reader.ReadToEnd();
+                            string pattern = "(?<=<dc:creator>)(.*?)(?=</dc:creator>)";
+                            Match m = Regex.Match(metaDataContents, pattern, RegexOptions.IgnoreCase);
+                            creater = m.Value.ToString();
+                        }
+
+
+                    }
+
+
+                }
+            }
+
+
+             return creater;
+
+        }
+
     }
 }

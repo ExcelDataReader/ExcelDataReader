@@ -1598,5 +1598,16 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual("10x27", result.Rows[9][9]);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_308_ExcelProperties()
+        {
+            var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_num_double_date_bool_string"),true);
+            Assert.AreEqual("yerdenizden", reader.ToString());
+
+
+
+
+        }
     }
 }
