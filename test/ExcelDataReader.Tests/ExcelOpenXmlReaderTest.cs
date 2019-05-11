@@ -1604,10 +1604,6 @@ namespace ExcelDataReader.Netstandard20.Tests
         {
             var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_num_double_date_bool_string"),true);
             Assert.AreEqual("yerdenizden", reader.ToString());
-
-
-
-
         }
     }
 }

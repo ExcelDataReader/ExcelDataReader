@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.RegularExpressions;
 using ExcelDataReader.Core.BinaryFormat;
@@ -194,6 +195,7 @@ namespace ExcelDataReader
         /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>
         /// <param name="excelSpecialDetails">The flag of enabling the Excel Details. Should be set to true</param>
         /// <returns>The excel data reader.</returns>
+        [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1612:ElementParameterDocumentationMustMatchElementParameters", Justification = "Reviewed.")]
         public static string CreateOpenXmlReader(Stream fileStream, bool excelSpecialDetails, ExcelReaderConfiguration configuration = null)
         {
             if (excelSpecialDetails)
@@ -293,15 +295,15 @@ namespace ExcelDataReader
 
         private static string ExcelSpecialDetailsHelper(Stream stream)
         {
-             string creater=string.Empty;
-             var Zipworker = new Core.ZipWorker(stream);
-             var archive = Zipworker.MyZipWorker(stream);
+             string creater = string.Empty;
+             var zipworker = new Core.ZipWorker(stream);
+             var archive = zipworker.MyZipWorker(stream);
              foreach (var entry in archive.Entries)
             {
                 if (entry.ToString().Contains("docProps/core.xml"))
                 {
                     FileInfo metadataFileInfo = new FileInfo(entry.FullName);
-                    string metadataFileName = metadataFileInfo.Name.Replace(metadataFileInfo.Extension, String.Empty);
+                    string metadataFileName = metadataFileInfo.Name.Replace(metadataFileInfo.Extension, string.Empty);
                    
                     using (var newstream = entry.Open())
                     {
@@ -312,18 +314,11 @@ namespace ExcelDataReader
                             Match m = Regex.Match(metaDataContents, pattern, RegexOptions.IgnoreCase);
                             creater = m.Value.ToString();
                         }
-
-
                     }
-
-
                 }
             }
 
-
              return creater;
-
         }
-
     }
 }
