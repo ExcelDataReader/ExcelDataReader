@@ -193,7 +193,15 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case BIFFRECORDTYPE.XF_V4:
                     case BIFFRECORDTYPE.XF_V3:
                     case BIFFRECORDTYPE.XF_V2:
-                        AddExtendedFormat(GetExtendedFormatCount(), ((XlsBiffXF)rec).Format, true);
+                        var xf = (XlsBiffXF)rec;
+                        AddExtendedFormat(
+                            GetExtendedFormatCount(), 
+                            xf.Parent,
+                            (xf.UsedAttributes & XfUsedAttributes.NumberFormat) != 0,
+                            xf.Format,
+                            (xf.UsedAttributes & XfUsedAttributes.TextStyle) != 0,
+                            xf.IndentLevel,
+                            xf.HorizontalAlignment);
                         break;
                     case BIFFRECORDTYPE.SST:
                         SST = (XlsBiffSST)rec;

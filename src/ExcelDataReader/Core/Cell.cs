@@ -10,5 +10,7 @@
         public int NumberFormatIndex { get; set; }
 
         public object Value { get; set; }
+
+        public CellStyle CellStyle { get; set; }
     }
 }

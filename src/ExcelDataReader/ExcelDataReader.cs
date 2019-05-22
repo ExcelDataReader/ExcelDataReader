@@ -128,6 +128,15 @@ namespace ExcelDataReader
             return RowCells[i].NumberFormatIndex;
         }
 
+        public CellStyle GetCellStyle(int i)
+        {
+            if (RowCells == null)
+                throw new InvalidOperationException("No data exists for the row/column.");
+            if (RowCells[i] == null)
+                return new CellStyle();
+            return RowCells[i].CellStyle;
+        }
+
         public double GetColumnWidth(int i)
         {
             if (i >= FieldCount)

@@ -224,7 +224,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                     else
                     {
                         var numberFormatIndex = GetFormatIndexForCell(cell, ixfe);
-                        var cellValue = ReadSingleCell(biffStream, cell, numberFormatIndex);
+                        var cellStyle = GetCellStyle(cell, ixfe);
+                        var cellValue = ReadSingleCell(biffStream, cell, numberFormatIndex, cellStyle);
                         currentRow.Cells.Add(cellValue);
                     }
 
@@ -272,11 +273,14 @@ namespace ExcelDataReader.Core.BinaryFormat
                     for (ushort j = cell.ColumnIndex; j <= lastColumnIndex; j++)
                     {
                         var numberFormatIndex = Workbook.GetNumberFormatFromXF(rkCell.GetXF(j));
+                        CellStyle cellStyle = new CellStyle();
+                        Workbook.GetCellStyleFromXF(cellStyle, rkCell.GetXF(j));
                         var resultCell = new Cell()
                         {
                             ColumnIndex = j,
                             Value = TryConvertOADateTime(rkCell.GetValue(j), numberFormatIndex),
-                            NumberFormatIndex = numberFormatIndex
+                            NumberFormatIndex = numberFormatIndex, 
+                            CellStyle = cellStyle,
                         };
 
                         result.Add(resultCell);
@@ -293,7 +297,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Reads additional records if needed: a string record might follow a formula result
         /// </summary>
-        private Cell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, int numberFormatIndex)
+        private Cell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, int numberFormatIndex, CellStyle cellStyle)
         {
             LogManager.Log(this).Debug("ReadSingleCell {0}", cell.Id);
 
@@ -304,7 +308,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             var result = new Cell()
             {
                 ColumnIndex = cell.ColumnIndex,
-                NumberFormatIndex = numberFormatIndex
+                NumberFormatIndex = numberFormatIndex,
+                CellStyle = cellStyle,
             };
 
             switch (cell.Id)
@@ -454,6 +459,39 @@ namespace ExcelDataReader.Core.BinaryFormat
             return Workbook.GetNumberFormatFromXF(cell.XFormat);
         }
 
+        private CellStyle GetCellStyle(XlsBiffBlankCell cell, XlsBiffRecord ixfe)
+        {
+            CellStyle cellStyle = new CellStyle();
+            if (Workbook.BiffVersion == 2)
+            {
+                if (cell.XFormat == 63 && ixfe != null)
+                {
+                    var xFormat = ixfe.ReadUInt16(0);
+                    cellStyle.FormatIndex = Workbook.GetNumberFormatFromXF(xFormat);
+                }
+                else if (cell.XFormat > 63)
+                {
+                    // Invalid XF ref on cell in BIFF2 stream, default to built-in "General"
+                    return cellStyle;
+                }
+                else if (cell.XFormat < Workbook.GetExtendedFormatCount())
+                {
+                    cellStyle.FormatIndex = Workbook.GetNumberFormatFromXF(cell.XFormat);
+                }
+                else
+                {
+                    // Either the file has no XFs, or XF was out of range. Use the cell attributes' format reference.
+                    cellStyle.FormatIndex = Workbook.GetNumberFormatFromFileIndex(cell.Format);
+                }
+            }
+            else
+            {
+                Workbook.GetCellStyleFromXF(cellStyle, cell.XFormat);
+            }
+
+            return cellStyle;
+        }
+
         private void ReadWorksheetGlobals()
         {
             using (var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, null, Workbook.SecretKey, Workbook.Encryption))
@@ -499,7 +537,15 @@ namespace ExcelDataReader.Core.BinaryFormat
                     {
                         // NOTE: XF records should only occur in raw BIFF2-4 single worksheet documents without the workbook stream, or globally in the workbook stream.
                         // It is undefined behavior if multiple worksheets in a workbook declare XF records.
-                        Workbook.AddExtendedFormat(-1, ((XlsBiffXF)rec).Format, true);
+                        var xf = (XlsBiffXF)rec;
+                        Workbook.AddExtendedFormat(
+                            -1,
+                            xf.Parent,
+                            (xf.UsedAttributes & XfUsedAttributes.NumberFormat) != 0,
+                            xf.Format,
+                            (xf.UsedAttributes & XfUsedAttributes.TextStyle) != 0,
+                            xf.IndentLevel,
+                            xf.HorizontalAlignment);
                     }
 
                     if (rec.Id == BIFFRECORDTYPE.MERGECELLS)
