@@ -223,9 +223,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                     }
                     else
                     {
-                        var numberFormatIndex = GetFormatIndexForCell(cell, ixfe);
                         var cellStyle = GetCellStyle(cell, ixfe);
-                        var cellValue = ReadSingleCell(biffStream, cell, numberFormatIndex, cellStyle);
+                        var cellValue = ReadSingleCell(biffStream, cell, cellStyle);
                         currentRow.Cells.Add(cellValue);
                     }
 
@@ -297,7 +296,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Reads additional records if needed: a string record might follow a formula result
         /// </summary>
-        private Cell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, int numberFormatIndex, CellStyle cellStyle)
+        private Cell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, CellStyle cellStyle)
         {
             LogManager.Log(this).Debug("ReadSingleCell {0}", cell.Id);
 
@@ -308,7 +307,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             var result = new Cell()
             {
                 ColumnIndex = cell.ColumnIndex,
-                NumberFormatIndex = numberFormatIndex,
+                NumberFormatIndex = cellStyle.FormatIndex,
                 CellStyle = cellStyle,
             };
 
@@ -325,12 +324,12 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.INTEGER:
                 case BIFFRECORDTYPE.INTEGER_OLD:
                     intValue = ((XlsBiffIntegerCell)cell).Value;
-                    result.Value = TryConvertOADateTime(intValue, numberFormatIndex);
+                    result.Value = TryConvertOADateTime(intValue, cellStyle.FormatIndex);
                     break;
                 case BIFFRECORDTYPE.NUMBER:
                 case BIFFRECORDTYPE.NUMBER_OLD:
                     doubleValue = ((XlsBiffNumberCell)cell).Value;
-                    result.Value = TryConvertOADateTime(doubleValue, numberFormatIndex);
+                    result.Value = TryConvertOADateTime(doubleValue, cellStyle.FormatIndex);
                     break;
                 case BIFFRECORDTYPE.LABEL:
                 case BIFFRECORDTYPE.LABEL_OLD:
@@ -342,7 +341,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     break;
                 case BIFFRECORDTYPE.RK:
                     doubleValue = ((XlsBiffRKCell)cell).Value;
-                    result.Value = TryConvertOADateTime(doubleValue, numberFormatIndex);
+                    result.Value = TryConvertOADateTime(doubleValue, cellStyle.FormatIndex);
                     break;
                 case BIFFRECORDTYPE.BLANK:
                 case BIFFRECORDTYPE.BLANK_OLD:
@@ -352,7 +351,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.FORMULA:
                 case BIFFRECORDTYPE.FORMULA_V3:
                 case BIFFRECORDTYPE.FORMULA_V4:
-                    objectValue = TryGetFormulaValue(biffStream, (XlsBiffFormulaCell)cell, numberFormatIndex);
+                    objectValue = TryGetFormulaValue(biffStream, (XlsBiffFormulaCell)cell, cellStyle.FormatIndex);
                     result.Value = objectValue;
                     break;
             }
@@ -427,38 +426,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             return value;
         }
-
-        /// <summary>
-        /// Returns an index into Workbook.Formats for the given cell and preceding ixfe record.
-        /// </summary>
-        private int GetFormatIndexForCell(XlsBiffBlankCell cell, XlsBiffRecord ixfe)
-        {
-            if (Workbook.BiffVersion == 2)
-            {
-                if (cell.XFormat == 63 && ixfe != null)
-                {
-                    var xFormat = ixfe.ReadUInt16(0);
-                    return Workbook.GetNumberFormatFromXF(xFormat);
-                }
-                else if (cell.XFormat > 63)
-                {
-                    // Invalid XF ref on cell in BIFF2 stream, default to built-in "General"
-                    return 0;
-                }
-                else if (cell.XFormat < Workbook.GetExtendedFormatCount())
-                {
-                    return Workbook.GetNumberFormatFromXF(cell.XFormat);
-                }
-                else
-                {
-                    // Either the file has no XFs, or XF was out of range. Use the cell attributes' format reference.
-                    return Workbook.GetNumberFormatFromFileIndex(cell.Format);
-                }
-            }
-
-            return Workbook.GetNumberFormatFromXF(cell.XFormat);
-        }
-
+        
         private CellStyle GetCellStyle(XlsBiffBlankCell cell, XlsBiffRecord ixfe)
         {
             CellStyle cellStyle = new CellStyle();

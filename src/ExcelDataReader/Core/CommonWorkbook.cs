@@ -94,14 +94,17 @@ namespace ExcelDataReader.Core
                 return;
             }
 
-            if (extendedFormat.TextStyleSet)
+            // Not sure if we use all text style values if any of them is non-zero if XF_USED_ATTRIB is not set 
+            // as it should be. But this seems to work with the sample .xls files I've found. 
+            if (extendedFormat.TextStyleSet || extendedFormat.IndentLevel != 0 || extendedFormat.HorizontalAlignment != HorizontalAlignment.General)
             {
                 cellStyle.TextStyleSet = true;
                 cellStyle.IndentLevel = extendedFormat.IndentLevel;
                 cellStyle.HorizontalAlignment = extendedFormat.HorizontalAlignment;
             }
 
-            if (extendedFormat.NumberFormatSet)
+            // The file for the GitIssue_158 test doesn't have the number format bit set in XF_USED_ATTRIB. 
+            if (extendedFormat.NumberFormatSet || extendedFormat.FormatIndex > 0)
             {
                 cellStyle.FormatSet = true;
                 cellStyle.FormatIndex = GetNumberFormatFromFileIndex(extendedFormat.FormatIndex);

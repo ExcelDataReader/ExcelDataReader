@@ -2029,6 +2029,18 @@ namespace ExcelDataReader.Netstandard20.Tests
             }
         }
 
+        [TestMethod(Description = "XF_USED_ATTRIB is not set correctly")]
+        public void GitIssue_341_HorizontalAlignment2()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Git_Issue_51")))
+            {
+                Assert.IsTrue(reader.Read());
+                Assert.IsTrue(reader.Read());
+                Assert.IsTrue(reader.Read());
+                Assert.AreEqual(HorizontalAlignment.Right, reader.GetCellStyle(1).HorizontalAlignment);
+            }
+        }
+
         [TestMethod(Description = "Indent is from a style")]
         public void GitIssue_341_FromStyle()
         {
