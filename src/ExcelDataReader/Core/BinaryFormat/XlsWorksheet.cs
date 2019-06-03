@@ -271,10 +271,10 @@ namespace ExcelDataReader.Core.BinaryFormat
                     ushort lastColumnIndex = rkCell.LastColumnIndex;
                     for (ushort j = cell.ColumnIndex; j <= lastColumnIndex; j++)
                     {
-                        var numberFormatIndex = Workbook.GetNumberFormatFromXF(rkCell.GetXF(j));
                         CellStyle cellStyle = new CellStyle();
                         Workbook.GetCellStyleFromXF(cellStyle, rkCell.GetXF(j));
-                        var resultCell = new Cell()
+                        var numberFormatIndex = Workbook.GetNumberFormatFromFileIndex(cellStyle.FormatIndex);
+                        var resultCell = new Cell
                         {
                             ColumnIndex = j,
                             Value = TryConvertOADateTime(rkCell.GetValue(j), numberFormatIndex),
@@ -442,7 +442,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     // Invalid XF ref on cell in BIFF2 stream, default to built-in "General"
                     return cellStyle;
                 }
-                else if (cell.XFormat < Workbook.GetExtendedFormatCount())
+                else if (cell.XFormat < Workbook.GetExtendedFormatCount)
                 {
                     cellStyle.FormatIndex = Workbook.GetNumberFormatFromXF(cell.XFormat);
                 }
@@ -501,13 +501,25 @@ namespace ExcelDataReader.Core.BinaryFormat
                         IsDate1904 = ((XlsBiffSimpleValueRecord)rec).Value == 1;
                     }
 
-                    if (rec.Id == BIFFRECORDTYPE.XF_V2 || rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4)
+                    if (rec.Id == BIFFRECORDTYPE.XF_V2)
                     {
                         // NOTE: XF records should only occur in raw BIFF2-4 single worksheet documents without the workbook stream, or globally in the workbook stream.
                         // It is undefined behavior if multiple worksheets in a workbook declare XF records.
                         var xf = (XlsBiffXF)rec;
                         Workbook.AddExtendedFormat(
-                            -1,
+                            0, // Not applicable for biff2
+                            true,
+                            xf.Format,
+                            true,
+                            0, // Not applicable for biff2
+                            xf.HorizontalAlignment);
+                    }
+                    else if (rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4)
+                    {
+                        // NOTE: XF records should only occur in raw BIFF2-4 single worksheet documents without the workbook stream, or globally in the workbook stream.
+                        // It is undefined behavior if multiple worksheets in a workbook declare XF records.
+                        var xf = (XlsBiffXF)rec;
+                        Workbook.AddExtendedFormat(
                             xf.Parent,
                             (xf.UsedAttributes & XfUsedAttributes.NumberFormat) != 0,
                             xf.Format,

@@ -82,6 +82,10 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public int ResultsCount => Sheets?.Count ?? -1;
 
+        public int GetExtendedFormatCount => ExtendedFormats.Count;
+
+        private List<ExtendedFormat> ExtendedFormats { get; } = new List<ExtendedFormat>();
+
         public static bool IsRawBiffStream(byte[] bytes)
         {
             if (bytes.Length < 8)
@@ -138,6 +142,84 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
+        /// <summary>
+        /// Returns the global number format index from an XF index.
+        /// </summary>
+        public int GetNumberFormatFromXF(int xfIndex)
+        {
+            if (xfIndex < 0 || xfIndex >= ExtendedFormats.Count)
+            {
+                // Invalid XF index, return built-in "General" format
+                return 0;
+            }
+
+            var extendedFormat = ExtendedFormats[xfIndex];
+            if (!extendedFormat.ApplyNumberFormat)
+            {
+                return 0;
+            }
+
+            return GetNumberFormatFromFileIndex(ExtendedFormats[xfIndex].FormatIndex);
+        }
+
+        public void GetCellStyleFromXF(CellStyle cellStyle, int xfIndex)
+        {
+            if (xfIndex < 0 || xfIndex >= ExtendedFormats.Count)
+            {
+                // Invalid XF index, return default.
+                return;
+            }
+
+            var extendedFormat = ExtendedFormats[xfIndex];
+            if (extendedFormat.XfId == 0xfff)
+            {
+                if (!cellStyle.TextStyleSet && !extendedFormat.ApplyAlignment)
+                {
+                    cellStyle.IndentLevel = extendedFormat.IndentLevel;
+                    cellStyle.HorizontalAlignment = extendedFormat.HorizontalAlignment;
+                }
+
+                if (!cellStyle.FormatSet && !extendedFormat.ApplyNumberFormat)
+                    cellStyle.FormatIndex = GetNumberFormatFromFileIndex(extendedFormat.FormatIndex);
+
+                return;
+            }
+
+            // Not sure if we use all text style values if any of them is non-zero if XF_USED_ATTRIB is not set 
+            // as it should be. But this seems to work with the sample .xls files I've found. 
+            if (extendedFormat.ApplyAlignment || extendedFormat.IndentLevel != 0 || extendedFormat.HorizontalAlignment != HorizontalAlignment.General)
+            {
+                cellStyle.TextStyleSet = true;
+                cellStyle.IndentLevel = extendedFormat.IndentLevel;
+                cellStyle.HorizontalAlignment = extendedFormat.HorizontalAlignment;
+            }
+
+            // The file for the GitIssue_158 test doesn't have the number format bit set in XF_USED_ATTRIB. 
+            if (extendedFormat.ApplyNumberFormat || extendedFormat.FormatIndex > 0)
+            {
+                cellStyle.FormatSet = true;
+                cellStyle.FormatIndex = GetNumberFormatFromFileIndex(extendedFormat.FormatIndex);
+            }
+
+            GetCellStyleFromXF(cellStyle, extendedFormat.XfId);
+        }
+
+        /// <summary>
+        /// Registers an extended format.
+        /// </summary>
+        public void AddExtendedFormat(int xfId, bool applyFormat, int formatIndexInFile, bool applyAlignment, int indentLevel, HorizontalAlignment horizontalAlignment)
+        {
+            ExtendedFormats.Add(new ExtendedFormat
+            {
+                XfId = xfId,
+                ApplyNumberFormat = applyFormat,
+                FormatIndex = formatIndexInFile,
+                ApplyAlignment = applyAlignment,
+                IndentLevel = indentLevel,
+                HorizontalAlignment = horizontalAlignment,
+            });
+        }
+
         private void ReadWorkbookGlobals(XlsBiffStream biffStream)
         {
             XlsBiffRecord rec;
@@ -192,16 +274,24 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case BIFFRECORDTYPE.XF:
                     case BIFFRECORDTYPE.XF_V4:
                     case BIFFRECORDTYPE.XF_V3:
-                    case BIFFRECORDTYPE.XF_V2:
                         var xf = (XlsBiffXF)rec;
                         AddExtendedFormat(
-                            GetExtendedFormatCount(), 
                             xf.Parent,
                             (xf.UsedAttributes & XfUsedAttributes.NumberFormat) != 0,
                             xf.Format,
                             (xf.UsedAttributes & XfUsedAttributes.TextStyle) != 0,
                             xf.IndentLevel,
                             xf.HorizontalAlignment);
+                        break;
+                    case BIFFRECORDTYPE.XF_V2:
+                        var xf2 = (XlsBiffXF)rec;
+                        AddExtendedFormat(
+                            0, // Not applicable for biff2
+                            true,
+                            xf2.Format,
+                            true,
+                            0, // Not applicable for biff2
+                            xf2.HorizontalAlignment);
                         break;
                     case BIFFRECORDTYPE.SST:
                         SST = (XlsBiffSST)rec;
@@ -231,5 +321,20 @@ namespace ExcelDataReader.Core.BinaryFormat
                 AddNumberFormat(biffFormat.Key, biffFormat.Value.GetValue(Encoding));
             }
         }
+
+        private sealed class ExtendedFormat
+        {
+            public int XfId { get; set; }
+
+            public bool ApplyNumberFormat { get; set; }
+
+            public int FormatIndex { get; set; }
+
+            public bool ApplyAlignment { get; set; }
+
+            public int IndentLevel { get; set; }
+
+            public HorizontalAlignment HorizontalAlignment { get; set; }
+        }   
     }
 }

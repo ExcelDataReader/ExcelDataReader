@@ -33,30 +33,6 @@ namespace ExcelDataReader.Core
         /// </summary>
         private Dictionary<int, int> FormatMappings { get; } = new Dictionary<int, int>();
 
-        private List<ExtendedFormat> ExtendedFormats { get; } = new List<ExtendedFormat>();
-
-        public int GetExtendedFormatCount() => ExtendedFormats.Count;
-
-        /// <summary>
-        /// Returns the global number format index from an XF index.
-        /// </summary>
-        public int GetNumberFormatFromXF(int xfIndex)
-        {
-            if (xfIndex < 0 || xfIndex >= ExtendedFormats.Count)
-            {
-                // Invalid XF index, return built-in "General" format
-                return 0;
-            }
-
-            var extendedFormat = ExtendedFormats[xfIndex];
-            if (!extendedFormat.ApplyNumberFormat)
-            {
-                return 0;
-            }
-
-            return GetNumberFormatFromFileIndex(ExtendedFormats[xfIndex].FormatIndex);
-        }
-
         /// <summary>
         /// Returns the global number format index from a file-based format index.
         /// </summary>
@@ -71,48 +47,6 @@ namespace ExcelDataReader.Core
             return formatIndexInFile;
         }
 
-        public void GetCellStyleFromXF(CellStyle cellStyle, int xfIndex)
-        {
-            if (xfIndex < 0 || xfIndex >= ExtendedFormats.Count)
-            {
-                // Invalid XF index, return default.
-                return;
-            }
-
-            var extendedFormat = ExtendedFormats[xfIndex];
-            if (extendedFormat.ParentXfId == 0xfff)
-            {
-                if (!cellStyle.TextStyleSet && !extendedFormat.TextStyleSet)
-                {
-                    cellStyle.IndentLevel = extendedFormat.IndentLevel;
-                    cellStyle.HorizontalAlignment = extendedFormat.HorizontalAlignment;
-                }
-
-                if (!cellStyle.FormatSet && !extendedFormat.NumberFormatSet)
-                    cellStyle.FormatIndex = GetNumberFormatFromFileIndex(extendedFormat.FormatIndex);
-
-                return;
-            }
-
-            // Not sure if we use all text style values if any of them is non-zero if XF_USED_ATTRIB is not set 
-            // as it should be. But this seems to work with the sample .xls files I've found. 
-            if (extendedFormat.TextStyleSet || extendedFormat.IndentLevel != 0 || extendedFormat.HorizontalAlignment != HorizontalAlignment.General)
-            {
-                cellStyle.TextStyleSet = true;
-                cellStyle.IndentLevel = extendedFormat.IndentLevel;
-                cellStyle.HorizontalAlignment = extendedFormat.HorizontalAlignment;
-            }
-
-            // The file for the GitIssue_158 test doesn't have the number format bit set in XF_USED_ATTRIB. 
-            if (extendedFormat.NumberFormatSet || extendedFormat.FormatIndex > 0)
-            {
-                cellStyle.FormatSet = true;
-                cellStyle.FormatIndex = GetNumberFormatFromFileIndex(extendedFormat.FormatIndex);
-            }
-
-            GetCellStyleFromXF(cellStyle, extendedFormat.ParentXfId);
-        }
-        
         /// <summary>
         /// Registers a number format string and its file-based format index in the workbook's Formats dictionary.
         /// If the format string matches a built-in or previously registered format, it will be mapped to that index.
@@ -138,56 +72,6 @@ namespace ExcelDataReader.Core
                 Formats.Add(maxIndex, new NumberFormatString(formatString));
                 FormatMappings[formatIndexInFile] = maxIndex;
             }
-        }
-
-        /// <summary>
-        /// Registers an extended format and its file based number format index.
-        /// </summary>
-        public void AddExtendedFormat(int xfId, int formatIndexInFile, bool applyNumberFormat)
-        {
-            ExtendedFormats.Add(new ExtendedFormat
-            {
-                XfId = xfId,
-                FormatIndex = formatIndexInFile,
-                ApplyNumberFormat = applyNumberFormat
-            });
-        }
-
-        /// <summary>
-        /// Registers an extended format.
-        /// </summary>
-        public void AddExtendedFormat(int xfId, int parentXfId, bool numberFormatSet, int formatIndexInFile, bool textStyleSet, int indentLevel, HorizontalAlignment horizontalAlignment)
-        {
-            ExtendedFormats.Add(new ExtendedFormat
-            {
-                XfId = xfId,
-                ParentXfId = parentXfId,
-                NumberFormatSet = numberFormatSet,
-                FormatIndex = formatIndexInFile,
-                TextStyleSet = textStyleSet,
-                IndentLevel = indentLevel,
-                HorizontalAlignment = horizontalAlignment,
-                ApplyNumberFormat = true,
-            });
-        }
-
-        private sealed class ExtendedFormat
-        {
-            public int XfId { get; set; }
-
-            public int ParentXfId { get; set; }
-
-            public bool NumberFormatSet { get; set; }
-            
-            public int FormatIndex { get; set; }
-
-            public bool TextStyleSet { get; set; }
-
-            public int IndentLevel { get; set; }
-
-            public HorizontalAlignment HorizontalAlignment { get; set; }
-
-            public bool ApplyNumberFormat { get; set; }
         }
     }
 }

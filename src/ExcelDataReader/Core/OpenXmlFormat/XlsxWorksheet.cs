@@ -513,13 +513,18 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             else
                 result.ColumnIndex = nextColumnIndex;
 
+            CellStyle cellStyle = new CellStyle();
+
             if (aS != null)
             {
                 if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
                 {
-                    result.NumberFormatIndex = Workbook.GetNumberFormatFromXF(styleIndex);
+                    Workbook.GetCellStyleFromXF(cellStyle, styleIndex);
+                    result.NumberFormatIndex = cellStyle.FormatIndex;
                 }
             }
+
+            result.CellStyle = cellStyle;
 
             if (!XmlReaderHelper.ReadFirstContent(xmlReader))
             {
