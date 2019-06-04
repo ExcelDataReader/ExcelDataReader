@@ -273,7 +273,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     {
                         CellStyle cellStyle = new CellStyle();
                         Workbook.GetCellStyleFromXF(cellStyle, rkCell.GetXF(j));
-                        var numberFormatIndex = Workbook.GetNumberFormatFromFileIndex(cellStyle.FormatIndex);
+                        var numberFormatIndex = cellStyle.FormatIndex;
                         var resultCell = new Cell
                         {
                             ColumnIndex = j,

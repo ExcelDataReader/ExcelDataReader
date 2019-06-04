@@ -192,6 +192,7 @@ namespace ExcelDataReader.Tests
             { "Test_git_issue_341.xls", "Test_git_issue_341.xls" },
             { "Test_git_issue_341_style.xls", "Test_git_issue_341_style.xls" },
             { "Test_git_issue_341.xlsx", "Test_git_issue_341.xlsx" },
+            { "customformat_notdate.xls", "customformat_notdate.xls" },
         };
 
         public static Stream GetTestWorkbook(string key)

@@ -2050,5 +2050,17 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual(2, reader.GetCellStyle(0).IndentLevel);
             }
         }
+
+
+        [TestMethod]
+        public void MultiCellCustomFormatNotDate()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("customformat_notdate.xls")))
+            {
+                Assert.IsTrue(reader.Read());
+                Assert.AreEqual(60.8, reader.GetValue(1));
+                Assert.AreEqual("#,##0.0;\\–#,##0.0;\"–\"", reader.GetNumberFormatString(1));
+            }
+        }
     }
 }
