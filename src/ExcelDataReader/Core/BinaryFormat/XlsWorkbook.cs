@@ -185,7 +185,9 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case BIFFRECORDTYPE.FORMAT:
                         {
                             var fmt = (XlsBiffFormatString)rec;
-                            biffFormats.Add(fmt.Index, fmt);
+                            var index = fmt.Index;
+                            if (!biffFormats.ContainsKey(index))
+                                biffFormats.Add(index, fmt);
                         }
 
                         break;
