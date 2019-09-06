@@ -67,7 +67,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public XlsBiffSimpleValueRecord Backup { get; set; }
 
-        public List<XlsBiffRecord> Fonts { get; } = new List<XlsBiffRecord>();
+        public List<XlsBiffFont> Fonts { get; } = new List<XlsBiffFont>();
 
         public List<XlsBiffBoundSheet> Sheets { get; } = new List<XlsBiffBoundSheet>();
 
@@ -138,6 +138,37 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
+        internal void AddXf(XlsBiffXF xf)
+        {
+            // Ignore used flags in Cell XFs
+            var applyFont = !xf.IsCellStyleXf || (xf.UsedAttributes & XfUsedAttributes.Font) != 0;
+            var applyNumberFormat = !xf.IsCellStyleXf || (xf.UsedAttributes & XfUsedAttributes.NumberFormat) != 0;
+            var applyAlignment = !xf.IsCellStyleXf || (xf.UsedAttributes & XfUsedAttributes.TextStyle) != 0;
+            var applyProtection = !xf.IsCellStyleXf || (xf.UsedAttributes & XfUsedAttributes.CellProtection) != 0;
+            var extendedFormat = new ExtendedFormat()
+            {
+                FontIndex = xf.Font,
+                FormatIndex = xf.Format,
+                Locked = xf.IsLocked,
+                Hidden = xf.IsHidden,
+                HorizontalAlignment = xf.HorizontalAlignment,
+                IndentLevel = xf.IndentLevel,
+                ParentCellStyleXf = xf.ParentCellStyleXf,
+                ApplyFont = applyFont,
+                ApplyNumberFormat = applyNumberFormat,
+                ApplyTextAlignment = applyAlignment,
+                ApplyProtection = applyProtection,
+            };
+
+            // The workbook holds two kinds of XF records: Cell XFs, and Cell Style XFs.
+            // In the binary XLS format, both kinds of XF records are saved in a single list,
+            // whereas the XLSX format has two separate lists - like the CommonWorkbook internals.
+            // The Cell XFs hold indexes into the Cell Style XF list, so adding the XF in both lists 
+            // here to keep the indexes the same.
+            ExtendedFormats.Add(extendedFormat);
+            CellStyleExtendedFormats.Add(extendedFormat);
+        }
+
         private void ReadWorkbookGlobals(XlsBiffStream biffStream)
         {
             XlsBiffRecord rec;
@@ -173,7 +204,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         break;
                     case BIFFRECORDTYPE.FONT:
                     case BIFFRECORDTYPE.FONT_V34:
-                        Fonts.Add(rec);
+                        Fonts.Add((XlsBiffFont)rec);
                         break;
                     case BIFFRECORDTYPE.FORMAT_V23:
                         {
@@ -193,7 +224,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case BIFFRECORDTYPE.XF_V4:
                     case BIFFRECORDTYPE.XF_V3:
                     case BIFFRECORDTYPE.XF_V2:
-                        AddExtendedFormat(GetExtendedFormatCount(), ((XlsBiffXF)rec).Format, true);
+                        AddXf((XlsBiffXF)rec);
                         break;
                     case BIFFRECORDTYPE.SST:
                         SST = (XlsBiffSST)rec;
