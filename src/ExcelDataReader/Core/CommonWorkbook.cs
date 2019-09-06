@@ -29,32 +29,70 @@ namespace ExcelDataReader.Core
         public Dictionary<int, NumberFormatString> Formats { get; } = new Dictionary<int, NumberFormatString>();
 
         /// <summary>
+        /// Gets the Cell XFs
+        /// </summary>
+        public List<ExtendedFormat> ExtendedFormats { get; } = new List<ExtendedFormat>();
+
+        /// <summary>
+        /// Gets the Cell Style XFs
+        /// </summary>
+        public List<ExtendedFormat> CellStyleExtendedFormats { get; } = new List<ExtendedFormat>();
+
+        /// <summary>
         /// Gets the the dictionary of mappings between format index in the file and key in the Formats dictionary.
         /// </summary>
         private Dictionary<int, int> FormatMappings { get; } = new Dictionary<int, int>();
 
-        private List<ExtendedFormat> ExtendedFormats { get; } = new List<ExtendedFormat>();
-
-        public int GetExtendedFormatCount() => ExtendedFormats.Count;
-
-        /// <summary>
-        /// Returns the global number format index from an XF index.
-        /// </summary>
-        public int GetNumberFormatFromXF(int xfIndex)
+        public ExtendedFormat GetEffectiveCellStyle(int xfIndex, int numberFormatFromCell)
         {
-            if (xfIndex < 0 || xfIndex >= ExtendedFormats.Count)
+            var effectiveStyle = new ExtendedFormat();
+            var cellXf = xfIndex >= 0 && xfIndex < ExtendedFormats.Count
+                ? ExtendedFormats[xfIndex]
+                : null;
+            if (cellXf != null)
             {
-                // Invalid XF index, return built-in "General" format
-                return 0;
+                effectiveStyle.FontIndex = cellXf.FontIndex;
+                effectiveStyle.FormatIndex = GetNumberFormatFromFileIndex(cellXf.FormatIndex); // fileindex->
+
+                effectiveStyle.Hidden = cellXf.Hidden;
+                effectiveStyle.Locked = cellXf.Locked;
+                effectiveStyle.IndentLevel = cellXf.IndentLevel;
+                effectiveStyle.HorizontalAlignment = cellXf.HorizontalAlignment;
+
+                var cellStyleXf = cellXf.ParentCellStyleXf >= 0 && cellXf.ParentCellStyleXf < CellStyleExtendedFormats.Count 
+                    ? CellStyleExtendedFormats[cellXf.ParentCellStyleXf] 
+                    : null;
+                if (cellStyleXf != null)
+                {
+                    if (cellStyleXf.ApplyFont)
+                    {
+                        effectiveStyle.FontIndex = cellStyleXf.FontIndex;
+                    }
+
+                    if (cellStyleXf.ApplyNumberFormat)
+                    {
+                        effectiveStyle.FormatIndex = GetNumberFormatFromFileIndex(cellStyleXf.FormatIndex);
+                    }
+
+                    if (cellStyleXf.ApplyProtection)
+                    {
+                        effectiveStyle.Hidden = cellStyleXf.Hidden;
+                        effectiveStyle.Locked = cellStyleXf.Locked;
+                    }
+
+                    if (cellStyleXf.ApplyTextAlignment)
+                    {
+                        effectiveStyle.IndentLevel = cellStyleXf.IndentLevel;
+                        effectiveStyle.HorizontalAlignment = cellStyleXf.HorizontalAlignment;
+                    }
+                }
+            }
+            else
+            {
+                effectiveStyle.FormatIndex = GetNumberFormatFromFileIndex(numberFormatFromCell);
             }
 
-            var extendedFormat = ExtendedFormats[xfIndex];
-            if (!extendedFormat.ApplyNumberFormat)
-            {
-                return 0;
-            }
-
-            return GetNumberFormatFromFileIndex(ExtendedFormats[xfIndex].FormatIndex);
+            return effectiveStyle;
         }
 
         /// <summary>
@@ -96,28 +134,6 @@ namespace ExcelDataReader.Core
                 Formats.Add(maxIndex, new NumberFormatString(formatString));
                 FormatMappings[formatIndexInFile] = maxIndex;
             }
-        }
-
-        /// <summary>
-        /// Registers an extended format and its file based number format index.
-        /// </summary>
-        public void AddExtendedFormat(int xfId, int formatIndexInFile, bool applyNumberFormat)
-        {
-            ExtendedFormats.Add(new ExtendedFormat()
-            {
-                XfId = xfId,
-                FormatIndex = formatIndexInFile,
-                ApplyNumberFormat = applyNumberFormat
-            });
-        }
-
-        private class ExtendedFormat
-        {
-            public int XfId { get; set; }
-
-            public int FormatIndex { get; set; }
-
-            public bool ApplyNumberFormat { get; set; }
         }
     }
 }

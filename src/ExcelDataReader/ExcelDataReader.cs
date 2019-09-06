@@ -116,7 +116,9 @@ namespace ExcelDataReader
                 throw new InvalidOperationException("No data exists for the row/column.");
             if (RowCells[i] == null)
                 return null;
-            return _worksheetIterator?.Current?.GetNumberFormatString(RowCells[i].NumberFormatIndex)?.FormatString;
+            if (RowCells[i].EffectiveStyle == null)
+                return null;
+            return _worksheetIterator?.Current?.GetNumberFormatString(RowCells[i].EffectiveStyle.FormatIndex)?.FormatString;
         }
 
         public int GetNumberFormatIndex(int i)
@@ -125,7 +127,9 @@ namespace ExcelDataReader
                 throw new InvalidOperationException("No data exists for the row/column.");
             if (RowCells[i] == null)
                 return -1;
-            return RowCells[i].NumberFormatIndex;
+            if (RowCells[i].EffectiveStyle == null)
+                return -1;
+            return RowCells[i].EffectiveStyle.FormatIndex;
         }
 
         public double GetColumnWidth(int i)
@@ -159,6 +163,31 @@ namespace ExcelDataReader
             const double DefaultColumnWidth = 8.43D;
 
             return retWidth ?? DefaultColumnWidth;
+        }
+
+        public CellStyle GetCellStyle(int i)
+        {
+            if (RowCells == null)
+                throw new InvalidOperationException("No data exists for the row/column.");
+
+            var result = new CellStyle();
+            if (RowCells[i] == null)
+            {
+                return result;
+            }
+
+            var effectiveStyle = RowCells[i].EffectiveStyle;
+            if (effectiveStyle == null)
+            {
+                return result;
+            }
+
+            result.FormatIndex = effectiveStyle.FormatIndex;
+            result.IndentLevel = effectiveStyle.IndentLevel;
+            result.HorizontalAlignment = effectiveStyle.HorizontalAlignment;
+            result.Hidden = effectiveStyle.Hidden;
+            result.Locked = effectiveStyle.Locked;
+            return result;
         }
 
         /// <inheritdoc />

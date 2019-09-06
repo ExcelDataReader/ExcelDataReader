@@ -513,13 +513,18 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             else
                 result.ColumnIndex = nextColumnIndex;
 
+            int styleIndex = -1;
             if (aS != null)
             {
-                if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
+                if (!int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out styleIndex))
                 {
-                    result.NumberFormatIndex = Workbook.GetNumberFormatFromXF(styleIndex);
+                    styleIndex = -1;
                 }
             }
+
+            var effectiveStyle = Workbook.GetEffectiveCellStyle(styleIndex, 0);
+            result.XfIndex = styleIndex;
+            result.EffectiveStyle = effectiveStyle;
 
             if (!XmlReaderHelper.ReadFirstContent(xmlReader))
             {
@@ -532,13 +537,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 {
                     var rawValue = xmlReader.ReadElementContentAsString();
                     if (!string.IsNullOrEmpty(rawValue))
-                        result.Value = ConvertCellValue(rawValue, aT, result.NumberFormatIndex);
+                        result.Value = ConvertCellValue(rawValue, aT, effectiveStyle.FormatIndex);
                 }
                 else if (xmlReader.IsStartElement(NIs, NsSpreadsheetMl))
                 {
                     var rawValue = XlsxWorkbook.ReadStringItem(xmlReader);
                     if (!string.IsNullOrEmpty(rawValue))
-                        result.Value = ConvertCellValue(rawValue, aT, result.NumberFormatIndex);
+                        result.Value = ConvertCellValue(rawValue, aT, effectiveStyle.FormatIndex);
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {

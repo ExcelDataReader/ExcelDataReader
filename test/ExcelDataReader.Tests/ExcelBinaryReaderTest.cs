@@ -1966,5 +1966,101 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual("10x27", result.Rows[9][9]);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_341_Indent()
+        {
+            int[][] expected =
+            {
+                new[] { 2, 0, 0 },
+                new[] { 2, 0, 0 },
+                new[] { 3, 3, 4 },
+                new[] { 1, 1, 0 }, // Merged cell
+                new[] { 2, 0, 0 },
+            };
+
+            int index = 0;
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_341.xls")))
+            {
+                while (reader.Read())
+                {
+                    int[] expectedRow = expected[index];
+                    int[] actualRow = new int[reader.FieldCount];
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        actualRow[i] = reader.GetCellStyle(i).IndentLevel;
+                    }
+
+                    Assert.AreEqual(expectedRow, actualRow, "Indent level on row '{0}'.", index);
+
+                    index++;
+                }
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_341_HorizontalAlignment()
+        {
+            HorizontalAlignment[][] expected =
+            {
+                new[] { HorizontalAlignment.Left, HorizontalAlignment.General, HorizontalAlignment.General },
+                new[] { HorizontalAlignment.Distributed, HorizontalAlignment.General, HorizontalAlignment.General },
+                new[] { HorizontalAlignment.Left, HorizontalAlignment.Left, HorizontalAlignment.Left },
+                new[] { HorizontalAlignment.Left, HorizontalAlignment.Left, HorizontalAlignment.General }, // Merged cell
+                new[] { HorizontalAlignment.Left, HorizontalAlignment.General, HorizontalAlignment.General },
+            };
+
+            int index = 0;
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_341.xls")))
+            {
+                while (reader.Read())
+                {
+                    HorizontalAlignment[] expectedRow = expected[index];
+                    HorizontalAlignment[] actualRow = new HorizontalAlignment[reader.FieldCount];
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        actualRow[i] = reader.GetCellStyle(i).HorizontalAlignment;
+                    }
+
+                    Assert.AreEqual(expectedRow, actualRow, "Horizontal alignment on row '{0}'.", index);
+
+                    index++;
+                }
+            }
+        }
+
+        [TestMethod(Description = "XF_USED_ATTRIB is not set correctly")]
+        public void GitIssue_341_HorizontalAlignment2()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Git_Issue_51")))
+            {
+                Assert.IsTrue(reader.Read());
+                Assert.IsTrue(reader.Read());
+                Assert.IsTrue(reader.Read());
+                Assert.AreEqual(HorizontalAlignment.Right, reader.GetCellStyle(1).HorizontalAlignment);
+            }
+        }
+
+        [TestMethod(Description = "Indent is from a style")]
+        public void GitIssue_341_FromStyle()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_341_style.xls")))
+            {
+                Assert.IsTrue(reader.Read());
+                Assert.AreEqual(2, reader.GetCellStyle(0).IndentLevel);
+            }
+        }
+
+
+        [TestMethod]
+        public void MultiCellCustomFormatNotDate()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("customformat_notdate.xls")))
+            {
+                Assert.IsTrue(reader.Read());
+                Assert.AreEqual(60.8, reader.GetValue(1));
+                Assert.AreEqual("#,##0.0;\\–#,##0.0;\"–\"", reader.GetNumberFormatString(1));
+            }
+        }
     }
 }

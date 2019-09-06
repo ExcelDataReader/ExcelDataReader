@@ -223,8 +223,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                     }
                     else
                     {
-                        var numberFormatIndex = GetFormatIndexForCell(cell, ixfe);
-                        var cellValue = ReadSingleCell(biffStream, cell, numberFormatIndex);
+                        var xfIndex = GetXfIndexForCell(cell, ixfe);
+                        var cellValue = ReadSingleCell(biffStream, cell, xfIndex);
                         currentRow.Cells.Add(cellValue);
                     }
 
@@ -271,12 +271,14 @@ namespace ExcelDataReader.Core.BinaryFormat
                     ushort lastColumnIndex = rkCell.LastColumnIndex;
                     for (ushort j = cell.ColumnIndex; j <= lastColumnIndex; j++)
                     {
-                        var numberFormatIndex = Workbook.GetNumberFormatFromXF(rkCell.GetXF(j));
+                        var xfIndex = rkCell.GetXF(j);
+                        var effectiveStyle = Workbook.GetEffectiveCellStyle(xfIndex, cell.Format);
                         var resultCell = new Cell()
                         {
                             ColumnIndex = j,
-                            Value = TryConvertOADateTime(rkCell.GetValue(j), numberFormatIndex),
-                            NumberFormatIndex = numberFormatIndex
+                            Value = TryConvertOADateTime(rkCell.GetValue(j), effectiveStyle.FormatIndex),
+                            XfIndex = xfIndex,
+                            EffectiveStyle = effectiveStyle,
                         };
 
                         result.Add(resultCell);
@@ -293,7 +295,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Reads additional records if needed: a string record might follow a formula result
         /// </summary>
-        private Cell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, int numberFormatIndex)
+        private Cell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, int xfIndex)
         {
             LogManager.Log(this).Debug("ReadSingleCell {0}", cell.Id);
 
@@ -301,11 +303,14 @@ namespace ExcelDataReader.Core.BinaryFormat
             int intValue;
             object objectValue;
 
+            var effectiveStyle = Workbook.GetEffectiveCellStyle(xfIndex, cell.Format);
             var result = new Cell()
             {
                 ColumnIndex = cell.ColumnIndex,
-                NumberFormatIndex = numberFormatIndex
+                XfIndex = xfIndex,
+                EffectiveStyle = effectiveStyle,
             };
+            var numberFormatIndex = effectiveStyle.FormatIndex;
 
             switch (cell.Id)
             {
@@ -330,7 +335,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.LABEL:
                 case BIFFRECORDTYPE.LABEL_OLD:
                 case BIFFRECORDTYPE.RSTRING:
-                    result.Value = ((XlsBiffLabelCell)cell).GetValue(Encoding);
+                    result.Value = GetLabelString((XlsBiffLabelCell)cell, effectiveStyle);
                     break;
                 case BIFFRECORDTYPE.LABELSST:
                     result.Value = Workbook.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex, Encoding);
@@ -347,7 +352,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.FORMULA:
                 case BIFFRECORDTYPE.FORMULA_V3:
                 case BIFFRECORDTYPE.FORMULA_V4:
-                    objectValue = TryGetFormulaValue(biffStream, (XlsBiffFormulaCell)cell, numberFormatIndex);
+                    objectValue = TryGetFormulaValue(biffStream, (XlsBiffFormulaCell)cell, effectiveStyle);
                     result.Value = objectValue;
                     break;
             }
@@ -357,7 +362,27 @@ namespace ExcelDataReader.Core.BinaryFormat
             return result;
         }
 
-        private object TryGetFormulaValue(XlsBiffStream biffStream, XlsBiffFormulaCell formulaCell, int numberFormatIndex)
+        private string GetLabelString(XlsBiffLabelCell cell, ExtendedFormat effectiveStyle)
+        {
+            // 1. Use encoding from font's character set (BIFF5-8)
+            // 2. If not specified, use encoding from CODEPAGE BIFF record
+            // 3. If not specified, use configured fallback encoding
+            // Encoding is only used on BIFF2-5 byte strings. BIFF8 uses XlsUnicodeString which ignores the encoding.
+            var labelEncoding = GetFont(effectiveStyle.FontIndex)?.ByteStringEncoding ?? Encoding;
+            return cell.GetValue(labelEncoding);
+        }
+
+        private XlsBiffFont GetFont(int fontIndex)
+        {
+            if (fontIndex < 0 || fontIndex >= Workbook.Fonts.Count)
+            {
+                return null;
+            }
+
+            return Workbook.Fonts[fontIndex];
+        }
+
+        private object TryGetFormulaValue(XlsBiffStream biffStream, XlsBiffFormulaCell formulaCell, ExtendedFormat effectiveStyle)
         {
             switch (formulaCell.FormulaType)
             {
@@ -368,16 +393,16 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case XlsBiffFormulaCell.FormulaValueType.EmptyString:
                     return string.Empty;
                 case XlsBiffFormulaCell.FormulaValueType.Number:
-                    return TryConvertOADateTime(formulaCell.XNumValue, numberFormatIndex);
+                    return TryConvertOADateTime(formulaCell.XNumValue, effectiveStyle.FormatIndex);
                 case XlsBiffFormulaCell.FormulaValueType.String:
-                    return TryGetFormulaString(biffStream);
+                    return TryGetFormulaString(biffStream, effectiveStyle);
             }
 
             // Bad data or new formula value type
             return null;
         }
 
-        private string TryGetFormulaString(XlsBiffStream biffStream)
+        private string TryGetFormulaString(XlsBiffStream biffStream, ExtendedFormat effectiveStyle)
         {
             var rec = biffStream.Read();
             if (rec != null && rec.Id == BIFFRECORDTYPE.SHAREDFMLA)
@@ -388,7 +413,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             if (rec != null && rec.Id == BIFFRECORDTYPE.STRING)
             {
                 var stringRecord = (XlsBiffFormulaString)rec;
-                return stringRecord.GetValue(Encoding);
+                var formulaEncoding = GetFont(effectiveStyle.FontIndex)?.ByteStringEncoding ?? Encoding; // Workbook.GetFontEncodingFromXF(xFormat) ?? Encoding;
+                return stringRecord.GetValue(formulaEncoding);
             }
 
             // Bad data - could not find a string following the formula
@@ -424,34 +450,34 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Returns an index into Workbook.Formats for the given cell and preceding ixfe record.
+        /// Returns an index into Workbook.ExtendedFormats for the given cell and preceding ixfe record.
         /// </summary>
-        private int GetFormatIndexForCell(XlsBiffBlankCell cell, XlsBiffRecord ixfe)
+        private int GetXfIndexForCell(XlsBiffBlankCell cell, XlsBiffRecord ixfe)
         {
             if (Workbook.BiffVersion == 2)
             {
                 if (cell.XFormat == 63 && ixfe != null)
                 {
                     var xFormat = ixfe.ReadUInt16(0);
-                    return Workbook.GetNumberFormatFromXF(xFormat);
+                    return xFormat;
                 }
                 else if (cell.XFormat > 63)
                 {
-                    // Invalid XF ref on cell in BIFF2 stream, default to built-in "General"
-                    return 0;
+                    // Invalid XF ref on cell in BIFF2 stream
+                    return -1;
                 }
-                else if (cell.XFormat < Workbook.GetExtendedFormatCount())
+                else if (cell.XFormat < Workbook.ExtendedFormats.Count)
                 {
-                    return Workbook.GetNumberFormatFromXF(cell.XFormat);
+                    return cell.XFormat;
                 }
                 else
                 {
-                    // Either the file has no XFs, or XF was out of range. Use the cell attributes' format reference.
-                    return Workbook.GetNumberFormatFromFileIndex(cell.Format);
+                    // Either the file has no XFs, or XF was out of range
+                    return -1;
                 }
             }
 
-            return Workbook.GetNumberFormatFromXF(cell.XFormat);
+            return cell.XFormat;
         }
 
         private void ReadWorksheetGlobals()
@@ -499,7 +525,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     {
                         // NOTE: XF records should only occur in raw BIFF2-4 single worksheet documents without the workbook stream, or globally in the workbook stream.
                         // It is undefined behavior if multiple worksheets in a workbook declare XF records.
-                        Workbook.AddExtendedFormat(-1, ((XlsBiffXF)rec).Format, true);
+                        Workbook.AddXf((XlsBiffXF)rec);
                     }
 
                     if (rec.Id == BIFFRECORDTYPE.MERGECELLS)

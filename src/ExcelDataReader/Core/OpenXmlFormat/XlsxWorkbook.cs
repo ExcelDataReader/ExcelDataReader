@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Xml;
 
@@ -16,6 +17,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string ElementStringItem = "si";
         private const string ElementStyleSheet = "styleSheet";
         private const string ElementCellCrossReference = "cellXfs";
+        private const string ElementCellStyleCrossReference = "cellStyleXfs";
         private const string ElementNumberFormats = "numFmts";
         private const string ElementWorkbook = "workbook";
         private const string ElementWorkbookProperties = "workbookPr";
@@ -34,9 +36,19 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string ANumFmtId = "numFmtId";
         private const string AXFId = "xfId";
         private const string AApplyNumberFormat = "applyNumberFormat";
+        private const string AApplyAlignment = "applyAlignment";
+        private const string AApplyProtection = "applyProtection";
 
         private const string NNumFmt = "numFmt";
         private const string AFormatCode = "formatCode";
+
+        private const string NAlignment = "alignment";
+        private const string AIndent = "indent";
+        private const string AHorizontal = "horizontal";
+
+        private const string NProtection = "protection";
+        private const string AHidden = "hidden";
+        private const string ALocked = "locked";
 
         private ZipWorker _zipWorker;
 
@@ -310,7 +322,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             {
                 if (reader.IsStartElement(ElementCellCrossReference, NsSpreadsheetMl))
                 {
-                    ReadCellXfs(reader);
+                    ReadCellXfs(reader, false);
+                }
+                else if (reader.IsStartElement(ElementCellStyleCrossReference, NsSpreadsheetMl))
+                {
+                    ReadCellXfs(reader, true);
                 }
                 else if (reader.IsStartElement(ElementNumberFormats, NsSpreadsheetMl))
                 {
@@ -323,7 +339,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
-        private void ReadCellXfs(XmlReader reader)
+        private void ReadCellXfs(XmlReader reader, bool isCellStyleXF)
         {
             if (!XmlReaderHelper.ReadFirstContent(reader))
             {
@@ -336,8 +352,78 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 {
                     int.TryParse(reader.GetAttribute(AXFId), out var xfId);
                     int.TryParse(reader.GetAttribute(ANumFmtId), out var numFmtId);
-                    var applyNumberFormat = reader.GetAttribute(AApplyNumberFormat) != "0";
-                    AddExtendedFormat(xfId, numFmtId, applyNumberFormat);
+                    var applyNumberFormat = reader.GetAttribute(AApplyNumberFormat) == "1";
+                    var applyAlignment = reader.GetAttribute(AApplyAlignment) == "1";
+                    var applyProtection = reader.GetAttribute(AApplyProtection) == "1";
+                    ReadAlignment(reader, out int indentLevel, out HorizontalAlignment horizontalAlignment, out var hidden, out var locked);
+
+                    var extendedFormat = new ExtendedFormat()
+                    {
+                        FontIndex = -1,
+                        ParentCellStyleXf = xfId,
+                        FormatIndex = numFmtId,
+                        HorizontalAlignment = horizontalAlignment,
+                        IndentLevel = indentLevel,
+                        Hidden = hidden,
+                        Locked = locked,
+                        ApplyFont = applyNumberFormat,
+                        ApplyNumberFormat = applyNumberFormat,
+                        ApplyProtection = applyProtection,
+                        ApplyTextAlignment = applyAlignment,
+                    };
+
+                    if (!isCellStyleXF)
+                    {
+                        ExtendedFormats.Add(extendedFormat);
+                    }
+                    else
+                    {
+                        CellStyleExtendedFormats.Add(extendedFormat);
+                    }
+
+                    // reader.Skip();
+                }
+                else if (!XmlReaderHelper.SkipContent(reader))
+                {
+                    break;
+                }
+            }
+        }
+
+        private void ReadAlignment(XmlReader reader, out int indentLevel, out HorizontalAlignment horizontalAlignment, out bool hidden, out bool locked)
+        {
+            indentLevel = 0;
+            horizontalAlignment = HorizontalAlignment.General;
+            hidden = false;
+            locked = false;
+
+            if (!XmlReaderHelper.ReadFirstContent(reader))
+            {
+                return;
+            }
+
+            while (!reader.EOF)
+            {
+                if (reader.IsStartElement(NAlignment, NsSpreadsheetMl))
+                {
+                    int.TryParse(reader.GetAttribute(AIndent), out indentLevel);
+                    try
+                    {
+                        horizontalAlignment = (HorizontalAlignment)Enum.Parse(typeof(HorizontalAlignment), reader.GetAttribute(AHorizontal), true);
+                    }
+                    catch (ArgumentException)
+                    {
+                    }
+                    catch (OverflowException)
+                    {
+                    }
+
+                    reader.Skip();
+                }
+                else if (reader.IsStartElement(NProtection, NsSpreadsheetMl))
+                {
+                    locked = reader.GetAttribute(ALocked) == "1";
+                    hidden = reader.GetAttribute(AHidden) == "1";
                     reader.Skip();
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))

@@ -1598,5 +1598,67 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual("10x27", result.Rows[9][9]);
             }
         }
+
+        [TestMethod]
+        public void GitIssue_341_Indent()
+        {
+            int[][] expected =
+            {
+                new[] { 2, 0, 0 },
+                new[] { 2, 0, 0 },
+                new[] { 3, 3, 4 },
+                new[] { 1, 1, 1 }, // Merged cell
+                new[] { 2, 0, 0 },
+            };
+
+            int index = 0;
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_341.xlsx")))
+            {
+                while (reader.Read())
+                {
+                    int[] expectedRow = expected[index];
+                    int[] actualRow = new int[reader.FieldCount];
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        actualRow[i] = reader.GetCellStyle(i).IndentLevel;
+                    }
+
+                    Assert.AreEqual(expectedRow, actualRow, "Indent level on row '{0}'.", index);
+
+                    index++;
+                }
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue_341_HorizontalAlignment()
+        {
+            HorizontalAlignment[][] expected =
+            {
+                new[] { HorizontalAlignment.Left, HorizontalAlignment.General, HorizontalAlignment.General },
+                new[] { HorizontalAlignment.Distributed, HorizontalAlignment.General, HorizontalAlignment.General },
+                new[] { HorizontalAlignment.Left, HorizontalAlignment.Left, HorizontalAlignment.Left },
+                new[] { HorizontalAlignment.Left, HorizontalAlignment.Left, HorizontalAlignment.Left }, // Merged cell
+                new[] { HorizontalAlignment.Left, HorizontalAlignment.General, HorizontalAlignment.General },
+            };
+
+            int index = 0;
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_341.xlsx")))
+            {
+                while (reader.Read())
+                {
+                    HorizontalAlignment[] expectedRow = expected[index];
+                    HorizontalAlignment[] actualRow = new HorizontalAlignment[reader.FieldCount];
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        actualRow[i] = reader.GetCellStyle(i).HorizontalAlignment;
+                    }
+
+                    Assert.AreEqual(expectedRow, actualRow, "Horizontal alignment on row '{0}'.", index);
+
+                    index++;
+                }
+            }
+        }
     }
 }
