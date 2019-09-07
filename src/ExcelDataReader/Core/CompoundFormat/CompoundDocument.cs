@@ -45,12 +45,15 @@ namespace ExcelDataReader.Core.CompoundFormat
             return BitConverter.ToUInt64(probe, 0) == 0xE11AB1A1E011CFD0;
         }
 
-        internal CompoundDirectoryEntry FindEntry(string entryName)
+        internal CompoundDirectoryEntry FindEntry(params string[] entryNames)
         {
             foreach (var e in Entries)
             {
-                if (string.Equals(e.EntryName, entryName, StringComparison.CurrentCultureIgnoreCase))
-                    return e;
+                foreach (var entryName in entryNames)
+                {
+                    if (string.Equals(e.EntryName, entryName, StringComparison.CurrentCultureIgnoreCase))
+                        return e;
+                }
             }
 
             return null;

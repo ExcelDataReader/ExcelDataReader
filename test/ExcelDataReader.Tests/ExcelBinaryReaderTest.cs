@@ -2051,7 +2051,6 @@ namespace ExcelDataReader.Netstandard20.Tests
             }
         }
 
-
         [TestMethod]
         public void MultiCellCustomFormatNotDate()
         {
@@ -2060,6 +2059,21 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.IsTrue(reader.Read());
                 Assert.AreEqual(60.8, reader.GetValue(1));
                 Assert.AreEqual("#,##0.0;\\–#,##0.0;\"–\"", reader.GetNumberFormatString(1));
+            }
+        }
+
+        [TestMethod]
+        public void Test_git_issue_411()
+        {
+            // This file has two problems: 
+            // - has both Book and Workbook compound streams
+            // - has no codepage record, encoding specified in font records
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_411.xls")))
+            {
+                Assert.AreEqual(1, reader.ResultsCount);
+                Assert.IsTrue(reader.Read());
+                Assert.IsTrue(reader.Read());
+                Assert.AreEqual("Универсальный передаточный\nдокумент", reader.GetValue(1));
             }
         }
     }
