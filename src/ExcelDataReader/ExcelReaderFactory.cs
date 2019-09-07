@@ -187,7 +187,7 @@ namespace ExcelDataReader
 
         private static bool TryGetWorkbook(Stream fileStream, CompoundDocument document, out Stream stream)
         {
-            var workbookEntry = document.FindEntry(DirectoryEntryWorkbook) ?? document.FindEntry(DirectoryEntryBook);
+            var workbookEntry = document.FindEntry(DirectoryEntryWorkbook, DirectoryEntryBook);
             if (workbookEntry != null)
             {
                 if (workbookEntry.EntryType != STGTY.STGTY_STREAM)
