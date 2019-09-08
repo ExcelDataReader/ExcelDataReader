@@ -182,6 +182,7 @@ namespace ExcelDataReader
                 return result;
             }
 
+            result.FontIndex = effectiveStyle.FontIndex;
             result.NumberFormatIndex = effectiveStyle.NumberFormatIndex;
             result.IndentLevel = effectiveStyle.IndentLevel;
             result.HorizontalAlignment = effectiveStyle.HorizontalAlignment;
