@@ -118,7 +118,7 @@ namespace ExcelDataReader
                 return null;
             if (RowCells[i].EffectiveStyle == null)
                 return null;
-            return _worksheetIterator?.Current?.GetNumberFormatString(RowCells[i].EffectiveStyle.FormatIndex)?.FormatString;
+            return Workbook.GetNumberFormatString(RowCells[i].EffectiveStyle.FormatIndex)?.FormatString;
         }
 
         public int GetNumberFormatIndex(int i)

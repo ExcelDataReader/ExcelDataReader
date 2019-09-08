@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core.CsvFormat
 {
@@ -76,11 +75,6 @@ namespace ExcelDataReader.Core.CsvFormat
         private bool AnalyzedPartial { get; }
 
         private int AnalyzedRowCount { get; }
-
-        public NumberFormatString GetNumberFormatString(int index)
-        {
-            return null;
-        }
 
         public IEnumerable<Row> ReadRows()
         {

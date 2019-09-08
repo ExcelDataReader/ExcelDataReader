@@ -119,16 +119,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
-        public NumberFormatString GetNumberFormatString(int numberFormatIndex)
-        {
-            if (Workbook.Formats.TryGetValue(numberFormatIndex, out var result))
-            {
-                return result;
-            }
-
-            return null;
-        }
-
         private void ReadWorksheetGlobals()
         {
             if (string.IsNullOrEmpty(Path))
@@ -586,7 +576,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 default:
                     if (double.TryParse(rawValue, style, invariantCulture, out double number))
                     {
-                        var format = GetNumberFormatString(numberFormatIndex);
+                        var format = Workbook.GetNumberFormatString(numberFormatIndex);
                         if (format != null)
                         {
                             if (format.IsDateTimeFormat)

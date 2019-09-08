@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core.CsvFormat
 {
@@ -28,6 +29,11 @@ namespace ExcelDataReader.Core.CsvFormat
         public IEnumerable<CsvWorksheet> ReadWorksheets()
         {
             yield return new CsvWorksheet(Stream, Encoding, AutodetectSeparators, AnalyzeInitialCsvRows);
+        }
+
+        public NumberFormatString GetNumberFormatString(int index)
+        {
+            return null;
         }
     }
 }
