@@ -361,7 +361,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     {
                         FontIndex = -1,
                         ParentCellStyleXf = xfId,
-                        FormatIndex = numFmtId,
+                        NumberFormatIndex = numFmtId,
                         HorizontalAlignment = horizontalAlignment,
                         IndentLevel = indentLevel,
                         Hidden = hidden,

@@ -148,7 +148,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             var extendedFormat = new ExtendedFormat()
             {
                 FontIndex = xf.Font,
-                FormatIndex = xf.Format,
+                NumberFormatIndex = xf.Format,
                 Locked = xf.IsLocked,
                 Hidden = xf.IsHidden,
                 HorizontalAlignment = xf.HorizontalAlignment,
