@@ -118,16 +118,6 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
-        public NumberFormatString GetNumberFormatString(int numberFormatIndex)
-        {
-            if (Workbook.Formats.TryGetValue(numberFormatIndex, out var fmtString))
-            {
-                return fmtString;
-            }
-
-            return null;
-        }
-
         /// <summary>
         /// Find how many rows to read at a time and their offset in the file.
         /// If rows are stored sequentially in the file, returns a block size of up to 32 rows.
@@ -423,7 +413,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private object TryConvertOADateTime(double value, int numberFormatIndex)
         {
-            var format = GetNumberFormatString(numberFormatIndex);
+            var format = Workbook.GetNumberFormatString(numberFormatIndex);
             if (format != null)
             {
                 if (format.IsDateTimeFormat)
@@ -437,7 +427,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private object TryConvertOADateTime(int value, int numberFormatIndex)
         {
-            var format = GetNumberFormatString(numberFormatIndex);
+            var format = Workbook.GetNumberFormatString(numberFormatIndex);
             if (format != null)
             {
                 if (format.IsDateTimeFormat)

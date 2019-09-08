@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Text;
+using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core
 {
@@ -13,5 +13,7 @@ namespace ExcelDataReader.Core
         int ResultsCount { get; }
 
         IEnumerable<TWorksheet> ReadWorksheets();
+
+        NumberFormatString GetNumberFormatString(int index);
     }
 }
