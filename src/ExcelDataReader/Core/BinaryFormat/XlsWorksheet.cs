@@ -266,7 +266,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         var resultCell = new Cell()
                         {
                             ColumnIndex = j,
-                            Value = TryConvertOADateTime(rkCell.GetValue(j), effectiveStyle.FormatIndex),
+                            Value = TryConvertOADateTime(rkCell.GetValue(j), effectiveStyle.NumberFormatIndex),
                             XfIndex = xfIndex,
                             EffectiveStyle = effectiveStyle,
                         };
@@ -300,7 +300,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 XfIndex = xfIndex,
                 EffectiveStyle = effectiveStyle,
             };
-            var numberFormatIndex = effectiveStyle.FormatIndex;
+            var numberFormatIndex = effectiveStyle.NumberFormatIndex;
 
             switch (cell.Id)
             {
@@ -383,7 +383,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case XlsBiffFormulaCell.FormulaValueType.EmptyString:
                     return string.Empty;
                 case XlsBiffFormulaCell.FormulaValueType.Number:
-                    return TryConvertOADateTime(formulaCell.XNumValue, effectiveStyle.FormatIndex);
+                    return TryConvertOADateTime(formulaCell.XNumValue, effectiveStyle.NumberFormatIndex);
                 case XlsBiffFormulaCell.FormulaValueType.String:
                     return TryGetFormulaString(biffStream, effectiveStyle);
             }

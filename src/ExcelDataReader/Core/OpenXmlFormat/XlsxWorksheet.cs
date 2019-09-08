@@ -527,13 +527,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 {
                     var rawValue = xmlReader.ReadElementContentAsString();
                     if (!string.IsNullOrEmpty(rawValue))
-                        result.Value = ConvertCellValue(rawValue, aT, effectiveStyle.FormatIndex);
+                        result.Value = ConvertCellValue(rawValue, aT, effectiveStyle.NumberFormatIndex);
                 }
                 else if (xmlReader.IsStartElement(NIs, NsSpreadsheetMl))
                 {
                     var rawValue = XlsxWorkbook.ReadStringItem(xmlReader);
                     if (!string.IsNullOrEmpty(rawValue))
-                        result.Value = ConvertCellValue(rawValue, aT, effectiveStyle.FormatIndex);
+                        result.Value = ConvertCellValue(rawValue, aT, effectiveStyle.NumberFormatIndex);
                 }
                 else if (!XmlReaderHelper.SkipContent(xmlReader))
                 {

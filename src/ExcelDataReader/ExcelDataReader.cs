@@ -118,7 +118,7 @@ namespace ExcelDataReader
                 return null;
             if (RowCells[i].EffectiveStyle == null)
                 return null;
-            return Workbook.GetNumberFormatString(RowCells[i].EffectiveStyle.FormatIndex)?.FormatString;
+            return Workbook.GetNumberFormatString(RowCells[i].EffectiveStyle.NumberFormatIndex)?.FormatString;
         }
 
         public int GetNumberFormatIndex(int i)
@@ -129,7 +129,7 @@ namespace ExcelDataReader
                 return -1;
             if (RowCells[i].EffectiveStyle == null)
                 return -1;
-            return RowCells[i].EffectiveStyle.FormatIndex;
+            return RowCells[i].EffectiveStyle.NumberFormatIndex;
         }
 
         public double GetColumnWidth(int i)
@@ -182,7 +182,7 @@ namespace ExcelDataReader
                 return result;
             }
 
-            result.FormatIndex = effectiveStyle.FormatIndex;
+            result.NumberFormatIndex = effectiveStyle.NumberFormatIndex;
             result.IndentLevel = effectiveStyle.IndentLevel;
             result.HorizontalAlignment = effectiveStyle.HorizontalAlignment;
             result.Hidden = effectiveStyle.Hidden;

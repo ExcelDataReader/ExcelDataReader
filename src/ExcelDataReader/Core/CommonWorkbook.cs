@@ -36,7 +36,7 @@ namespace ExcelDataReader.Core
             if (cellXf != null)
             {
                 effectiveStyle.FontIndex = cellXf.FontIndex;
-                effectiveStyle.FormatIndex = cellXf.FormatIndex;
+                effectiveStyle.NumberFormatIndex = cellXf.NumberFormatIndex;
 
                 effectiveStyle.Hidden = cellXf.Hidden;
                 effectiveStyle.Locked = cellXf.Locked;
@@ -55,7 +55,7 @@ namespace ExcelDataReader.Core
 
                     if (cellStyleXf.ApplyNumberFormat)
                     {
-                        effectiveStyle.FormatIndex = cellStyleXf.FormatIndex;
+                        effectiveStyle.NumberFormatIndex = cellStyleXf.NumberFormatIndex;
                     }
 
                     if (cellStyleXf.ApplyProtection)
@@ -73,7 +73,7 @@ namespace ExcelDataReader.Core
             }
             else
             {
-                effectiveStyle.FormatIndex = numberFormatFromCell;
+                effectiveStyle.NumberFormatIndex = numberFormatFromCell;
             }
 
             return effectiveStyle;

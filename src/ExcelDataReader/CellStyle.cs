@@ -54,9 +54,9 @@ namespace ExcelDataReader
     public class CellStyle
     {
         /// <summary>
-        /// Gets the format index.
+        /// Gets the number format index.
         /// </summary>
-        public int FormatIndex { get; internal set; }
+        public int NumberFormatIndex { get; internal set; }
 
         /// <summary>
         /// Gets the indent level.

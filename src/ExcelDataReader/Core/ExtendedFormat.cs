@@ -10,7 +10,7 @@
 
         public int FontIndex { get; set; }
 
-        public int FormatIndex { get; set; }
+        public int NumberFormatIndex { get; set; }
 
         public bool Locked { get; set; }
 
