@@ -54,6 +54,11 @@ namespace ExcelDataReader
     public class CellStyle
     {
         /// <summary>
+        /// Gets the font index.
+        /// </summary>
+        public int FontIndex { get; internal set; }
+
+        /// <summary>
         /// Gets the number format index.
         /// </summary>
         public int NumberFormatIndex { get; internal set; }

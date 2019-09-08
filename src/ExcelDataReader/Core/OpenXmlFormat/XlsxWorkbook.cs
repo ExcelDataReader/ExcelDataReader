@@ -33,8 +33,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string AttributeTarget = "Target";
 
         private const string NXF = "xf";
+        private const string AFontId = "fontId";
         private const string ANumFmtId = "numFmtId";
         private const string AXFId = "xfId";
+        private const string AApplyFont = "applyFont";
         private const string AApplyNumberFormat = "applyNumberFormat";
         private const string AApplyAlignment = "applyAlignment";
         private const string AApplyProtection = "applyProtection";
@@ -352,6 +354,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 {
                     int.TryParse(reader.GetAttribute(AXFId), out var xfId);
                     int.TryParse(reader.GetAttribute(ANumFmtId), out var numFmtId);
+                    int.TryParse(reader.GetAttribute(AFontId), out var fontId);
+                    var applyFont = reader.GetAttribute(AApplyFont) == "1";
                     var applyNumberFormat = reader.GetAttribute(AApplyNumberFormat) == "1";
                     var applyAlignment = reader.GetAttribute(AApplyAlignment) == "1";
                     var applyProtection = reader.GetAttribute(AApplyProtection) == "1";
@@ -359,14 +363,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
                     var extendedFormat = new ExtendedFormat()
                     {
-                        FontIndex = -1,
+                        FontIndex = fontId,
                         ParentCellStyleXf = xfId,
                         NumberFormatIndex = numFmtId,
                         HorizontalAlignment = horizontalAlignment,
                         IndentLevel = indentLevel,
                         Hidden = hidden,
                         Locked = locked,
-                        ApplyFont = applyNumberFormat,
+                        ApplyFont = applyFont,
                         ApplyNumberFormat = applyNumberFormat,
                         ApplyProtection = applyProtection,
                         ApplyTextAlignment = applyAlignment,
