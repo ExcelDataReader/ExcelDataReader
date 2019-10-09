@@ -13,6 +13,10 @@ namespace ExcelDataReader.Tests
         public static void SetUp()
         {
             Log.Log.InitializeWith<NunitLogFactory>();
+
+#if NETCOREAPP1_0 || NETCOREAPP2_0
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
         }
     }
 }
