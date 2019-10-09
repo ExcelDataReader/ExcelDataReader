@@ -1,29 +1,19 @@
 ﻿using NUnit.Framework;
 using ExcelDataReader.Core.NumberFormat;
 
-#if EXCELDATAREADER_NET20
-namespace ExcelDataReader.Net20.Tests
-#elif NET45
-namespace ExcelDataReader.Net45.Tests
-#elif NETCOREAPP1_0
-namespace ExcelDataReader.Netstandard13.Tests
-#elif NETCOREAPP2_0
-namespace ExcelDataReader.Netstandard20.Tests
-#else
-#error "Tests do not support the selected target platform"
-#endif
+namespace ExcelDataReader.Tests
 {
     [TestFixture]
     public class FormatReaderTest
     {
-        bool IsDateFormatString(string formatString)
+        private static bool IsDateFormatString(string formatString)
         {
             var format = new NumberFormatString(formatString);
-            return format?.IsDateTimeFormat ?? false;
+            return format.IsDateTimeFormat;
         }
 
         [Test]
-        public void NumberFormat_TestIsDateFormatString()
+        public void NumberFormatTestIsDateFormatString()
         {
             Assert.IsTrue(IsDateFormatString("dd/mm/yyyy"));
             Assert.IsTrue(IsDateFormatString("dd-mmm-yy"));
@@ -46,14 +36,14 @@ namespace ExcelDataReader.Netstandard20.Tests
             Assert.IsFalse(IsDateFormatString(@"_-* #,##0\ _P_t_s_-;\-* #,##0\ _P_t_s_-;_-* "" - ""??\ _P_t_s_-;_-@_- "));
         }
 
-        void TestValid(string format)
+        private static void TestValid(string format)
         {
             var to = new NumberFormatString(format);
             Assert.IsTrue(to.IsValid, "Invalid format: {0}", format);
         }
 
         [Test]
-        public void NumberFormat_TestValid()
+        public void NumberFormatTestValid()
         {
             // Mostly adapted from the SheetJS/ssf project:
             TestValid("\" Excellent\"");

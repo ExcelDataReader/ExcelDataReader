@@ -106,7 +106,6 @@ namespace ExcelDataReader.Tests
             DataSet prefixedResult = excelReader.AsDataSet(Configuration.FirstRowColumnNamesPrefixConfiguration);
             Assert.AreEqual("column a", prefixedResult.Tables[0].Columns[0].ColumnName);
             Assert.AreEqual("Prefix3", prefixedResult.Tables[0].Columns[3].ColumnName);
-
         }
     }
 }

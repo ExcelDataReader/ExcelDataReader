@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETCOREAPP1_0
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,3 +16,4 @@ namespace ExcelDataReader.Tests
         public static string ToLongTimeString(this DateTime dateTime) => dateTime.ToString("T");
     }
 }
+#endif

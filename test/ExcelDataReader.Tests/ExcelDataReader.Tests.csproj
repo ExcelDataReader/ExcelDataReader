@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyTitle>ExcelDataReader.Tests</AssemblyTitle>
     <Authors>ExcelDataReader developers</Authors>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <TargetFrameworks>netcoreapp1.0;netcoreapp2.0;net20;net45</TargetFrameworks>
     <AssemblyName>ExcelDataReader.Tests</AssemblyName>
     <PackageId>ExcelDataReader.Tests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
@@ -11,11 +11,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataReaderExtensions.cs" Link="ExcelDataReaderExtensions.cs" />
-    <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataSetConfiguration.cs" Link="ExcelDataSetConfiguration.cs" />
-    <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataTableConfiguration.cs" Link="ExcelDataTableConfiguration.cs" />
+    <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataReaderExtensions.cs" Link="DataSet\ExcelDataReaderExtensions.cs" />
+    <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataSetConfiguration.cs" Link="DataSet\ExcelDataSetConfiguration.cs" />
+    <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataTableConfiguration.cs" Link="DataSet\ExcelDataTableConfiguration.cs" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\ExcelDataReader\ExcelDataReader.csproj" />
   </ItemGroup>
@@ -24,7 +24,6 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
     <PackageReference Include="NUnit" Version="3.10.1" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,6 +32,18 @@
   
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp1.0'">
+    <PackageReference Include="System.Text.Encoding.CodePages">
+      <Version>4.6.0</Version>
+    </PackageReference>
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+    <PackageReference Include="System.Text.Encoding.CodePages">
+      <Version>4.6.0</Version>
+    </PackageReference>
   </ItemGroup>
 
 </Project>
