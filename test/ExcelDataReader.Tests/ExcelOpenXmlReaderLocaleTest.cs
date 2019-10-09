@@ -1,42 +1,40 @@
 ﻿#if NET20 || NET45 || NETCOREAPP2_0
-using System.Data;
 using System.Globalization;
 using System.Threading;
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
 using TestMethod = NUnit.Framework.TestAttribute;
 
-// ReSharper disable InconsistentNaming
 namespace ExcelDataReader.Tests
 {
     [TestClass]
     public class ExcelOpenXmlReaderLocaleTest
     {
         [TestMethod]
-        public void Time_is_readable_for_polish_locale_issue_xxx()
+        public void TimeIsReadableForPolishLocaleIssueXxx()
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("pl-PL", false);
 
-            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Issue_xxx_LocaleTime")))
+            using (var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_Issue_xxx_LocaleTime.xlsx")))
             {
-                var dataset = reader.AsDataSet();
+                var dataSet = reader.AsDataSet();
 
-                Assert.AreEqual(new System.DateTime(1899, 12, 31, 1, 34, 0), dataset.Tables[0].Rows[1][1]);
-                Assert.AreEqual(new System.DateTime(1899, 12, 31, 1, 34, 0), dataset.Tables[0].Rows[2][1]);
-                Assert.AreEqual(new System.DateTime(1899, 12, 31, 18, 47, 0), dataset.Tables[0].Rows[3][1]);
+                Assert.AreEqual(new System.DateTime(1899, 12, 31, 1, 34, 0), dataSet.Tables[0].Rows[1][1]);
+                Assert.AreEqual(new System.DateTime(1899, 12, 31, 1, 34, 0), dataSet.Tables[0].Rows[2][1]);
+                Assert.AreEqual(new System.DateTime(1899, 12, 31, 18, 47, 0), dataSet.Tables[0].Rows[3][1]);
 
                 reader.Close();
             }
         }
 
         [TestMethod]
-        public void Test_Decimal_Locale()
+        public void TestDecimalLocale()
         {
             // change culture to german. this will expect commas instead of decimal points
             Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE", false);
 
             IExcelDataReader excelReader =
-                ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_Decimal_Locale"));
+                ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_Decimal_Locale.xlsx"));
 
             var dataSet = excelReader.AsDataSet();
 
@@ -54,7 +52,7 @@ namespace ExcelDataReader.Tests
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("sv-SE", false);
 
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Format49_@")))
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Format49_@.xlsx")))
             {
                 DataSet result = excelReader.AsDataSet();
 

@@ -16,8 +16,8 @@ namespace ExcelDataReader
     {
         private IEnumerator<TWorksheet> _worksheetIterator;
         private IEnumerator<Row> _rowIterator;
-        private IEnumerator<TWorksheet> _cachedWorksheetIterator = null;
-        private List<TWorksheet> _cachedWorksheets = null;
+        private IEnumerator<TWorksheet> _cachedWorksheetIterator;
+        private List<TWorksheet> _cachedWorksheets;
 
         ~ExcelDataReader()
         {
