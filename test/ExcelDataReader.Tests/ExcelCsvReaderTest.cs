@@ -11,14 +11,6 @@ namespace ExcelDataReader.Tests
 
     public class ExcelCsvReaderTest
     {
-        [OneTimeSetUp]
-        public void TestInitialize()
-        {
-#if NETCOREAPP1_0 || NETCOREAPP2_0
-            Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-#endif
-        }
-
         [Test]
         public void CsvCommaInQuotes()
         {
