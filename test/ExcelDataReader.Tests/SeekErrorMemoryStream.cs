@@ -45,7 +45,7 @@ namespace ExcelDataReader.Tests
             if (_canSeek)
                 return base.Seek(offset, loc);
 
-            // throw offset error to simuate problem we had with HttpInputStream
+            // throw offset error to simulate problem we had with HttpInputStream
             throw new ArgumentOutOfRangeException(nameof(offset));
         }
     }
