@@ -174,9 +174,9 @@ dotnet_naming_rule.static_field_should_be_pascal_case.severity = suggestion
 dotnet_naming_rule.static_field_should_be_pascal_case.symbols = static_field
 dotnet_naming_rule.static_field_should_be_pascal_case.style = pascal_case
 
-dotnet_naming_rule.private_or_internal_field_should_be_begins_with_m_.severity = suggestion
-dotnet_naming_rule.private_or_internal_field_should_be_begins_with_m_.symbols = private_or_internal_field
-dotnet_naming_rule.private_or_internal_field_should_be_begins_with_m_.style = begins_with_m_
+dotnet_naming_rule.private_or_internal_field_should_be_begins_with__.severity = suggestion
+dotnet_naming_rule.private_or_internal_field_should_be_begins_with__.symbols = private_or_internal_field
+dotnet_naming_rule.private_or_internal_field_should_be_begins_with__.style = begins_with__
 
 # Symbol specifications
 
@@ -212,7 +212,7 @@ dotnet_naming_style.begins_with_i.required_suffix =
 dotnet_naming_style.begins_with_i.word_separator = 
 dotnet_naming_style.begins_with_i.capitalization = pascal_case
 
-dotnet_naming_style.begins_with_m_.required_prefix = m_
-dotnet_naming_style.begins_with_m_.required_suffix = 
-dotnet_naming_style.begins_with_m_.word_separator = 
-dotnet_naming_style.begins_with_m_.capitalization = camel_case
+dotnet_naming_style.begins_with__.required_prefix = _
+dotnet_naming_style.begins_with__.required_suffix = 
+dotnet_naming_style.begins_with__.word_separator = 
+dotnet_naming_style.begins_with__.capitalization = camel_case

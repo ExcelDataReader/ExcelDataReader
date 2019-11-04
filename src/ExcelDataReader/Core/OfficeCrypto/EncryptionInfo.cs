@@ -28,6 +28,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         public static EncryptionInfo Create(byte[] bytes)
         {
+            // TODO Does this work on a big endian system?
             var versionMajor = BitConverter.ToUInt16(bytes, 0);
             var versionMinor = BitConverter.ToUInt16(bytes, 2);
 

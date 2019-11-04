@@ -48,28 +48,27 @@ namespace ExcelDataReader
                 {
                     return new ExcelBinaryReader(stream, configuration.Password, configuration.FallbackEncoding);
                 }
-                else if (TryGetEncryptedPackage(fileStream, document, configuration.Password, out stream))
+
+                if (TryGetEncryptedPackage(fileStream, document, configuration.Password, out stream))
                 {
                     return new ExcelOpenXmlReader(stream);
                 }
-                else
-                {
-                    throw new ExcelReaderException(Errors.ErrorStreamWorkbookNotFound);
-                }
+
+                throw new ExcelReaderException(Errors.ErrorStreamWorkbookNotFound);
             }
-            else if (XlsWorkbook.IsRawBiffStream(probe))
+
+            if (XlsWorkbook.IsRawBiffStream(probe))
             {
                 return new ExcelBinaryReader(fileStream, configuration.Password, configuration.FallbackEncoding);
             }
-            else if (probe[0] == 0x50 && probe[1] == 0x4B)
+
+            if (probe[0] == 0x50 && probe[1] == 0x4B)
             {
                 // zip files start with 'PK'
                 return new ExcelOpenXmlReader(fileStream);
             }
-            else
-            {
-                throw new HeaderException(Errors.ErrorHeaderSignature);
-            }
+
+            throw new HeaderException(Errors.ErrorHeaderSignature);
         }
 
         /// <summary>
@@ -148,20 +147,17 @@ namespace ExcelDataReader
                 {
                     return new ExcelOpenXmlReader(stream);
                 }
-                else
-                {
-                    throw new ExcelReaderException(Errors.ErrorCompoundNoOpenXml);
-                }
+
+                throw new ExcelReaderException(Errors.ErrorCompoundNoOpenXml);
             }
-            else if (probe[0] == 0x50 && probe[1] == 0x4B)
+
+            if (probe[0] == 0x50 && probe[1] == 0x4B)
             {
                 // Zip files start with 'PK'
                 return new ExcelOpenXmlReader(fileStream);
             }
-            else
-            {
-                throw new HeaderException(Errors.ErrorHeaderSignature);
-            }
+
+            throw new HeaderException(Errors.ErrorHeaderSignature);
         }
 
         /// <summary>
