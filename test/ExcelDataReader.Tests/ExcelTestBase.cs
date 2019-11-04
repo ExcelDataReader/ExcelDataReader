@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -17,6 +18,98 @@ namespace ExcelDataReader.Tests
         protected abstract Stream OpenStream(string name);
 
         protected abstract IExcelDataReader OpenReader(Stream stream, ExcelReaderConfiguration configuration = null);
+
+        [Test]
+        public void IssueDateAndTime1468Test()
+        {
+            using (IExcelDataReader excelReader = OpenReader("Test_Encoding_Formula_Date_1520"))
+            {
+                DataSet dataSet = excelReader.AsDataSet();
+
+                string val1 = new DateTime(2009, 05, 01).ToShortDateString();
+                string val2 = DateTime.Parse(dataSet.Tables[0].Rows[1][1].ToString()).ToShortDateString();
+
+                Assert.AreEqual(val1, val2);
+
+                val1 = new DateTime(2009, 1, 1, 11, 0, 0).ToShortTimeString();
+                val2 = DateTime.Parse(dataSet.Tables[0].Rows[2][4].ToString()).ToShortTimeString();
+
+                Assert.AreEqual(val1, val2);
+            }
+        }
+
+        [Test]
+        public void Issue11773Exponential()
+        {
+            using (IExcelDataReader excelReader = OpenReader("Test_Issue_11773_Exponential"))
+            {
+                var dataSet = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
+
+                Assert.AreEqual(2566.37168141593D, double.Parse(dataSet.Tables[0].Rows[0][6].ToString()));
+            }
+        }
+
+        [Test]
+        public void Issue11773ExponentialCommas()
+        {
+#if NETCOREAPP1_0
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+#else
+            System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE", false);
+#endif
+
+            using (IExcelDataReader excelReader = OpenReader("Test_Issue_11773_Exponential"))
+            {
+                var dataSet = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
+
+                Assert.AreEqual(2566.37168141593D, double.Parse(dataSet.Tables[0].Rows[0][6].ToString()));
+            }
+        }
+
+        /// <summary>
+        /// Makes sure that we can read data from the first row of last sheet
+        /// </summary>
+        [Test]
+        public void Issue12271NextResultSet()
+        {
+            using (IExcelDataReader excelReader = OpenReader("Test_LotsOfSheets"))
+            {
+                do
+                {
+                    excelReader.Read();
+
+                    if (excelReader.FieldCount == 0)
+                    {
+                        continue;
+                    }
+
+                    // ignore sheets beginning with $e
+                    if (excelReader.Name.StartsWith("$e", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    Assert.AreEqual("StaffName", excelReader.GetString(0));
+                }
+                while (excelReader.NextResult());
+            }
+        }
+
+        [Test]
+        public void AsDataSetTestReadSheetNames()
+        {
+            using (IExcelDataReader reader = OpenReader("TestOpen"))
+            {
+                Assert.AreEqual(3, reader.ResultsCount);
+
+                DataSet dataSet = reader.AsDataSet();
+
+                Assert.IsTrue(dataSet != null);
+                Assert.AreEqual(3, dataSet.Tables.Count);
+                Assert.AreEqual(7, dataSet.Tables["Sheet1"].Rows.Count);
+                Assert.AreEqual(11, dataSet.Tables["Sheet1"].Columns.Count);
+            }
+        }
 
         [Test]
         public void AsDataSetTest()
@@ -64,7 +157,8 @@ namespace ExcelDataReader.Tests
             using (var reader = OpenReader("ColumnWidthsTest"))
             {
                 reader.Read();
-
+                
+                // The expected values do not quite match what you see in Excel, is that correct?
                 Assert.AreEqual(8.43, reader.GetColumnWidth(0));
                 Assert.AreEqual(0, reader.GetColumnWidth(1));
                 Assert.AreEqual(15.140625, reader.GetColumnWidth(2));
@@ -98,86 +192,13 @@ namespace ExcelDataReader.Tests
             using (var excelReader = OpenReader("Test_MergedCell"))
             {
                 excelReader.Read();
-                var mergedCells = new List<CellRange>(excelReader.MergeCells);
-                Assert.AreEqual(mergedCells.Count, 4, "Incorrect number of merged cells");
 
-                //Sort from top -> left, then down
-                mergedCells.Sort(delegate (CellRange c1, CellRange c2)
-                {
-                    if (c1.FromRow == c2.FromRow)
-                    {
-                        return c1.FromColumn.CompareTo(c2.FromColumn);
-                    }
-                    return c1.FromRow.CompareTo(c2.FromRow);
-                });
-
-                CollectionAssert.AreEqual(
-                    new[]
-                    {
-                        1,
-                        2,
-                        0,
-                        1
-                    },
-                    new[]
-                    {
-                        mergedCells[0].FromRow,
-                        mergedCells[0].ToRow,
-                        mergedCells[0].FromColumn,
-                        mergedCells[0].ToColumn
-                    }
-                );
-
-                CollectionAssert.AreEqual(
-                    new[]
-                    {
-                        1,
-                        5,
-                        2,
-                        2
-                    },
-                    new[]
-                    {
-                        mergedCells[1].FromRow,
-                        mergedCells[1].ToRow,
-                        mergedCells[1].FromColumn,
-                        mergedCells[1].ToColumn
-                    }
-                );
-
-                CollectionAssert.AreEqual(
-                    new[]
-                    {
-                        3,
-                        5,
-                        0,
-                        0
-                    },
-                    new[]
-                    {
-                        mergedCells[2].FromRow,
-                        mergedCells[2].ToRow,
-                        mergedCells[2].FromColumn,
-                        mergedCells[2].ToColumn
-                    }
-                );
-
-                CollectionAssert.AreEqual(
-                    new[]
-                    {
-                        6,
-                        6,
-                        0,
-                        2
-                    },
-                    new[]
-                    {
-                        mergedCells[3].FromRow,
-                        mergedCells[3].ToRow,
-                        mergedCells[3].FromColumn,
-                        mergedCells[3].ToColumn
-                    }
-                );
+                Assert.That(excelReader.MergeCells, Is.EquivalentTo(new[] {
+                    new[] { 1, 2, 0, 1 },
+                    new[] { 1, 5, 2, 2 },
+                    new[] { 3, 5, 0, 0 },
+                    new[] { 6, 6, 0, 2 },
+                }).Using<CellRange, int[]>((a, e) => a.FromRow == e[0] && a.ToRow == e[1] && a.FromColumn == e[2] && a.ToColumn == e[3]));
             }
         }
 
@@ -208,16 +229,13 @@ namespace ExcelDataReader.Tests
             {
                 // Verify the row heights are set when expected, and converted to points from twips
                 reader.Read();
-                Assert.Greater(reader.RowHeight, 0);
-                Assert.Less(reader.RowHeight, 20);
+                Assert.AreEqual(15, reader.RowHeight);
 
                 reader.Read();
-                Assert.Greater(reader.RowHeight, 0);
-                Assert.Less(reader.RowHeight, 20);
+                Assert.AreEqual(38.25, reader.RowHeight);
 
                 reader.Read();
-                Assert.Greater(reader.RowHeight, 0);
-                Assert.Less(reader.RowHeight, 20);
+                Assert.AreEqual(6, reader.RowHeight);
 
                 reader.Read();
                 Assert.AreEqual(0, reader.RowHeight);
@@ -417,18 +435,6 @@ namespace ExcelDataReader.Tests
 
                 excelReader.NextResult();
                 Assert.AreEqual("Sheet3", excelReader.Name);
-            }
-        }
-
-        /// <summary>
-        /// This test is to ensure that we get the same results from an xls saved in excel vs open office
-        /// </summary>
-        [Test]
-        public void TestOpenOfficeSavedInExcel()
-        {
-            using (IExcelDataReader excelReader = OpenReader("Test_Excel_OpenOffice"))
-            {
-                AssertUtilities.DoOpenOfficeTest(excelReader);
             }
         }
 

@@ -11,6 +11,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="TestResults\**" />
+    <EmbeddedResource Remove="TestResults\**" />
+    <None Remove="TestResults\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataReaderExtensions.cs" Link="DataSet\ExcelDataReaderExtensions.cs" />
     <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataSetConfiguration.cs" Link="DataSet\ExcelDataSetConfiguration.cs" />
     <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataTableConfiguration.cs" Link="DataSet\ExcelDataTableConfiguration.cs" />

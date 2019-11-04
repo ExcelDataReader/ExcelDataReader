@@ -8,20 +8,23 @@ namespace ExcelDataReader
     /// </summary>
     public sealed class CellRange
     {
-        internal CellRange(string from, string to)
+        internal CellRange(string range)
         {
-            int fromColumn, fromRow, toColumn, toRow;
-            ReferenceHelper.ParseReference(from, out fromColumn, out fromRow);
+            var fromTo = range.Split(':');
+            if (fromTo.Length == 2)
+            {
+                ReferenceHelper.ParseReference(fromTo[0], out int column, out int row);
+                
+                // 0 indexed vs 1 indexed
+                FromColumn = column - 1;
+                FromRow = row - 1;
 
-            // 0 indexed vs 1 indexed
-            FromColumn = fromColumn - 1;
-            FromRow = fromRow - 1;
+                ReferenceHelper.ParseReference(fromTo[1], out column, out row);
 
-            ReferenceHelper.ParseReference(to, out toColumn, out toRow);
-
-            // 0 indexed vs 1 indexed
-            ToColumn = toColumn - 1;
-            ToRow = toRow - 1;
+                // 0 indexed vs 1 indexed
+                ToColumn = column - 1;
+                ToRow = row - 1;
+            }
         }
 
         internal CellRange(int fromColumn, int fromRow, int toColumn, int toRow)
@@ -35,21 +38,24 @@ namespace ExcelDataReader
         /// <summary>
         /// Gets the column the range starts in
         /// </summary>
-        public int FromColumn { get; private set; }
+        public int FromColumn { get; }
 
         /// <summary>
         /// Gets the row the range starts in
         /// </summary>
-        public int FromRow { get; private set; }
+        public int FromRow { get; }
 
         /// <summary>
         /// Gets the column the range ends in
         /// </summary>
-        public int ToColumn { get; private set; }
+        public int ToColumn { get; }
 
         /// <summary>
         /// Gets the row the range ends in
         /// </summary>
-        public int ToRow { get; private set; }
+        public int ToRow { get; }
+
+        /// <inheritsdoc/>
+        public override string ToString() => $"{FromRow}, {ToRow}, {FromColumn}, {ToColumn}";
     }
 }

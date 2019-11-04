@@ -32,6 +32,7 @@ namespace ExcelDataReader
 
         public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
 
+        // We shouldn't expose the internal array here. 
         public CellRange[] MergeCells => _worksheetIterator?.Current?.MergeCells;
 
         public int Depth { get; private set; }
@@ -103,6 +104,7 @@ namespace ExcelDataReader
         {
             if (RowCells == null)
                 throw new InvalidOperationException("No data exists for the row/column.");
+            
             return RowCells[i]?.Value;
         }
 
@@ -139,19 +141,12 @@ namespace ExcelDataReader
             double? retWidth = null;
             if (columnWidths != null)
             {
-                var colWidthIndex = 0;
-                while (colWidthIndex < columnWidths.Length && retWidth == null)
+                foreach (var columnWidth in columnWidths)
                 {
-                    var columnWidth = columnWidths[colWidthIndex];
-                    if (i >= columnWidth.Min && i <= columnWidth.Max)
+                    if (i >= columnWidth.Minimum && i <= columnWidth.Maximum)
                     {
-                        retWidth = columnWidth.Hidden
-                            ? 0
-                            : columnWidth.Width;
-                    }
-                    else
-                    {
-                        colWidthIndex++;
+                        retWidth = columnWidth.Hidden ? 0 : columnWidth.Width;
+                        break;
                     }
                 }
             }

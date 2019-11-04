@@ -1,14 +1,23 @@
-﻿namespace ExcelDataReader.Core
+﻿using System;
+
+namespace ExcelDataReader.Core
 {
     internal class Cell
     {
+        public Cell(int columnIndex, int numberFormatIndex, object value)
+        {
+            ColumnIndex = columnIndex;
+            NumberFormatIndex = numberFormatIndex;
+            Value = value;
+        }
+
         /// <summary>
-        /// Gets or sets the zero-based column index.
+        /// Gets the zero-based column index.
         /// </summary>
-        public int ColumnIndex { get; set; }
+        public int ColumnIndex { get; }
 
-        public int NumberFormatIndex { get; set; }
+        public int NumberFormatIndex { get; }
 
-        public object Value { get; set; }
+        public object Value { get; }
     }
 }

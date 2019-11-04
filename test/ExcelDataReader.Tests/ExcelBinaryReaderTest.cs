@@ -132,25 +132,6 @@ namespace ExcelDataReader.Tests
         }
 
         [TestMethod]
-        public void IssueDateAndTime1468Test()
-        {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Encoding_Formula_Date_1520.xls")))
-            {
-                DataSet dataSet = excelReader.AsDataSet();
-
-                string val1 = new DateTime(2009, 05, 01).ToShortDateString();
-                string val2 = DateTime.Parse(dataSet.Tables[0].Rows[1][1].ToString()).ToShortDateString();
-
-                Assert.AreEqual(val1, val2);
-
-                val1 = DateTime.Parse("11:00:00").ToShortTimeString();
-                val2 = DateTime.Parse(dataSet.Tables[0].Rows[2][4].ToString()).ToShortTimeString();
-
-                Assert.AreEqual(val1, val2);
-            }
-        }
-
-        [TestMethod]
         public void TestOpenOffice()
         {
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_OpenOffice.xls")))
