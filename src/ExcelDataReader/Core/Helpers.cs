@@ -25,11 +25,6 @@ namespace ExcelDataReader.Core
             return encoding.GetByteCount(new[] { 'a' }) == 1;
         }
 
-        public static double Int64BitsToDouble(long value)
-        {
-            return BitConverter.ToDouble(BitConverter.GetBytes(value), 0);
-        }
-
         public static string ConvertEscapeChars(string input)
         {
             return EscapeRegex.Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber)).ToString());

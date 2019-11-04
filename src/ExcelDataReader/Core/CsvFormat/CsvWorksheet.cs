@@ -68,7 +68,7 @@ namespace ExcelDataReader.Core.CsvFormat
 
         public char Separator { get; }
 
-        public Col[] ColumnWidths => null;
+        public Column[] ColumnWidths => null;
 
         private int BomLength { get; set; }
 
@@ -114,19 +114,11 @@ namespace ExcelDataReader.Core.CsvFormat
                 var cells = new List<Cell>(row.Count);
                 for (var index = 0; index < row.Count; index++)
                 {
-                    cells.Add(new Cell()
-                    {
-                        ColumnIndex = index,
-                        Value = row[index]
-                    });
+                    object value = row[index];
+                    cells.Add(new Cell(index, value, new ExtendedFormat()));
                 }
 
-                yield return new Row()
-                {
-                    Height = 12.75, // 255 twips
-                    Cells = cells,
-                    RowIndex = rowIndex
-                };
+                yield return new Row(rowIndex, 12.75 /* 255 twips */, cells);
 
                 rowIndex++;
             }

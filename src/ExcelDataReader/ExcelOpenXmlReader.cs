@@ -1,5 +1,4 @@
 using System.IO;
-using ExcelDataReader.Core;
 using ExcelDataReader.Core.OpenXmlFormat;
 
 namespace ExcelDataReader
