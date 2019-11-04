@@ -1,5 +1,7 @@
 using System;
 
+#nullable enable
+
 namespace ExcelDataReader
 {
     /// <summary>
@@ -11,6 +13,13 @@ namespace ExcelDataReader
         {
             HasDifferentFirst = hasDifferentFirst;
             HasDifferentOddEven = hasDifferentOddEven;
+        }
+
+        internal HeaderFooter(string? footer, string? header)
+            : this(false, false)
+        {
+            OddHeader = header;
+            OddFooter = footer;
         }
 
         /// <summary>
@@ -26,31 +35,31 @@ namespace ExcelDataReader
         /// <summary>
         /// Gets the header used for the first page if <see cref="HasDifferentFirst"/> is <see langword="true"/>.
         /// </summary>
-        public string FirstHeader { get; internal set; }
+        public string? FirstHeader { get; internal set; }
 
         /// <summary>
         /// Gets the footer used for the first page if <see cref="HasDifferentFirst"/> is <see langword="true"/>.
         /// </summary>
-        public string FirstFooter { get; internal set; }
+        public string? FirstFooter { get; internal set; }
 
         /// <summary>
         /// Gets the header used for odd pages -or- all pages if <see cref="HasDifferentOddEven"/> is <see langword="false"/>. 
         /// </summary>
-        public string OddHeader { get; internal set; }
+        public string? OddHeader { get; internal set; }
 
         /// <summary>
         /// Gets the footer used for odd pages -or- all pages if <see cref="HasDifferentOddEven"/> is <see langword="false"/>. 
         /// </summary>
-        public string OddFooter { get; internal set; }
+        public string? OddFooter { get; internal set; }
 
         /// <summary>
         /// Gets the header used for even pages if <see cref="HasDifferentOddEven"/> is <see langword="true"/>. 
         /// </summary>
-        public string EvenHeader { get; internal set; }
+        public string? EvenHeader { get; internal set; }
 
         /// <summary>
         /// Gets the footer used for even pages if <see cref="HasDifferentOddEven"/> is <see langword="true"/>. 
         /// </summary>
-        public string EvenFooter { get; internal set; }
+        public string? EvenFooter { get; internal set; }
     }
 }

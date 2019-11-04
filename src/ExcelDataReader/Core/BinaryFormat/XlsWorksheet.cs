@@ -25,22 +25,15 @@ namespace ExcelDataReader.Core.BinaryFormat
             Name = refSheet.GetSheetName(workbook.Encoding);
             DataOffset = refSheet.StartOffset;
 
-            switch (refSheet.VisibleState)
+            VisibleState = refSheet.VisibleState switch
             {
-                case XlsBiffBoundSheet.SheetVisibility.Hidden:
-                    VisibleState = "hidden";
-                    break;
-                case XlsBiffBoundSheet.SheetVisibility.VeryHidden:
-                    VisibleState = "veryhidden";
-                    break;
-                default:
-                    VisibleState = "visible";
-                    break;
-            }
-
+                XlsBiffBoundSheet.SheetVisibility.Hidden => "hidden",
+                XlsBiffBoundSheet.SheetVisibility.VeryHidden => "veryhidden",
+                _ => "visible",
+            };
             ReadWorksheetGlobals();
         }
-                
+
         /// <summary>
         /// Gets the worksheet name
         /// </summary>
@@ -57,7 +50,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public CellRange[] MergeCells { get; private set; }
 
-        public Col[] ColumnWidths { get; private set; }
+        public Column[] ColumnWidths { get; private set; }
 
         /// <summary>
         /// Gets the worksheet data offset.
@@ -83,7 +76,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public XlsBiffSimpleValueRecord Iteration { get; set; }
 
         public XlsBiffRecord Delta { get; set; }
-        
+
         public XlsBiffRecord Window { get; set; }
 */
 
@@ -94,7 +87,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public bool IsDate1904 { get; private set; }
 
         public XlsWorkbook Workbook { get; }
-                
+
         public IEnumerable<Row> ReadRows()
         {
             var rowIndex = 0;
@@ -104,12 +97,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 {
                     for (; rowIndex < rowBlock.RowIndex; ++rowIndex)
                     {
-                        yield return new Row()
-                        {
-                            RowIndex = rowIndex,
-                            Height = DefaultRowHeight / 20.0,
-                            Cells = new List<Cell>()
-                        };
+                        yield return new Row(rowIndex, DefaultRowHeight / 20.0, new List<Cell>());
                     }
 
                     rowIndex++;
@@ -158,7 +146,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 GetBlockSize(rowIndex, out var blockRowCount, out var minOffset, out var maxOffset);
 
                 var block = ReadNextBlock(biffStream, rowIndex, blockRowCount, minOffset, maxOffset);
-                
+
                 for (var i = 0; i < blockRowCount; ++i)
                 {
                     if (block.Rows.TryGetValue(rowIndex + i, out var row))
@@ -178,7 +166,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             // Ensure rows with physical records are initialized with height
             for (var i = 0; i < rows; i++)
             {
-                if (RowOffsetMap.TryGetValue(startRow + i, out var rowOffset))
+                if (RowOffsetMap.TryGetValue(startRow + i, out _))
                 {
                     EnsureRow(result, startRow + i);
                 }
@@ -221,7 +209,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     ixfe = null;
                 }
             }
-            
+
             return result;
         }
 
@@ -235,12 +223,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     height = (rowOffset.Record.UseDefaultRowHeight ? DefaultRowHeight : rowOffset.Record.RowHeight) / 20.0;
                 }
 
-                currentRow = new Row()
-                {
-                    RowIndex = rowIndex,
-                    Height = height,
-                    Cells = new List<Cell>()
-                };
+                currentRow = new Row(rowIndex, height, new List<Cell>());
 
                 result.Rows.Add(rowIndex, currentRow);
             }
@@ -248,11 +231,10 @@ namespace ExcelDataReader.Core.BinaryFormat
             return currentRow;
         }
 
-        private List<Cell> ReadMultiCell(XlsBiffBlankCell cell)
+        private IEnumerable<Cell> ReadMultiCell(XlsBiffBlankCell cell)
         {
             LogManager.Log(this).Debug("ReadMultiCell {0}", cell.Id);
 
-            var result = new List<Cell>();
             switch (cell.Id)
             {
                 case BIFFRECORDTYPE.MULRK:
@@ -263,23 +245,14 @@ namespace ExcelDataReader.Core.BinaryFormat
                     {
                         var xfIndex = rkCell.GetXF(j);
                         var effectiveStyle = Workbook.GetEffectiveCellStyle(xfIndex, cell.Format);
-                        var resultCell = new Cell()
-                        {
-                            ColumnIndex = j,
-                            Value = TryConvertOADateTime(rkCell.GetValue(j), effectiveStyle.NumberFormatIndex),
-                            XfIndex = xfIndex,
-                            EffectiveStyle = effectiveStyle,
-                        };
 
-                        result.Add(resultCell);
-
-                        LogManager.Log(this).Debug("VALUE[{1}]: {0}", resultCell.Value, j);
+                        var value = TryConvertOADateTime(rkCell.GetValue(j), effectiveStyle.NumberFormatIndex);
+                        LogManager.Log(this).Debug("CELL[{0}] = {1}", j, value);
+                        yield return new Cell(j, value, effectiveStyle);
                     }
 
                     break;
             }
-
-            return result;
         }
 
         /// <summary>
@@ -289,50 +262,38 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             LogManager.Log(this).Debug("ReadSingleCell {0}", cell.Id);
 
-            double doubleValue;
-            int intValue;
-            object objectValue;
-
             var effectiveStyle = Workbook.GetEffectiveCellStyle(xfIndex, cell.Format);
-            var result = new Cell()
-            {
-                ColumnIndex = cell.ColumnIndex,
-                XfIndex = xfIndex,
-                EffectiveStyle = effectiveStyle,
-            };
             var numberFormatIndex = effectiveStyle.NumberFormatIndex;
 
+            object value = null;
             switch (cell.Id)
             {
                 case BIFFRECORDTYPE.BOOLERR:
                     if (cell.ReadByte(7) == 0)
-                        result.Value = cell.ReadByte(6) != 0;
+                        value = cell.ReadByte(6) != 0;
                     break;
                 case BIFFRECORDTYPE.BOOLERR_OLD:
                     if (cell.ReadByte(8) == 0)
-                        result.Value = cell.ReadByte(7) != 0;
+                        value = cell.ReadByte(7) != 0;
                     break;
                 case BIFFRECORDTYPE.INTEGER:
                 case BIFFRECORDTYPE.INTEGER_OLD:
-                    intValue = ((XlsBiffIntegerCell)cell).Value;
-                    result.Value = TryConvertOADateTime(intValue, numberFormatIndex);
+                    value = TryConvertOADateTime(((XlsBiffIntegerCell)cell).Value, numberFormatIndex);
                     break;
                 case BIFFRECORDTYPE.NUMBER:
                 case BIFFRECORDTYPE.NUMBER_OLD:
-                    doubleValue = ((XlsBiffNumberCell)cell).Value;
-                    result.Value = TryConvertOADateTime(doubleValue, numberFormatIndex);
+                    value = TryConvertOADateTime(((XlsBiffNumberCell)cell).Value, numberFormatIndex);
                     break;
                 case BIFFRECORDTYPE.LABEL:
                 case BIFFRECORDTYPE.LABEL_OLD:
                 case BIFFRECORDTYPE.RSTRING:
-                    result.Value = GetLabelString((XlsBiffLabelCell)cell, effectiveStyle);
+                    value = GetLabelString((XlsBiffLabelCell)cell, effectiveStyle);
                     break;
                 case BIFFRECORDTYPE.LABELSST:
-                    result.Value = Workbook.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex, Encoding);
+                    value = Workbook.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex, Encoding);
                     break;
                 case BIFFRECORDTYPE.RK:
-                    doubleValue = ((XlsBiffRKCell)cell).Value;
-                    result.Value = TryConvertOADateTime(doubleValue, numberFormatIndex);
+                    value = TryConvertOADateTime(((XlsBiffRKCell)cell).Value, numberFormatIndex);
                     break;
                 case BIFFRECORDTYPE.BLANK:
                 case BIFFRECORDTYPE.BLANK_OLD:
@@ -342,14 +303,11 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.FORMULA:
                 case BIFFRECORDTYPE.FORMULA_V3:
                 case BIFFRECORDTYPE.FORMULA_V4:
-                    objectValue = TryGetFormulaValue(biffStream, (XlsBiffFormulaCell)cell, effectiveStyle);
-                    result.Value = objectValue;
+                    value = TryGetFormulaValue(biffStream, (XlsBiffFormulaCell)cell, effectiveStyle);
                     break;
             }
 
-            LogManager.Log(this).Debug("VALUE: {0}", result.Value);
-
-            return result;
+            return new Cell(cell.ColumnIndex, value, effectiveStyle);
         }
 
         private string GetLabelString(XlsBiffLabelCell cell, ExtendedFormat effectiveStyle)
@@ -374,22 +332,17 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private object TryGetFormulaValue(XlsBiffStream biffStream, XlsBiffFormulaCell formulaCell, ExtendedFormat effectiveStyle)
         {
-            switch (formulaCell.FormulaType)
+            return formulaCell.FormulaType switch
             {
-                case XlsBiffFormulaCell.FormulaValueType.Boolean:
-                    return formulaCell.BooleanValue;
-                case XlsBiffFormulaCell.FormulaValueType.Error:
-                    return null;
-                case XlsBiffFormulaCell.FormulaValueType.EmptyString:
-                    return string.Empty;
-                case XlsBiffFormulaCell.FormulaValueType.Number:
-                    return TryConvertOADateTime(formulaCell.XNumValue, effectiveStyle.NumberFormatIndex);
-                case XlsBiffFormulaCell.FormulaValueType.String:
-                    return TryGetFormulaString(biffStream, effectiveStyle);
-            }
+                XlsBiffFormulaCell.FormulaValueType.Boolean => formulaCell.BooleanValue,
+                XlsBiffFormulaCell.FormulaValueType.Error => null,
+                XlsBiffFormulaCell.FormulaValueType.EmptyString => string.Empty,
+                XlsBiffFormulaCell.FormulaValueType.Number => TryConvertOADateTime(formulaCell.XNumValue, effectiveStyle.NumberFormatIndex),
+                XlsBiffFormulaCell.FormulaValueType.String => TryGetFormulaString(biffStream, effectiveStyle),
 
-            // Bad data or new formula value type
-            return null;
+                // Bad data or new formula value type
+                _ => null,
+            };
         }
 
         private string TryGetFormulaString(XlsBiffStream biffStream, ExtendedFormat effectiveStyle)
@@ -490,7 +443,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 var biffFormats = new Dictionary<ushort, XlsBiffFormatString>();
                 var recordOffset = biffStream.Position;
                 var rec = biffStream.Read();
-                var columnWidths = new List<Col>();
+                var columnWidths = new List<Column>();
 
                 while (rec != null && !(rec is XlsBiffEof))
                 {
@@ -527,7 +480,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     {
                         columnWidths.Add(((XlsBiffColInfo)rec).Value);
                     }
-                    
+
                     if (rec.Id == BIFFRECORDTYPE.FORMAT)
                     {
                         var fmt = (XlsBiffFormatString)rec;
@@ -574,7 +527,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     {
                         var rowRecord = (XlsBiffRow)rec;
                         SetMinMaxRow(rowRecord.RowIndex, rowRecord);
-                        
+
                         // Count rows by row records without affecting the overlap in OffsetMap
                         maxRowCountFromRowRecord = Math.Max(maxRowCountFromRowRecord, rowRecord.RowIndex + 1);
                     }
@@ -609,11 +562,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                 if (header != null || footer != null)
                 {
-                    HeaderFooter = new HeaderFooter(false, false)
-                    {
-                        OddHeader = header?.GetValue(Encoding),
-                        OddFooter = footer?.GetValue(Encoding),
-                    };
+                    HeaderFooter = new HeaderFooter(footer?.GetValue(Encoding), header?.GetValue(Encoding));
                 }
 
                 foreach (var biffFormat in biffFormats)
