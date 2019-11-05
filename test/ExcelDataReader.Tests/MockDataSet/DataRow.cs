@@ -6,6 +6,11 @@ namespace ExcelDataReader
     {
         readonly object[] values;
 
+        internal DataRow(int count) 
+        {
+            values = new object[count];
+        }
+
         internal DataRow(object[] itemArray)
         {
             values = (object[])itemArray.Clone();
@@ -34,7 +39,7 @@ namespace ExcelDataReader
 
         public bool IsNull(int i)
         {
-            return ItemArray[i] == DBNull.Value;
+            return this[i] == DBNull.Value;
         }
     }
 }
