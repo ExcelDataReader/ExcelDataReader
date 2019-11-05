@@ -941,5 +941,96 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(DBNull.Value, dataSet.Tables[0].Rows[1][4]);
             }
         }
+
+        [Test]
+        public void GitIssue160FilterRow()
+        {
+            // Check there are four rows with data, including empty and hidden rows
+            using (var reader = OpenReader("CollapsedHide"))
+            {
+                var dataSet = reader.AsDataSet();
+
+                Assert.AreEqual(4, dataSet.Tables[0].Rows.Count);
+            }
+
+            // Check there are two rows with content
+            using (var reader = OpenReader("CollapsedHide"))
+            {
+                var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+                    {
+                        FilterRow = rowReader => !IsEmptyRow(rowReader)
+                    }
+                });
+
+                Assert.AreEqual(2, dataSet.Tables[0].Rows.Count);
+            }
+
+            // Check there is one visible row with content
+            using (var reader = OpenReader("CollapsedHide"))
+            {
+                var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+                    {
+                        FilterRow = rowReader => !IsEmptyOrHiddenRow(rowReader)
+                    }
+                });
+
+                Assert.AreEqual(1, dataSet.Tables[0].Rows.Count);
+            }
+
+            static bool IsEmptyOrHiddenRow(IExcelDataReader reader)
+            {
+                if (reader.RowHeight <= 0)
+                    return true;
+
+                for (var i = 0; i < reader.FieldCount; i++)
+                {
+                    if (reader.GetValue(i) != null)
+                        return false;
+                }
+
+                return true;
+            }
+
+            static bool IsEmptyRow(IExcelDataReader reader)
+            {
+                for (var i = 0; i < reader.FieldCount; i++)
+                {
+                    if (reader.GetValue(i) != null)
+                        return false;
+                }
+
+                return true;
+            }
+        }
+
+        [Test]
+        public void GitIssue300FilterColumn()
+        {
+            // Check there are two columns with data
+            using (var reader = OpenReader("CollapsedHide"))
+            {
+                var dataSet = reader.AsDataSet();
+
+                Assert.AreEqual(2, dataSet.Tables[0].Columns.Count);
+            }
+
+            // Check there is one column when skipping the first
+            using (var reader = OpenReader("CollapsedHide"))
+            {
+                var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+                    {
+                        FilterColumn = (rowReader, index) => index > 0
+                    }
+                });
+
+                Assert.AreEqual(1, dataSet.Tables[0].Columns.Count);
+            }
+        }
     }
 }
