@@ -17,6 +17,6 @@ test_script:
     dotnet test test\ExcelDataReader.Tests\ExcelDataReader.Tests.csproj --no-build --logger "trx" -c $Env:CONFIGURATION
     # upload results to AppVeyor
     $wc = New-Object 'System.Net.WebClient'
-    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test\ExcelDataReader.Tests\TestResults\*.trx))
+    Resolve-Path .\test\ExcelDataReader.Tests\TestResults\*.trx | % $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", "$_")
 artifacts:
 - path: '**\*.nupkg'
