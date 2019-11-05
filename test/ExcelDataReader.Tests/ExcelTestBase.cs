@@ -157,7 +157,7 @@ namespace ExcelDataReader.Tests
             using (var reader = OpenReader("ColumnWidthsTest"))
             {
                 reader.Read();
-                
+
                 // The expected values do not quite match what you see in Excel, is that correct?
                 Assert.AreEqual(8.43, reader.GetColumnWidth(0));
                 Assert.AreEqual(0, reader.GetColumnWidth(1));
@@ -397,7 +397,7 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(val1, val2);
             }
         }
-        
+
         [Test]
         public void IssueEncoding1520Test()
         {
@@ -468,7 +468,7 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(65536, rowCount);
             }
         }
-        
+
         [Test]
         public void GitIssue283TimeSpan()
         {

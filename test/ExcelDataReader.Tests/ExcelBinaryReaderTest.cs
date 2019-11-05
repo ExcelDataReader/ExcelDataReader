@@ -152,7 +152,7 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(34, dataSet.Tables[0].Rows.Count);
             }
         }
-        
+
         [TestMethod]
         public void UncalculatedTest()
         {
@@ -678,11 +678,11 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("Hoja8", reader.CodeName);
             }
         }
-        
+
         [TestMethod]
         public void GitIssue242Password()
         {
-            // BIFF8 standard encryption cryptoapi rc4+sha 
+            // BIFF8 standard encryption cryptoapi rc4+sha
             using (var reader = ExcelReaderFactory.CreateBinaryReader(
                 Configuration.GetTestWorkbook("Test_git_issue_242_std_rc4_pwd_password.xls"),
                 new ExcelReaderConfiguration { Password = "password" }))
@@ -866,7 +866,7 @@ namespace ExcelDataReader.Tests
                 Assert.IsNotNull(reader);
             }
         }
-        
+
         [TestMethod]
         public void GitIssue321MissingEof()
         {
@@ -1057,7 +1057,7 @@ namespace ExcelDataReader.Tests
         [TestMethod]
         public void Test_git_issue_411()
         {
-            // This file has two problems: 
+            // This file has two problems:
             // - has both Book and Workbook compound streams
             // - has no codepage record, encoding specified in font records
             using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_411.xls")))

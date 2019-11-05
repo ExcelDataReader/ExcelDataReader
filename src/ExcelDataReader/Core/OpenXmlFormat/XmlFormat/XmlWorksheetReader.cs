@@ -54,7 +54,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         private const string ACustomHeight = "customHeight";
         private const string AHt = "ht";
 
-        public XmlWorksheetReader(XmlReader reader) 
+        public XmlWorksheetReader(XmlReader reader)
             : base(reader)
         {
         }
