@@ -2076,5 +2076,16 @@ namespace ExcelDataReader.Netstandard20.Tests
                 Assert.AreEqual("Универсальный передаточный\nдокумент", reader.GetValue(1));
             }
         }
+
+        [TestMethod]
+        public void GitIssue438() 
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_438.xls")))
+            {
+                reader.Read();
+
+                Assert.AreEqual(new DateTime(1992, 05, 15), reader.GetDateTime(0));
+            }
+        }
     }
 }

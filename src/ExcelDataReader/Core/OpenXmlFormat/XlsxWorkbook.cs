@@ -36,10 +36,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string AFontId = "fontId";
         private const string ANumFmtId = "numFmtId";
         private const string AXFId = "xfId";
-        private const string AApplyFont = "applyFont";
-        private const string AApplyNumberFormat = "applyNumberFormat";
-        private const string AApplyAlignment = "applyAlignment";
-        private const string AApplyProtection = "applyProtection";
 
         private const string NNumFmt = "numFmt";
         private const string AFormatCode = "formatCode";
@@ -355,10 +351,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     int.TryParse(reader.GetAttribute(AXFId), out var xfId);
                     int.TryParse(reader.GetAttribute(ANumFmtId), out var numFmtId);
                     int.TryParse(reader.GetAttribute(AFontId), out var fontId);
-                    var applyFont = reader.GetAttribute(AApplyFont) == "1";
-                    var applyNumberFormat = reader.GetAttribute(AApplyNumberFormat) == "1";
-                    var applyAlignment = reader.GetAttribute(AApplyAlignment) == "1";
-                    var applyProtection = reader.GetAttribute(AApplyProtection) == "1";
                     ReadAlignment(reader, out int indentLevel, out HorizontalAlignment horizontalAlignment, out var hidden, out var locked);
 
                     var extendedFormat = new ExtendedFormat()
@@ -370,10 +362,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         IndentLevel = indentLevel,
                         Hidden = hidden,
                         Locked = locked,
-                        ApplyFont = applyFont,
-                        ApplyNumberFormat = applyNumberFormat,
-                        ApplyProtection = applyProtection,
-                        ApplyTextAlignment = applyAlignment,
                     };
 
                     if (!isCellStyleXF)

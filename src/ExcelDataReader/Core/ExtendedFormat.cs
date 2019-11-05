@@ -19,13 +19,5 @@
         public int IndentLevel { get; set; }
 
         public HorizontalAlignment HorizontalAlignment { get; set; }
-
-        public bool ApplyNumberFormat { get; set; }
-
-        public bool ApplyFont { get; set; }
-
-        public bool ApplyTextAlignment { get; set; }
-
-        public bool ApplyProtection { get; set; }
     }
 }
