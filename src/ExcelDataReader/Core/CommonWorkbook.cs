@@ -42,34 +42,6 @@ namespace ExcelDataReader.Core
                 effectiveStyle.Locked = cellXf.Locked;
                 effectiveStyle.IndentLevel = cellXf.IndentLevel;
                 effectiveStyle.HorizontalAlignment = cellXf.HorizontalAlignment;
-
-                var cellStyleXf = cellXf.ParentCellStyleXf >= 0 && cellXf.ParentCellStyleXf < CellStyleExtendedFormats.Count 
-                    ? CellStyleExtendedFormats[cellXf.ParentCellStyleXf] 
-                    : null;
-                if (cellStyleXf != null)
-                {
-                    if (cellStyleXf.ApplyFont)
-                    {
-                        effectiveStyle.FontIndex = cellStyleXf.FontIndex;
-                    }
-
-                    if (cellStyleXf.ApplyNumberFormat)
-                    {
-                        effectiveStyle.NumberFormatIndex = cellStyleXf.NumberFormatIndex;
-                    }
-
-                    if (cellStyleXf.ApplyProtection)
-                    {
-                        effectiveStyle.Hidden = cellStyleXf.Hidden;
-                        effectiveStyle.Locked = cellStyleXf.Locked;
-                    }
-
-                    if (cellStyleXf.ApplyTextAlignment)
-                    {
-                        effectiveStyle.IndentLevel = cellStyleXf.IndentLevel;
-                        effectiveStyle.HorizontalAlignment = cellStyleXf.HorizontalAlignment;
-                    }
-                }
             }
             else
             {

@@ -140,11 +140,6 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         internal void AddXf(XlsBiffXF xf)
         {
-            // Ignore used flags in Cell XFs
-            var applyFont = !xf.IsCellStyleXf || (xf.UsedAttributes & XfUsedAttributes.Font) != 0;
-            var applyNumberFormat = !xf.IsCellStyleXf || (xf.UsedAttributes & XfUsedAttributes.NumberFormat) != 0;
-            var applyAlignment = !xf.IsCellStyleXf || (xf.UsedAttributes & XfUsedAttributes.TextStyle) != 0;
-            var applyProtection = !xf.IsCellStyleXf || (xf.UsedAttributes & XfUsedAttributes.CellProtection) != 0;
             var extendedFormat = new ExtendedFormat()
             {
                 FontIndex = xf.Font,
@@ -154,10 +149,6 @@ namespace ExcelDataReader.Core.BinaryFormat
                 HorizontalAlignment = xf.HorizontalAlignment,
                 IndentLevel = xf.IndentLevel,
                 ParentCellStyleXf = xf.ParentCellStyleXf,
-                ApplyFont = applyFont,
-                ApplyNumberFormat = applyNumberFormat,
-                ApplyTextAlignment = applyAlignment,
-                ApplyProtection = applyProtection,
             };
 
             // The workbook holds two kinds of XF records: Cell XFs, and Cell Style XFs.
