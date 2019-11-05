@@ -55,15 +55,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             {
                 if (Reader.IsStartElement(ElementCellCrossReference, NsSpreadsheetMl))
                 {
-                    var extendedFormat = ReadCellXfs();
-                    if (extendedFormat != null)
-                        yield return new ExtendedFormatRecord(extendedFormat);
+                    foreach (var xf in ReadCellXfs())
+                        yield return new ExtendedFormatRecord(xf);
                 }
                 else if (Reader.IsStartElement(ElementCellStyleCrossReference, NsSpreadsheetMl))
                 {
-                    var extendedFormat = ReadCellXfs();
-                    if (extendedFormat != null)
-                        yield return new CellStyleExtendedFormatRecord(extendedFormat);
+                    foreach (var xf in ReadCellXfs())
+                        yield return new CellStyleExtendedFormatRecord(xf);
                 }
                 else if (Reader.IsStartElement(ElementNumberFormats, NsSpreadsheetMl))
                 {
@@ -95,14 +93,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             }
         }
 
-        private ExtendedFormat ReadCellXfs()
+        private IEnumerable<ExtendedFormat> ReadCellXfs()
         {
             if (!XmlReaderHelper.ReadFirstContent(Reader))
             {
-                return null;
+                yield break;
             }
-
-            ExtendedFormat result = null;
 
             while (!Reader.EOF)
             {
@@ -115,7 +111,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                     var applyProtection = Reader.GetAttribute(AApplyProtection) == "1";
                     ReadAlignment(Reader, out int indentLevel, out HorizontalAlignment horizontalAlignment, out var hidden, out var locked);
 
-                    result = new ExtendedFormat()
+                    yield return new ExtendedFormat()
                     {
                         FontIndex = -1,
                         ParentCellStyleXf = xfId,
@@ -137,8 +133,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                     break;
                 }
             }
-
-            return result;
         }
 
         private void ReadAlignment(XmlReader reader, out int indentLevel, out HorizontalAlignment horizontalAlignment, out bool hidden, out bool locked)
