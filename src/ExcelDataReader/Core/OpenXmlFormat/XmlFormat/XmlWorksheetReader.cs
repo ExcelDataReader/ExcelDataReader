@@ -261,7 +261,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         private CellRecord ReadCell(int nextColumnIndex)
         {
             int columnIndex;
-            int xfIndex = 0;
+            int xfIndex = -1;
 
             var aS = Reader.GetAttribute(AS);
             var aT = Reader.GetAttribute(AT);

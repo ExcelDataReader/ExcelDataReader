@@ -113,7 +113,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             if (string.IsNullOrEmpty(Path))
                 yield break;
 
-            // TODO Separate content reader that only cares about rows and cells?
             using var sheetStream = Document.GetWorksheetReader(Path);
             if (sheetStream == null)
                 yield break;
@@ -167,16 +166,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 yield return new Row(rowIndex, height, cells);
         }
 
-        public NumberFormatString GetNumberFormatString(int numberFormatIndex)
-        {
-            if (Workbook.Formats.TryGetValue(numberFormatIndex, out var result))
-            {
-                return result;
-            }
-
-            return null;
-        }
-
         private object ConvertCellValue(object value, int numberFormatIndex)
         {
             switch (value)
@@ -190,7 +179,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     return null;
 
                 case double number:
-                    var format = GetNumberFormatString(numberFormatIndex);
+                    var format = Workbook.GetNumberFormatString(numberFormatIndex);
                     if (format != null)
                     {
                         if (format.IsDateTimeFormat)

@@ -950,7 +950,7 @@ namespace ExcelDataReader.Tests
                 new[] { 2, 0, 0 },
                 new[] { 2, 0, 0 },
                 new[] { 3, 3, 4 },
-                new[] { 1, 1, 0 }, // Merged cell
+                new[] { 1, 1, 1 }, // Merged cell
                 new[] { 2, 0, 0 },
             };
 
@@ -981,7 +981,7 @@ namespace ExcelDataReader.Tests
                 new[] { HorizontalAlignment.Left, HorizontalAlignment.General, HorizontalAlignment.General },
                 new[] { HorizontalAlignment.Distributed, HorizontalAlignment.General, HorizontalAlignment.General },
                 new[] { HorizontalAlignment.Left, HorizontalAlignment.Left, HorizontalAlignment.Left },
-                new[] { HorizontalAlignment.Left, HorizontalAlignment.Left, HorizontalAlignment.General }, // Merged cell
+                new[] { HorizontalAlignment.Left, HorizontalAlignment.Left, HorizontalAlignment.Left }, // Merged cell
                 new[] { HorizontalAlignment.Left, HorizontalAlignment.General, HorizontalAlignment.General },
             };
 
