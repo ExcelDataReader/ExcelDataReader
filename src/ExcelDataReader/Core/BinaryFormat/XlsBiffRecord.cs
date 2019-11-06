@@ -34,9 +34,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// Gets the whole size of structure
         /// </summary>
         public int Size => ContentOffset + RecordSize;
-
-        public virtual bool IsCell => false;
-
+        
         internal byte[] Bytes { get; }
 
         internal int RecordContentOffset { get; }

@@ -8,52 +8,19 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffFormulaCell : XlsBiffBlankCell
     {
-        internal XlsBiffFormulaCell(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset, biffVersion)
-        {
-            if (biffVersion == 2)
-            {
-                Flags = (FormulaFlags)ReadUInt16(0xF);
-                XNumValue = ReadDouble(0x7);
-                FormulaType = FormulaValueType.Number;
-            }
-            else
-            {
-                Flags = (FormulaFlags)ReadUInt16(0xE);
+        private readonly int _biffVersion;
+        private bool _booleanValue;
+        private FORMULAERROR _errorValue;
+        private double _xNumValue;
+        private FormulaValueType _formulaType;
+        private bool _initialized;
 
-                var formulaValueExprO = ReadUInt16(0xC);
-                if (formulaValueExprO != 0xFFFF)
-                {
-                    FormulaType = FormulaValueType.Number;
-                    XNumValue = ReadDouble(0x6);
-                }
-                else
-                {
-                    var formulaValueByte1 = ReadByte(0x6);
-                    var formulaValueByte3 = ReadByte(0x8);
-                    var formulaLength = ReadByte(0xF);
-                    switch (formulaValueByte1)
-                    {
-                        case 0x00:
-                            FormulaType = FormulaValueType.String;
-                            break;
-                        case 0x01:
-                            FormulaType = FormulaValueType.Boolean;
-                            BooleanValue = formulaValueByte3 != 0;
-                            break;
-                        case 0x02:
-                            FormulaType = FormulaValueType.Error;
-                            ErrorValue = (FORMULAERROR)formulaValueByte3;
-                            break;
-                        case 0x03:
-                            FormulaType = FormulaValueType.EmptyString;
-                            break;
-                        default:
-                            FormulaType = FormulaValueType.Unknown;
-                            break;
-                    }
-                }
-            }
+        //// private FormulaFlags _flags;
+
+        internal XlsBiffFormulaCell(byte[] bytes, uint offset, int biffVersion)
+            : base(bytes, offset)
+        {
+            _biffVersion = biffVersion;
         }
 
         [Flags]
@@ -95,19 +62,103 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Gets the formula flags
-        /// </summary>
-        public FormulaFlags Flags { get; }
-
-        /// <summary>
         /// Gets the formula value type.
         /// </summary>
-        public FormulaValueType FormulaType { get; }
+        public FormulaValueType FormulaType
+        {
+            get
+            {
+                LazyInit();
+                return _formulaType;
+            }
+        }
 
-        public bool BooleanValue { get; }
+        public bool BooleanValue
+        {
+            get
+            {
+                LazyInit();
+                return _booleanValue;
+            }
+        }
 
-        public FORMULAERROR ErrorValue { get; }
+        public FORMULAERROR ErrorValue
+        {
+            get
+            {
+                LazyInit();
+                return _errorValue;
+            }
+        }
 
-        public double XNumValue { get; }
+        public double XNumValue
+        {
+            get
+            {
+                LazyInit();
+                return _xNumValue;
+            }
+        }
+
+        /*
+        public FormulaFlags Flags
+        {
+            get
+            {
+                LazyInit();
+                return _flags;
+            }
+        }
+        */
+
+        private void LazyInit()
+        {
+            if (_initialized)
+                return;
+            _initialized = true;
+
+            if (_biffVersion == 2)
+            {
+                // _flags = (FormulaFlags)ReadUInt16(0xF);
+                _xNumValue = ReadDouble(0x7);
+                _formulaType = FormulaValueType.Number;
+            }
+            else
+            {
+                // _flags = (FormulaFlags)ReadUInt16(0xE);
+                var formulaValueExprO = ReadUInt16(0xC);
+                if (formulaValueExprO != 0xFFFF)
+                {
+                    _formulaType = FormulaValueType.Number;
+                    _xNumValue = ReadDouble(0x6);
+                }
+                else
+                {
+                    // var formulaLength = ReadByte(0xF);
+                    var formulaValueByte1 = ReadByte(0x6);
+                    var formulaValueByte3 = ReadByte(0x8);
+                    switch (formulaValueByte1)
+                    {
+                        case 0x00:
+                            _formulaType = FormulaValueType.String;
+                            break;
+                        case 0x01:
+                            _formulaType = FormulaValueType.Boolean;
+                            _booleanValue = formulaValueByte3 != 0;
+                            break;
+                        case 0x02:
+                            _formulaType = FormulaValueType.Error;
+                            _errorValue = (FORMULAERROR)formulaValueByte3;
+                            break;
+                        case 0x03:
+                            _formulaType = FormulaValueType.EmptyString;
+                            break;
+                        default:
+                            _formulaType = FormulaValueType.Unknown;
+                            break;
+                    }
+                }
+            }
+        }
     }
 }

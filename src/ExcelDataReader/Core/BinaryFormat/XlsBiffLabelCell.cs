@@ -12,7 +12,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         private readonly IXlsString _xlsString;
 
         internal XlsBiffLabelCell(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset, biffVersion)
+            : base(bytes, offset)
         {
             if (Id == BIFFRECORDTYPE.LABEL_OLD)
             {

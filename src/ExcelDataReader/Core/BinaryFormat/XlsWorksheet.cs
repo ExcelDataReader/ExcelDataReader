@@ -65,20 +65,20 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         public Dictionary<int, XlsRowOffset> RowOffsetMap { get; }
 
-/*
-    TODO: populate these in ReadWorksheetGlobals() if needed
-        public XlsBiffSimpleValueRecord CalcMode { get; set; }
+        /*
+            TODO: populate these in ReadWorksheetGlobals() if needed
+                public XlsBiffSimpleValueRecord CalcMode { get; set; }
 
-        public XlsBiffSimpleValueRecord CalcCount { get; set; }
+                public XlsBiffSimpleValueRecord CalcCount { get; set; }
 
-        public XlsBiffSimpleValueRecord RefMode { get; set; }
+                public XlsBiffSimpleValueRecord RefMode { get; set; }
 
-        public XlsBiffSimpleValueRecord Iteration { get; set; }
+                public XlsBiffSimpleValueRecord Iteration { get; set; }
 
-        public XlsBiffRecord Delta { get; set; }
+                public XlsBiffRecord Delta { get; set; }
 
-        public XlsBiffRecord Window { get; set; }
-*/
+                public XlsBiffRecord Window { get; set; }
+        */
 
         public int FieldCount { get; private set; }
 
@@ -189,9 +189,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                     ixfe = rec;
                 }
 
-                if (rec.IsCell)
+                if (rec is XlsBiffBlankCell cell)
                 {
-                    var cell = (XlsBiffBlankCell)rec;
                     var currentRow = EnsureRow(result, cell.RowIndex);
 
                     if (cell.Id == BIFFRECORDTYPE.MULRK)
@@ -433,6 +432,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                 XlsBiffHeaderFooterString header = null;
                 XlsBiffHeaderFooterString footer = null;
+                
                 var ixfeOffset = -1;
 
                 int maxCellColumn = 0;
@@ -447,109 +447,77 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                 while (rec != null && !(rec is XlsBiffEof))
                 {
-                    if (rec is XlsBiffDimensions dims)
+                    switch (rec)
                     {
-                        FieldCount = dims.LastColumn;
-                        RowCount = (int)dims.LastRow;
-                    }
+                        case XlsBiffDimensions dims:
+                            FieldCount = dims.LastColumn;
+                            RowCount = (int)dims.LastRow;
+                            break;
+                        case XlsBiffDefaultRowHeight defaultRowHeightRecord:
+                            DefaultRowHeight = defaultRowHeightRecord.RowHeight;
+                            break;
+                        case XlsBiffSimpleValueRecord is1904 when rec.Id == BIFFRECORDTYPE.RECORD1904:
+                            IsDate1904 = is1904.Value == 1;
+                            break;
+                        case XlsBiffXF xf when rec.Id == BIFFRECORDTYPE.XF_V2 || rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4:
+                            // NOTE: XF records should only occur in raw BIFF2-4 single worksheet documents without the workbook stream, or globally in the workbook stream.
+                            // It is undefined behavior if multiple worksheets in a workbook declare XF records.
+                            Workbook.AddXf(xf);
+                            break;
+                        case XlsBiffMergeCells mc:
+                            mergeCells.AddRange(mc.MergeCells);
+                            break;
+                        case XlsBiffColInfo colInfo:
+                            columnWidths.Add(colInfo.Value);
+                            break;
+                        case XlsBiffFormatString fmt when rec.Id == BIFFRECORDTYPE.FORMAT:
+                            if (Workbook.BiffVersion >= 5)
+                            {
+                                // fmt.Index exists on BIFF5+ only
+                                biffFormats.Add(fmt.Index, fmt);
+                            }
+                            else
+                            {
+                                biffFormats.Add((ushort)biffFormats.Count, fmt);
+                            }
 
-                    if (rec.Id == BIFFRECORDTYPE.DEFAULTROWHEIGHT || rec.Id == BIFFRECORDTYPE.DEFAULTROWHEIGHT_V2)
-                    {
-                        var defaultRowHeightRecord = (XlsBiffDefaultRowHeight)rec;
-                        DefaultRowHeight = defaultRowHeightRecord.RowHeight;
-                    }
+                            break;
 
-                    if (rec.Id == BIFFRECORDTYPE.RECORD1904)
-                    {
-                        IsDate1904 = ((XlsBiffSimpleValueRecord)rec).Value == 1;
-                    }
+                        case XlsBiffFormatString fmt23 when rec.Id == BIFFRECORDTYPE.FORMAT_V23:
+                            biffFormats.Add((ushort)biffFormats.Count, fmt23);
+                            break;
+                        case XlsBiffSimpleValueRecord codePage when rec.Id == BIFFRECORDTYPE.CODEPAGE:
+                            Encoding = EncodingHelper.GetEncoding(codePage.Value);
+                            break;
+                        case XlsBiffHeaderFooterString h when rec.Id == BIFFRECORDTYPE.HEADER && rec.RecordSize > 0:
+                            header = h;
+                            break;
+                        case XlsBiffHeaderFooterString f when rec.Id == BIFFRECORDTYPE.FOOTER && rec.RecordSize > 0:
+                            footer = f;
+                            break;
+                        case XlsBiffCodeName codeName:
+                            CodeName = codeName.GetValue(Encoding);
+                            break;
+                        case XlsBiffRow row:
+                            SetMinMaxRow(row.RowIndex, row);
 
-                    if (rec.Id == BIFFRECORDTYPE.XF_V2 || rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4)
-                    {
-                        // NOTE: XF records should only occur in raw BIFF2-4 single worksheet documents without the workbook stream, or globally in the workbook stream.
-                        // It is undefined behavior if multiple worksheets in a workbook declare XF records.
-                        Workbook.AddXf((XlsBiffXF)rec);
-                    }
+                            // Count rows by row records without affecting the overlap in OffsetMap
+                            maxRowCountFromRowRecord = Math.Max(maxRowCountFromRowRecord, row.RowIndex + 1);
+                            break;
+                        case XlsBiffBlankCell cell:
+                            maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
+                            maxRowCount = Math.Max(maxRowCount, cell.RowIndex + 1);
+                            if (ixfeOffset != -1)
+                            {
+                                SetMinMaxRowOffset(cell.RowIndex, ixfeOffset, maxRowCount - 1);
+                                ixfeOffset = -1;
+                            }
 
-                    if (rec.Id == BIFFRECORDTYPE.MERGECELLS)
-                    {
-                        mergeCells.AddRange(((XlsBiffMergeCells)rec).MergeCells);
-                    }
-
-                    if (rec.Id == BIFFRECORDTYPE.COLINFO)
-                    {
-                        columnWidths.Add(((XlsBiffColInfo)rec).Value);
-                    }
-
-                    if (rec.Id == BIFFRECORDTYPE.FORMAT)
-                    {
-                        var fmt = (XlsBiffFormatString)rec;
-                        if (Workbook.BiffVersion >= 5)
-                        {
-                            // fmt.Index exists on BIFF5+ only
-                            biffFormats.Add(fmt.Index, fmt);
-                        }
-                        else
-                        {
-                            biffFormats.Add((ushort)biffFormats.Count, fmt);
-                        }
-                    }
-
-                    if (rec.Id == BIFFRECORDTYPE.FORMAT_V23)
-                    {
-                        var fmt = (XlsBiffFormatString)rec;
-                        biffFormats.Add((ushort)biffFormats.Count, fmt);
-                    }
-
-                    if (rec.Id == BIFFRECORDTYPE.CODEPAGE)
-                    {
-                        var codePage = (XlsBiffSimpleValueRecord)rec;
-                        Encoding = EncodingHelper.GetEncoding(codePage.Value);
-                    }
-
-                    if (rec.Id == BIFFRECORDTYPE.HEADER && rec.RecordSize > 0)
-                    {
-                        header = (XlsBiffHeaderFooterString)rec;
-                    }
-
-                    if (rec.Id == BIFFRECORDTYPE.FOOTER && rec.RecordSize > 0)
-                    {
-                        footer = (XlsBiffHeaderFooterString)rec;
-                    }
-
-                    if (rec.Id == BIFFRECORDTYPE.CODENAME)
-                    {
-                        var codeName = (XlsBiffCodeName)rec;
-                        CodeName = codeName.GetValue(Encoding);
-                    }
-
-                    if (rec.Id == BIFFRECORDTYPE.ROW || rec.Id == BIFFRECORDTYPE.ROW_V2)
-                    {
-                        var rowRecord = (XlsBiffRow)rec;
-                        SetMinMaxRow(rowRecord.RowIndex, rowRecord);
-
-                        // Count rows by row records without affecting the overlap in OffsetMap
-                        maxRowCountFromRowRecord = Math.Max(maxRowCountFromRowRecord, rowRecord.RowIndex + 1);
-                    }
-
-                    if (rec.Id == BIFFRECORDTYPE.IXFE)
-                    {
-                        ixfeOffset = recordOffset;
-                    }
-
-                    if (rec.IsCell)
-                    {
-                        var cell = (XlsBiffBlankCell)rec;
-                        maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
-                        maxRowCount = Math.Max(maxRowCount, cell.RowIndex + 1);
-
-                        if (ixfeOffset != -1)
-                        {
-                            SetMinMaxRowOffset(cell.RowIndex, ixfeOffset, maxRowCount - 1);
-                            ixfeOffset = -1;
-                        }
-
-                        SetMinMaxRowOffset(cell.RowIndex, recordOffset, maxRowCount - 1);
+                            SetMinMaxRowOffset(cell.RowIndex, recordOffset, maxRowCount - 1);
+                            break;
+                        case XlsBiffRecord ixfe when rec.Id == BIFFRECORDTYPE.IXFE:
+                            ixfeOffset = recordOffset; 
+                            break;
                     }
 
                     recordOffset = biffStream.Position;
