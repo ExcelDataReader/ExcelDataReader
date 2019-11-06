@@ -153,7 +153,6 @@ namespace ExcelDataReader.Core.BinaryFormat
             if (SecretKey != null)
                 DecryptRecord(recordOffset, id, bytes);
 
-            const uint offset = 0;
             int biffVersion = BiffVersion;
 
             switch (id)
@@ -162,108 +161,104 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.BOF_V3:
                 case BIFFRECORDTYPE.BOF_V4:
                 case BIFFRECORDTYPE.BOF:
-                    return new XlsBiffBOF(bytes, offset);
+                    return new XlsBiffBOF(bytes);
                 case BIFFRECORDTYPE.EOF:
-                    return new XlsBiffEof(bytes, offset);
+                    return new XlsBiffEof(bytes);
                 case BIFFRECORDTYPE.INTERFACEHDR:
-                    return new XlsBiffInterfaceHdr(bytes, offset);
+                    return new XlsBiffInterfaceHdr(bytes);
 
                 case BIFFRECORDTYPE.SST:
-                    return new XlsBiffSST(bytes, offset);
+                    return new XlsBiffSST(bytes);
 
-                case BIFFRECORDTYPE.INDEX:
-                    return new XlsBiffIndex(bytes, offset, biffVersion == 8);
                 case BIFFRECORDTYPE.DEFAULTROWHEIGHT_V2:
                 case BIFFRECORDTYPE.DEFAULTROWHEIGHT:
-                    return new XlsBiffDefaultRowHeight(bytes, offset, biffVersion);
+                    return new XlsBiffDefaultRowHeight(bytes, biffVersion);
                 case BIFFRECORDTYPE.ROW_V2:
                 case BIFFRECORDTYPE.ROW:
-                    return new XlsBiffRow(bytes, offset);
-                case BIFFRECORDTYPE.DBCELL:
-                    return new XlsBiffDbCell(bytes, offset);
+                    return new XlsBiffRow(bytes);
 
                 case BIFFRECORDTYPE.BOOLERR:
                 case BIFFRECORDTYPE.BOOLERR_OLD:
                 case BIFFRECORDTYPE.BLANK:
                 case BIFFRECORDTYPE.BLANK_OLD:
-                    return new XlsBiffBlankCell(bytes, offset);
+                    return new XlsBiffBlankCell(bytes);
                 case BIFFRECORDTYPE.MULBLANK:
-                    return new XlsBiffMulBlankCell(bytes, offset);
+                    return new XlsBiffMulBlankCell(bytes);
                 case BIFFRECORDTYPE.LABEL_OLD:
                 case BIFFRECORDTYPE.LABEL:
                 case BIFFRECORDTYPE.RSTRING:
-                    return new XlsBiffLabelCell(bytes, offset, biffVersion);
+                    return new XlsBiffLabelCell(bytes, biffVersion);
                 case BIFFRECORDTYPE.LABELSST:
-                    return new XlsBiffLabelSSTCell(bytes, offset);
+                    return new XlsBiffLabelSSTCell(bytes);
                 case BIFFRECORDTYPE.INTEGER:
                 case BIFFRECORDTYPE.INTEGER_OLD:
-                    return new XlsBiffIntegerCell(bytes, offset);
+                    return new XlsBiffIntegerCell(bytes);
                 case BIFFRECORDTYPE.NUMBER:
                 case BIFFRECORDTYPE.NUMBER_OLD:
-                    return new XlsBiffNumberCell(bytes, offset);
+                    return new XlsBiffNumberCell(bytes);
                 case BIFFRECORDTYPE.RK:
-                    return new XlsBiffRKCell(bytes, offset);
+                    return new XlsBiffRKCell(bytes);
                 case BIFFRECORDTYPE.MULRK:
-                    return new XlsBiffMulRKCell(bytes, offset);
+                    return new XlsBiffMulRKCell(bytes);
                 case BIFFRECORDTYPE.FORMULA:
                 case BIFFRECORDTYPE.FORMULA_V3:
                 case BIFFRECORDTYPE.FORMULA_V4:
-                    return new XlsBiffFormulaCell(bytes, offset, biffVersion);
+                    return new XlsBiffFormulaCell(bytes, biffVersion);
                 case BIFFRECORDTYPE.FORMAT_V23:
                 case BIFFRECORDTYPE.FORMAT:
-                    return new XlsBiffFormatString(bytes, offset, biffVersion);
+                    return new XlsBiffFormatString(bytes, biffVersion);
                 case BIFFRECORDTYPE.STRING:
                 case BIFFRECORDTYPE.STRING_OLD:
-                    return new XlsBiffFormulaString(bytes, offset, biffVersion);
+                    return new XlsBiffFormulaString(bytes, biffVersion);
                 case BIFFRECORDTYPE.CONTINUE:
-                    return new XlsBiffContinue(bytes, offset);
+                    return new XlsBiffContinue(bytes);
                 case BIFFRECORDTYPE.DIMENSIONS:
                 case BIFFRECORDTYPE.DIMENSIONS_V2:
-                    return new XlsBiffDimensions(bytes, offset, biffVersion);
+                    return new XlsBiffDimensions(bytes, biffVersion);
                 case BIFFRECORDTYPE.BOUNDSHEET:
-                    return new XlsBiffBoundSheet(bytes, offset, biffVersion);
+                    return new XlsBiffBoundSheet(bytes, biffVersion);
                 case BIFFRECORDTYPE.WINDOW1:
-                    return new XlsBiffWindow1(bytes, offset);
+                    return new XlsBiffWindow1(bytes);
                 case BIFFRECORDTYPE.CODEPAGE:
-                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                    return new XlsBiffSimpleValueRecord(bytes);
                 case BIFFRECORDTYPE.FNGROUPCOUNT:
-                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                    return new XlsBiffSimpleValueRecord(bytes);
                 case BIFFRECORDTYPE.RECORD1904:
-                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                    return new XlsBiffSimpleValueRecord(bytes);
                 case BIFFRECORDTYPE.BOOKBOOL:
-                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                    return new XlsBiffSimpleValueRecord(bytes);
                 case BIFFRECORDTYPE.BACKUP:
-                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                    return new XlsBiffSimpleValueRecord(bytes);
                 case BIFFRECORDTYPE.HIDEOBJ:
-                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                    return new XlsBiffSimpleValueRecord(bytes);
                 case BIFFRECORDTYPE.USESELFS:
-                    return new XlsBiffSimpleValueRecord(bytes, offset);
+                    return new XlsBiffSimpleValueRecord(bytes);
                 case BIFFRECORDTYPE.UNCALCED:
-                    return new XlsBiffUncalced(bytes, offset);
+                    return new XlsBiffUncalced(bytes);
                 case BIFFRECORDTYPE.QUICKTIP:
-                    return new XlsBiffQuickTip(bytes, offset);
+                    return new XlsBiffQuickTip(bytes);
                 case BIFFRECORDTYPE.MSODRAWING:
-                    return new XlsBiffMSODrawing(bytes, offset);
+                    return new XlsBiffMSODrawing(bytes);
                 case BIFFRECORDTYPE.FILEPASS:
-                    return new XlsBiffFilePass(bytes, offset, biffVersion);
+                    return new XlsBiffFilePass(bytes, biffVersion);
                 case BIFFRECORDTYPE.HEADER:
                 case BIFFRECORDTYPE.FOOTER:
-                    return new XlsBiffHeaderFooterString(bytes, offset, biffVersion);
+                    return new XlsBiffHeaderFooterString(bytes, biffVersion);
                 case BIFFRECORDTYPE.CODENAME:
-                    return new XlsBiffCodeName(bytes, offset);
+                    return new XlsBiffCodeName(bytes);
                 case BIFFRECORDTYPE.XF:
                 case BIFFRECORDTYPE.XF_V2:
                 case BIFFRECORDTYPE.XF_V3:
                 case BIFFRECORDTYPE.XF_V4:
-                    return new XlsBiffXF(bytes, offset, biffVersion);
+                    return new XlsBiffXF(bytes, biffVersion);
                 case BIFFRECORDTYPE.FONT:
-                    return new XlsBiffFont(bytes, offset, biffVersion);
+                    return new XlsBiffFont(bytes, biffVersion);
                 case BIFFRECORDTYPE.MERGECELLS:
-                    return new XlsBiffMergeCells(bytes, offset);
+                    return new XlsBiffMergeCells(bytes);
                 case BIFFRECORDTYPE.COLINFO:
-                    return new XlsBiffColInfo(bytes, offset);
+                    return new XlsBiffColInfo(bytes);
                 default:
-                    return new XlsBiffRecord(bytes, offset);
+                    return new XlsBiffRecord(bytes);
             }
         }
 

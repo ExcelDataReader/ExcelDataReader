@@ -6,8 +6,8 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffUncalced : XlsBiffRecord
     {
-        internal XlsBiffUncalced(byte[] bytes, uint offset)
-            : base(bytes, offset)
+        internal XlsBiffUncalced(byte[] bytes)
+            : base(bytes)
         {
         }
     }

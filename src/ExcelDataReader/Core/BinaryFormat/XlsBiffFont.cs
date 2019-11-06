@@ -10,24 +10,24 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly IXlsString _fontName;
 
-        internal XlsBiffFont(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset)
+        internal XlsBiffFont(byte[] bytes, int biffVersion)
+            : base(bytes)
         {
             if (Id == BIFFRECORDTYPE.FONT_V34)
             {
-                _fontName = new XlsShortByteString(bytes, offset + 4 + 6);
+                _fontName = new XlsShortByteString(bytes, ContentOffset + 6);
             }
             else if (Id == BIFFRECORDTYPE.FONT && biffVersion == 2)
             {
-                _fontName = new XlsShortByteString(bytes, offset + 4 + 4);
+                _fontName = new XlsShortByteString(bytes, ContentOffset + 4);
             }
             else if (Id == BIFFRECORDTYPE.FONT && biffVersion == 5)
             {
-                _fontName = new XlsShortByteString(bytes, offset + 4 + 14);
+                _fontName = new XlsShortByteString(bytes, ContentOffset + 14);
             }
             else if (Id == BIFFRECORDTYPE.FONT && biffVersion == 8)
             {
-                _fontName = new XlsShortUnicodeString(bytes, offset + 4 + 14);
+                _fontName = new XlsShortUnicodeString(bytes, ContentOffset + 14);
             }
             else
             {

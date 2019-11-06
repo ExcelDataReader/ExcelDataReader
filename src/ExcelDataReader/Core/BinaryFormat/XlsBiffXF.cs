@@ -4,8 +4,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 {
     internal class XlsBiffXF : XlsBiffRecord
     {
-        internal XlsBiffXF(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset)
+        internal XlsBiffXF(byte[] bytes, int biffVersion)
+            : base(bytes)
         {
             switch (Id)
             {

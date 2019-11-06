@@ -11,8 +11,8 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly List<IXlsString> _strings;
 
-        internal XlsBiffSST(byte[] bytes, uint offset)
-            : base(bytes, offset)
+        internal XlsBiffSST(byte[] bytes)
+            : base(bytes)
         {
             _strings = new List<IXlsString>();
         }

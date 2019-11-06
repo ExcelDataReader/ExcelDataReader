@@ -5,8 +5,8 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffIntegerCell : XlsBiffBlankCell
     {
-        internal XlsBiffIntegerCell(byte[] bytes, uint offset)
-            : base(bytes, offset)
+        internal XlsBiffIntegerCell(byte[] bytes)
+            : base(bytes)
         {
         }
 
