@@ -92,7 +92,9 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         public override bool VerifyPassword(string password)
         {
-            var secretKey = HashPassword(password, PasswordSaltValue, PasswordHashAlgorithm, PasswordSpinCount);
+            byte[] secretKey;
+            using (var hashAlgorithm = CryptoHelpers.Create(PasswordHashAlgorithm))
+                secretKey = HashPassword(password, PasswordSaltValue, hashAlgorithm, PasswordSpinCount);
 
             var inputBlockKey = CryptoHelpers.HashBytes(
                 CryptoHelpers.Combine(secretKey, new byte[] { 0xfe, 0xa7, 0xd2, 0x76, 0x3b, 0x4b, 0x9e, 0x79 }),
@@ -120,35 +122,39 @@ namespace ExcelDataReader.Core.OfficeCrypto
             }
         }
 
-        private static byte[] GenerateSecretKey(string password, byte[] saltValue, HashIdentifier hashAlgorithm, byte[] encryptedKeyValue, int spinCount, int keyBits, SymmetricAlgorithm cipher)
+        private static byte[] GenerateSecretKey(string password, byte[] saltValue, HashIdentifier hashIdentifier, byte[] encryptedKeyValue, int spinCount, int keyBits, SymmetricAlgorithm cipher)
         {
             var block3 = new byte[] { 0x14, 0x6e, 0x0b, 0xe7, 0xab, 0xac, 0xd0, 0xd6 };
 
-            var h = HashPassword(password, saltValue, hashAlgorithm, spinCount);
+            byte[] hash;
+            using (var hashAlgorithm = CryptoHelpers.Create(hashIdentifier))
+            {
+                hash = HashPassword(password, saltValue, hashAlgorithm, spinCount);
 
-            h = CryptoHelpers.HashBytes(CryptoHelpers.Combine(h, block3), hashAlgorithm);
+                hash = CryptoHelpers.HashBytes(CryptoHelpers.Combine(hash, block3), hashIdentifier);
+            }
 
             // Truncate or pad with 0x36
-            var hashSize = h.Length;
-            Array.Resize(ref h, keyBits / 8);
+            var hashSize = hash.Length;
+            Array.Resize(ref hash, keyBits / 8);
             for (var i = hashSize; i < keyBits / 8; i++)
             {
-                h[i] = 0x36;
+                hash[i] = 0x36;
             }
 
             // NOTE: the stored salt is padded to a multiple of the block size which affects AES-192
-            var decryptedKeyValue = CryptoHelpers.DecryptBytes(cipher, encryptedKeyValue, h, saltValue);
+            var decryptedKeyValue = CryptoHelpers.DecryptBytes(cipher, encryptedKeyValue, hash, saltValue);
             Array.Resize(ref decryptedKeyValue, keyBits / 8);
             return decryptedKeyValue;
         }
 
-        private static byte[] HashPassword(string password, byte[] saltValue, HashIdentifier hashAlgorithm, int spinCount)
+        private static byte[] HashPassword(string password, byte[] saltValue, HashAlgorithm hashAlgorithm, int spinCount)
         {
-            var h = CryptoHelpers.HashBytes(CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password)), hashAlgorithm);
+            var h = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password)));
 
             for (var i = 0; i < spinCount; i++)
             {
-                h = CryptoHelpers.HashBytes(CryptoHelpers.Combine(BitConverter.GetBytes(i), h), hashAlgorithm);
+                h = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(BitConverter.GetBytes(i), h));
             }
 
             return h;
