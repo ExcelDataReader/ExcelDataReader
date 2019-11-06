@@ -243,25 +243,29 @@ namespace ExcelDataReader.Core.OfficeCrypto
         /// <summary>
         /// 2.3.4.7 ECMA-376 Document Encryption Key Generation (Standard Encryption)
         /// </summary>
-        private static byte[] GenerateEcma376SecretKey(string password, byte[] saltValue, HashIdentifier hashAlgorithm, int keySize, int verifierHashSize)
+        private static byte[] GenerateEcma376SecretKey(string password, byte[] saltValue, HashIdentifier hashIdentifier, int keySize, int verifierHashSize)
         {
-            var h = CryptoHelpers.HashBytes(CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password)), hashAlgorithm);
-            for (int i = 0; i < 50000; i++)
+            byte[] hash;
+            using (var hashAlgorithm = CryptoHelpers.Create(hashIdentifier))
             {
-                h = CryptoHelpers.HashBytes(CryptoHelpers.Combine(BitConverter.GetBytes(i), h), hashAlgorithm);
+                hash = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password)));
+                for (int i = 0; i < 50000; i++)
+                {
+                    hash = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(BitConverter.GetBytes(i), hash));
+                }
+
+                hash = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(hash, BitConverter.GetBytes(0)));
+
+                // The algorithm in this 'DeriveKey' function is the bit that's not clear from the documentation
+                hash = DeriveKey(hash, hashAlgorithm, keySize, verifierHashSize);
             }
 
-            h = CryptoHelpers.HashBytes(CryptoHelpers.Combine(h, BitConverter.GetBytes(0)), hashAlgorithm);
+            Array.Resize(ref hash, keySize / 8);
 
-            // The algorithm in this 'DeriveKey' function is the bit that's not clear from the documentation
-            h = DeriveKey(h, hashAlgorithm, keySize, verifierHashSize);
-
-            Array.Resize(ref h, keySize / 8);
-
-            return h;
+            return hash;
         }
 
-        private static byte[] DeriveKey(byte[] hashValue, HashIdentifier hashAlgorithm, int keySize, int verifierHashSize)
+        private static byte[] DeriveKey(byte[] hashValue, HashAlgorithm hashAlgorithm, int keySize, int verifierHashSize)
         {
             // And one more hash to derive the key
             byte[] derivedKey = new byte[64];
@@ -272,7 +276,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
             for (int i = 0; i < derivedKey.Length; i++)
                 derivedKey[i] = (byte)(i < hashValue.Length ? 0x36 ^ hashValue[i] : 0x36);
 
-            byte[] x1 = CryptoHelpers.HashBytes(derivedKey, hashAlgorithm);
+            byte[] x1 = hashAlgorithm.ComputeHash(derivedKey);
 
             if (verifierHashSize > keySize / 8)
                 return x1;
@@ -280,7 +284,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
             for (int i = 0; i < derivedKey.Length; i++)
                 derivedKey[i] = (byte)(i < hashValue.Length ? 0x5C ^ hashValue[i] : 0x5C);
 
-            byte[] x2 = CryptoHelpers.HashBytes(derivedKey, hashAlgorithm);
+            byte[] x2 = hashAlgorithm.ComputeHash(derivedKey);
             return CryptoHelpers.Combine(x1, x2);
         }
     }

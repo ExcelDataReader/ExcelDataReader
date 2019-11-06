@@ -6,23 +6,28 @@ namespace ExcelDataReader.Core.OfficeCrypto
 {
     internal static class CryptoHelpers
     {
+        public static HashAlgorithm Create(HashIdentifier hashAlgorithm) 
+        {
+            switch (hashAlgorithm)
+            {
+                case HashIdentifier.SHA512:
+                    return SHA512.Create();
+                case HashIdentifier.SHA384:
+                    return SHA384.Create();
+                case HashIdentifier.SHA256:
+                    return SHA256.Create();
+                case HashIdentifier.SHA1:
+                    return SHA1.Create();
+                case HashIdentifier.MD5:
+                    return MD5.Create();
+                default:
+                    throw new InvalidOperationException("Unsupported hash algorithm");
+            }
+        }
+
         public static byte[] HashBytes(byte[] bytes, HashIdentifier hashAlgorithm)
         {
-            HashAlgorithm hash;
-            if (hashAlgorithm == HashIdentifier.SHA512)
-                hash = SHA512.Create();
-            else if (hashAlgorithm == HashIdentifier.SHA384)
-                hash = SHA384.Create();
-            else if (hashAlgorithm == HashIdentifier.SHA256)
-                hash = SHA256.Create();
-            else if (hashAlgorithm == HashIdentifier.SHA1)
-                hash = SHA1.Create();
-            else if (hashAlgorithm == HashIdentifier.MD5)
-                hash = MD5.Create();
-            else
-                throw new InvalidOperationException("Unsupported hash algorithm");
-
-            using (hash)
+            using (HashAlgorithm hash = Create(hashAlgorithm))
             {
                 return hash.ComputeHash(bytes);
             }
