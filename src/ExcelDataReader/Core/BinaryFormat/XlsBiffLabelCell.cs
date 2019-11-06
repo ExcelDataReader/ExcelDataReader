@@ -11,27 +11,27 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly IXlsString _xlsString;
 
-        internal XlsBiffLabelCell(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset)
+        internal XlsBiffLabelCell(byte[] bytes, int biffVersion)
+            : base(bytes)
         {
             if (Id == BIFFRECORDTYPE.LABEL_OLD)
             {
                 // BIFF2
-                _xlsString = new XlsShortByteString(bytes, offset + 4 + 7);
+                _xlsString = new XlsShortByteString(bytes, ContentOffset + 7);
             }
             else if (biffVersion >= 2 && biffVersion <= 5)
             {
                 // BIFF3-5, or if there is a newer label record present in a BIFF2 stream
-                _xlsString = new XlsByteString(bytes, offset + 4 + 6);
+                _xlsString = new XlsByteString(bytes, ContentOffset + 6);
             }
             else if (biffVersion == 8)
             {
                 // BIFF8
-                _xlsString = new XlsUnicodeString(bytes, offset + 4 + 6);
+                _xlsString = new XlsUnicodeString(bytes, ContentOffset + 6);
             }
             else
             {
-                throw new ArgumentException("Unexpected BIFF version " + biffVersion.ToString(), nameof(biffVersion));
+                throw new ArgumentException("Unexpected BIFF version " + biffVersion, nameof(biffVersion));
             }
         }
 

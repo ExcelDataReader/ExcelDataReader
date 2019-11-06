@@ -5,8 +5,8 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffDimensions : XlsBiffRecord
     {
-        internal XlsBiffDimensions(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset)
+        internal XlsBiffDimensions(byte[] bytes, int biffVersion)
+            : base(bytes)
         {
             if (biffVersion < 8)
             {

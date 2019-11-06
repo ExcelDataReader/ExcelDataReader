@@ -5,8 +5,8 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffInterfaceHdr : XlsBiffRecord
     {
-        internal XlsBiffInterfaceHdr(byte[] bytes, uint offset)
-            : base(bytes, offset)
+        internal XlsBiffInterfaceHdr(byte[] bytes)
+            : base(bytes)
         {
         }
 

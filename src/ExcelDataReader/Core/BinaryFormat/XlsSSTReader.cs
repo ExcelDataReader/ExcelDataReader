@@ -34,7 +34,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             EnsureRecord();
 
-            var header = new XlsSSTStringHeader(CurrentRecord.Bytes, (uint)(CurrentRecord.Offset + CurrentRecordOffset));
+            var header = new XlsSSTStringHeader(CurrentRecord.Bytes, CurrentRecordOffset);
             Advance((int)header.HeadSize);
 
             var remainingCharacters = (int)header.CharacterCount;
@@ -89,14 +89,14 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             if (isMultiByte)
             {
-                Array.Copy(CurrentRecord.Bytes, CurrentRecord.Offset + CurrentRecordOffset, dest, offset, characterCount * 2);
+                Array.Copy(CurrentRecord.Bytes, CurrentRecordOffset, dest, offset, characterCount * 2);
                 CurrentRecordOffset += characterCount * 2;
             }
             else
             {
                 for (int i = 0; i < characterCount; i++)
                 {
-                    dest[offset + i * 2] = CurrentRecord.Bytes[CurrentRecord.Offset + CurrentRecordOffset + i];
+                    dest[offset + i * 2] = CurrentRecord.Bytes[CurrentRecordOffset + i];
                     dest[offset + i * 2 + 1] = 0;
                 }
 
@@ -111,7 +111,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 throw new InvalidOperationException("SST read position out of range");
             }
 
-            var result = CurrentRecord.Bytes[CurrentRecord.Offset + CurrentRecordOffset];
+            var result = CurrentRecord.Bytes[CurrentRecordOffset];
             CurrentRecordOffset++;
             return result;
         }

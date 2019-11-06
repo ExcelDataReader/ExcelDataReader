@@ -8,8 +8,8 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffFilePass : XlsBiffRecord
     {
-        internal XlsBiffFilePass(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset)
+        internal XlsBiffFilePass(byte[] bytes, int biffVersion)
+            : base(bytes)
         {
             if (biffVersion >= 2 && biffVersion <= 5)
             {

@@ -8,8 +8,8 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffMergeCells : XlsBiffRecord
     {
-        public XlsBiffMergeCells(byte[] bytes, uint offset)
-            : base(bytes, offset)
+        public XlsBiffMergeCells(byte[] bytes)
+            : base(bytes)
         {
             var count = ReadUInt16(0);
 

@@ -8,6 +8,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffFormulaCell : XlsBiffBlankCell
     {
+        // private FormulaFlags _flags;
         private readonly int _biffVersion;
         private bool _booleanValue;
         private FORMULAERROR _errorValue;
@@ -15,10 +16,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         private FormulaValueType _formulaType;
         private bool _initialized;
 
-        //// private FormulaFlags _flags;
-
-        internal XlsBiffFormulaCell(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset)
+        internal XlsBiffFormulaCell(byte[] bytes, int biffVersion)
+            : base(bytes)
         {
             _biffVersion = biffVersion;
         }

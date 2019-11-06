@@ -5,8 +5,8 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffQuickTip : XlsBiffRecord
     {
-        internal XlsBiffQuickTip(byte[] bytes, uint offset)
-            : base(bytes, offset)
+        internal XlsBiffQuickTip(byte[] bytes)
+            : base(bytes)
         {
         }
     }

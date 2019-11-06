@@ -4,8 +4,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 {
     internal class XlsBiffColInfo : XlsBiffRecord
     {
-        public XlsBiffColInfo(byte[] bytes, uint offset)
-            : base(bytes, offset)
+        public XlsBiffColInfo(byte[] bytes)
+            : base(bytes)
         {
             var colFirst = ReadUInt16(0x0);
             var colLast = ReadUInt16(0x2);

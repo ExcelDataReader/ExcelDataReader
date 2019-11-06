@@ -6,8 +6,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 {
     internal class XlsBiffDefaultRowHeight : XlsBiffRecord
     {
-        public XlsBiffDefaultRowHeight(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset)
+        public XlsBiffDefaultRowHeight(byte[] bytes, int biffVersion)
+            : base(bytes)
         {
             if (biffVersion == 2)
             {

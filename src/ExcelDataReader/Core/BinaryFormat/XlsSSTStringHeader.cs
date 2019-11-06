@@ -9,9 +9,9 @@ namespace ExcelDataReader.Core.BinaryFormat
     internal class XlsSSTStringHeader
     {
         private readonly byte[] _bytes;
-        private readonly uint _offset;
+        private readonly int _offset;
 
-        public XlsSSTStringHeader(byte[] bytes, uint offset)
+        public XlsSSTStringHeader(byte[] bytes, int offset)
         {
             _bytes = bytes;
             _offset = offset;
@@ -28,12 +28,12 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Gets the number of characters in the string.
         /// </summary>
-        public ushort CharacterCount => BitConverter.ToUInt16(_bytes, (int)_offset);
+        public ushort CharacterCount => BitConverter.ToUInt16(_bytes, _offset);
 
         /// <summary>
         /// Gets the flags.
         /// </summary>
-        public FormattedUnicodeStringFlags Flags => (FormattedUnicodeStringFlags)Buffer.GetByte(_bytes, (int)_offset + 2);
+        public FormattedUnicodeStringFlags Flags => (FormattedUnicodeStringFlags)Buffer.GetByte(_bytes, _offset + 2);
 
         /// <summary>
         /// Gets a value indicating whether the string has an extended record. 
