@@ -142,20 +142,21 @@ namespace ExcelDataReader.Core.BinaryFormat
             var header = new byte[4];
             stream.Read(header, 0, 4);
 
+            // Does this work on a big endian system?
             var id = (BIFFRECORDTYPE)BitConverter.ToUInt16(header, 0);
             int recordSize = BitConverter.ToUInt16(header, 2);
 
             var bytes = new byte[4 + recordSize];
             Array.Copy(header, bytes, 4);
             stream.Read(bytes, 4, recordSize);
-
+            
             if (SecretKey != null)
                 DecryptRecord(recordOffset, id, bytes);
 
-            uint offset = 0;
+            const uint offset = 0;
             int biffVersion = BiffVersion;
 
-            switch ((BIFFRECORDTYPE)id)
+            switch (id)
             {
                 case BIFFRECORDTYPE.BOF_V2:
                 case BIFFRECORDTYPE.BOF_V3:
@@ -185,25 +186,25 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.BOOLERR_OLD:
                 case BIFFRECORDTYPE.BLANK:
                 case BIFFRECORDTYPE.BLANK_OLD:
-                    return new XlsBiffBlankCell(bytes, offset, biffVersion);
+                    return new XlsBiffBlankCell(bytes, offset);
                 case BIFFRECORDTYPE.MULBLANK:
-                    return new XlsBiffMulBlankCell(bytes, offset, biffVersion);
+                    return new XlsBiffMulBlankCell(bytes, offset);
                 case BIFFRECORDTYPE.LABEL_OLD:
                 case BIFFRECORDTYPE.LABEL:
                 case BIFFRECORDTYPE.RSTRING:
                     return new XlsBiffLabelCell(bytes, offset, biffVersion);
                 case BIFFRECORDTYPE.LABELSST:
-                    return new XlsBiffLabelSSTCell(bytes, offset, biffVersion);
+                    return new XlsBiffLabelSSTCell(bytes, offset);
                 case BIFFRECORDTYPE.INTEGER:
                 case BIFFRECORDTYPE.INTEGER_OLD:
-                    return new XlsBiffIntegerCell(bytes, offset, biffVersion);
+                    return new XlsBiffIntegerCell(bytes, offset);
                 case BIFFRECORDTYPE.NUMBER:
                 case BIFFRECORDTYPE.NUMBER_OLD:
-                    return new XlsBiffNumberCell(bytes, offset, biffVersion);
+                    return new XlsBiffNumberCell(bytes, offset);
                 case BIFFRECORDTYPE.RK:
-                    return new XlsBiffRKCell(bytes, offset, biffVersion);
+                    return new XlsBiffRKCell(bytes, offset);
                 case BIFFRECORDTYPE.MULRK:
-                    return new XlsBiffMulRKCell(bytes, offset, biffVersion);
+                    return new XlsBiffMulRKCell(bytes, offset);
                 case BIFFRECORDTYPE.FORMULA:
                 case BIFFRECORDTYPE.FORMULA_V3:
                 case BIFFRECORDTYPE.FORMULA_V4:

@@ -5,22 +5,14 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal class XlsBiffIntegerCell : XlsBiffBlankCell
     {
-        internal XlsBiffIntegerCell(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset, biffVersion)
+        internal XlsBiffIntegerCell(byte[] bytes, uint offset)
+            : base(bytes, offset)
         {
-            if (Id == BIFFRECORDTYPE.INTEGER_OLD)
-            {
-                Value = ReadUInt16(0x7);
-            }
-            else
-            {
-                Value = ReadUInt16(0x6);
-            }
         }
 
         /// <summary>
         /// Gets the cell value.
         /// </summary>
-        public int Value { get; }
+        public int Value => Id == BIFFRECORDTYPE.INTEGER_OLD ? ReadUInt16(0x7) : ReadUInt16(0x6);
     }
 }
