@@ -120,10 +120,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                         IndentLevel = indentLevel,
                         Hidden = hidden,
                         Locked = locked,
-                        ApplyFont = applyNumberFormat,
-                        ApplyNumberFormat = applyNumberFormat,
-                        ApplyProtection = applyProtection,
-                        ApplyTextAlignment = applyAlignment,
                     };
 
                     // reader.Skip();

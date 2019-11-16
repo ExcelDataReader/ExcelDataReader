@@ -65,10 +65,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
                             HorizontalAlignment = (HorizontalAlignment)(buffer[12] & 0b111),
                             Locked = (buffer[13] & 0x10000) != 0,
                             Hidden = (buffer[13] & 0x100000) != 0,
-                            ApplyNumberFormat = (flags & 0b1) != 0,
-                            ApplyFont = (flags & 0b10) != 0,
-                            ApplyTextAlignment = (flags & 0b100) != 0,
-                            ApplyProtection = (flags & 0b10000) != 0,
                         };
 
                         if (_inCellXf)
