@@ -29,26 +29,15 @@ namespace ExcelDataReader.Core
 
         public ExtendedFormat GetEffectiveCellStyle(int xfIndex, int numberFormatFromCell)
         {
-            var effectiveStyle = new ExtendedFormat();
-            var cellXf = xfIndex >= 0 && xfIndex < ExtendedFormats.Count
-                ? ExtendedFormats[xfIndex]
-                : null;
-            if (cellXf != null)
+            if (xfIndex >= 0 && xfIndex < ExtendedFormats.Count)
             {
-                effectiveStyle.FontIndex = cellXf.FontIndex;
-                effectiveStyle.NumberFormatIndex = cellXf.NumberFormatIndex;
-
-                effectiveStyle.Hidden = cellXf.Hidden;
-                effectiveStyle.Locked = cellXf.Locked;
-                effectiveStyle.IndentLevel = cellXf.IndentLevel;
-                effectiveStyle.HorizontalAlignment = cellXf.HorizontalAlignment;
-            }
-            else
-            {
-                effectiveStyle.NumberFormatIndex = numberFormatFromCell;
+                return ExtendedFormats[xfIndex];
             }
 
-            return effectiveStyle;
+            return new ExtendedFormat()
+            {
+                NumberFormatIndex = numberFormatFromCell,
+            };
         }
 
         /// <summary>
