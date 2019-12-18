@@ -179,6 +179,21 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
     }
 });
 ```
+Setting up `AsDataSet()` configuration, use the FilterRow callback to implement a "progress indicator" while loading, e.g.:
+
+```c#
+var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+{
+    ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
+    {
+        FilterRow = (rowReader) => {
+            int progress = (int)Math.Ceiling((decimal)rowReader.Depth / (decimal)rowReader.RowCount * (decimal)100);
+            // progress is in the range 0..100
+            return true;
+        }
+    }
+});
+```
 
 ## Formatting
 
