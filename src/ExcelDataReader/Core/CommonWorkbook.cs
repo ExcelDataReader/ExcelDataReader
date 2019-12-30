@@ -45,7 +45,8 @@ namespace ExcelDataReader.Core
         /// </summary>
         public void AddNumberFormat(int formatIndexInFile, string formatString)
         {
-            Formats.Add(formatIndexInFile, new NumberFormatString(formatString));
+            if (!Formats.ContainsKey(formatIndexInFile))
+                Formats.Add(formatIndexInFile, new NumberFormatString(formatString));
         }
 
         public NumberFormatString GetNumberFormatString(int numberFormatIndex)

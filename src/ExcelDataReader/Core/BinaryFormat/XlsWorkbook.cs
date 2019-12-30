@@ -163,8 +163,6 @@ namespace ExcelDataReader.Core.BinaryFormat
         private void ReadWorkbookGlobals(XlsBiffStream biffStream)
         {
             XlsBiffRecord rec;
-            var biffFormats = new Dictionary<ushort, XlsBiffFormatString>();
-
             while ((rec = biffStream.Read()) != null && rec.Id != BIFFRECORDTYPE.EOF)
             {
                 switch (rec.Id)
@@ -200,7 +198,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case BIFFRECORDTYPE.FORMAT_V23:
                         {
                             var fmt = (XlsBiffFormatString)rec;
-                            biffFormats.Add((ushort)biffFormats.Count, fmt);
+                            AddNumberFormat(Formats.Count, fmt.GetValue(Encoding));
                         }
 
                         break;
@@ -208,8 +206,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         {
                             var fmt = (XlsBiffFormatString)rec;
                             var index = fmt.Index;
-                            if (!biffFormats.ContainsKey(index))
-                                biffFormats.Add(index, fmt);
+                            AddNumberFormat(index, fmt.GetValue(Encoding));
                         }
 
                         break;
@@ -240,11 +237,6 @@ namespace ExcelDataReader.Core.BinaryFormat
                     default:
                         break;
                 }
-            }
-
-            foreach (var biffFormat in biffFormats)
-            {
-                AddNumberFormat(biffFormat.Key, biffFormat.Value.GetValue(Encoding));
             }
         }
     }

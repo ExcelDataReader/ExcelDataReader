@@ -374,5 +374,12 @@ namespace ExcelDataReader.Tests
                 AssertUtilities.DoOpenOfficeTest(excelReader);
             }
         }
+
+        [Test]
+        public void GitIssue454HandleDuplicateNumberFormats()
+        {
+            using var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue454.xlsx"));
+            reader.Read();
+        }
     }
 }
