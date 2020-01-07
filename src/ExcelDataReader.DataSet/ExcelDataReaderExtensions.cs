@@ -166,11 +166,7 @@ namespace ExcelDataReader
                         {
                             field = fieldsTypes.Find((e) => { return e.ColumnName == columnName; });
                         }
-                        if (field != null)
-                        {
-                            m.Add(i, field);
-                        }
-
+                        
                         //Create the DataColumn with the associated data type.
                         var column = new DataColumn(columnName, field != null ? field.ColumnType : typeof(object)) { Caption = name };
                         result.Columns.Add(column);
