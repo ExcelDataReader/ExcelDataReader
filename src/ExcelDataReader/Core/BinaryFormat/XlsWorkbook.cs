@@ -162,6 +162,8 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private void ReadWorkbookGlobals(XlsBiffStream biffStream)
         {
+            var formats = new Dictionary<int, XlsBiffFormatString>();
+
             XlsBiffRecord rec;
             while ((rec = biffStream.Read()) != null && rec.Id != BIFFRECORDTYPE.EOF)
             {
@@ -198,7 +200,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     case BIFFRECORDTYPE.FORMAT_V23:
                         {
                             var fmt = (XlsBiffFormatString)rec;
-                            AddNumberFormat(Formats.Count, fmt.GetValue(Encoding));
+                            formats.Add(Formats.Count, fmt);
                         }
 
                         break;
@@ -206,7 +208,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                         {
                             var fmt = (XlsBiffFormatString)rec;
                             var index = fmt.Index;
-                            AddNumberFormat(index, fmt.GetValue(Encoding));
+                            if (!formats.ContainsKey(index))
+                                formats.Add(index, fmt);
                         }
 
                         break;
@@ -237,6 +240,13 @@ namespace ExcelDataReader.Core.BinaryFormat
                     default:
                         break;
                 }
+            }
+
+            foreach (var format in formats)
+            {
+                // We don't decode the value until here in-case there are format records before the 
+                // codepage record. 
+                Formats.Add(format.Key, new NumberFormatString(format.Value.GetValue(Encoding)));
             }
         }
     }
