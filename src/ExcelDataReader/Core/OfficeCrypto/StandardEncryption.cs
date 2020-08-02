@@ -179,6 +179,12 @@ namespace ExcelDataReader.Core.OfficeCrypto
                 var salt = CryptoHelpers.Combine(secretKey, BitConverter.GetBytes(blockNumber));
                 salt = CryptoHelpers.HashBytes(salt, HashAlgorithm);
                 Array.Resize(ref salt, (int)KeySize / 8);
+                if (KeySize == 40)
+                {
+                    // 2.3.5.2: If keyLength is exactly 40 bits, the encryption key MUST be composed of the first 40 bits of Hfinal and 88 bits set to zero, creating a 128-bit key.
+                    salt = CryptoHelpers.Combine(salt, new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+                }
+
                 return salt;
             }
             else
