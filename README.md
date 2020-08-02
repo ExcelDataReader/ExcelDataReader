@@ -20,6 +20,7 @@ If you are reporting an issue it is really useful if you can supply an example E
 | File Type | Container Format | File Format | Excel Version(s) |
 | --------- | ---------------- | ----------- | ---------------- |
 | .xlsx     | ZIP, CFB+ZIP     | OpenXml     | 2007 and newer |
+| .xlsb     | ZIP, CFB         | OpenXml     | 2007 and newer |
 | .xls      | CFB              | BIFF8       | 97, 2000, XP, 2003<br>98, 2001, v.X, 2004 (Mac) |
 | .xls      | CFB              | BIFF5       | 5.0, 95 |
 | .xls      | -                | BIFF4       | 4.0 |
@@ -44,7 +45,7 @@ using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
 {
     // Auto-detect format, supports:
     //  - Binary Excel files (2.0-2003 format; *.xls)
-    //  - OpenXml Excel files (2007 format; *.xlsx)
+    //  - OpenXml Excel files (2007 format; *.xlsx, *.xlsb)
     using (var reader = ExcelReaderFactory.CreateReader(stream))
     {
         // Choose one of either 1 or 2:
@@ -97,6 +98,7 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 - `GetDouble()`, `GetInt32()`, `GetBoolean()`, `GetDateTime()`, `GetString()` return a value from the current row cast to their respective type.
 - `GetNumberFormatString()` returns a string containing the formatting codes for a value in the current row, or `null` if there is no value. See also the Formatting section below.
 - `GetNumberFormatIndex()` returns the number format index for a value in the current row. Index values below 164 refer to built-in number formats, otherwise indicate a custom number format.
+- `GetCellStyle()` returns an object containing style information for a cell in the current row: indent, horizontal alignment, hidden, locked.
 - The typed `Get*()` methods throw `InvalidCastException` unless the types match exactly.
 
 ### CreateReader() configuration options
