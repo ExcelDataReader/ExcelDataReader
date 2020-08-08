@@ -40,6 +40,9 @@ namespace ExcelDataReader.Core.CompoundFormat
 
         internal List<CompoundDirectoryEntry> Entries { get; set; }
 
+        // NOTE: DateTime.MaxValue.ToFileTime() fails on Unity in timezones with DST and +~6h offset, like Sidney Australia
+        private static long SafeFileTimeMaxDate { get; } = DateTime.MaxValue.ToFileTimeUtc();
+
         internal static bool IsCompoundDocument(byte[] probe)
         {
             return BitConverter.ToUInt64(probe, 0) == 0xE11AB1A1E011CFD0;
@@ -167,7 +170,7 @@ namespace ExcelDataReader.Core.CompoundFormat
         private DateTime ReadFileTime(BinaryReader reader)
         {
             var d = reader.ReadInt64();
-            if (d < 0 || d > DateTime.MaxValue.ToFileTime())
+            if (d < 0 || d > SafeFileTimeMaxDate)
             {
                 d = 0;
             }
