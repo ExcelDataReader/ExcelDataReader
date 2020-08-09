@@ -203,7 +203,13 @@ namespace ExcelDataReader.Core.BinaryFormat
                         break;
                     case XlsBiffSST sst:
                         SST = sst;
-                        SST.ReadStrings(biffStream);
+                        break;
+                    case XlsBiffContinue sstContinue:
+                        if (SST != null)
+                        {
+                            SST.ReadContinueStrings(sstContinue);
+                        }
+
                         break;
                     case XlsBiffRecord _ when rec.Id == BIFFRECORDTYPE.MMS:
                         Mms = rec;
@@ -219,11 +225,15 @@ namespace ExcelDataReader.Core.BinaryFormat
                     // case BIFFRECORDTYPE.PROT4REVPASSWORD:
                         // IsProtected
                         // break;
-                    // case BIFFRECORDTYPE.CONTINUE:
                     // case BIFFRECORDTYPE.PASSWORD:
                     default:
                         break;
                 }
+            }
+
+            if (SST != null)
+            {
+                SST.Flush();
             }
 
             foreach (var format in formats)

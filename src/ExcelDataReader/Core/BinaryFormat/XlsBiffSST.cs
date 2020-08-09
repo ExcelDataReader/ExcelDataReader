@@ -10,11 +10,13 @@ namespace ExcelDataReader.Core.BinaryFormat
     internal class XlsBiffSST : XlsBiffRecord
     {
         private readonly List<IXlsString> _strings;
+        private readonly XlsSSTReader _reader = new XlsSSTReader();
 
         internal XlsBiffSST(byte[] bytes)
             : base(bytes)
         {
             _strings = new List<IXlsString>();
+            ReadSstStrings();
         }
 
         /// <summary>
@@ -28,19 +30,35 @@ namespace ExcelDataReader.Core.BinaryFormat
         public uint UniqueCount => ReadUInt32(0x4);
 
         /// <summary>
-        /// Parses strings out of the SST record and subsequent Continue records from the BIFF stream
+        /// Parses strings out of a Continue record
         /// </summary>
-        public void ReadStrings(XlsBiffStream biffStream)
+        public void ReadContinueStrings(XlsBiffContinue sstContinue)
         {
-            var reader = new XlsSSTReader(this, biffStream);
-
-            for (var i = 0; i < UniqueCount; i++)
+            if (_strings.Count == UniqueCount)
             {
-                var s = reader.ReadString();
-                _strings.Add(s);
+                return;
+            }
+
+            foreach (var str in _reader.ReadStringsFromContinue(sstContinue))
+            {
+                _strings.Add(str);
+
+                if (_strings.Count == UniqueCount)
+                {
+                    break;
+                }
             }
         }
-        
+
+        public void Flush()
+        {
+            var str = _reader.Flush();
+            if (str != null)
+            {
+                _strings.Add(str);
+            }
+        }
+
         /// <summary>
         /// Returns string at specified index
         /// </summary>
@@ -51,8 +69,29 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             if (sstIndex < _strings.Count)
                 return _strings[(int)sstIndex].GetValue(encoding);
-            
-            return string.Empty;
+
+            return null; // #VALUE error
+        }
+
+        /// <summary>
+        /// Parses strings out of this SST record
+        /// </summary>
+        private void ReadSstStrings()
+        {
+            if (_strings.Count == UniqueCount)
+            {
+                return;
+            }
+
+            foreach (var str in _reader.ReadStringsFromSST(this))
+            {
+                _strings.Add(str);
+
+                if (_strings.Count == UniqueCount)
+                {
+                    break;
+                }
+            }
         }
     }
 }

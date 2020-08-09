@@ -1068,5 +1068,84 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(10, reader.GetDouble(1));
             }
         }
+
+        [TestMethod]
+        public void GitIssue467_Test_empty_continue_SST()
+        {
+            // File was modified in a hex editor to include an empty CONTINUE record with only a multi byte flag
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_467_sst_empty_continue.xls")))
+            {
+                reader.Read();
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue467_Test_emptier_continue_leftover_bytes_SST()
+        {
+            // File was modified in a hex editor to include an empty CONTINUE record without a multi byte flag
+            // followed by a CONTINUE record with multibyte flag and a leftover byte
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_467_empty_continue_leftoverbytes.xls")))
+            {
+                reader.Read();
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue467_Test_SST_wrong_count()
+        {
+            // Modified 10x10.xls in a hex editor to specify too many strings in the SST
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_477_sst_wrong_count.xls")))
+            {
+                reader.Read();
+                Assert.AreEqual(10, reader.RowCount);
+                Assert.AreEqual(10, reader.FieldCount);
+                Assert.AreEqual("col1", reader.GetString(0));
+                Assert.AreEqual("col3", reader.GetString(2));
+                Assert.AreEqual("col7", reader.GetString(6));
+
+                reader.Read();
+                Assert.AreEqual("10x10", reader.GetString(0));
+
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                Assert.AreEqual("10x27", reader.GetString(9));
+            }
+        }
+
+        [TestMethod]
+        public void GitIssue467_Test_SST_zero_count()
+        {
+            // Modified 10x10.xls in a hex editor to specify zero strings in the SST: Excel doesn't read these
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_477_sst_zero_count.xls")))
+            {
+                reader.Read();
+                Assert.AreEqual(10, reader.RowCount);
+                Assert.AreEqual(10, reader.FieldCount);
+                Assert.AreEqual(null, reader.GetString(0));
+                Assert.AreEqual(null, reader.GetString(2));
+                Assert.AreEqual(null, reader.GetString(6));
+
+                reader.Read();
+                Assert.AreEqual(null, reader.GetString(0));
+
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                reader.Read();
+                Assert.AreEqual(null, reader.GetString(9));
+            }
+        }
     }
 }
