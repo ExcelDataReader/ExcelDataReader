@@ -11,7 +11,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         // private FormulaFlags _flags;
         private readonly int _biffVersion;
         private bool _booleanValue;
-        private FORMULAERROR _errorValue;
+        private CellError _errorValue;
         private double _xNumValue;
         private FormulaValueType _formulaType;
         private bool _initialized;
@@ -81,7 +81,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
-        public FORMULAERROR ErrorValue
+        public CellError ErrorValue
         {
             get
             {
@@ -147,7 +147,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                             break;
                         case 0x02:
                             _formulaType = FormulaValueType.Error;
-                            _errorValue = (FORMULAERROR)formulaValueByte3;
+                            _errorValue = (CellError)formulaValueByte3;
                             break;
                         case 0x03:
                             _formulaType = FormulaValueType.EmptyString;

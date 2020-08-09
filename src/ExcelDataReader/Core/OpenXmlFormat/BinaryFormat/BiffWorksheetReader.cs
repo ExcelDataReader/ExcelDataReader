@@ -132,9 +132,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
                     }
 
                 case Blank:
+                    return ReadCell(null);
                 case BoolError:
                 case FormulaError:
-                    return ReadCell(null);
+                    return ReadCell(null, (CellError)buffer[8]);
                 case Number:
                     return ReadCell(GetRkNumber(buffer, 8));
                 case Bool:
@@ -157,12 +158,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
                     return Record.Default;
             }
 
-            CellRecord ReadCell(object value) 
+            CellRecord ReadCell(object value, CellError? errorValue = null) 
             {
                 int column = (int)GetDWord(buffer, 0);
                 uint xfIndex = GetDWord(buffer, 4) & 0xffffff;
 
-                return new CellRecord(column, (int)xfIndex, value);
+                return new CellRecord(column, (int)xfIndex, value, errorValue);
             }
         }
     }

@@ -186,6 +186,14 @@ namespace ExcelDataReader
             return result;
         }
 
+        public CellError? GetCellError(int i)
+        {
+            if (RowCells == null)
+                throw new InvalidOperationException("No data exists for the row/column.");
+
+            return RowCells[i].Error;
+        }
+
         /// <inheritdoc />
         public void Reset()
         {

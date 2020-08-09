@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ExcelDataReader.Core.OpenXmlFormat.Records
+﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records
 {
     internal sealed class CellRecord : Record
     {
-        public CellRecord(int columnIndex, int xfIndex, object value)
+        public CellRecord(int columnIndex, int xfIndex, object value, CellError? error)
         {
             ColumnIndex = columnIndex;
             XfIndex = xfIndex;
             Value = value;
+            Error = error;
         }
 
         public int ColumnIndex { get; }
@@ -18,5 +15,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.Records
         public int XfIndex { get; }
 
         public object Value { get; }
+
+        public CellError? Error { get; }
     }
 }

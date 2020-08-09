@@ -157,7 +157,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     case CellRecord cell when inSheetData:
                         // TODO What if we get a cell without a row?
                         var extendedFormat = Workbook.GetEffectiveCellStyle(cell.XfIndex, 0);
-                        cells.Add(new Cell(cell.ColumnIndex, ConvertCellValue(cell.Value, extendedFormat.NumberFormatIndex), extendedFormat));
+                        cells.Add(new Cell(cell.ColumnIndex, ConvertCellValue(cell.Value, extendedFormat.NumberFormatIndex), extendedFormat, cell.Error));
                         break;
                 }
             }

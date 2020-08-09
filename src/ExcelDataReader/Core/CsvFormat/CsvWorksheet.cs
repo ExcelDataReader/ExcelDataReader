@@ -115,7 +115,7 @@ namespace ExcelDataReader.Core.CsvFormat
                 for (var index = 0; index < row.Count; index++)
                 {
                     object value = row[index];
-                    cells.Add(new Cell(index, value, new ExtendedFormat()));
+                    cells.Add(new Cell(index, value, new ExtendedFormat(), null));
                 }
 
                 yield return new Row(rowIndex, 12.75 /* 255 twips */, cells);

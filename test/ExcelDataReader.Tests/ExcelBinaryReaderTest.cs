@@ -1147,5 +1147,46 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(null, reader.GetString(9));
             }
         }
+
+        [TestMethod]
+        public void GitIssue466_BIFF3_Errors()
+        {
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_466_biff3.xls")))
+            {
+                // First row contains formula errors
+                reader.Read();
+                Assert.AreEqual(null, reader.GetString(0));
+                Assert.AreEqual(CellError.DIV0, reader.GetCellError(0));
+
+                Assert.AreEqual(null, reader.GetString(1));
+                Assert.AreEqual(CellError.NA, reader.GetCellError(1));
+
+                Assert.AreEqual(null, reader.GetString(2));
+                Assert.AreEqual(CellError.VALUE, reader.GetCellError(2));
+
+                Assert.AreEqual(null, reader.GetString(3));
+                Assert.AreEqual(CellError.NAME, reader.GetCellError(3));
+
+                Assert.AreEqual(null, reader.GetString(4));
+                Assert.AreEqual(CellError.REF, reader.GetCellError(4));
+                
+                // Second row contains error constants
+                reader.Read();
+                Assert.AreEqual(null, reader.GetString(0));
+                Assert.AreEqual(CellError.DIV0, reader.GetCellError(0));
+
+                Assert.AreEqual(null, reader.GetString(1));
+                Assert.AreEqual(CellError.NA, reader.GetCellError(1));
+
+                Assert.AreEqual(null, reader.GetString(2));
+                Assert.AreEqual(CellError.VALUE, reader.GetCellError(2));
+
+                Assert.AreEqual(null, reader.GetString(3));
+                Assert.AreEqual(CellError.NAME, reader.GetCellError(3));
+
+                Assert.AreEqual(null, reader.GetString(4));
+                Assert.AreEqual(CellError.REF, reader.GetCellError(4));
+            }
+        }
     }
 }

@@ -196,21 +196,4 @@ namespace ExcelDataReader.Core.BinaryFormat
         QUICKTIP = 0x0800,
         COLINFO = 0x007D
     }
-
-    internal enum FORMULAERROR : byte
-    {
-        NULL = 0x00, // #NULL!
-
-        DIV0 = 0x07, // #DIV/0!
-
-        VALUE = 0x0F, // #VALUE!
-
-        REF = 0x17, // #REF!
-
-        NAME = 0x1D, // #NAME?
-
-        NUM = 0x24, // #NUM!
-
-        NA = 0x2A, // #N/A
-    }
 }

@@ -282,23 +282,24 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             if (!XmlReaderHelper.ReadFirstContent(Reader))
             {
-                return new CellRecord(columnIndex, xfIndex, null);
+                return new CellRecord(columnIndex, xfIndex, null, null);
             }
 
             object value = null;
+            CellError? error = null;
             while (!Reader.EOF)
             {
                 if (Reader.IsStartElement(NV, NsSpreadsheetMl))
                 {
                     string rawValue = Reader.ReadElementContentAsString();
                     if (!string.IsNullOrEmpty(rawValue))
-                        value = ConvertCellValue(rawValue, aT);
+                        ConvertCellValue(rawValue, aT, out value, out error);
                 }
                 else if (Reader.IsStartElement(NIs, NsSpreadsheetMl))
                 {
                     string rawValue = StringHelper.ReadStringItem(Reader);
                     if (!string.IsNullOrEmpty(rawValue))
-                        value = ConvertCellValue(rawValue, aT);
+                        ConvertCellValue(rawValue, aT, out value, out error);
                 }
                 else if (!XmlReaderHelper.SkipContent(Reader))
                 {
@@ -306,43 +307,82 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                 }
             }
 
-            return new CellRecord(columnIndex, xfIndex, value);
+            return new CellRecord(columnIndex, xfIndex, value, error);
         }
 
-        private object ConvertCellValue(string rawValue, string aT)
+        private void ConvertCellValue(string rawValue, string aT, out object value, out CellError? error)
         {
             const NumberStyles style = NumberStyles.Any;
             var invariantCulture = CultureInfo.InvariantCulture;
 
+            error = null;
             switch (aT)
             {
                 case AS: //// if string
                     if (int.TryParse(rawValue, style, invariantCulture, out var sstIndex))
                     {
                         // TODO: Can we get here when the sstIndex is not a valid index in the SST list?
-                        return sstIndex;
+                        value = sstIndex;
+                        return;
                     }
 
-                    return rawValue;
+                    value = rawValue;
+                    return;
                 case NInlineStr: //// if string inline
                 case NStr: //// if cached formula string
-                    return Helpers.ConvertEscapeChars(rawValue);
+                    value = Helpers.ConvertEscapeChars(rawValue);
+                    return;
                 case "b": //// boolean
-                    return rawValue == "1";
+                    value = rawValue == "1";
+                    return;
                 case "d": //// ISO 8601 date
                     if (DateTime.TryParseExact(rawValue, "yyyy-MM-dd", invariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date))
-                        return date;
+                    {
+                        value = date;
+                        return;
+                    }
 
-                    return rawValue;
+                    value = rawValue;
+                    return;
                 case "e": //// error
-                    return null;
+                    error = ConvertError(rawValue);
+                    value = null;
+                    return;
                 default:
                     if (double.TryParse(rawValue, style, invariantCulture, out double number))
                     {
-                        return number;
+                        value = number;
+                        return;
                     }
 
-                    return rawValue;
+                    value = rawValue;
+                    return;
+            }
+        }
+
+        private CellError? ConvertError(string e)
+        {
+            // 2.5.97.2 BErr
+            switch (e)
+            {
+                case "#NULL!":
+                    return CellError.NULL;
+                case "#DIV/0!":
+                    return CellError.DIV0;
+                case "#VALUE!":
+                    return CellError.VALUE;
+                case "#REF!":
+                    return CellError.REF;
+                case "#NAME?":
+                    return CellError.NAME;
+                case "#NUM!":
+                    return CellError.NUM;
+                case "#N/A":
+                    return CellError.NA;
+                case "#GETTING_DATA":
+                    return CellError.GETTING_DATA;
+                default:
+                    return null;
             }
         }
     }

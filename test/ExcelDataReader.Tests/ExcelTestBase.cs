@@ -521,8 +521,14 @@ namespace ExcelDataReader.Tests
                 // Check errors on first row return null
                 reader.Read();
                 Assert.IsNull(reader.GetValue(0));
+                Assert.AreEqual(CellError.DIV0, reader.GetCellError(0));
+
                 Assert.IsNull(reader.GetValue(1));
+                Assert.AreEqual(CellError.NA, reader.GetCellError(1));
+
                 Assert.IsNull(reader.GetValue(2));
+                Assert.AreEqual(CellError.VALUE, reader.GetCellError(2));
+
                 Assert.AreEqual(1, reader.RowCount);
             }
         }

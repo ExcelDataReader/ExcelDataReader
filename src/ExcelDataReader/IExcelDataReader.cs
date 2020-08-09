@@ -79,5 +79,12 @@ namespace ExcelDataReader
         /// <param name="i">The index of the column to find.</param>
         /// <returns>The cell style.</returns>
         CellStyle GetCellStyle(int i);
+
+        /// <summary>
+        /// Gets the cell error.
+        /// </summary>
+        /// <param name="i">The index of the column to find.</param>
+        /// <returns>The cell error, or null if no error.</returns>
+        CellError? GetCellError(int i);
     }
 }

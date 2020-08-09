@@ -247,7 +247,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                         var value = TryConvertOADateTime(rkCell.GetValue(j), effectiveStyle.NumberFormatIndex);
                         LogManager.Log(this).Debug("CELL[{0}] = {1}", j, value);
-                        yield return new Cell(j, value, effectiveStyle);
+                        yield return new Cell(j, value, effectiveStyle, null);
                     }
 
                     break;
@@ -265,15 +265,20 @@ namespace ExcelDataReader.Core.BinaryFormat
             var numberFormatIndex = effectiveStyle.NumberFormatIndex;
 
             object value = null;
+            CellError? error = null;
             switch (cell.Id)
             {
                 case BIFFRECORDTYPE.BOOLERR:
                     if (cell.ReadByte(7) == 0)
                         value = cell.ReadByte(6) != 0;
+                    else
+                        error = (CellError)cell.ReadByte(6);
                     break;
                 case BIFFRECORDTYPE.BOOLERR_OLD:
                     if (cell.ReadByte(8) == 0)
                         value = cell.ReadByte(7) != 0;
+                    else
+                        error = (CellError)cell.ReadByte(7);
                     break;
                 case BIFFRECORDTYPE.INTEGER:
                 case BIFFRECORDTYPE.INTEGER_OLD:
@@ -302,11 +307,11 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.FORMULA:
                 case BIFFRECORDTYPE.FORMULA_V3:
                 case BIFFRECORDTYPE.FORMULA_V4:
-                    value = TryGetFormulaValue(biffStream, (XlsBiffFormulaCell)cell, effectiveStyle);
+                    value = TryGetFormulaValue(biffStream, (XlsBiffFormulaCell)cell, effectiveStyle, out error);
                     break;
             }
 
-            return new Cell(cell.ColumnIndex, value, effectiveStyle);
+            return new Cell(cell.ColumnIndex, value, effectiveStyle, error);
         }
 
         private string GetLabelString(XlsBiffLabelCell cell, ExtendedFormat effectiveStyle)
@@ -329,19 +334,22 @@ namespace ExcelDataReader.Core.BinaryFormat
             return Workbook.Fonts[fontIndex];
         }
 
-        private object TryGetFormulaValue(XlsBiffStream biffStream, XlsBiffFormulaCell formulaCell, ExtendedFormat effectiveStyle)
+        private object TryGetFormulaValue(XlsBiffStream biffStream, XlsBiffFormulaCell formulaCell, ExtendedFormat effectiveStyle, out CellError? error)
         {
-            return formulaCell.FormulaType switch
+            error = null;
+            switch (formulaCell.FormulaType)
             {
-                XlsBiffFormulaCell.FormulaValueType.Boolean => formulaCell.BooleanValue,
-                XlsBiffFormulaCell.FormulaValueType.Error => null,
-                XlsBiffFormulaCell.FormulaValueType.EmptyString => string.Empty,
-                XlsBiffFormulaCell.FormulaValueType.Number => TryConvertOADateTime(formulaCell.XNumValue, effectiveStyle.NumberFormatIndex),
-                XlsBiffFormulaCell.FormulaValueType.String => TryGetFormulaString(biffStream, effectiveStyle),
+                case XlsBiffFormulaCell.FormulaValueType.Boolean: return formulaCell.BooleanValue;
+                case XlsBiffFormulaCell.FormulaValueType.Error:
+                    error = (CellError)formulaCell.ErrorValue;
+                    return null;
+                case XlsBiffFormulaCell.FormulaValueType.EmptyString: return string.Empty;
+                case XlsBiffFormulaCell.FormulaValueType.Number: return TryConvertOADateTime(formulaCell.XNumValue, effectiveStyle.NumberFormatIndex);
+                case XlsBiffFormulaCell.FormulaValueType.String: return TryGetFormulaString(biffStream, effectiveStyle);
 
                 // Bad data or new formula value type
-                _ => null,
-            };
+                default: return null;
+            }
         }
 
         private string TryGetFormulaString(XlsBiffStream biffStream, ExtendedFormat effectiveStyle)
