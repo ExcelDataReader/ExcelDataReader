@@ -1050,5 +1050,23 @@ namespace ExcelDataReader.Tests
                 }
             }
         }
+
+        [TestMethod]
+        public void GitIssue477_Test_crypto_keylength40()
+        {
+            // BIFF8 standard encryption cryptoapi rc4+sha with 40bit key
+            // Test file from SheetJS project: password_2002_40_basecrypto.xls
+            using (var reader = ExcelReaderFactory.CreateBinaryReader(
+                Configuration.GetTestWorkbook("Test_git_issue_477_crypto_keylength40.xls"),
+                new ExcelReaderConfiguration { Password = "password" }))
+            {
+                reader.Read();
+                Assert.AreEqual(1, reader.GetDouble(0));
+ 
+                reader.Read();
+                Assert.AreEqual(2, reader.GetDouble(0));
+                Assert.AreEqual(10, reader.GetDouble(1));
+            }
+        }
     }
 }
