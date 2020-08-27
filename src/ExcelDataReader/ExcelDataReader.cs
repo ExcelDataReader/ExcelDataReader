@@ -190,8 +190,8 @@ namespace ExcelDataReader
         {
             if (RowCells == null)
                 throw new InvalidOperationException("No data exists for the row/column.");
-
-            return RowCells[i].Error;
+            
+            return RowCells[i]?.Error;
         }
 
         /// <inheritdoc />
