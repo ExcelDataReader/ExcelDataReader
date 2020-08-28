@@ -126,7 +126,7 @@ namespace ExcelDataReader
                     continue;
                 }
 
-                if (IsEmptyRow(self))
+                if (IsEmptyRow(self, configuration))
                 {
                     emptyRows++;
                     continue;
@@ -144,10 +144,18 @@ namespace ExcelDataReader
                 for (var i = 0; i < columnIndices.Count; i++)
                 {
                     var columnIndex = columnIndices[i];
+
                     var value = self.GetValue(columnIndex);
+                    if (configuration.TransformValue != null)
+                    {
+                        var transformedValue = configuration.TransformValue(self, i, value);
+                        if (transformedValue != null)
+                            value = transformedValue;
+                    }
+
                     row[i] = value;
                 }
-                
+
                 result.Rows.Add(row);
             }
 
@@ -155,11 +163,19 @@ namespace ExcelDataReader
             return result;
         }
 
-        private static bool IsEmptyRow(IExcelDataReader reader)
+        private static bool IsEmptyRow(IExcelDataReader reader, ExcelDataTableConfiguration configuration)
         {
             for (var i = 0; i < reader.FieldCount; i++)
             {
-                if (reader.GetValue(i) != null)
+                var value = reader.GetValue(i);
+                if (configuration.TransformValue != null)
+                {
+                    var transformedValue = configuration.TransformValue(reader, i, value);
+                    if (transformedValue != null)
+                        value = transformedValue;
+                }
+
+                if (value != null)
                     return false;
             }
 
