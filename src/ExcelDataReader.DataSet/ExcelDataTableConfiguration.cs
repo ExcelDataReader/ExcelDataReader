@@ -31,5 +31,10 @@ namespace ExcelDataReader
         /// Gets or sets a callback to determine whether to include the specific column in the DataTable. Called once per column after reading the headers.
         /// </summary>
         public Func<IExcelDataReader, int, bool> FilterColumn { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to prioritize cell error value over cell value.
+        /// </summary>
+        public bool ReadCellErrorsAsValues { get; set; } = false;
     }
 }

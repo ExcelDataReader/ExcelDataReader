@@ -126,7 +126,7 @@ namespace ExcelDataReader
                     continue;
                 }
 
-                if (IsEmptyRow(self))
+                if (IsEmptyRow(self, configuration.ReadCellErrorsAsValues))
                 {
                     emptyRows++;
                     continue;
@@ -144,7 +144,14 @@ namespace ExcelDataReader
                 for (var i = 0; i < columnIndices.Count; i++)
                 {
                     var columnIndex = columnIndices[i];
+                    
                     var value = self.GetValue(columnIndex);
+                    if (configuration.ReadCellErrorsAsValues)
+                    {
+                        var cellErrorValue = self.GetCellError(columnIndex);
+                        value = cellErrorValue == null ? value : cellErrorValue;
+                    }
+
                     row[i] = value;
                 }
                 
@@ -155,12 +162,20 @@ namespace ExcelDataReader
             return result;
         }
 
-        private static bool IsEmptyRow(IExcelDataReader reader)
+        private static bool IsEmptyRow(IExcelDataReader reader, bool readCellErrorsAsValues)
         {
             for (var i = 0; i < reader.FieldCount; i++)
             {
-                if (reader.GetValue(i) != null)
-                    return false;
+                if (readCellErrorsAsValues)
+                {
+                    if (reader.GetValue(i) != null || reader.GetCellError(i) != null)
+                        return false;
+                }
+                else
+                {
+                    if (reader.GetValue(i) != null)
+                        return false;
+                }                
             }
 
             return true;
