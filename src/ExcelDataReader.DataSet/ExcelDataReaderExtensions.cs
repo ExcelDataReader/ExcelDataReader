@@ -126,7 +126,7 @@ namespace ExcelDataReader
                     continue;
                 }
 
-                if (IsEmptyRow(self, configuration.ReadCellErrorsAsValues))
+                if (IsEmptyRow(self, configuration))
                 {
                     emptyRows++;
                     continue;
@@ -144,38 +144,39 @@ namespace ExcelDataReader
                 for (var i = 0; i < columnIndices.Count; i++)
                 {
                     var columnIndex = columnIndices[i];
-                    
+
                     var value = self.GetValue(columnIndex);
-                    if (configuration.ReadCellErrorsAsValues)
+                    if (configuration.TransformValue != null)
                     {
-                        var cellErrorValue = self.GetCellError(columnIndex);
-                        value = cellErrorValue == null ? value : cellErrorValue;
-                    }
+                        var transformedValue = configuration.TransformValue(self, i, value);
+                        if (transformedValue != null)
+                            value = transformedValue;
+                    }                                  
 
                     row[i] = value;
                 }
-                
+
                 result.Rows.Add(row);
             }
 
             result.EndLoadData();
             return result;
-        }
+        }     
 
-        private static bool IsEmptyRow(IExcelDataReader reader, bool readCellErrorsAsValues)
+        private static bool IsEmptyRow(IExcelDataReader reader, ExcelDataTableConfiguration configuration)
         {
             for (var i = 0; i < reader.FieldCount; i++)
             {
-                if (readCellErrorsAsValues)
+                var value = reader.GetValue(i);
+                if (configuration.TransformValue != null)
                 {
-                    if (reader.GetValue(i) != null || reader.GetCellError(i) != null)
-                        return false;
+                    var transformedValue = configuration.TransformValue(reader, i, value);
+                    if (transformedValue != null)
+                        value = transformedValue;
                 }
-                else
-                {
-                    if (reader.GetValue(i) != null)
-                        return false;
-                }                
+
+                if (value != null)
+                    return false;
             }
 
             return true;
