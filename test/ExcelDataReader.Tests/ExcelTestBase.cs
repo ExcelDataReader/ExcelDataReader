@@ -1038,5 +1038,29 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(1, dataSet.Tables[0].Columns.Count);
             }
         }
+
+        [Test]
+        public void GitIssue483CellErrorEmptyRow()
+        {
+            // Check there are four rows with no errors and no NREs
+            using (var reader = OpenReader("CollapsedHide"))
+            {
+                reader.Read();
+                Assert.AreEqual(null, reader.GetCellError(0));
+                Assert.AreEqual(null, reader.GetCellError(1));
+
+                reader.Read();
+                Assert.AreEqual(null, reader.GetCellError(0));
+                Assert.AreEqual(null, reader.GetCellError(1));
+
+                reader.Read();
+                Assert.AreEqual(null, reader.GetCellError(0));
+                Assert.AreEqual(null, reader.GetCellError(1));
+
+                reader.Read();
+                Assert.AreEqual(null, reader.GetCellError(0));
+                Assert.AreEqual(null, reader.GetCellError(1));
+            }
+        }
     }
 }
