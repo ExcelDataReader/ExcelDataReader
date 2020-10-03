@@ -381,5 +381,35 @@ namespace ExcelDataReader.Tests
             using var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue454.xlsx"));
             reader.Read();
         }
+
+        [Test]
+        public void GitIssue486TransformValue()
+        {
+            using (var reader = OpenReader("Test_git_issue_486"))
+            {
+                var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+                    {
+                        UseHeaderRow = true,
+                        TransformValue = (transformReader, n, value) =>
+                        {
+                            var error = transformReader.GetCellError(n);
+                            if (error != null)
+                            {
+                                return error;
+                            }
+                            return value;
+                        }
+                    }
+                });
+
+                Assert.AreEqual("REF", dataSet.Tables[0].Rows[0][0].ToString());
+                Assert.AreEqual("REF", dataSet.Tables[0].Rows[0][1].ToString());
+
+                Assert.AreEqual("NAME", dataSet.Tables[0].Rows[1][0].ToString());
+                Assert.AreEqual("NAME", dataSet.Tables[0].Rows[1][1].ToString());
+            }
+        }
     }
 }
