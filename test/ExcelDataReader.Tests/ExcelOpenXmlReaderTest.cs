@@ -411,5 +411,12 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("NAME", dataSet.Tables[0].Rows[1][1].ToString());
             }
         }
+
+        [TestMethod]
+        public void GitIssue_308_ExcelProperties()
+        {
+            var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("xTest_num_double_date_bool_string"),true);
+            Assert.AreEqual("yerdenizden", reader.ToString());
+        }
     }
 }
