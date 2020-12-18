@@ -151,7 +151,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
                         var length = GetDWord(buffer, 8);
                         return ReadCell(GetString(buffer, 8 + 4, length));
                     }
-
                 case SharedString:
                     return ReadCell((int)GetDWord(buffer, 8));
                 default:
@@ -163,8 +162,18 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
                 int column = (int)GetDWord(buffer, 0);
                 uint xfIndex = GetDWord(buffer, 4) & 0xffffff;
 
-                return new CellRecord(column, (int)xfIndex, value, errorValue);
+                return new CellRecord(column, (int)xfIndex, value, errorValue, null); // no formulas below yet, but see sample below
             }
+
+            /*
+             
+                string GetFormula()
+                {
+                    var bts = ReadArray(0x10, FormulaLength);
+                    return Encoding.Unicode.GetString(bts, 0, bts.Length);
+                }
+
+            */
         }
     }
 }

@@ -108,6 +108,14 @@ namespace ExcelDataReader
             return RowCells[i]?.Value;
         }
 
+        public string GetFormula(int i)
+        {
+            if (RowCells == null)
+                throw new InvalidOperationException("No data exists for the row/column.");
+
+            return RowCells[i]?.Formula;
+        }
+
         public int GetValues(object[] values) => throw new NotSupportedException();
                
         public bool IsDBNull(int i) => GetValue(i) == null;
