@@ -17,7 +17,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         private const string ARef = "ref";
         private const string AR = "r";
         private const string NV = "v";
-        public const string Nf = "f";
+        private const string Nf = "f";
         private const string NIs = "is";
         private const string AT = "t";
         private const string AS = "s";

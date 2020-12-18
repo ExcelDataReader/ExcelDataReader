@@ -151,6 +151,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
                         var length = GetDWord(buffer, 8);
                         return ReadCell(GetString(buffer, 8 + 4, length));
                     }
+
                 case SharedString:
                     return ReadCell((int)GetDWord(buffer, 8));
                 default:

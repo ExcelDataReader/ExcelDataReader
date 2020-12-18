@@ -18,6 +18,7 @@
         public object Value { get; }
 
         public CellError? Error { get; }
+
         public string Formula { get; }
     }
 }
