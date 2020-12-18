@@ -86,5 +86,12 @@ namespace ExcelDataReader
         /// <param name="i">The index of the column to find.</param>
         /// <returns>The cell error, or null if no error.</returns>
         CellError? GetCellError(int i);
+
+        /// <summary>
+        /// Returns the cell formula from the reader position at the specified column.
+        /// </summary>
+        /// <param name="i">The index of the column to return the formula.</param>
+        /// <returns>Raw formula string in the excel workbook.</returns>
+        string GetFormula(int i);
     }
 }

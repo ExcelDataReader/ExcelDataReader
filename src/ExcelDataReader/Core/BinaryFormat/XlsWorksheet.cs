@@ -247,7 +247,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                         var value = TryConvertOADateTime(rkCell.GetValue(j), effectiveStyle.NumberFormatIndex);
                         LogManager.Log(this).Debug("CELL[{0}] = {1}", j, value);
-                        yield return new Cell(j, value, effectiveStyle, null);
+                        yield return new Cell(j, value, effectiveStyle, null, null); // formulas not supported in xls yet 
                     }
 
                     break;
@@ -311,7 +311,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     break;
             }
 
-            return new Cell(cell.ColumnIndex, value, effectiveStyle, error);
+            return new Cell(cell.ColumnIndex, value, effectiveStyle, error, null); // formulas not supported in xls yet 
         }
 
         private string GetLabelString(XlsBiffLabelCell cell, ExtendedFormat effectiveStyle)

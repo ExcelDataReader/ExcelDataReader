@@ -17,6 +17,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         private const string ARef = "ref";
         private const string AR = "r";
         private const string NV = "v";
+        private const string Nf = "f";
         private const string NIs = "is";
         private const string AT = "t";
         private const string AS = "s";
@@ -282,8 +283,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             if (!XmlReaderHelper.ReadFirstContent(Reader))
             {
-                return new CellRecord(columnIndex, xfIndex, null, null);
+                return new CellRecord(columnIndex, xfIndex, null, null, null);
             }
+
+            string formula = null;
 
             object value = null;
             CellError? error = null;
@@ -301,13 +304,17 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                     if (!string.IsNullOrEmpty(rawValue))
                         ConvertCellValue(rawValue, aT, out value, out error);
                 }
+                else if (Reader.IsStartElement(Nf, NsSpreadsheetMl))
+                {
+                    formula = Reader.ReadElementContentAsString();
+                }
                 else if (!XmlReaderHelper.SkipContent(Reader))
                 {
                     break;
                 }
             }
 
-            return new CellRecord(columnIndex, xfIndex, value, error);
+            return new CellRecord(columnIndex, xfIndex, value, error, formula);
         }
 
         private void ConvertCellValue(string rawValue, string aT, out object value, out CellError? error)

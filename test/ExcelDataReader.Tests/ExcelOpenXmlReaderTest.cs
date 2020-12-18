@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-
+using System.Linq;
 using NUnit.Framework;
 
 namespace ExcelDataReader.Tests
@@ -409,6 +409,22 @@ namespace ExcelDataReader.Tests
 
                 Assert.AreEqual("NAME", dataSet.Tables[0].Rows[1][0].ToString());
                 Assert.AreEqual("NAME", dataSet.Tables[0].Rows[1][1].ToString());
+            }
+        }
+
+        [Test]
+        public void TestFormulas()
+        {
+            using (var reader = OpenReader("TestFormulas"))
+            {
+                foreach (int i in Enumerable.Range(0, 10))
+                {
+                    reader.Read();
+                }
+
+                var formula = reader.GetFormula(4);
+
+                Assert.AreEqual(@"VLOOKUP(D10,A1:B10,2)", formula);
             }
         }
     }

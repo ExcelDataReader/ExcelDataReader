@@ -4,12 +4,13 @@ namespace ExcelDataReader.Core
 {
     internal class Cell
     {
-        public Cell(int columnIndex, object value, ExtendedFormat effectiveStyle, CellError? error)
+        public Cell(int columnIndex, object value, ExtendedFormat effectiveStyle, CellError? error, string formula)
         {
             ColumnIndex = columnIndex;
             Value = value;
             EffectiveStyle = effectiveStyle;
             Error = error;
+            Formula = formula;
         }
 
         /// <summary>
@@ -26,5 +27,7 @@ namespace ExcelDataReader.Core
         public object Value { get; }
 
         public CellError? Error { get; }
+
+        public string Formula { get; }
     }
 }
