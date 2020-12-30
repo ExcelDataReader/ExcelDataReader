@@ -43,6 +43,9 @@ namespace ExcelDataReader
                     tableConfiguration = new ExcelDataTableConfiguration();
                 }
 
+                // there's also a UseColumnDataType in the ExcelDataTableConfiguration; we'll use the same one for tableConfiguration
+                tableConfiguration.UseColumnDataType = configuration.UseColumnDataType;
+
                 var table = AsDataTable(self, tableConfiguration);
                 result.Tables.Add(table);
             }
@@ -107,7 +110,17 @@ namespace ExcelDataReader
 
                         // if a column already exists with the name append _i to the duplicates
                         var columnName = GetUniqueColumnName(result, name);
-                        var column = new DataColumn(columnName, typeof(object)) { Caption = name };
+
+                        DataColumn column;
+                        if (configuration.UseColumnDataType)
+                        {
+                            column = new DataColumn(columnName, typeof(object)) { Caption = name };
+                        }
+                        else
+                        {
+                            column = new DataColumn(columnName, System.Type.GetType("System.String"));
+                        }
+
                         result.Columns.Add(column);
                         columnIndices.Add(i);
                     }

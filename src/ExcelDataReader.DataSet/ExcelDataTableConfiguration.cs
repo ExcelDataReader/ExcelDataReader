@@ -36,5 +36,10 @@ namespace ExcelDataReader
         /// Gets or sets a callback to determine whether to transform the cell value.
         /// </summary>
         public Func<IExcelDataReader, int, object, object> TransformValue { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to assign column types (mirrors setting in ExcelDataSetConfiguration)
+        /// </summary>
+        internal bool UseColumnDataType { get; set; } = true;
     }
 }
