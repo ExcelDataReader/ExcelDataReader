@@ -53,6 +53,11 @@ namespace ExcelDataReader
         void Reset();
 
         /// <summary>
+        /// Read column names from next row.
+        /// </summary>
+        void ReadHeader();
+
+        /// <summary>
         /// Gets the number format for the specified field -or- <see langword="null"/> if there is no value.
         /// </summary>
         /// <param name="i">The index of the field to find.</param>

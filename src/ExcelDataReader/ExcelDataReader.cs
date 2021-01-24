@@ -18,6 +18,7 @@ namespace ExcelDataReader
         private IEnumerator<Row> _rowIterator;
         private IEnumerator<TWorksheet> _cachedWorksheetIterator;
         private List<TWorksheet> _cachedWorksheets;
+        private Dictionary<string, int> _columnNames;
 
         ~ExcelDataReader()
         {
@@ -55,7 +56,21 @@ namespace ExcelDataReader
 
         public object this[int i] => GetValue(i);
 
-        public object this[string name] => throw new NotSupportedException();
+        public object this[string name]
+        {
+            get
+            {
+                if (_columnNames == null)
+                    throw new NotSupportedException();
+
+                if (_columnNames.ContainsKey(name))
+                {
+                    return this.GetValue(_columnNames[name]);
+                }
+
+                throw new IndexOutOfRangeException($"Column {name} does not exists.");
+            }
+        }
 
         public bool GetBoolean(int i) => (bool)GetValue(i);
 
@@ -91,9 +106,30 @@ namespace ExcelDataReader
 
         public long GetInt64(int i) => (long)GetValue(i);
 
-        public string GetName(int i) => throw new NotSupportedException();
+        public string GetName(int i)
+        {
+            if (_columnNames == null)
+                throw new NotSupportedException();
 
-        public int GetOrdinal(string name) => throw new NotSupportedException();
+            if (i >= this.FieldCount)
+                throw new IndexOutOfRangeException();
+
+            foreach (string name in _columnNames.Keys)
+            {
+                if (_columnNames[name] == i)
+                    return name;
+            }
+
+            return null;
+        }
+
+        public int GetOrdinal(string name)
+        {
+            if (_columnNames == null)
+                throw new NotSupportedException();
+
+            return _columnNames[name];
+        }
 
         /// <inheritdoc />
         public DataTable GetSchemaTable() => throw new NotSupportedException();
@@ -104,12 +140,23 @@ namespace ExcelDataReader
         {
             if (RowCells == null)
                 throw new InvalidOperationException("No data exists for the row/column.");
-            
+
             return RowCells[i]?.Value;
         }
 
-        public int GetValues(object[] values) => throw new NotSupportedException();
-               
+        public int GetValues(object[] values)
+        {
+            if (values == null)
+                throw new ArgumentNullException();
+
+            int count = Math.Min(FieldCount, values.Length);
+
+            for (int i = 0; i < count; ++i)
+                values[i] = this.GetValue(i);
+
+            return count;
+        }
+
         public bool IsDBNull(int i) => GetValue(i) == null;
 
         public string GetNumberFormatString(int i)
@@ -190,7 +237,7 @@ namespace ExcelDataReader
         {
             if (RowCells == null)
                 throw new InvalidOperationException("No data exists for the row/column.");
-            
+
             return RowCells[i]?.Error;
         }
 
@@ -217,6 +264,13 @@ namespace ExcelDataReader
 
                 _rowIterator = _worksheetIterator.Current.ReadRows().GetEnumerator();
             }
+
+            if (_columnNames != null)
+            {
+                _columnNames.Clear();
+
+                _columnNames = null;
+            }
         }
 
         public virtual void Close()
@@ -235,6 +289,9 @@ namespace ExcelDataReader
 
         public bool NextResult()
         {
+            if (_columnNames != null)
+                _columnNames = null;
+
             if (_worksheetIterator == null)
             {
                 return false;
@@ -274,6 +331,26 @@ namespace ExcelDataReader
 
             Depth++;
             return true;
+        }
+
+        public void ReadHeader()
+        {
+            if (!Read())
+                return;
+
+            _columnNames = new Dictionary<string, int>();
+
+            int count = this.FieldCount;
+
+            for (int i = 0; i < count; ++i)
+            {
+                string columnName = this.GetString(i);
+
+                if (_columnNames.ContainsKey(columnName))
+                    throw new InvalidOperationException("Columns names ambiguous.");
+
+                _columnNames.Add(columnName, i);
+            }
         }
 
         public void Dispose()
