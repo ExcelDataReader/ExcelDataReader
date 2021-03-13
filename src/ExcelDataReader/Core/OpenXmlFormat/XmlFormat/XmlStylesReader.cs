@@ -106,9 +106,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                 {
                     int.TryParse(Reader.GetAttribute(AXFId), out var xfId);
                     int.TryParse(Reader.GetAttribute(ANumFmtId), out var numFmtId);
-                    var applyNumberFormat = Reader.GetAttribute(AApplyNumberFormat) == "1";
-                    var applyAlignment = Reader.GetAttribute(AApplyAlignment) == "1";
-                    var applyProtection = Reader.GetAttribute(AApplyProtection) == "1";
                     ReadAlignment(Reader, out int indentLevel, out HorizontalAlignment horizontalAlignment, out var hidden, out var locked);
 
                     yield return new ExtendedFormat()
