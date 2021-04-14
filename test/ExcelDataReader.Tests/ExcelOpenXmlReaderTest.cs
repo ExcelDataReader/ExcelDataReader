@@ -411,5 +411,20 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("NAME", dataSet.Tables[0].Rows[1][1].ToString());
             }
         }
+
+        [Test]
+        public void GitIssue498ReadStrictOpenXmlExcelFile()
+        {
+            using IExcelDataReader reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_498.xlsx"));            
+            DataTableCollection tables = reader.AsDataSet().Tables;
+
+            Assert.AreEqual(2, tables.Count);
+            
+            foreach (DataTable table in tables)
+            {
+                Assert.AreEqual(2, table.Rows.Count);
+                Assert.AreEqual(2, table.Columns.Count);
+            }
+        }
     }
 }

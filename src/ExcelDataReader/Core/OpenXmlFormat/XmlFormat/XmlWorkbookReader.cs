@@ -11,9 +11,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 {
     internal sealed class XmlWorkbookReader : XmlRecordReader
     {
-        private const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-        private const string NsDocumentRelationship = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
-
         private const string ElementWorkbook = "workbook";
         private const string ElementWorkbookProperties = "workbookPr";
         private const string ElementSheets = "sheets";
@@ -31,7 +28,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
         protected override IEnumerable<Record> ReadOverride()
         {
-            if (!Reader.IsStartElement(ElementWorkbook, NsSpreadsheetMl))
+            if (!CheckStartElementAndApplyNamespaces(ElementWorkbook))
             {
                 yield break;
             }
@@ -79,6 +76,20 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                     yield break;
                 }
             }
+        }
+
+        private bool CheckStartElementAndApplyNamespaces(string element)
+        {
+            if (Reader.IsStartElement(element, NsSpreadsheetMl))
+                return true;
+
+            if (Reader.IsStartElement(element, XmlNamespaces.StrictNsSpreadsheetMl))
+            {
+                XmlProperNamespaces.SetStrictNamespaces();
+                return true;
+            }
+
+            return false;
         }
     }
 }

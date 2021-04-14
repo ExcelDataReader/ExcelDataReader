@@ -9,8 +9,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 {
     internal sealed class XmlWorksheetReader : XmlRecordReader
     {
-        private const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-
         private const string NWorksheet = "worksheet";
         private const string NSheetData = "sheetData";
         private const string NRow = "row";

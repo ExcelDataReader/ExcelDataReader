@@ -8,8 +8,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 {
     internal sealed class XmlStylesReader : XmlRecordReader
     {
-        private const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-
         private const string ElementStyleSheet = "styleSheet";
 
         private const string ANumFmtId = "numFmtId";

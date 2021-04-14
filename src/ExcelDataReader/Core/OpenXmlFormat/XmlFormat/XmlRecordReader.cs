@@ -17,6 +17,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
         protected XmlReader Reader { get; }
 
+        protected string NsSpreadsheetMl => XmlProperNamespaces.NsSpreadsheetMl;
+
+        protected string NsDocumentRelationship => XmlProperNamespaces.NsDocumentRelationship;
+
         public override Record Read()
         {
             if (_enumerator == null)

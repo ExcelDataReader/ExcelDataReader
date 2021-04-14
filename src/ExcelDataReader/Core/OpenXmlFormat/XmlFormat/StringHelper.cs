@@ -6,11 +6,11 @@ using System.Xml;
 namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 {
     internal static class StringHelper
-    {
-        private const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-
+    {       
         private const string ElementT = "t";
         private const string ElementR = "r";
+
+        private static string NsSpreadsheetMl => XmlProperNamespaces.NsSpreadsheetMl;
 
         public static string ReadStringItem(XmlReader reader)
         {

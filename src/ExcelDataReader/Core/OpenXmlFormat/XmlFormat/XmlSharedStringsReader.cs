@@ -8,7 +8,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 {
     internal sealed class XmlSharedStringsReader : XmlRecordReader
     {
-        private const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
         private const string ElementSst = "sst";
         private const string ElementStringItem = "si";
 
