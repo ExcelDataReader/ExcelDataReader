@@ -57,9 +57,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         {
         }
 
-        protected override IEnumerable<Record> ReadOverride()
+        protected override IEnumerable<Record> ReadOverride(XmlProperNamespaces properNamespaces)
         {
-            if (!Reader.IsStartElement(NWorksheet, NsSpreadsheetMl))
+            if (!Reader.IsStartElement(NWorksheet, properNamespaces.NsSpreadsheetMl))
             {
                 yield break;
             }
@@ -71,7 +71,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!Reader.EOF)
             {
-                if (Reader.IsStartElement(NSheetData, NsSpreadsheetMl))
+                if (Reader.IsStartElement(NSheetData, properNamespaces.NsSpreadsheetMl))
                 {
                     yield return new SheetDataBeginRecord();
                     if (!XmlReaderHelper.ReadFirstContent(Reader))
@@ -83,7 +83,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                     int rowIndex = -1;
                     while (!Reader.EOF)
                     {
-                        if (Reader.IsStartElement(NRow, NsSpreadsheetMl))
+                        if (Reader.IsStartElement(NRow, properNamespaces.NsSpreadsheetMl))
                         {
                             if (int.TryParse(Reader.GetAttribute(AR), out int arValue))
                                 rowIndex = arValue - 1; // The row attribute is 1-based
@@ -108,9 +108,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                             int nextColumnIndex = 0;
                             while (!Reader.EOF)
                             {
-                                if (Reader.IsStartElement(NC, NsSpreadsheetMl))
+                                if (Reader.IsStartElement(NC, properNamespaces.NsSpreadsheetMl))
                                 {
-                                    var cell = ReadCell(nextColumnIndex);
+                                    var cell = ReadCell(nextColumnIndex, properNamespaces.NsSpreadsheetMl);
                                     nextColumnIndex = cell.ColumnIndex + 1;
                                     yield return cell;
                                 }
@@ -128,7 +128,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
                     yield return new SheetDataEndRecord();
                 }
-                else if (Reader.IsStartElement(NMergeCells, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NMergeCells, properNamespaces.NsSpreadsheetMl))
                 {
                     if (!XmlReaderHelper.ReadFirstContent(Reader))
                     {
@@ -137,7 +137,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
                     while (!Reader.EOF)
                     {
-                        if (Reader.IsStartElement(NMergeCell, NsSpreadsheetMl))
+                        if (Reader.IsStartElement(NMergeCell, properNamespaces.NsSpreadsheetMl))
                         {
                             var cellRefs = Reader.GetAttribute(ARef);
                             yield return new MergeCellRecord(new CellRange(cellRefs));
@@ -150,13 +150,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                         }
                     }
                 }
-                else if (Reader.IsStartElement(NHeaderFooter, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NHeaderFooter, properNamespaces.NsSpreadsheetMl))
                 {
-                    var result = ReadHeaderFooter();
+                    var result = ReadHeaderFooter(properNamespaces.NsSpreadsheetMl);
                     if (result != null)
                         yield return new HeaderFooterRecord(result);
                 }
-                else if (Reader.IsStartElement(NCols, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NCols, properNamespaces.NsSpreadsheetMl))
                 {
                     if (!XmlReaderHelper.ReadFirstContent(Reader))
                     {
@@ -165,7 +165,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
                     while (!Reader.EOF)
                     {
-                        if (Reader.IsStartElement(NCol, NsSpreadsheetMl))
+                        if (Reader.IsStartElement(NCol, properNamespaces.NsSpreadsheetMl))
                         {
                             var min = Reader.GetAttribute(AMin);
                             var max = Reader.GetAttribute(AMax);
@@ -188,14 +188,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                         }
                     }
                 }
-                else if (Reader.IsStartElement(NSheetProperties, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NSheetProperties, properNamespaces.NsSpreadsheetMl))
                 {
                     var codeName = Reader.GetAttribute("codeName");
                     yield return new SheetPrRecord(codeName);
 
                     Reader.Skip();
                 }
-                else if (Reader.IsStartElement(NSheetFormatProperties, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NSheetFormatProperties, properNamespaces.NsSpreadsheetMl))
                 {
                     if (double.TryParse(Reader.GetAttribute(ADefaultRowHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out var defaultRowHeight))
                         yield return new SheetFormatPrRecord(defaultRowHeight);
@@ -209,7 +209,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             }
         }
 
-        private HeaderFooter ReadHeaderFooter()
+        private HeaderFooter ReadHeaderFooter(string nsSpreadsheetMl)
         {
             var differentFirst = Reader.GetAttribute(ADifferentFirst) == "1";
             var differentOddEven = Reader.GetAttribute(ADifferentOddEven) == "1";
@@ -223,27 +223,27 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!Reader.EOF)
             {
-                if (Reader.IsStartElement(NOddHeader, NsSpreadsheetMl))
+                if (Reader.IsStartElement(NOddHeader, nsSpreadsheetMl))
                 {
                     headerFooter.OddHeader = Reader.ReadElementContentAsString();
                 }
-                else if (Reader.IsStartElement(NOddFooter, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NOddFooter, nsSpreadsheetMl))
                 {
                     headerFooter.OddFooter = Reader.ReadElementContentAsString();
                 }
-                else if (Reader.IsStartElement(NEvenHeader, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NEvenHeader, nsSpreadsheetMl))
                 {
                     headerFooter.EvenHeader = Reader.ReadElementContentAsString();
                 }
-                else if (Reader.IsStartElement(NEvenFooter, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NEvenFooter, nsSpreadsheetMl))
                 {
                     headerFooter.EvenFooter = Reader.ReadElementContentAsString();
                 }
-                else if (Reader.IsStartElement(NFirstHeader, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NFirstHeader, nsSpreadsheetMl))
                 {
                     headerFooter.FirstHeader = Reader.ReadElementContentAsString();
                 }
-                else if (Reader.IsStartElement(NFirstFooter, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NFirstFooter, nsSpreadsheetMl))
                 {
                     headerFooter.FirstFooter = Reader.ReadElementContentAsString();
                 }
@@ -256,7 +256,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             return headerFooter;
         }
 
-        private CellRecord ReadCell(int nextColumnIndex)
+        private CellRecord ReadCell(int nextColumnIndex, string nsSpreadsheetMl)
         {
             int columnIndex;
             int xfIndex = -1;
@@ -287,15 +287,15 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             CellError? error = null;
             while (!Reader.EOF)
             {
-                if (Reader.IsStartElement(NV, NsSpreadsheetMl))
+                if (Reader.IsStartElement(NV, nsSpreadsheetMl))
                 {
                     string rawValue = Reader.ReadElementContentAsString();
                     if (!string.IsNullOrEmpty(rawValue))
                         ConvertCellValue(rawValue, aT, out value, out error);
                 }
-                else if (Reader.IsStartElement(NIs, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NIs, nsSpreadsheetMl))
                 {
-                    string rawValue = StringHelper.ReadStringItem(Reader);
+                    string rawValue = StringHelper.ReadStringItem(Reader, nsSpreadsheetMl);
                     if (!string.IsNullOrEmpty(rawValue))
                         ConvertCellValue(rawValue, aT, out value, out error);
                 }

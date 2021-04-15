@@ -16,9 +16,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         {
         }
 
-        protected override IEnumerable<Record> ReadOverride()
+        protected override IEnumerable<Record> ReadOverride(XmlProperNamespaces properNamespaces)
         {
-            if (!Reader.IsStartElement(ElementSst, NsSpreadsheetMl))
+            if (!Reader.IsStartElement(ElementSst, properNamespaces.NsSpreadsheetMl))
             {
                 yield break;
             }
@@ -30,9 +30,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!Reader.EOF)
             {
-                if (Reader.IsStartElement(ElementStringItem, NsSpreadsheetMl))
+                if (Reader.IsStartElement(ElementStringItem, properNamespaces.NsSpreadsheetMl))
                 {
-                    var value = StringHelper.ReadStringItem(Reader);
+                    var value = StringHelper.ReadStringItem(Reader, properNamespaces.NsSpreadsheetMl);
                     yield return new SharedStringRecord(value);
                 }
                 else if (!XmlReaderHelper.SkipContent(Reader))

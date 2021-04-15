@@ -15,22 +15,18 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             Reader = reader;
         }
 
-        protected XmlReader Reader { get; }
+        protected XmlReader Reader { get; }       
 
-        protected string NsSpreadsheetMl => XmlProperNamespaces.NsSpreadsheetMl;
-
-        protected string NsDocumentRelationship => XmlProperNamespaces.NsDocumentRelationship;
-
-        public override Record Read()
+        public override Record Read(XmlProperNamespaces properNamespaces)
         {
             if (_enumerator == null)
-                _enumerator = ReadOverride().GetEnumerator();
+                _enumerator = ReadOverride(properNamespaces).GetEnumerator();
             if (_enumerator.MoveNext())
                 return _enumerator.Current;
             return null;
         }
 
-        protected abstract IEnumerable<Record> ReadOverride();
+        protected abstract IEnumerable<Record> ReadOverride(XmlProperNamespaces properNamespaces);
 
         /// <inheritdoc />
         protected override void Dispose(bool disposing)

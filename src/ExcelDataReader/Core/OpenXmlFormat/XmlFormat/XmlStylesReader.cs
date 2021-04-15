@@ -37,9 +37,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         {
         }
 
-        protected override IEnumerable<Record> ReadOverride()
+        protected override IEnumerable<Record> ReadOverride(XmlProperNamespaces properNamespaces)
         {
-            if (!Reader.IsStartElement(ElementStyleSheet, NsSpreadsheetMl))
+            if (!Reader.IsStartElement(ElementStyleSheet, properNamespaces.NsSpreadsheetMl))
             {
                 yield break;
             }
@@ -51,17 +51,17 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!Reader.EOF)
             {
-                if (Reader.IsStartElement(ElementCellCrossReference, NsSpreadsheetMl))
+                if (Reader.IsStartElement(ElementCellCrossReference, properNamespaces.NsSpreadsheetMl))
                 {
-                    foreach (var xf in ReadCellXfs())
+                    foreach (var xf in ReadCellXfs(properNamespaces.NsSpreadsheetMl))
                         yield return new ExtendedFormatRecord(xf);
                 }
-                else if (Reader.IsStartElement(ElementCellStyleCrossReference, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(ElementCellStyleCrossReference, properNamespaces.NsSpreadsheetMl))
                 {
-                    foreach (var xf in ReadCellXfs())
+                    foreach (var xf in ReadCellXfs(properNamespaces.NsSpreadsheetMl))
                         yield return new CellStyleExtendedFormatRecord(xf);
                 }
-                else if (Reader.IsStartElement(ElementNumberFormats, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(ElementNumberFormats, properNamespaces.NsSpreadsheetMl))
                 {
                     if (!XmlReaderHelper.ReadFirstContent(Reader))
                     {
@@ -70,7 +70,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
                     while (!Reader.EOF)
                     {
-                        if (Reader.IsStartElement(NNumFmt, NsSpreadsheetMl))
+                        if (Reader.IsStartElement(NNumFmt, properNamespaces.NsSpreadsheetMl))
                         {
                             int.TryParse(Reader.GetAttribute(ANumFmtId), out var numFmtId);
                             var formatCode = Reader.GetAttribute(AFormatCode);
@@ -91,7 +91,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             }
         }
 
-        private IEnumerable<ExtendedFormat> ReadCellXfs()
+        private IEnumerable<ExtendedFormat> ReadCellXfs(string nsSpreadsheetMl)
         {
             if (!XmlReaderHelper.ReadFirstContent(Reader))
             {
@@ -100,14 +100,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!Reader.EOF)
             {
-                if (Reader.IsStartElement(NXF, NsSpreadsheetMl))
+                if (Reader.IsStartElement(NXF, nsSpreadsheetMl))
                 {
                     int.TryParse(Reader.GetAttribute(AXFId), out var xfId);
                     int.TryParse(Reader.GetAttribute(ANumFmtId), out var numFmtId);
                     var applyNumberFormat = Reader.GetAttribute(AApplyNumberFormat) == "1";
                     var applyAlignment = Reader.GetAttribute(AApplyAlignment) == "1";
                     var applyProtection = Reader.GetAttribute(AApplyProtection) == "1";
-                    ReadAlignment(Reader, out int indentLevel, out HorizontalAlignment horizontalAlignment, out var hidden, out var locked);
+                    ReadAlignment(Reader, out int indentLevel, out HorizontalAlignment horizontalAlignment, nsSpreadsheetMl, out var hidden, out var locked);
 
                     yield return new ExtendedFormat()
                     {
@@ -129,7 +129,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             }
         }
 
-        private void ReadAlignment(XmlReader reader, out int indentLevel, out HorizontalAlignment horizontalAlignment, out bool hidden, out bool locked)
+        private void ReadAlignment(XmlReader reader, out int indentLevel, out HorizontalAlignment horizontalAlignment, string nsSpreadsheetMl, out bool hidden, out bool locked)
         {
             indentLevel = 0;
             horizontalAlignment = HorizontalAlignment.General;
@@ -143,7 +143,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!reader.EOF)
             {
-                if (reader.IsStartElement(NAlignment, NsSpreadsheetMl))
+                if (reader.IsStartElement(NAlignment, nsSpreadsheetMl))
                 {
                     int.TryParse(reader.GetAttribute(AIndent), out indentLevel);
                     try
@@ -159,7 +159,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
                     reader.Skip();
                 }
-                else if (reader.IsStartElement(NProtection, NsSpreadsheetMl))
+                else if (reader.IsStartElement(NProtection, nsSpreadsheetMl))
                 {
                     locked = reader.GetAttribute(ALocked) == "1";
                     hidden = reader.GetAttribute(AHidden) == "1";

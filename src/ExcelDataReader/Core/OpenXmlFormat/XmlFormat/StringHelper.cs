@@ -10,9 +10,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         private const string ElementT = "t";
         private const string ElementR = "r";
 
-        private static string NsSpreadsheetMl => XmlProperNamespaces.NsSpreadsheetMl;
-
-        public static string ReadStringItem(XmlReader reader)
+        public static string ReadStringItem(XmlReader reader, string nsSpreadsheetMl)
         {
             string result = string.Empty;
             if (!XmlReaderHelper.ReadFirstContent(reader))
@@ -22,14 +20,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!reader.EOF)
             {
-                if (reader.IsStartElement(ElementT, NsSpreadsheetMl))
+                if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
                 {
                     // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
                     result += reader.ReadElementContentAsString();
                 }
-                else if (reader.IsStartElement(ElementR, NsSpreadsheetMl))
+                else if (reader.IsStartElement(ElementR, nsSpreadsheetMl))
                 {
-                    result += ReadRichTextRun(reader);
+                    result += ReadRichTextRun(reader, nsSpreadsheetMl);
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))
                 {
@@ -40,7 +38,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             return result;
         }
 
-        private static string ReadRichTextRun(XmlReader reader)
+        private static string ReadRichTextRun(XmlReader reader, string nsSpreadsheetMl)
         {
             string result = string.Empty;
             if (!XmlReaderHelper.ReadFirstContent(reader))
@@ -50,7 +48,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!reader.EOF)
             {
-                if (reader.IsStartElement(ElementT, NsSpreadsheetMl))
+                if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
                 {
                     result += reader.ReadElementContentAsString();
                 }
@@ -61,6 +59,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             }
 
             return result;
-        }
+        }        
     }
 }

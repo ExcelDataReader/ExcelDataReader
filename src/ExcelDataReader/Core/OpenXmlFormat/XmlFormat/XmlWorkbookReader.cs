@@ -26,9 +26,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         {
         }
 
-        protected override IEnumerable<Record> ReadOverride()
+        protected override IEnumerable<Record> ReadOverride(XmlProperNamespaces properNamespaces)
         {
-            if (!CheckStartElementAndApplyNamespaces(ElementWorkbook))
+            if (!CheckStartElementAndApplyNamespaces(ElementWorkbook, properNamespaces))
             {
                 yield break;
             }
@@ -40,14 +40,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!Reader.EOF)
             {
-                if (Reader.IsStartElement(ElementWorkbookProperties, NsSpreadsheetMl))
+                if (Reader.IsStartElement(ElementWorkbookProperties, properNamespaces.NsSpreadsheetMl))
                 {
                     // Workbook VBA CodeName: reader.GetAttribute("codeName");
                     bool date1904 = Reader.GetAttribute("date1904") == "1";
                     yield return new WorkbookPrRecord(date1904);
                     Reader.Skip();
                 }
-                else if (Reader.IsStartElement(ElementSheets, NsSpreadsheetMl))
+                else if (Reader.IsStartElement(ElementSheets, properNamespaces.NsSpreadsheetMl))
                 {
                     if (!XmlReaderHelper.ReadFirstContent(Reader))
                     {
@@ -56,12 +56,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
                     while (!Reader.EOF)
                     {
-                        if (Reader.IsStartElement(ElementSheet, NsSpreadsheetMl))
+                        if (Reader.IsStartElement(ElementSheet, properNamespaces.NsSpreadsheetMl))
                         {
                             yield return new SheetRecord(
                                 Reader.GetAttribute(AttributeName),
                                 uint.Parse(Reader.GetAttribute(AttributeSheetId)),
-                                Reader.GetAttribute(AttributeRelationshipId, NsDocumentRelationship),
+                                Reader.GetAttribute(AttributeRelationshipId, properNamespaces.NsDocumentRelationship),
                                 Reader.GetAttribute(AttributeVisibleState));
                             Reader.Skip();
                         }
@@ -78,14 +78,16 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             }
         }
 
-        private bool CheckStartElementAndApplyNamespaces(string element)
+        private bool CheckStartElementAndApplyNamespaces(string element, XmlProperNamespaces properNamespaces)
         {
-            if (Reader.IsStartElement(element, NsSpreadsheetMl))
+            if (Reader.IsStartElement(element, XmlNamespaces.NsSpreadsheetMl))
+            {
                 return true;
+            }
 
             if (Reader.IsStartElement(element, XmlNamespaces.StrictNsSpreadsheetMl))
             {
-                XmlProperNamespaces.SetStrictNamespaces();
+                properNamespaces.SetStrictNamespaces();
                 return true;
             }
 

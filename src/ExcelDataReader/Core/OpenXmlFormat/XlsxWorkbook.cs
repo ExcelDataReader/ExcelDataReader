@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Xml;
 
 using ExcelDataReader.Core.OpenXmlFormat.Records;
+using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
@@ -16,16 +17,18 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string AttributeTarget = "Target";
 
         private readonly ZipWorker _zipWorker;
-
+               
         public XlsxWorkbook(ZipWorker zipWorker)
         {
             _zipWorker = zipWorker;
-
-            ReadWorkbook();
+            ProperNamespaces = new XmlProperNamespaces();
+            ReadWorkbook(ProperNamespaces);
             ReadWorkbookRels();
-            ReadSharedStrings();
-            ReadStyles();
+            ReadSharedStrings(ProperNamespaces);
+            ReadStyles(ProperNamespaces);
         }
+
+        public XmlProperNamespaces ProperNamespaces { get; private set; }
 
         public List<SheetRecord> Sheets { get; } = new List<SheetRecord>();
 
@@ -43,12 +46,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
-        private void ReadWorkbook()
+        private void ReadWorkbook(XmlProperNamespaces properNamespaces)
         {
             using var reader = _zipWorker.GetWorkbookReader();
 
             Record record;
-            while ((record = reader.Read()) != null)
+            while ((record = reader.Read(properNamespaces)) != null)
             {
                 switch (record)
                 {
@@ -109,14 +112,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
-        private void ReadSharedStrings()
+        private void ReadSharedStrings(XmlProperNamespaces properNamespaces)
         {
             using var reader = _zipWorker.GetSharedStringsReader();
             if (reader == null)
                 return;
 
             Record record;
-            while ((record = reader.Read()) != null)
+            while ((record = reader.Read(properNamespaces)) != null)
             {
                 switch (record)
                 {
@@ -127,14 +130,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
-        private void ReadStyles()
+        private void ReadStyles(XmlProperNamespaces properNamespaces)
         {
             using var reader = _zipWorker.GetStylesReader();
             if (reader == null)
                 return;
 
             Record record;
-            while ((record = reader.Read()) != null)
+            while ((record = reader.Read(properNamespaces)) != null)
             {
                 switch (record)
                 {

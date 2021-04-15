@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-
 using NUnit.Framework;
 
 namespace ExcelDataReader.Tests
@@ -95,7 +94,7 @@ namespace ExcelDataReader.Tests
         }
 
         /*
-        #if !LEGACY
+#if !LEGACY
                 [Test]
                 public void ZipWorker_Extract_Test()
                 {
@@ -127,7 +126,7 @@ namespace ExcelDataReader.Tests
                         return System.IO.Path.GetTempPath();
                     }
                 }
-        #endif
+#endif
         */
 
         [Test]
@@ -412,10 +411,11 @@ namespace ExcelDataReader.Tests
             }
         }
 
-        [Test]
-        public void GitIssue498ReadStrictOpenXmlExcelFile()
+        [TestCase("Test_git_issue_498_1.xlsx")]
+        [TestCase("Test_git_issue_498_2.xlsx")]
+        public void GitIssue498ReadStrictOpenXmlExcelFile(string fileName)
         {
-            using IExcelDataReader reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_498.xlsx"));            
+            using IExcelDataReader reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook(fileName));            
             DataTableCollection tables = reader.AsDataSet().Tables;
 
             Assert.AreEqual(2, tables.Count);
@@ -424,6 +424,7 @@ namespace ExcelDataReader.Tests
             {
                 Assert.AreEqual(2, table.Rows.Count);
                 Assert.AreEqual(2, table.Columns.Count);
+                Assert.AreEqual("A1", table.Rows[0][0].ToString());
             }
         }
     }

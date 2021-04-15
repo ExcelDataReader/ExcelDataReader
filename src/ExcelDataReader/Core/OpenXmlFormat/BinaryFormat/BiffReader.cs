@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 
 using ExcelDataReader.Core.OpenXmlFormat.Records;
+using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
 #nullable enable
 
@@ -20,7 +21,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
 
         protected Stream Stream { get; }
 
-        public override Record? Read()
+        public override Record? Read(XmlProperNamespaces properNamespaces)
         {
             if (!TryReadVariableValue(out var recordId) ||
                 !TryReadVariableValue(out var recordLength))

@@ -23,6 +23,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 return;
 
             using var sheetStream = Document.GetWorksheetReader(Path);
+            
             if (sheetStream == null)
                 return;
 
@@ -35,7 +36,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             bool inSheetData = false;
 
             Record record;
-            while ((record = sheetStream.Read()) != null)
+            while ((record = sheetStream.Read(Workbook.ProperNamespaces)) != null)
             {
                 switch (record)
                 {
@@ -123,7 +124,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
             bool inSheetData = false;
             Record record;
-            while ((record = sheetStream.Read()) != null)
+            while ((record = sheetStream.Read(Workbook.ProperNamespaces)) != null)
             {
                 switch (record)
                 {
