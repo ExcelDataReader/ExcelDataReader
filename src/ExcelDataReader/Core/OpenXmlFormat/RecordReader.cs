@@ -23,7 +23,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             GC.SuppressFinalize(this);
         }       
 
-        public abstract Record? Read(XmlProperNamespaces properNamespaces);
+        public abstract Record? Read();
 
         protected virtual void Dispose(bool disposing) 
         {

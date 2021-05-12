@@ -11,14 +11,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         private const string ElementSst = "sst";
         private const string ElementStringItem = "si";
 
-        public XmlSharedStringsReader(XmlReader reader)
-            : base(reader)
+        public XmlSharedStringsReader(XmlReader reader, XmlProperNamespaces properNamespaces)
+            : base(reader, properNamespaces)
         {
         }
 
-        protected override IEnumerable<Record> ReadOverride(XmlProperNamespaces properNamespaces)
+        protected override IEnumerable<Record> ReadOverride()
         {
-            if (!Reader.IsStartElement(ElementSst, properNamespaces.NsSpreadsheetMl))
+            if (!Reader.IsStartElement(ElementSst, ProperNamespaces.NsSpreadsheetMl))
             {
                 yield break;
             }
@@ -30,9 +30,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!Reader.EOF)
             {
-                if (Reader.IsStartElement(ElementStringItem, properNamespaces.NsSpreadsheetMl))
+                if (Reader.IsStartElement(ElementStringItem, ProperNamespaces.NsSpreadsheetMl))
                 {
-                    var value = StringHelper.ReadStringItem(Reader, properNamespaces.NsSpreadsheetMl);
+                    var value = StringHelper.ReadStringItem(Reader, ProperNamespaces.NsSpreadsheetMl);
                     yield return new SharedStringRecord(value);
                 }
                 else if (!XmlReaderHelper.SkipContent(Reader))

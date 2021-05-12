@@ -10,23 +10,26 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
     {
         private IEnumerator<Record> _enumerator;
 
-        public XmlRecordReader(XmlReader reader)
+        public XmlRecordReader(XmlReader reader, XmlProperNamespaces properNamespaces)
         {
             Reader = reader;
+            ProperNamespaces = properNamespaces;
         }
 
-        protected XmlReader Reader { get; }       
+        public XmlProperNamespaces ProperNamespaces { get; set; }
 
-        public override Record Read(XmlProperNamespaces properNamespaces)
+        protected XmlReader Reader { get; }
+
+        public override Record Read()
         {
             if (_enumerator == null)
-                _enumerator = ReadOverride(properNamespaces).GetEnumerator();
+                _enumerator = ReadOverride().GetEnumerator();
             if (_enumerator.MoveNext())
                 return _enumerator.Current;
             return null;
         }
 
-        protected abstract IEnumerable<Record> ReadOverride(XmlProperNamespaces properNamespaces);
+        protected abstract IEnumerable<Record> ReadOverride();
 
         /// <inheritdoc />
         protected override void Dispose(bool disposing)

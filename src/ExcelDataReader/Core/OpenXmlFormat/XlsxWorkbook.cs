@@ -22,10 +22,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         {
             _zipWorker = zipWorker;
             ProperNamespaces = new XmlProperNamespaces();
-            ReadWorkbook(ProperNamespaces);
+            ReadWorkbook();
             ReadWorkbookRels();
-            ReadSharedStrings(ProperNamespaces);
-            ReadStyles(ProperNamespaces);
+            ReadSharedStrings();
+            ReadStyles();
         }
 
         public XmlProperNamespaces ProperNamespaces { get; private set; }
@@ -46,13 +46,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
-        private void ReadWorkbook(XmlProperNamespaces properNamespaces)
+        private void ReadWorkbook()
         {
-            using var reader = _zipWorker.GetWorkbookReader();
-
+            using RecordReader reader = _zipWorker.GetWorkbookReader(ProperNamespaces);            
+            
             Record record;
-            while ((record = reader.Read(properNamespaces)) != null)
-            {
+            while ((record = reader.Read()) != null)
+            {                
                 switch (record)
                 {
                     case WorkbookPrRecord pr:
@@ -63,6 +63,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         break;
                 }
             }
+
+            if (reader is XmlWorkbookReader xmlWorkbookReader)
+                ProperNamespaces = xmlWorkbookReader.ProperNamespaces;
         }
 
         private void ReadWorkbookRels()
@@ -112,14 +115,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
-        private void ReadSharedStrings(XmlProperNamespaces properNamespaces)
+        private void ReadSharedStrings()
         {
-            using var reader = _zipWorker.GetSharedStringsReader();
+            using var reader = _zipWorker.GetSharedStringsReader(ProperNamespaces);
             if (reader == null)
                 return;
 
             Record record;
-            while ((record = reader.Read(properNamespaces)) != null)
+            while ((record = reader.Read()) != null)
             {
                 switch (record)
                 {
@@ -130,14 +133,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             }
         }
 
-        private void ReadStyles(XmlProperNamespaces properNamespaces)
+        private void ReadStyles()
         {
-            using var reader = _zipWorker.GetStylesReader();
+            using var reader = _zipWorker.GetStylesReader(ProperNamespaces);
             if (reader == null)
                 return;
 
             Record record;
-            while ((record = reader.Read(properNamespaces)) != null)
+            while ((record = reader.Read()) != null)
             {
                 switch (record)
                 {
@@ -150,6 +153,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     case NumberFormatRecord nf:
                         AddNumberFormat(nf.FormatIndexInFile, nf.FormatString);
                         break;
+                    default:
+                        {
+                            break;
+                        }
                 }
             }
         }

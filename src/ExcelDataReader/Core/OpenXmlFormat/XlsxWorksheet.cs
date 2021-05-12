@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text.RegularExpressions;
+using System.Xml;
 using ExcelDataReader.Core.NumberFormat;
 using ExcelDataReader.Core.OpenXmlFormat.Records;
+using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
@@ -22,7 +26,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             if (string.IsNullOrEmpty(Path))
                 return;
 
-            using var sheetStream = Document.GetWorksheetReader(Path);
+            using var sheetStream = Document.GetWorksheetReader(Path, Workbook.ProperNamespaces);
             
             if (sheetStream == null)
                 return;
@@ -36,7 +40,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             bool inSheetData = false;
 
             Record record;
-            while ((record = sheetStream.Read(Workbook.ProperNamespaces)) != null)
+            while ((record = sheetStream.Read()) != null)
             {
                 switch (record)
                 {
@@ -114,7 +118,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             if (string.IsNullOrEmpty(Path))
                 yield break;
 
-            using var sheetStream = Document.GetWorksheetReader(Path);
+            using RecordReader sheetStream = Document.GetWorksheetReader(Path, Workbook.ProperNamespaces);
             if (sheetStream == null)
                 yield break;
 
@@ -124,7 +128,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
             bool inSheetData = false;
             Record record;
-            while ((record = sheetStream.Read(Workbook.ProperNamespaces)) != null)
+            while ((record = sheetStream.Read()) != null)
             {
                 switch (record)
                 {
@@ -190,9 +194,24 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     }
 
                     return number;
+
+                case DateTime date:
+                    return date;
+
                 default:
+                    if (value == null)
+                        return value;
+                    NumberFormatString numberFormat = Workbook.GetNumberFormatString(numberFormatIndex);
+                    if (numberFormat.IsTimeSpanFormat)
+                        return XmlConvert.ToTimeSpan(value.ToString());
+                    if (numberFormat.IsDateTimeFormat)
+                    {
+                        if (DateTimeOffset.TryParse(value.ToString(), out DateTimeOffset dateTimeOffset))
+                            return dateTimeOffset;
+                    }
+
                     return value;
             }
-        }
+        }        
     }
 }

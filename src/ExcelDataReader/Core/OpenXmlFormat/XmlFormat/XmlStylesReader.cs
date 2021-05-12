@@ -32,14 +32,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         private const string AHidden = "hidden";
         private const string ALocked = "locked";
 
-        public XmlStylesReader(XmlReader reader) 
-            : base(reader)
+        public XmlStylesReader(XmlReader reader, XmlProperNamespaces properNamespaces) 
+            : base(reader, properNamespaces)
         {
         }
 
-        protected override IEnumerable<Record> ReadOverride(XmlProperNamespaces properNamespaces)
+        protected override IEnumerable<Record> ReadOverride()
         {
-            if (!Reader.IsStartElement(ElementStyleSheet, properNamespaces.NsSpreadsheetMl))
+            if (!Reader.IsStartElement(ElementStyleSheet, ProperNamespaces.NsSpreadsheetMl))
             {
                 yield break;
             }
@@ -51,17 +51,17 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!Reader.EOF)
             {
-                if (Reader.IsStartElement(ElementCellCrossReference, properNamespaces.NsSpreadsheetMl))
+                if (Reader.IsStartElement(ElementCellCrossReference, ProperNamespaces.NsSpreadsheetMl))
                 {
-                    foreach (var xf in ReadCellXfs(properNamespaces.NsSpreadsheetMl))
+                    foreach (var xf in ReadCellXfs(ProperNamespaces.NsSpreadsheetMl))
                         yield return new ExtendedFormatRecord(xf);
                 }
-                else if (Reader.IsStartElement(ElementCellStyleCrossReference, properNamespaces.NsSpreadsheetMl))
+                else if (Reader.IsStartElement(ElementCellStyleCrossReference, ProperNamespaces.NsSpreadsheetMl))
                 {
-                    foreach (var xf in ReadCellXfs(properNamespaces.NsSpreadsheetMl))
+                    foreach (var xf in ReadCellXfs(ProperNamespaces.NsSpreadsheetMl))
                         yield return new CellStyleExtendedFormatRecord(xf);
                 }
-                else if (Reader.IsStartElement(ElementNumberFormats, properNamespaces.NsSpreadsheetMl))
+                else if (Reader.IsStartElement(ElementNumberFormats, ProperNamespaces.NsSpreadsheetMl))
                 {
                     if (!XmlReaderHelper.ReadFirstContent(Reader))
                     {
@@ -70,7 +70,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
                     while (!Reader.EOF)
                     {
-                        if (Reader.IsStartElement(NNumFmt, properNamespaces.NsSpreadsheetMl))
+                        if (Reader.IsStartElement(NNumFmt, ProperNamespaces.NsSpreadsheetMl))
                         {
                             int.TryParse(Reader.GetAttribute(ANumFmtId), out var numFmtId);
                             var formatCode = Reader.GetAttribute(AFormatCode);

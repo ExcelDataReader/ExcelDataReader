@@ -52,16 +52,15 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         private const string ACustomHeight = "customHeight";
         private const string AHt = "ht";
 
-        public XmlWorksheetReader(XmlReader reader) 
-            : base(reader)
+        public XmlWorksheetReader(XmlReader reader, XmlProperNamespaces properNamespaces) 
+            : base(reader, properNamespaces)
         {
         }
 
-        protected override IEnumerable<Record> ReadOverride(XmlProperNamespaces properNamespaces)
+        protected override IEnumerable<Record> ReadOverride()
         {
-            if (!Reader.IsStartElement(NWorksheet, properNamespaces.NsSpreadsheetMl))
-            {
-                yield break;
+            if (!Reader.IsStartElement(NWorksheet, ProperNamespaces.NsSpreadsheetMl))
+            {                yield break;
             }
 
             if (!XmlReaderHelper.ReadFirstContent(Reader))
@@ -71,7 +70,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!Reader.EOF)
             {
-                if (Reader.IsStartElement(NSheetData, properNamespaces.NsSpreadsheetMl))
+                if (Reader.IsStartElement(NSheetData, ProperNamespaces.NsSpreadsheetMl))
                 {
                     yield return new SheetDataBeginRecord();
                     if (!XmlReaderHelper.ReadFirstContent(Reader))
@@ -83,7 +82,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                     int rowIndex = -1;
                     while (!Reader.EOF)
                     {
-                        if (Reader.IsStartElement(NRow, properNamespaces.NsSpreadsheetMl))
+                        if (Reader.IsStartElement(NRow, ProperNamespaces.NsSpreadsheetMl))
                         {
                             if (int.TryParse(Reader.GetAttribute(AR), out int arValue))
                                 rowIndex = arValue - 1; // The row attribute is 1-based
@@ -108,9 +107,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                             int nextColumnIndex = 0;
                             while (!Reader.EOF)
                             {
-                                if (Reader.IsStartElement(NC, properNamespaces.NsSpreadsheetMl))
+                                if (Reader.IsStartElement(NC, ProperNamespaces.NsSpreadsheetMl))
                                 {
-                                    var cell = ReadCell(nextColumnIndex, properNamespaces.NsSpreadsheetMl);
+                                    var cell = ReadCell(nextColumnIndex, ProperNamespaces.NsSpreadsheetMl);
                                     nextColumnIndex = cell.ColumnIndex + 1;
                                     yield return cell;
                                 }
@@ -128,7 +127,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
                     yield return new SheetDataEndRecord();
                 }
-                else if (Reader.IsStartElement(NMergeCells, properNamespaces.NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NMergeCells, ProperNamespaces.NsSpreadsheetMl))
                 {
                     if (!XmlReaderHelper.ReadFirstContent(Reader))
                     {
@@ -137,7 +136,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
                     while (!Reader.EOF)
                     {
-                        if (Reader.IsStartElement(NMergeCell, properNamespaces.NsSpreadsheetMl))
+                        if (Reader.IsStartElement(NMergeCell, ProperNamespaces.NsSpreadsheetMl))
                         {
                             var cellRefs = Reader.GetAttribute(ARef);
                             yield return new MergeCellRecord(new CellRange(cellRefs));
@@ -150,13 +149,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                         }
                     }
                 }
-                else if (Reader.IsStartElement(NHeaderFooter, properNamespaces.NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NHeaderFooter, ProperNamespaces.NsSpreadsheetMl))
                 {
-                    var result = ReadHeaderFooter(properNamespaces.NsSpreadsheetMl);
+                    var result = ReadHeaderFooter(ProperNamespaces.NsSpreadsheetMl);
                     if (result != null)
                         yield return new HeaderFooterRecord(result);
                 }
-                else if (Reader.IsStartElement(NCols, properNamespaces.NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NCols, ProperNamespaces.NsSpreadsheetMl))
                 {
                     if (!XmlReaderHelper.ReadFirstContent(Reader))
                     {
@@ -165,7 +164,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
                     while (!Reader.EOF)
                     {
-                        if (Reader.IsStartElement(NCol, properNamespaces.NsSpreadsheetMl))
+                        if (Reader.IsStartElement(NCol, ProperNamespaces.NsSpreadsheetMl))
                         {
                             var min = Reader.GetAttribute(AMin);
                             var max = Reader.GetAttribute(AMax);
@@ -188,14 +187,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                         }
                     }
                 }
-                else if (Reader.IsStartElement(NSheetProperties, properNamespaces.NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NSheetProperties, ProperNamespaces.NsSpreadsheetMl))
                 {
                     var codeName = Reader.GetAttribute("codeName");
                     yield return new SheetPrRecord(codeName);
 
                     Reader.Skip();
                 }
-                else if (Reader.IsStartElement(NSheetFormatProperties, properNamespaces.NsSpreadsheetMl))
+                else if (Reader.IsStartElement(NSheetFormatProperties, ProperNamespaces.NsSpreadsheetMl))
                 {
                     if (double.TryParse(Reader.GetAttribute(ADefaultRowHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out var defaultRowHeight))
                         yield return new SheetFormatPrRecord(defaultRowHeight);

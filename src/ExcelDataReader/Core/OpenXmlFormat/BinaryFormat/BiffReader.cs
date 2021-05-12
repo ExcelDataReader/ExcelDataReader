@@ -21,7 +21,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
 
         protected Stream Stream { get; }
 
-        public override Record? Read(XmlProperNamespaces properNamespaces)
+        public override Record? Read()
         {
             if (!TryReadVariableValue(out var recordId) ||
                 !TryReadVariableValue(out var recordLength))
