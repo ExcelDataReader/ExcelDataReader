@@ -14,22 +14,22 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
         public static string ReadStringItem(XmlReader reader)
         {
-            string result = string.Empty;
             if (!XmlReaderHelper.ReadFirstContent(reader))
             {
-                return result;
+                return string.Empty;
             }
 
+            StringBuilder sb = new StringBuilder();
             while (!reader.EOF)
             {
                 if (reader.IsStartElement(ElementT, NsSpreadsheetMl))
                 {
                     // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
-                    result += reader.ReadElementContentAsString();
+                    sb.Append(reader.ReadElementContentAsString());
                 }
                 else if (reader.IsStartElement(ElementR, NsSpreadsheetMl))
                 {
-                    result += ReadRichTextRun(reader);
+                    ReadRichTextRun(reader, sb);
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))
                 {
@@ -37,30 +37,27 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                 }
             }
 
-            return result;
+            return sb.ToString();
         }
 
-        private static string ReadRichTextRun(XmlReader reader)
+        private static void ReadRichTextRun(XmlReader reader, StringBuilder sb)
         {
-            string result = string.Empty;
             if (!XmlReaderHelper.ReadFirstContent(reader))
             {
-                return result;
+                return;
             }
 
             while (!reader.EOF)
             {
                 if (reader.IsStartElement(ElementT, NsSpreadsheetMl))
                 {
-                    result += reader.ReadElementContentAsString();
+                    sb.Append(reader.ReadElementContentAsString());
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))
                 {
                     break;
                 }
             }
-
-            return result;
         }
     }
 }

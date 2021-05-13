@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyTitle>ExcelDataReader.Tests</AssemblyTitle>
     <Authors>ExcelDataReader developers</Authors>
-    <TargetFrameworks>netcoreapp1.0;netcoreapp2.0;net20;net45</TargetFrameworks>
+    <TargetFrameworks>netcoreapp1.0;netcoreapp2.0;net5.0;net20;net45</TargetFrameworks>
     <AssemblyName>ExcelDataReader.Tests</AssemblyName>
     <PackageId>ExcelDataReader.Tests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>

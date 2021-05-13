@@ -55,17 +55,15 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
                 case Xf when _inCellXf:
                 case Xf when _inCellStyleXf:
                     {
-                        var flags = buffer[14];
-                        var extendedFormat = new ExtendedFormat()
-                        {
-                            ParentCellStyleXf = GetWord(buffer, 0),
-                            NumberFormatIndex = GetWord(buffer, 2),
-                            FontIndex = GetWord(buffer, 4),
-                            IndentLevel = (int)(uint)buffer[11],
-                            HorizontalAlignment = (HorizontalAlignment)(buffer[12] & 0b111),
-                            Locked = (buffer[13] & 0x10000) != 0,
-                            Hidden = (buffer[13] & 0x100000) != 0,
-                        };
+                        // var flags = buffer[14];
+                        var extendedFormat = new ExtendedFormat(
+                            GetWord(buffer, 0),
+                            GetWord(buffer, 4),
+                            GetWord(buffer, 2),
+                            (buffer[13] & 0x10000) != 0,
+                            (buffer[13] & 0x100000) != 0,
+                            (int)(uint)buffer[11],
+                            (HorizontalAlignment)(buffer[12] & 0b111));
 
                         if (_inCellXf)
                             return new ExtendedFormatRecord(extendedFormat);

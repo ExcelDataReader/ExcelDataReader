@@ -34,10 +34,10 @@ namespace ExcelDataReader.Core
                 return ExtendedFormats[xfIndex];
             }
 
-            return new ExtendedFormat()
-            {
-                NumberFormatIndex = numberFormatFromCell,
-            };
+            if (numberFormatFromCell == 0)
+                return ExtendedFormat.Zero;
+
+            return new ExtendedFormat(numberFormatFromCell);
         }
 
         /// <summary>
