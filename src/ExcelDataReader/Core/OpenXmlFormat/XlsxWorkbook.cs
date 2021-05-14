@@ -63,9 +63,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         break;
                 }
             }
-
-            if (reader is XmlWorkbookReader xmlWorkbookReader)
-                ProperNamespaces = xmlWorkbookReader.ProperNamespaces;
         }
 
         private void ReadWorkbookRels()
