@@ -60,7 +60,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         protected override IEnumerable<Record> ReadOverride()
         {
             if (!Reader.IsStartElement(NWorksheet, ProperNamespaces.NsSpreadsheetMl))
-            {                yield break;
+            {
+                yield break;
             }
 
             if (!XmlReaderHelper.ReadFirstContent(Reader))
