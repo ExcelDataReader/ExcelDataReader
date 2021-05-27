@@ -10,6 +10,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
         }
 
+        public override bool IsEmpty => true;
+
         /// <summary>
         /// Gets the zero-based index of last described column
         /// </summary>

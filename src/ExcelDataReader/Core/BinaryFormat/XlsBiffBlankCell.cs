@@ -11,6 +11,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
         }
 
+        public virtual bool IsEmpty => true;
+
         /// <summary>
         /// Gets the zero-based index of row containing this cell.
         /// </summary>

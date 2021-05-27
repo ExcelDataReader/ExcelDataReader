@@ -10,6 +10,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
         }
 
+        public override bool IsEmpty => false;
+
         /// <summary>
         /// Gets the value of this cell
         /// </summary>

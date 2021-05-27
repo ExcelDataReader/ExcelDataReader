@@ -150,7 +150,7 @@ namespace ExcelDataReader.Tests
             {
                 var dataSet = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
-                Assert.AreEqual(7, dataSet.Tables[0].Columns.Count); // 6 with data + 1 that is present but no data in it
+                Assert.AreEqual(6, dataSet.Tables[0].Columns.Count); // 6 with data + 1 that is present but no data in it
                 Assert.AreEqual(0, dataSet.Tables[0].Rows.Count);
             }
         }

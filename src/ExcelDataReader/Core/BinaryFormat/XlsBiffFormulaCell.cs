@@ -60,6 +60,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             Number
         }
 
+        public override bool IsEmpty => false;
+
         /// <summary>
         /// Gets the formula value type.
         /// </summary>
