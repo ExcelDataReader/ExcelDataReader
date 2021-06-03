@@ -214,7 +214,7 @@ namespace BulkCopyStreamReader
             string theXlsFile = @"..\\..\\..\\..\\..\\Example\\XLS\\test_file.xlsx";
             string BulkInsertServer = "yourservername";
             string BulkInsertDatabase = "yourdatabasename";
-            string BulkInsertTable = "tourtablename";
+            string BulkInsertTable = "bulk_test"; // see Examples/SQL/create_bulk_test_table.sql
             BulkInsertXLS(fromFileXLSX: theXlsFile,
                      toServer:     BulkInsertServer,
                      toDatabase:   BulkInsertDatabase,
