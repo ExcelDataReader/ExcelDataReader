@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="x15 xr xr6 xr10 xr2" xmlns:x15="http://schemas.microsoft.com/office/spreadsheetml/2010/11/main" xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision" xmlns:xr6="http://schemas.microsoft.com/office/spreadsheetml/2016/revision6" xmlns:xr10="http://schemas.microsoft.com/office/spreadsheetml/2016/revision10" xmlns:xr2="http://schemas.microsoft.com/office/spreadsheetml/2015/revision2">
+  <fileVersion appName="xl" lastEdited="7" lowestEdited="7" rupBuild="23929"/>
+  <workbookPr defaultThemeVersion="166925"/>
+  <mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+    <mc:Choice Requires="x15">
+      <x15ac:absPath url="C:\workspace-PR\ExcelDataReader\test\" xmlns:x15ac="http://schemas.microsoft.com/office/spreadsheetml/2010/11/ac"/>
+    </mc:Choice>
+  </mc:AlternateContent>
+  <xr:revisionPtr revIDLastSave="0" documentId="8_{DBE0408B-D28A-4324-B104-0359C368A003}" xr6:coauthVersionLast="46" xr6:coauthVersionMax="46" xr10:uidLastSave="{00000000-0000-0000-0000-000000000000}"/>
+  <bookViews>
+    <workbookView xWindow="5430" yWindow="2205" windowWidth="32325" windowHeight="16740" xr2:uid="{6EE16B0E-6FCB-46E0-A02F-038337FA01A6}"/>
+  </bookViews>
+  <sheets>
+    <sheet name="Sheet1" sheetId="1" r:id="rId1"/>
+  </sheets>
+  <calcPr calcId="181029"/>
+  <extLst>
+    <ext uri="{140A7094-0E35-4892-8432-C4D2E57EDEB5}" xmlns:x15="http://schemas.microsoft.com/office/spreadsheetml/2010/11/main">
+      <x15:workbookPr chartTrackingRefBase="1"/>
+    </ext>
+  </extLst>
+</workbook>

@@ -16,8 +16,8 @@ namespace ExcelDataReader
     {
         private IEnumerator<TWorksheet> _worksheetIterator;
         private IEnumerator<Row> _rowIterator;
-        private IEnumerator<TWorksheet> _cachedWorksheetIterator = null;
-        private List<TWorksheet> _cachedWorksheets = null;
+        private IEnumerator<TWorksheet> _cachedWorksheetIterator;
+        private List<TWorksheet> _cachedWorksheets;
 
         ~ExcelDataReader()
         {
@@ -32,6 +32,7 @@ namespace ExcelDataReader
 
         public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
 
+        // We shouldn't expose the internal array here. 
         public CellRange[] MergeCells => _worksheetIterator?.Current?.MergeCells;
 
         public int Depth { get; private set; }
@@ -90,24 +91,119 @@ namespace ExcelDataReader
 
         public long GetInt64(int i) => (long)GetValue(i);
 
-        public string GetName(int i) => throw new NotSupportedException();
+        public string GetName(int i)
+        {
+            return FieldNames()[i];
+        }
 
-        public int GetOrdinal(string name) => throw new NotSupportedException();
+        private string[] _fieldNames = null;
+        private Cell[] _fieldNameCells = null;
+
+        public Dictionary<string, object> InjectedFields { get; set; } // optionally set in ExcelOpenXmlReader, default to null when not specified
+
+        /// <summary>
+        /// return an array of field names found in the first line of the xls; reads and does NOT reset row counter to then skip field names during stream bulk insert
+        /// </summary>
+        /// <returns>array of field names</returns>
+        public string[] FieldNames()
+        {
+            if (_fieldNames == null)
+            {
+                // the first time FieldNames() gets called, the list will need to be initialized
+                if (RowCells == null)
+                {
+                    Read();
+                    _fieldNameCells = RowCells;
+
+                    // Reset(); // the first row *must* contain field names for bulk copy streams. When assigning the field names here, we do not reset the row pointer.
+                }
+                else
+                {
+                    _fieldNameCells = RowCells;
+                }
+
+                if (InjectedFields == null)
+                {
+                    // no InjectedFields found. The length of out field name array will be the same as the number of RowCells
+                    _fieldNames = new string[_fieldNameCells.Length];
+                }
+                else
+                {
+                    // InjectedFields specified; our total field list size will include the RowCells, plus the number of injected fields 
+                    _fieldNames = new string[_fieldNameCells.Length + InjectedFields.Count];
+
+                    // if there are any static fields to be injected, add them to the end of the field list
+                    int i = 0;
+                    foreach (string injectedFieldName in InjectedFields.Keys)
+                    {
+                        _fieldNames[_fieldNameCells.Length + i] = injectedFieldName;
+                        i++;
+                    }
+                }
+
+                // in ether case, InjectedFields or not ... save all the field names from the first row of RowCells for future reference
+                for (int i = 0; i < _fieldNameCells.Length; i++)
+                {
+                    _fieldNames[i] = (string)_fieldNameCells[i].Value;
+                }
+            }
+
+            return _fieldNames;
+        }
+
+        /// <summary>
+        /// typically only used by bulk insert column mapping, GetOrdinal returns a column number
+        /// </summary>
+        /// <param name="name">column name</param>
+        /// <returns>column number</returns>
+        public int GetOrdinal(string name)
+        {
+            return Array.IndexOf(FieldNames(), name);
+        }
 
         /// <inheritdoc />
         public DataTable GetSchemaTable() => throw new NotSupportedException();
 
         public string GetString(int i) => (string)GetValue(i);
 
+        /// <summary>
+        /// return the value of a cell at ordinal value [i]; may also return a fixed value as defined in 
+        /// </summary>
+        /// <param name="i">ordinal column referenbce</param>
+        /// <returns>value of that cell, or null</returns>
         public object GetValue(int i)
         {
             if (RowCells == null)
                 throw new InvalidOperationException("No data exists for the row/column.");
-            return RowCells[i]?.Value;
+
+            // if fixed columns values were injected then FieldNames().Length > RowCells.Length; Recall Length is 1-based
+            if (i >= RowCells.Length)
+            {
+                if (_fieldNames == null)
+                {
+                    throw new Exception("ERROR: _fieldNames unexpectedly empty in ExcelDataReader.");
+                }
+
+                if ((_fieldNames.Length - i) > InjectedFields.Count)
+                {
+                    throw new Exception("ERROR: Ordinal value of " + i.ToString() + " exceeds number of available InjectedFields static values provided to ExcelDataReader.");
+                }
+            }
+
+            string thisField = GetName(i);
+
+            if (InjectedFields != null && InjectedFields.ContainsKey(thisField))
+            {
+                return InjectedFields[thisField];
+            }
+            else
+            {
+                return RowCells[i]?.Value; // RowCells is zero-based
+            }
         }
 
         public int GetValues(object[] values) => throw new NotSupportedException();
-               
+
         public bool IsDBNull(int i) => GetValue(i) == null;
 
         public string GetNumberFormatString(int i)
