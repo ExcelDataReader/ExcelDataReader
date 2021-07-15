@@ -1,2 +1,0 @@
-645042|99999999|Hotel Light|'s Gravendijkwal 100||Rotterdam||3014EJ|NL|51.91534|4.46340|RTM|1|EUR|3.0||ESR|Near Boijmans Van Beuningen Museum|0||117.8|96.3901|3 PM|noon
-259424|99999999|Belle Villa Resort Chiangmai|'135 Moo 5, Tambol Baanpong, Amphur Hang||Hang Dong||50230|TH|18.80298|98.83425|CNX|3|THB|4.0|52|ESR|Near Patara Elephant Farm|0||323.58|171.98|2 PM|noon
