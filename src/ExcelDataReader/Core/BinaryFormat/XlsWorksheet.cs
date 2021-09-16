@@ -514,7 +514,13 @@ namespace ExcelDataReader.Core.BinaryFormat
                             break;
                         case XlsBiffBlankCell cell:
                             if (!cell.IsEmpty)
-                                maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
+                            {
+                                if (cell is XlsBiffMulRKCell mcell)
+                                    maxCellColumn = Math.Max(maxCellColumn, mcell.LastColumnIndex + 1);
+                                else
+                                    maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
+                            }
+
                             maxRowCount = Math.Max(maxRowCount, cell.RowIndex + 1);
                             if (ixfeOffset != -1)
                             {
