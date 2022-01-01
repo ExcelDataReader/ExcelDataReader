@@ -174,4 +174,4 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
-
+src/ExcelDataReader/.DS_Store
