@@ -42,7 +42,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net20'">
     <PackageReference Include="SharpZipLib">
-      <Version>0.86.0</Version>
+      <Version>1.3.3</Version>
     </PackageReference>
   </ItemGroup>
 
