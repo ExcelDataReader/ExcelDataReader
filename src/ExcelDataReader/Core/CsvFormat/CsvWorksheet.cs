@@ -10,7 +10,11 @@ namespace ExcelDataReader.Core.CsvFormat
         public CsvWorksheet(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
         {
             Stream = stream;
-            Stream.Seek(0, SeekOrigin.Begin);
+            if (stream.CanSeek && stream.Position != 0)
+            {
+                Stream.Seek(0, SeekOrigin.Begin);
+            }
+
             try
             {
                 // Try as UTF-8 first, or use BOM if present
@@ -24,6 +28,11 @@ namespace ExcelDataReader.Core.CsvFormat
             }
             catch (DecoderFallbackException)
             {
+                if (!stream.CanSeek)
+                {
+                    throw;
+                }
+
                 // If cannot parse as UTF-8, try fallback encoding
                 Stream.Seek(0, SeekOrigin.Begin);
 
@@ -84,7 +93,15 @@ namespace ExcelDataReader.Core.CsvFormat
             var csv = new CsvParser(Separator, Encoding);
             var skipBomBytes = BomLength;
 
-            Stream.Seek(0, SeekOrigin.Begin);
+            if (stream.CanSeek && stream.Position != 0)
+            {
+                Stream.Seek(0, SeekOrigin.Begin);
+            }
+            else if (Stream.Position != 0)
+            {
+                throw new InvalidOperationException("Stream is not at the beginning and not Seekable");
+            }
+
             while (Stream.Position < Stream.Length)
             {
                 var bytesRead = Stream.Read(buffer, 0, bufferSize);
