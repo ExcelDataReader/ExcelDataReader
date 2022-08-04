@@ -10,7 +10,7 @@ namespace ExcelDataReader.Core.CsvFormat
         public CsvWorksheet(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
         {
             Stream = stream;
-            if (stream.CanSeek && stream.Position != 0)
+            if (Stream.CanSeek && Stream.Position != 0)
             {
                 Stream.Seek(0, SeekOrigin.Begin);
             }
@@ -28,7 +28,7 @@ namespace ExcelDataReader.Core.CsvFormat
             }
             catch (DecoderFallbackException)
             {
-                if (!stream.CanSeek)
+                if (!Stream.CanSeek)
                 {
                     throw;
                 }
@@ -93,7 +93,7 @@ namespace ExcelDataReader.Core.CsvFormat
             var csv = new CsvParser(Separator, Encoding);
             var skipBomBytes = BomLength;
 
-            if (stream.CanSeek && stream.Position != 0)
+            if (Stream.CanSeek && Stream.Position != 0)
             {
                 Stream.Seek(0, SeekOrigin.Begin);
             }
