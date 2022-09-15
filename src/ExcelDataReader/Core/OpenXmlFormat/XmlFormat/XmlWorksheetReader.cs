@@ -177,7 +177,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
                             var maxVal = int.Parse(max);
                             var minVal = int.Parse(min);
-                            var widthVal = double.Parse(width, CultureInfo.InvariantCulture);
+                            double.TryParse(width, NumberStyles.Float, CultureInfo.InvariantCulture, out double widthVal);
 
                             // Note: column indexes need to be converted to be zero-indexed
                             yield return new ColumnRecord(new Column(minVal - 1, maxVal - 1, hidden == "1", customWidth == "1" ? (double?)widthVal : null));
