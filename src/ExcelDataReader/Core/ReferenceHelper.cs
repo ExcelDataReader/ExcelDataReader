@@ -29,7 +29,7 @@ namespace ExcelDataReader.Core
                         continue;
                     }
 
-                    if (char.IsDigit(c))
+                    if (c >= '0' && c <= '9')
                         break;
 
                     position = 0;
@@ -44,11 +44,34 @@ namespace ExcelDataReader.Core
                 return false;
             }
 
-            if (!int.TryParse(value.Substring(position), NumberStyles.None, CultureInfo.InvariantCulture, out row))
+            if (!TryParseDecInt(value, position, out row))
             {
                 return false;
             }
 
+            return true;
+        }
+
+        private static bool TryParseDecInt(string s, int startIndex, out int result)
+        {
+            if (startIndex >= s.Length)
+            {
+                result = 0;
+                return false;
+            }
+
+            int r = 0;
+            for (int i = startIndex; i < s.Length; ++i)
+            {
+                int d = s[i] - '0';
+                if (d < 0 || d > 9)
+                {
+                    result = 0;
+                    return false;
+                }
+                r = r * 10 + d;
+            }
+            result = r;
             return true;
         }
     }
