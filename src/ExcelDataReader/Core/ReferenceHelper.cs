@@ -29,7 +29,7 @@ namespace ExcelDataReader.Core
                         continue;
                     }
 
-                    if (c >= '0' && c <= '9')
+                    if (IsDigit(c))
                         break;
 
                     position = 0;
@@ -52,27 +52,30 @@ namespace ExcelDataReader.Core
             return true;
         }
 
+        private static bool IsDigit(int ch) => ((uint)ch - '0') <= 9;
+
         private static bool TryParseDecInt(string s, int startIndex, out int result)
         {
             if (startIndex >= s.Length)
-            {
-                result = 0;
-                return false;
-            }
+                goto Fail;
 
-            int r = 0;
+            long r = 0;
             for (int i = startIndex; i < s.Length; ++i)
             {
-                int d = s[i] - '0';
-                if (d < 0 || d > 9)
-                {
-                    result = 0;
-                    return false;
-                }
-                r = r * 10 + d;
+                int num = s[i];
+                if (!IsDigit(num))
+                    goto Fail;
+                r = r * 10 + (num - '0');
+                if (r > int.MaxValue)
+                    goto Fail;
             }
-            result = r;
+
+            result = (int)r;
             return true;
+
+        Fail:
+            result = 0;
+            return false;
         }
     }
 }
