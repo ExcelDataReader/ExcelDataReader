@@ -13,6 +13,58 @@ namespace ExcelDataReader
         /// Converts all sheets to a DataSet
         /// </summary>
         /// <param name="self">The IExcelDataReader instance</param>
+        /// <param name="fieldsTypes">An optional list to force read the a value with an specific data type.</param>
+        /// <param name="configuration">An optional configuration object to modify the behavior of the conversion</param>
+        /// <returns>A dataset with all workbook contents</returns>
+        public static DataSet AsDataSet(this IExcelDataReader self, List<ExcelDataType> fieldsTypes, ExcelDataSetConfiguration configuration = null)
+        {
+            if (configuration == null)
+            {
+                configuration = new ExcelDataSetConfiguration();
+            }
+
+            self.Reset();
+
+            var tableIndex = -1;
+            var result = new DataSet();
+            do
+            {
+                tableIndex++;
+                if (configuration.FilterSheet != null && !configuration.FilterSheet(self, tableIndex))
+                {
+                    continue;
+                }
+
+                var tableConfiguration = configuration.ConfigureDataTable != null
+                    ? configuration.ConfigureDataTable(self)
+                    : null;
+
+                if (tableConfiguration == null)
+                {
+                    tableConfiguration = new ExcelDataTableConfiguration();
+                }
+
+                var table = AsDataTable(self, tableConfiguration, fieldsTypes);
+                result.Tables.Add(table);
+            }
+            while (self.NextResult());
+
+            result.AcceptChanges();
+
+            if (configuration.UseColumnDataType)
+            {
+                FixDataTypes(result);
+            }
+
+            self.Reset();
+
+            return result;
+        }
+
+        /// <summary>
+        /// Converts all sheets to a DataSet
+        /// </summary>
+        /// <param name="self">The IExcelDataReader instance</param>
         /// <param name="configuration">An optional configuration object to modify the behavior of the conversion</param>
         /// <returns>A dataset with all workbook contents</returns>
         public static DataSet AsDataSet(this IExcelDataReader self, ExcelDataSetConfiguration configuration = null)
@@ -43,7 +95,7 @@ namespace ExcelDataReader
                     tableConfiguration = new ExcelDataTableConfiguration();
                 }
 
-                var table = AsDataTable(self, tableConfiguration);
+                var table = AsDataTable(self, tableConfiguration, null);
                 result.Tables.Add(table);
             }
             while (self.NextResult());
@@ -73,7 +125,7 @@ namespace ExcelDataReader
             return columnName;
         }
 
-        private static DataTable AsDataTable(IExcelDataReader self, ExcelDataTableConfiguration configuration)
+        private static DataTable AsDataTable(IExcelDataReader self, ExcelDataTableConfiguration configuration, List<ExcelDataType> fieldsTypes)
         {
             var result = new DataTable { TableName = self.Name };
             result.ExtendedProperties.Add("visiblestate", self.VisibleState);
@@ -107,7 +159,16 @@ namespace ExcelDataReader
 
                         // if a column already exists with the name append _i to the duplicates
                         var columnName = GetUniqueColumnName(result, name);
-                        var column = new DataColumn(columnName, typeof(object)) { Caption = name };
+
+                        //  try to find a column name that match the current header in the fields type collection
+                        ExcelDataType field = null;
+                        if (fieldsTypes != null)
+                        {
+                            field = fieldsTypes.Find((e) => { return e.ColumnName == columnName; });
+                        }
+                        
+                        //Create the DataColumn with the associated data type.
+                        var column = new DataColumn(columnName, field != null ? field.ColumnType : typeof(object)) { Caption = name };
                         result.Columns.Add(column);
                         columnIndices.Add(i);
                     }

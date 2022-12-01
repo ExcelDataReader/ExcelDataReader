@@ -262,6 +262,9 @@ namespace TestApp
 
                 var openTiming = sw.ElapsedMilliseconds;
                 // reader.IsFirstRowAsColumnNames = firstRowNamesCheckBox.Checked;
+
+                //  Uncomment the following line to use the ExcelDataType list optional param
+                //ds = reader.AsDataSet(new List<ExcelDataType> { new ExcelDataType() { ColumnName = "COLUMN_HEADER", ColumnType = typeof( decimal)} },new ExcelDataSetConfiguration()
                 ds = reader.AsDataSet(new ExcelDataSetConfiguration()
                 {
                     UseColumnDataType = false,
