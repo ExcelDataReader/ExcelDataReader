@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 
 namespace ExcelDataReader.Core
 {
@@ -44,7 +45,11 @@ namespace ExcelDataReader.Core
                 return false;
             }
 
+#if NETSTANDARD2_1
+            if (!int.TryParse(value.AsSpan(position), NumberStyles.None, CultureInfo.InvariantCulture, out row))
+#else
             if (!int.TryParse(value.Substring(position), NumberStyles.None, CultureInfo.InvariantCulture, out row))
+#endif
             {
                 return false;
             }

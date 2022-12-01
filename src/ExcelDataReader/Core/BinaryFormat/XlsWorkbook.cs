@@ -140,16 +140,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         internal void AddXf(XlsBiffXF xf)
         {
-            var extendedFormat = new ExtendedFormat()
-            {
-                FontIndex = xf.Font,
-                NumberFormatIndex = xf.Format,
-                Locked = xf.IsLocked,
-                Hidden = xf.IsHidden,
-                HorizontalAlignment = xf.HorizontalAlignment,
-                IndentLevel = xf.IndentLevel,
-                ParentCellStyleXf = xf.ParentCellStyleXf,
-            };
+            var extendedFormat = new ExtendedFormat(xf.ParentCellStyleXf, xf.Font, xf.Format, xf.IsLocked, xf.IsHidden, xf.IndentLevel, xf.HorizontalAlignment);
 
             // The workbook holds two kinds of XF records: Cell XFs, and Cell Style XFs.
             // In the binary XLS format, both kinds of XF records are saved in a single list,

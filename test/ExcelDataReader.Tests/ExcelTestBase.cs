@@ -45,7 +45,7 @@ namespace ExcelDataReader.Tests
             {
                 var dataSet = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
-                Assert.AreEqual(2566.37168141593D, double.Parse(dataSet.Tables[0].Rows[0][6].ToString()));
+                Assert.AreEqual(2566.3716814159293D, dataSet.Tables[0].Rows[0][6]);
             }
         }
 
@@ -62,7 +62,7 @@ namespace ExcelDataReader.Tests
             {
                 var dataSet = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
-                Assert.AreEqual(2566.37168141593D, double.Parse(dataSet.Tables[0].Rows[0][6].ToString()));
+                Assert.AreEqual(2566.3716814159293D, dataSet.Tables[0].Rows[0][6]);
             }
         }
 
@@ -170,8 +170,13 @@ namespace ExcelDataReader.Tests
                     reader.GetColumnWidth(4);
                 });
 
+#if NET5_0_OR_GREATER
+                Assert.AreEqual($"Column at index 4 does not exist. (Parameter 'i')",
+                    exception.Message);
+#else
                 Assert.AreEqual($"Column at index 4 does not exist.{Environment.NewLine}Parameter name: i",
                     exception.Message);
+#endif
             }
         }
 

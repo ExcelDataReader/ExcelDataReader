@@ -346,8 +346,13 @@ namespace ExcelDataReader.Tests
                     reader.GetColumnWidth(5);
                 });
 
+#if NET5_0_OR_GREATER
+                Assert.AreEqual($"Column at index 5 does not exist. (Parameter 'i')", 
+                    exception.Message);
+#else
                 Assert.AreEqual($"Column at index 5 does not exist.{Environment.NewLine}Parameter name: i", 
                     exception.Message);
+#endif
             }
         }
 

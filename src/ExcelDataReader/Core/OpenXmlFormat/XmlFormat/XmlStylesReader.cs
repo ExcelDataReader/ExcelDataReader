@@ -106,21 +106,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                 {
                     int.TryParse(Reader.GetAttribute(AXFId), out var xfId);
                     int.TryParse(Reader.GetAttribute(ANumFmtId), out var numFmtId);
-                    var applyNumberFormat = Reader.GetAttribute(AApplyNumberFormat) == "1";
-                    var applyAlignment = Reader.GetAttribute(AApplyAlignment) == "1";
-                    var applyProtection = Reader.GetAttribute(AApplyProtection) == "1";
+
+                    // var applyNumberFormat = Reader.GetAttribute(AApplyNumberFormat) == "1";
+                    // var applyAlignment = Reader.GetAttribute(AApplyAlignment) == "1";
+                    // var applyProtection = Reader.GetAttribute(AApplyProtection) == "1";
                     ReadAlignment(Reader, out int indentLevel, out HorizontalAlignment horizontalAlignment, out var hidden, out var locked);
 
-                    yield return new ExtendedFormat()
-                    {
-                        FontIndex = -1,
-                        ParentCellStyleXf = xfId,
-                        NumberFormatIndex = numFmtId,
-                        HorizontalAlignment = horizontalAlignment,
-                        IndentLevel = indentLevel,
-                        Hidden = hidden,
-                        Locked = locked,
-                    };
+                    yield return new ExtendedFormat(xfId, -1, numFmtId, locked, hidden, indentLevel, horizontalAlignment);
 
                     // reader.Skip();
                 }
