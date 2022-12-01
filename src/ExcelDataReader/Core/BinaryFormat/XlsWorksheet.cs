@@ -458,7 +458,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                     switch (rec)
                     {
                         case XlsBiffDimensions dims:
-                            FieldCount = dims.LastColumn;
+                            // FieldCount = dims.LastColumn;
                             RowCount = (int)dims.LastRow;
                             break;
                         case XlsBiffDefaultRowHeight defaultRowHeightRecord:
@@ -513,7 +513,14 @@ namespace ExcelDataReader.Core.BinaryFormat
                             maxRowCountFromRowRecord = Math.Max(maxRowCountFromRowRecord, row.RowIndex + 1);
                             break;
                         case XlsBiffBlankCell cell:
-                            maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
+                            if (!cell.IsEmpty)
+                            {
+                                if (cell is XlsBiffMulRKCell mcell)
+                                    maxCellColumn = Math.Max(maxCellColumn, mcell.LastColumnIndex + 1);
+                                else
+                                    maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
+                            }
+
                             maxRowCount = Math.Max(maxRowCount, cell.RowIndex + 1);
                             if (ixfeOffset != -1)
                             {
@@ -549,8 +556,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 if (mergeCells.Count > 0)
                     MergeCells = mergeCells.ToArray();
 
-                if (FieldCount < maxCellColumn)
-                    FieldCount = maxCellColumn;
+                FieldCount = maxCellColumn;
 
                 maxRowCount = Math.Max(maxRowCount, maxRowCountFromRowRecord);
                 if (RowCount < maxRowCount)

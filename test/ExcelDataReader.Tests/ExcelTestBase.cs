@@ -383,7 +383,7 @@ namespace ExcelDataReader.Tests
             using (IExcelDataReader excelReader = OpenReader("Test_BlankHeader"))
             {
                 excelReader.Read();
-                Assert.AreEqual(6, excelReader.FieldCount);
+                Assert.AreEqual(4, excelReader.FieldCount);
                 excelReader.Read();
             }
         }
@@ -1065,6 +1065,16 @@ namespace ExcelDataReader.Tests
                 reader.Read();
                 Assert.AreEqual(null, reader.GetCellError(0));
                 Assert.AreEqual(null, reader.GetCellError(1));
+            }
+        }
+
+        [Test]
+        public void GitIssue532TrimEmptyColumns()
+        {
+            using var reader = OpenReader("Test_git_issue_532");
+            while (reader.Read())
+            {
+                Assert.AreEqual(3, reader.FieldCount);
             }
         }
     }

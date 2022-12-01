@@ -10,6 +10,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
         }
 
+        public override bool IsEmpty => false;
+
         /// <summary>
         /// Gets the index of string in Shared String Table
         /// </summary>
