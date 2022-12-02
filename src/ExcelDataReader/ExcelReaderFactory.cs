@@ -8,7 +8,7 @@ using ExcelDataReader.Misc;
 namespace ExcelDataReader
 {
     /// <summary>
-    /// The ExcelReader Factory
+    /// The ExcelReader Factory.
     /// </summary>
     public static class ExcelReaderFactory
     {
@@ -18,7 +18,7 @@ namespace ExcelDataReader
         private const string DirectoryEntryEncryptionInfo = "EncryptionInfo";
 
         /// <summary>
-        /// Creates an instance of <see cref="ExcelBinaryReader"/> or <see cref="ExcelOpenXmlReader"/>
+        /// Creates an instance of <see cref="ExcelBinaryReader"/> or <see cref="ExcelOpenXmlReader"/>.
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
         /// <param name="configuration">The configuration object.</param>
@@ -72,7 +72,7 @@ namespace ExcelDataReader
         }
 
         /// <summary>
-        /// Creates an instance of <see cref="ExcelBinaryReader"/>
+        /// Creates an instance of <see cref="ExcelBinaryReader"/>.
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
         /// <param name="configuration">The configuration object.</param>
@@ -117,7 +117,7 @@ namespace ExcelDataReader
         }
 
         /// <summary>
-        /// Creates an instance of <see cref="ExcelOpenXmlReader"/>
+        /// Creates an instance of <see cref="ExcelOpenXmlReader"/>.
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
         /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>
@@ -161,7 +161,7 @@ namespace ExcelDataReader
         }
 
         /// <summary>
-        /// Creates an instance of ExcelCsvReader
+        /// Creates an instance of ExcelCsvReader.
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
         /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>

@@ -1,7 +1,7 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents row record in table
+    /// Represents row record in table.
     /// </summary>
     internal class XlsBiffRow : XlsBiffRecord
     {
@@ -50,22 +50,22 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Gets the zero-based index of row described
+        /// Gets the zero-based index of row described.
         /// </summary>
         public ushort RowIndex { get; }
 
         /// <summary>
-        /// Gets the index of first defined column
+        /// Gets the index of first defined column.
         /// </summary>
         public ushort FirstDefinedColumn { get; }
 
         /// <summary>
-        /// Gets the index of last defined column
+        /// Gets the index of last defined column.
         /// </summary>
         public ushort LastDefinedColumn { get; }
 
         /// <summary>
-        /// Gets a value indicating whether to use the default row height instead of the RowHeight property
+        /// Gets a value indicating whether to use the default row height instead of the RowHeight property.
         /// </summary>
         public bool UseDefaultRowHeight { get; }
 
@@ -75,12 +75,12 @@ namespace ExcelDataReader.Core.BinaryFormat
         public int RowHeight { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the XFormat property is used
+        /// Gets a value indicating whether the XFormat property is used.
         /// </summary>
         public bool UseXFormat { get; }
 
         /// <summary>
-        /// Gets the default format for this row
+        /// Gets the default format for this row.
         /// </summary>
         public ushort XFormat { get; }
     }

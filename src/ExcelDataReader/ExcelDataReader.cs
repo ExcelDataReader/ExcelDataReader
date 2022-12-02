@@ -8,8 +8,8 @@ namespace ExcelDataReader
     /// <summary>
     /// A generic implementation of the IExcelDataReader interface using IWorkbook/IWorksheet to enumerate data.
     /// </summary>
-    /// <typeparam name="TWorkbook">A type implementing IWorkbook</typeparam>
-    /// <typeparam name="TWorksheet">A type implementing IWorksheet</typeparam>
+    /// <typeparam name="TWorkbook">A type implementing IWorkbook.</typeparam>
+    /// <typeparam name="TWorksheet">A type implementing IWorksheet.</typeparam>
     internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReader
         where TWorkbook : IWorkbook<TWorksheet>
         where TWorksheet : IWorksheet

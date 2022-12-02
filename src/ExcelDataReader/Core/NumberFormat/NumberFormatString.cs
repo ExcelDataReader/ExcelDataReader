@@ -55,12 +55,12 @@ namespace ExcelDataReader.Core.NumberFormat
         public string FormatString { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the format represents a DateTime
+        /// Gets a value indicating whether the format represents a DateTime.
         /// </summary>
         public bool IsDateTimeFormat { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the format represents a TimeSpan
+        /// Gets a value indicating whether the format represents a TimeSpan.
         /// </summary>
         public bool IsTimeSpanFormat { get; }
 

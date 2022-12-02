@@ -4,7 +4,7 @@ using ExcelDataReader.Log.Logger;
 namespace ExcelDataReader.Log
 {
     /// <summary>
-    /// logger type initialization
+    /// Logger type initialization.
     /// </summary>
     public static class Log
     {
@@ -14,9 +14,9 @@ namespace ExcelDataReader.Log
         private static ILogFactory factoryInstance;
 
         /// <summary>
-        /// Sets up logging to be with a certain type
+        /// Sets up logging to be with a certain type.
         /// </summary>
-        /// <typeparam name="T">The type of ILog for the application to use</typeparam>
+        /// <typeparam name="T">The type of ILog for the application to use.</typeparam>
         public static void InitializeWith<T>() 
             where T : ILogFactory, new()
         {

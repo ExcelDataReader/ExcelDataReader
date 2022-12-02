@@ -9,7 +9,7 @@ using ExcelDataReader.Exceptions;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents Globals section of workbook
+    /// Represents Globals section of workbook.
     /// </summary>
     internal class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
     {
@@ -72,7 +72,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public List<XlsBiffBoundSheet> Sheets { get; } = new List<XlsBiffBoundSheet>();
 
         /// <summary>
-        /// Gets or sets the Shared String Table of workbook
+        /// Gets or sets the Shared String Table of workbook.
         /// </summary>
         public XlsBiffSST SST { get; set; }
 

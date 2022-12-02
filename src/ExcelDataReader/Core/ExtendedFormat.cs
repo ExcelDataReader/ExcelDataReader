@@ -26,7 +26,7 @@
 
         /// <summary>
         /// Gets the to the parent Cell Style CF record with overrides for this XF. Only used with Cell XFs.
-        /// 0xFFF means no override
+        /// 0xFFF means no override.
         /// </summary>
         public int ParentCellStyleXf { get; }
 

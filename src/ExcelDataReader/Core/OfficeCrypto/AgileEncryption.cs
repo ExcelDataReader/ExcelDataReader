@@ -6,7 +6,7 @@ using System.Xml;
 namespace ExcelDataReader.Core.OfficeCrypto
 {
     /// <summary>
-    /// Represents "Agile Encryption" used in XLSX (Office 2010 and newer)
+    /// Represents "Agile Encryption" used in XLSX (Office 2010 and newer).
     /// </summary>
     internal class AgileEncryption : EncryptionInfo
     {

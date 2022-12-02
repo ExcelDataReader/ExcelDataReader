@@ -16,12 +16,12 @@ namespace ExcelDataReader.Core
         public Dictionary<int, NumberFormatString> Formats { get; } = new Dictionary<int, NumberFormatString>();
 
         /// <summary>
-        /// Gets the Cell XFs
+        /// Gets the Cell XFs.
         /// </summary>
         public List<ExtendedFormat> ExtendedFormats { get; } = new List<ExtendedFormat>();
 
         /// <summary>
-        /// Gets the Cell Style XFs
+        /// Gets the Cell Style XFs.
         /// </summary>
         public List<ExtendedFormat> CellStyleExtendedFormats { get; } = new List<ExtendedFormat>();
 

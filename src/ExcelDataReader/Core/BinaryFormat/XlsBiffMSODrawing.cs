@@ -1,7 +1,7 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents MSO Drawing record
+    /// Represents MSO Drawing record.
     /// </summary>
     internal class XlsBiffMSODrawing : XlsBiffRecord
     {

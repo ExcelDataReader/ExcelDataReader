@@ -8,7 +8,7 @@ using ExcelDataReader.Log;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents Worksheet section in workbook
+    /// Represents Worksheet section in workbook.
     /// </summary>
     internal class XlsWorksheet : IWorksheet
     {
@@ -35,14 +35,14 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Gets the worksheet name
+        /// Gets the worksheet name.
         /// </summary>
         public string Name { get; }
 
         public string CodeName { get; private set; }
 
         /// <summary>
-        /// Gets the visibility of worksheet
+        /// Gets the visibility of worksheet.
         /// </summary>
         public string VisibleState { get; }
 
@@ -109,7 +109,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Find how many rows to read at a time and their offset in the file.
         /// If rows are stored sequentially in the file, returns a block size of up to 32 rows.
-        /// If rows are stored non-sequentially, the block size may extend up to the entire worksheet stream
+        /// If rows are stored non-sequentially, the block size may extend up to the entire worksheet stream.
         /// </summary>
         private void GetBlockSize(int startRow, out int blockRowCount, out int minOffset, out int maxOffset)
         {
@@ -255,7 +255,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Reads additional records if needed: a string record might follow a formula result
+        /// Reads additional records if needed: a string record might follow a formula result.
         /// </summary>
         private Cell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, int xfIndex)
         {

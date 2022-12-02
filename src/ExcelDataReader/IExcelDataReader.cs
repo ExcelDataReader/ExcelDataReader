@@ -3,7 +3,7 @@ using System.Data;
 namespace ExcelDataReader
 {
     /// <summary>
-    /// The ExcelDataReader interface
+    /// The ExcelDataReader interface.
     /// </summary>
     public interface IExcelDataReader : IDataReader
     {

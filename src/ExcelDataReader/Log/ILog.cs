@@ -3,7 +3,7 @@
 namespace ExcelDataReader.Log
 {
     /// <summary>
-    /// Custom interface for logging messages
+    /// Custom interface for logging messages.
     /// </summary>
     public interface ILog
     {
