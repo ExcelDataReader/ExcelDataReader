@@ -4,6 +4,7 @@
   <PropertyGroup Condition="$(MSBuildProjectName.StartsWith('ExcelDataReader'))">
     <VersionPrefix>3.7.0</VersionPrefix>
     <TargetFrameworks>net462;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
     <AssemblyOriginatorKeyFile>..\ExcelDataReader.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
