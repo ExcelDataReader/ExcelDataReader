@@ -5,7 +5,6 @@
     <AssemblyName>TestApp</AssemblyName>
     <OutputType>WinExe</OutputType>
     <PackageId>TestApp</PackageId>
-    <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
     <UseWindowsForms>true</UseWindowsForms>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
