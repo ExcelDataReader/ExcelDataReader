@@ -1,5 +1,4 @@
-﻿#if NET20 || NET45 || NETCOREAPP2_0
-using System.Globalization;
+﻿using System.Globalization;
 using System.Threading;
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
@@ -64,4 +63,3 @@ namespace ExcelDataReader.Tests
         }
     }
 }
-#endif

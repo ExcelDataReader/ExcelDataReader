@@ -1,16 +1,12 @@
 using System;
-#if NET20 || NET45 || NETSTANDARD2_0
 using System.Runtime.Serialization;
-#endif
 
 namespace ExcelDataReader.Exceptions
 {
     /// <summary>
     /// Thrown when ExcelDataReader cannot parse the header.
     /// </summary>
-#if NET20 || NET45 || NETSTANDARD2_0
     [Serializable]
-#endif
     public class HeaderException : ExcelReaderException
     {
         /// <summary>
@@ -39,7 +35,6 @@ namespace ExcelDataReader.Exceptions
         {
         }
 
-#if NET20 || NET45 || NETSTANDARD2_0
         /// <summary>
         /// Initializes a new instance of the <see cref="HeaderException"/> class.
         /// </summary>
@@ -49,6 +44,5 @@ namespace ExcelDataReader.Exceptions
             : base(info, context)
         {
         }
-#endif
     }
 }

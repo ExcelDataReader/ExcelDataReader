@@ -191,10 +191,8 @@ namespace ExcelDataReader.Core.OfficeCrypto
         {
             if (value == "ChainingModeCBC")
                 return CipherMode.CBC;
-#if NET20 || NET45 || NETSTANDARD2_0
             else if (value == "ChainingModeCFB")
                 return CipherMode.CFB;
-#endif
             throw new ArgumentException("Invalid CipherMode " + value);
         }
 
