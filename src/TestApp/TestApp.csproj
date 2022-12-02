@@ -6,7 +6,6 @@
     <OutputType>WinExe</OutputType>
     <PackageId>TestApp</PackageId>
     <UseWindowsForms>true</UseWindowsForms>
-    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,8 +28,4 @@
     </Compile>
   </ItemGroup>
 
-  <ItemGroup>
-    <AdditionalFiles Include="..\..\stylecop.json" Link="stylecop.json" />
-  </ItemGroup>
- 
 </Project>
