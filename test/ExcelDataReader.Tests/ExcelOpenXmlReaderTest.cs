@@ -411,5 +411,16 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("NAME", dataSet.Tables[0].Rows[1][1].ToString());
             }
         }
+
+        [Test]
+        public void GitIssue608()
+        {
+            using (var reader = OpenReader("Test_git_issue_608"))
+            {
+                var dataSet = reader.AsDataSet();
+
+                Assert.That(dataSet.Tables[0].Rows[0].ItemArray, Is.EqualTo(new[] { "Column1", "Column2", "Column3" }));
+            }
+        }
     }
 }
