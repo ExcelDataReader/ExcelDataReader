@@ -17,7 +17,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             Stream = stream;
 
-            using (var biffStream = new XlsBiffStream(stream, 0, 0, password))
+            using (var biffStream = new XlsBiffStream(stream, password: password))
             {
                 if (biffStream.BiffVersion == 0)
                     throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);

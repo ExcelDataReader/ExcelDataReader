@@ -9,18 +9,26 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents a BIFF stream.
     /// </summary>
-    internal class XlsBiffStream : IDisposable
+    internal sealed class XlsBiffStream : IDisposable
     {
-        public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, string password = null, byte[] secretKey = null, EncryptionInfo encryption = null)
+        public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, BIFFTYPE? defaultType = null, string password = null, byte[] secretKey = null, EncryptionInfo encryption = null)
         {
             BaseStream = baseStream;
             Position = offset;
 
-            var bof = Read() as XlsBiffBOF;
-            if (bof != null)
-            { 
+            var record = Read();
+            if (record is XlsBiffBOF bof)
+            {
                 BiffVersion = explicitVersion == 0 ? GetBiffVersion(bof) : explicitVersion;
                 BiffType = bof.Type;
+
+                if (secretKey == null)
+                    record = Read();
+            }
+            else if (explicitVersion > 0 && defaultType != null) 
+            {
+                BiffVersion = explicitVersion;
+                BiffType = defaultType.Value;
             }
 
             CipherBlock = -1;
@@ -32,9 +40,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
             else
             {
-                var filePass = Read() as XlsBiffFilePass;
-                if (filePass == null)
-                    filePass = Read() as XlsBiffFilePass;
+                var filePass = record as XlsBiffFilePass;
+                filePass ??= Read() as XlsBiffFilePass;
 
                 if (filePass != null)
                 {

@@ -1196,5 +1196,29 @@ namespace ExcelDataReader.Tests
 
             Assert.AreEqual(77, reader.FieldCount);
         }
+
+        [Test]
+        public void GitIssue624MissingBOFInWorksheet()
+        {
+            using var reader = OpenReader("Test_git_issue624");
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+
+            List<string> row = new();
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                row.Add(reader.GetString(i));
+            }
+
+            Assert.That(row, Is.EqualTo(new[] { "Transref. AM", "NEWM/CANC", "Rel. transref.", "Portfolio ID  AM", "Portfolio ID KVG", "Portfolio name", "BUY/SELL", "OPEP/CLOP", "Quantity", "Instr. ID Type", "Financial instrument ID   ", "Financial instrument name  ", "Unique Product Identifier (UPI)", "Unique Trade Identifier (UTI)", "Price   ", "Strike", "Tic size", "Tic value", "Contract size", "CCY", "Fees", "Clearing amount", "Trade date", "Maturity date", "Sett. CCY", "Place of trade", "Execution Broker ID type", "Execution Broker ID", "Execution Broker Name", "Clearing Broker ID type", "Clearing Broker ID", "Clearing Broker Name", "CCP ID type", "CCP ID", "CCP Name", "Underlying name", "Underlying ISIN", "Put/Call", "Exercise Type", "Settlement Type", "Execution timestamp UTC (Date/Time)", "Confirmation timestamp UTC (Date/Time)", "Confirmation means", "Clearing timestamp UTC (Date/Time)", "Valuta/Settlement Date OTC-Option", "OTC Derivative ISIN", "Order transmission timestamp UTC (Date/Time)" }));
+        }
     }
 }
