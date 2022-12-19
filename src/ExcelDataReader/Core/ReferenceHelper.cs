@@ -1,11 +1,12 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 
 namespace ExcelDataReader.Core
 {
     internal static class ReferenceHelper
     {
         /// <summary>
-        /// Logic for the Excel dimensions. Ex: A15
+        /// Logic for the Excel dimensions. Ex: A15.
         /// </summary>
         /// <param name="value">The value.</param>
         /// <param name="column">The column, 1-based.</param>

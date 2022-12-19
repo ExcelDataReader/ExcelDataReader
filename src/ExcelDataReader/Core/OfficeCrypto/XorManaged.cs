@@ -106,7 +106,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
         }
 
         /// <summary>
-        /// Generates a 16 byte obfuscation array based on the POI/LibreOffice implementations
+        /// Generates a 16 byte obfuscation array based on the POI/LibreOffice implementations.
         /// </summary>
         internal static byte[] CreateXorArray_Method1(byte[] passwordBytes)
         {

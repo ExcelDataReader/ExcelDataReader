@@ -4,7 +4,7 @@ using System.Text;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents Sheet record in Workbook Globals
+    /// Represents Sheet record in Workbook Globals.
     /// </summary>
     internal class XlsBiffBoundSheet : XlsBiffRecord
     {

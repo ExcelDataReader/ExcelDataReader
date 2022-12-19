@@ -4,7 +4,7 @@ using System.Text;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents a string value of format
+    /// Represents a string value of format.
     /// </summary>
     internal class XlsBiffFormatString : XlsBiffRecord
     {

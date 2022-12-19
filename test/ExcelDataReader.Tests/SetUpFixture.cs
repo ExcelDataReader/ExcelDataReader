@@ -14,7 +14,7 @@ namespace ExcelDataReader.Tests
         {
             Log.Log.InitializeWith<NunitLogFactory>();
 
-#if NETCOREAPP1_0 || NETCOREAPP2_0
+#if NETCOREAPP1_0_OR_GREATER
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
         }

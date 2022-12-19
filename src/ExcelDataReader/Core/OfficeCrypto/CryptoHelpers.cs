@@ -58,17 +58,12 @@ namespace ExcelDataReader.Core.OfficeCrypto
                     return new RC4Managed();
                 case CipherIdentifier.DES3:
                     return InitCipher(TripleDES.Create(), keySize, blockSize, mode);
-#if NET20 || NET45 || NETSTANDARD2_0
                 case CipherIdentifier.RC2:
                     return InitCipher(RC2.Create(), keySize, blockSize, mode);
                 case CipherIdentifier.DES:
                     return InitCipher(DES.Create(), keySize, blockSize, mode);
                 case CipherIdentifier.AES:
                     return InitCipher(new RijndaelManaged(), keySize, blockSize, mode);
-#else
-                case CipherIdentifier.AES:
-                    return InitCipher(Aes.Create(), keySize, blockSize, mode);
-#endif
             }
 
             throw new InvalidOperationException("Unsupported encryption method: " + identifier.ToString());

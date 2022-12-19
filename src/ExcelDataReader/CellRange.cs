@@ -36,22 +36,22 @@ namespace ExcelDataReader
         }
 
         /// <summary>
-        /// Gets the column the range starts in
+        /// Gets the column the range starts in.
         /// </summary>
         public int FromColumn { get; }
 
         /// <summary>
-        /// Gets the row the range starts in
+        /// Gets the row the range starts in.
         /// </summary>
         public int FromRow { get; }
 
         /// <summary>
-        /// Gets the column the range ends in
+        /// Gets the column the range ends in.
         /// </summary>
         public int ToColumn { get; }
 
         /// <summary>
-        /// Gets the row the range ends in
+        /// Gets the row the range ends in.
         /// </summary>
         public int ToRow { get; }
 

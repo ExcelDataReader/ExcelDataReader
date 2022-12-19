@@ -1,7 +1,7 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents multiple Blank cell
+    /// Represents multiple Blank cell.
     /// </summary>
     internal class XlsBiffMulBlankCell : XlsBiffBlankCell
     {
@@ -10,16 +10,18 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
         }
 
+        public override bool IsEmpty => true;
+
         /// <summary>
-        /// Gets the zero-based index of last described column
+        /// Gets the zero-based index of last described column.
         /// </summary>
         public ushort LastColumnIndex => ReadUInt16(RecordSize - 2);
 
         /// <summary>
-        /// Returns format forspecified column, column must be between ColumnIndex and LastColumnIndex
+        /// Returns format forspecified column, column must be between ColumnIndex and LastColumnIndex.
         /// </summary>
-        /// <param name="columnIdx">Index of column</param>
-        /// <returns>Format</returns>
+        /// <param name="columnIdx">Index of column.</param>
+        /// <returns>Format.</returns>
         public ushort GetXF(ushort columnIdx)
         {
             int ofs = 4 + 6 * (columnIdx - ColumnIndex);

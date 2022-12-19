@@ -1,7 +1,7 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents a constant integer number in range 0..65535
+    /// Represents a constant integer number in range 0..65535.
     /// </summary>
     internal class XlsBiffIntegerCell : XlsBiffBlankCell
     {
@@ -9,6 +9,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             : base(bytes)
         {
         }
+
+        public override bool IsEmpty => false;
 
         /// <summary>
         /// Gets the cell value.

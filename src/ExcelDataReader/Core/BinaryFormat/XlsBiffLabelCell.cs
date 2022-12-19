@@ -5,7 +5,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
     /// [MS-XLS] 2.4.148 Label
-    /// Represents a string
+    /// Represents a string.
     /// </summary>
     internal class XlsBiffLabelCell : XlsBiffBlankCell
     {
@@ -34,6 +34,8 @@ namespace ExcelDataReader.Core.BinaryFormat
                 throw new ArgumentException("Unexpected BIFF version " + biffVersion, nameof(biffVersion));
             }
         }
+
+        public override bool IsEmpty => false;
 
         /// <summary>
         /// Gets the cell value.

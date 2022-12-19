@@ -1,0 +1,18 @@
+# Top level entry required to mark this as a global AnalyzerConfig file
+is_global = true
+
+# StyleCop Analyzers
+dotnet_diagnostic.SA0001.severity = none
+dotnet_diagnostic.SA1028.severity = none
+dotnet_diagnostic.SA1101.severity = none
+dotnet_diagnostic.SA1308.severity = none
+dotnet_diagnostic.SX1308.severity = warning
+dotnet_diagnostic.SA1309.severity = none
+dotnet_diagnostic.SA1407.severity = none
+dotnet_diagnostic.SA1408.severity = none
+dotnet_diagnostic.SA1413.severity = none
+dotnet_diagnostic.SA1503.severity = none
+dotnet_diagnostic.SA1611.severity = none
+dotnet_diagnostic.SA1633.severity = none
+dotnet_diagnostic.SA1636.severity = none
+dotnet_diagnostic.SA1652.severity = none

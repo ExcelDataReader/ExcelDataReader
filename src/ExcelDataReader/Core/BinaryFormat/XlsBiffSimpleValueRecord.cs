@@ -1,7 +1,7 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents record with the only two-bytes value
+    /// Represents record with the only two-bytes value.
     /// </summary>
     internal class XlsBiffSimpleValueRecord : XlsBiffRecord
     {
@@ -11,7 +11,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Gets the value
+        /// Gets the value.
         /// </summary>
         public ushort Value => ReadUInt16(0x0);
     }

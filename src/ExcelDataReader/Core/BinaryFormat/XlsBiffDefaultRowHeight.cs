@@ -31,7 +31,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Gets the row height in twips
+        /// Gets the row height in twips.
         /// </summary>
         public int RowHeight { get; }
     }
