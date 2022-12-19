@@ -30,7 +30,7 @@ namespace ExcelDataReader.Core
                         continue;
                     }
 
-                    if (char.IsDigit(c))
+                    if (IsDigit(c))
                         break;
 
                     position = 0;
@@ -45,16 +45,38 @@ namespace ExcelDataReader.Core
                 return false;
             }
 
-#if NETSTANDARD2_1
-            if (!int.TryParse(value.AsSpan(position), NumberStyles.None, CultureInfo.InvariantCulture, out row))
-#else
-            if (!int.TryParse(value.Substring(position), NumberStyles.None, CultureInfo.InvariantCulture, out row))
-#endif
+            if (!TryParseDecInt(value, position, out row))
             {
                 return false;
             }
 
             return true;
+        }
+
+        private static bool IsDigit(int ch) => ((uint)ch - '0') <= 9;
+
+        private static bool TryParseDecInt(string s, int startIndex, out int result)
+        {
+            if (startIndex >= s.Length)
+                goto Fail;
+
+            long r = 0;
+            for (int i = startIndex; i < s.Length; ++i)
+            {
+                int num = s[i];
+                if (!IsDigit(num))
+                    goto Fail;
+                r = r * 10 + (num - '0');
+                if (r > int.MaxValue)
+                    goto Fail;
+            }
+
+            result = (int)r;
+            return true;
+
+        Fail:
+            result = 0;
+            return false;
         }
     }
 }
