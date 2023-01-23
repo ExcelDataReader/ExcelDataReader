@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using ExcelDataReader.Core.OpenXmlFormat;
 
 namespace ExcelDataReader.Core
 {
@@ -22,6 +23,7 @@ namespace ExcelDataReader.Core
         CellRange[] MergeCells { get; }
 
         Column[] ColumnWidths { get; }
+        XlsxComments Comments { get; }
 
         IEnumerable<Row> ReadRows();
     }

@@ -1,4 +1,5 @@
 using System.Data;
+using ExcelDataReader.Core.OpenXmlFormat;
 
 namespace ExcelDataReader
 {
@@ -27,6 +28,10 @@ namespace ExcelDataReader
         /// </summary>
         HeaderFooter HeaderFooter { get; }
 
+        /// <summary>
+        /// Gets the sheet comments -or- <see langword="null"/> if none set.
+        /// </summary>
+        XlsxComments Comments { get;  }
         /// <summary>
         /// Gets the list of merged cell ranges.
         /// </summary>

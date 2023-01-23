@@ -18,6 +18,11 @@ namespace ExcelDataReader
         public bool UseHeaderRow { get; set; } = false;
 
         /// <summary>
+        /// Gets or sets a value indicating whether to process cell comments.
+        /// </summary>
+        public bool ProcessComments { get; set; } = false;
+
+        /// <summary>
         /// Gets or sets a callback to determine which row is the header row. Only called when UseHeaderRow = true.
         /// </summary>
         public Action<IExcelDataReader> ReadHeaderRow { get; set; }

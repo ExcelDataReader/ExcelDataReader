@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ExcelDataReader.Core.OpenXmlFormat;
 
 namespace ExcelDataReader.Core.CsvFormat
 {
@@ -69,6 +70,8 @@ namespace ExcelDataReader.Core.CsvFormat
         public char Separator { get; }
 
         public Column[] ColumnWidths => null;
+
+        public XlsxComments Comments => throw new NotImplementedException();
 
         private int BomLength { get; set; }
 

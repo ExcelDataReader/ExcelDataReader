@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using ExcelDataReader.Core;
+using ExcelDataReader.Core.OpenXmlFormat;
 
 namespace ExcelDataReader
 {
@@ -52,6 +53,8 @@ namespace ExcelDataReader
         protected TWorkbook Workbook { get; set; }
 
         protected Cell[] RowCells { get; set; }
+
+        public XlsxComments Comments => _worksheetIterator?.Current?.Comments;
 
         public object this[int i] => GetValue(i);
 
