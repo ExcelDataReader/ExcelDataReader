@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Reflection;
 using System.Xml;
 using ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
+using ExcelDataReader.Core.OpenXmlFormat.Records;
 using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
@@ -15,6 +17,15 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string FileWorkbook = "xl/workbook.{0}";
         private const string FileRels = "xl/_rels/workbook.{0}.rels";
 
+        // comments - or notes
+        private const string FileComments = "xl/{0}";
+        private const string SheetRels = "xl/worksheets/_rels/{1}.{0}.rels";
+        private const string NsRelationship = "http://schemas.openxmlformats.org/package/2006/relationships";
+        private const string ElementRelationship = "Relationship";
+        private const string ElementRelationships = "Relationships";
+        private const string AttributeType = "Type";
+        private const string AttributeTarget = "Target";
+        
         private const string Format = "xml";
         private const string BinFormat = "bin";
 
@@ -56,6 +67,61 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             entry = FindEntry(string.Format(FileSharedStrings, BinFormat));
             if (entry != null)
                 return new BiffSharedStringsReader(entry.Open());
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the cmments reader.
+        /// </summary>
+        public RecordReader GetCommentsReader(SheetRecord sheet)
+        {
+            //find comments sheet from sheet.rels
+            //get threaded comment reader first?
+            var sheetFilename = Path.GetFileNameWithoutExtension(sheet.Path);
+            var entry = FindEntry(string.Format(SheetRels, Format, sheetFilename));
+            if (entry == null)
+                return null;
+            var reader = XmlReader.Create(entry.Open(), XmlSettings);
+            if (!reader.IsStartElement(ElementRelationships, NsRelationship))
+            {
+                return null;
+            }
+
+            if (!XmlReaderHelper.ReadFirstContent(reader))
+            {
+                return null;
+            }
+
+            var commentFileName = "";
+            while (!reader.EOF)
+            {
+                if (reader.IsStartElement(ElementRelationship, NsRelationship))
+                {
+                    string relType = reader.GetAttribute(AttributeType);
+                    
+                    if (relType.EndsWith("comments"))
+                    {
+                        var target = reader.GetAttribute(AttributeTarget);
+                        commentFileName = string.Format(FileComments,Path.GetFileName(target));
+                        break;
+                    }//todo - hardcodednono
+
+                    reader.Skip();
+                }
+                else if (!XmlReaderHelper.SkipContent(reader))
+                {
+                    break;
+                }
+            }
+
+            entry = FindEntry(commentFileName);
+            if (entry != null)
+                return new XmlCommentsReader(XmlReader.Create(entry.Open(), XmlSettings));
+
+            //entry = FindEntry(string.Format(FileComments, BinFormat));
+            //if (entry != null)
+            //    return new BiffCommentsReader(entry.Open());
 
             return null;
         }

@@ -7,7 +7,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 {
     internal class XlsxWorksheet : IWorksheet
     {
-        public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, SheetRecord refSheet)
+        public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, SheetRecord refSheet, XlsxComments comments)
         {
             Document = document;
             Workbook = workbook;
@@ -79,6 +79,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 FieldCount = columnIndexMaximum + 1;
                 RowCount = rowIndexMaximum + 1;
             }
+
+            Comments = comments;
         }
 
         public int FieldCount { get; }
@@ -108,6 +110,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private ZipWorker Document { get; }
 
         private XlsxWorkbook Workbook { get; }
+
+        public XlsxComments Comments { get; }
 
         public IEnumerable<Row> ReadRows()
         {

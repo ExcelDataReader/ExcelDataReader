@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using ExcelDataReader.Core.NumberFormat;
+using ExcelDataReader.Core.OpenXmlFormat;
 using ExcelDataReader.Log;
 
 namespace ExcelDataReader.Core.BinaryFormat
@@ -87,6 +88,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         public bool IsDate1904 { get; private set; }
 
         public XlsWorkbook Workbook { get; }
+
+        public XlsxComments Comments => throw new NotImplementedException();
 
         public IEnumerable<Row> ReadRows()
         {

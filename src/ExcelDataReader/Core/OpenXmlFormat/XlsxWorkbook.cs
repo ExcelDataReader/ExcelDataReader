@@ -39,7 +39,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         {
             foreach (var sheet in Sheets)
             {
-                yield return new XlsxWorksheet(_zipWorker, this, sheet);
+                var comments = ReadComments(sheet);
+                yield return new XlsxWorksheet(_zipWorker, this, sheet, comments);
             }
         }
 
@@ -125,6 +126,26 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         break;
                 }
             }
+        }
+
+        private XlsxComments ReadComments(SheetRecord sheet)
+        {
+            var comments = new XlsxComments();
+            using var reader = _zipWorker.GetCommentsReader(sheet);
+            if (reader == null)
+                return comments;
+
+            Record record;
+            while ((record = reader.Read()) != null)
+            {
+                switch (record)
+                {
+                    case CommentRecord pr:
+                        comments.Add(pr.CellRef,pr.Comment);
+                        break;
+                }
+            }
+            return comments;
         }
 
         private void ReadStyles()

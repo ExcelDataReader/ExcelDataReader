@@ -25,6 +25,7 @@ namespace ExcelDataReader
             var result = new DataSet();
             do
             {
+               
                 tableIndex++;
                 if (configuration.FilterSheet != null && !configuration.FilterSheet(self, tableIndex))
                 {
@@ -39,6 +40,7 @@ namespace ExcelDataReader
 
                 var table = AsDataTable(self, tableConfiguration);
                 result.Tables.Add(table);
+               
             }
             while (self.NextResult());
 
@@ -71,6 +73,7 @@ namespace ExcelDataReader
         {
             var result = new DataTable { TableName = self.Name };
             result.ExtendedProperties.Add("visiblestate", self.VisibleState);
+            if (configuration.ProcessComments) { result.ExtendedProperties.Add("comments", self.Comments); }
             var first = true;
             var emptyRows = 0;
             var columnIndices = new List<int>();
