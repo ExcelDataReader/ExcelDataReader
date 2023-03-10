@@ -45,7 +45,7 @@ namespace ExcelDataReader.Tests
             {
                 var dataSet = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
-                Assert.AreEqual(2566.37168141593D, double.Parse(dataSet.Tables[0].Rows[0][6].ToString()));
+                Assert.AreEqual(2566.3716814159293D, dataSet.Tables[0].Rows[0][6]);
             }
         }
 
@@ -62,7 +62,7 @@ namespace ExcelDataReader.Tests
             {
                 var dataSet = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
-                Assert.AreEqual(2566.37168141593D, double.Parse(dataSet.Tables[0].Rows[0][6].ToString()));
+                Assert.AreEqual(2566.3716814159293D, dataSet.Tables[0].Rows[0][6]);
             }
         }
 
@@ -170,8 +170,13 @@ namespace ExcelDataReader.Tests
                     reader.GetColumnWidth(4);
                 });
 
+#if NET5_0_OR_GREATER
+                Assert.AreEqual($"Column at index 4 does not exist. (Parameter 'i')",
+                    exception.Message);
+#else
                 Assert.AreEqual($"Column at index 4 does not exist.{Environment.NewLine}Parameter name: i",
                     exception.Message);
+#endif
             }
         }
 
@@ -378,7 +383,7 @@ namespace ExcelDataReader.Tests
             using (IExcelDataReader excelReader = OpenReader("Test_BlankHeader"))
             {
                 excelReader.Read();
-                Assert.AreEqual(6, excelReader.FieldCount);
+                Assert.AreEqual(4, excelReader.FieldCount);
                 excelReader.Read();
             }
         }
@@ -1060,6 +1065,16 @@ namespace ExcelDataReader.Tests
                 reader.Read();
                 Assert.AreEqual(null, reader.GetCellError(0));
                 Assert.AreEqual(null, reader.GetCellError(1));
+            }
+        }
+
+        [Test]
+        public void GitIssue532TrimEmptyColumns()
+        {
+            using var reader = OpenReader("Test_git_issue_532");
+            while (reader.Read())
+            {
+                Assert.AreEqual(3, reader.FieldCount);
             }
         }
     }

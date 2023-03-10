@@ -1,8 +1,7 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents blank cell
-    /// Base class for all cell types
+    /// Represents a blank cell and is a base class for all cell types.
     /// </summary>
     internal class XlsBiffBlankCell : XlsBiffRecord
     {
@@ -10,6 +9,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             : base(bytes)
         {
         }
+
+        public virtual bool IsEmpty => true;
 
         /// <summary>
         /// Gets the zero-based index of row containing this cell.

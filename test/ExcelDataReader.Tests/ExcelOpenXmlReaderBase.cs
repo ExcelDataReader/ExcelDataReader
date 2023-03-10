@@ -93,11 +93,8 @@ namespace ExcelDataReader.Tests
         [TestCase("agile_AES192_SHA512_CBC_pwd_password")]
         [TestCase("agile_AES256_SHA512_CBC_pwd_password")]
         [TestCase("agile_DESede_SHA384_CBC_pwd_password")]
-        // The following encryptions do not exist on netstandard1.3
-#if NET20 || NET45 || NETCOREAPP2_0
         [TestCase("agile_DES_MD5_CBC_pwd_password")]
         [TestCase("agile_RC2_SHA1_CBC_pwd_password")]
-#endif
         public void GitIssue242AgileEncryption(string file)
         {
             // OpenXml agile encryption aes128+md5+cbc

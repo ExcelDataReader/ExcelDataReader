@@ -4,7 +4,7 @@ using System.Text;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Plain string without backing storage. Used internally
+    /// Plain string without backing storage. Used internally.
     /// </summary>
     internal class XlsInternalString : IXlsString
     {

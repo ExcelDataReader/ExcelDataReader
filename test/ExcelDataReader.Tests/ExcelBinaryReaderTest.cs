@@ -463,7 +463,7 @@ namespace ExcelDataReader.Tests
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Git_Issue_145.xls")))
             {
                 var ds = excelReader.AsDataSet();
-                Assert.AreEqual(256, ds.Tables[0].Columns.Count);
+                Assert.AreEqual(5, ds.Tables[0].Columns.Count);
             }
         }
 
@@ -484,9 +484,7 @@ namespace ExcelDataReader.Tests
                     "Variación en 12 Meses",
                     "Incidencia Mensual",
                     "Incidencia Acumulada", "" +
-                    "Incidencia a 12 Meses",
-                    DBNull.Value, //Merged Cell
-                    DBNull.Value }, ds.Tables[0].Rows[1216].ItemArray);
+                    "Incidencia a 12 Meses" }, ds.Tables[0].Rows[1216].ItemArray);
             }
         }
 
@@ -561,7 +559,7 @@ namespace ExcelDataReader.Tests
             using (var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue_217.xls")))
             {
                 var ds = excelReader.AsDataSet();
-                CollectionAssert.AreEqual(new object[] { "REX GESAMT      ", 484.7929, 142.1032, -0.1656, 5.0315225293000001, 5.0398685515999997, 37.5344725251, DBNull.Value, DBNull.Value }, ds.Tables[2].Rows[10].ItemArray);
+                CollectionAssert.AreEqual(new object[] { "REX GESAMT      ", 484.7929, 142.1032, -0.1656, 5.0315225293000001, 5.0398685515999997, 37.5344725251 }, ds.Tables[2].Rows[10].ItemArray);
             }
         }
 
@@ -1187,6 +1185,40 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual(null, reader.GetString(4));
                 Assert.AreEqual(CellError.REF, reader.GetCellError(4));
             }
+        }
+
+        [Test]
+        public void GitIssue532MulCells()
+        {
+            using var reader = OpenReader("Test_git_issue_532_mulcells");
+            reader.NextResult();
+            reader.Read();
+
+            Assert.AreEqual(77, reader.FieldCount);
+        }
+
+        [Test]
+        public void GitIssue624MissingBOFInWorksheet()
+        {
+            using var reader = OpenReader("Test_git_issue624");
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+            reader.Read();
+
+            List<string> row = new();
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                row.Add(reader.GetString(i));
+            }
+
+            Assert.That(row, Is.EqualTo(new[] { "Transref. AM", "NEWM/CANC", "Rel. transref.", "Portfolio ID  AM", "Portfolio ID KVG", "Portfolio name", "BUY/SELL", "OPEP/CLOP", "Quantity", "Instr. ID Type", "Financial instrument ID   ", "Financial instrument name  ", "Unique Product Identifier (UPI)", "Unique Trade Identifier (UTI)", "Price   ", "Strike", "Tic size", "Tic value", "Contract size", "CCY", "Fees", "Clearing amount", "Trade date", "Maturity date", "Sett. CCY", "Place of trade", "Execution Broker ID type", "Execution Broker ID", "Execution Broker Name", "Clearing Broker ID type", "Clearing Broker ID", "Clearing Broker Name", "CCP ID type", "CCP ID", "CCP Name", "Underlying name", "Underlying ISIN", "Put/Call", "Exercise Type", "Settlement Type", "Execution timestamp UTC (Date/Time)", "Confirmation timestamp UTC (Date/Time)", "Confirmation means", "Clearing timestamp UTC (Date/Time)", "Valuta/Settlement Date OTC-Option", "OTC Derivative ISIN", "Order transmission timestamp UTC (Date/Time)" }));
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Helper class for parsing the BIFF8 Shared String Table (SST)
+    /// Helper class for parsing the BIFF8 Shared String Table (SST).
     /// </summary>
     internal class XlsSSTReader
     {

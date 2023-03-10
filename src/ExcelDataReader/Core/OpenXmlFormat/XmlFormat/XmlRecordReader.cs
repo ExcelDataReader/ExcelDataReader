@@ -35,13 +35,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         protected override void Dispose(bool disposing)
         {
             _enumerator?.Dispose();
-#if NET20
-            if (disposing)
-                Reader.Close();
-#else
             if (disposing)
                 Reader.Dispose();
-#endif
         }
     }
 }

@@ -54,7 +54,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         rowIndexMaximum = Math.Max(rowIndexMaximum, row.RowIndex);
                         break;
                     case CellRecord cell when inSheetData:
-                        columnIndexMaximum = Math.Max(columnIndexMaximum, cell.ColumnIndex);
+                        if (cell.Value != null || cell.Error != null)
+                            columnIndexMaximum = Math.Max(columnIndexMaximum, cell.ColumnIndex);
                         break;
                     case ColumnRecord column:
                         columnWidths.Add(column.Column);

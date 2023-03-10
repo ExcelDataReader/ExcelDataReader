@@ -149,7 +149,7 @@ namespace ExcelDataReader.Tests
             {
                 var dataSet = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
-                Assert.AreEqual(7, dataSet.Tables[0].Columns.Count); // 6 with data + 1 that is present but no data in it
+                Assert.AreEqual(6, dataSet.Tables[0].Columns.Count); // 6 with data + 1 that is present but no data in it
                 Assert.AreEqual(0, dataSet.Tables[0].Rows.Count);
             }
         }
@@ -409,6 +409,17 @@ namespace ExcelDataReader.Tests
                 Assert.AreEqual("NAME", dataSet.Tables[0].Rows[1][0].ToString());
                 Assert.AreEqual("NAME", dataSet.Tables[0].Rows[1][1].ToString());
             }
-        }        
+        }
+
+        [Test]
+        public void GitIssue608()
+        {
+            using (var reader = OpenReader("Test_git_issue_608"))
+            {
+                var dataSet = reader.AsDataSet();
+
+                Assert.That(dataSet.Tables[0].Rows[0].ItemArray, Is.EqualTo(new[] { "Column1", "Column2", "Column3" }));
+            }
+        }
     }
 }

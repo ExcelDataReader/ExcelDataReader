@@ -5,22 +5,19 @@ using System.Data;
 namespace ExcelDataReader
 {
     /// <summary>
-    /// ExcelDataReader DataSet extensions
+    /// ExcelDataReader DataSet extensions.
     /// </summary>
     public static class ExcelDataReaderExtensions
     {
         /// <summary>
-        /// Converts all sheets to a DataSet
+        /// Converts all sheets to a DataSet.
         /// </summary>
-        /// <param name="self">The IExcelDataReader instance</param>
-        /// <param name="configuration">An optional configuration object to modify the behavior of the conversion</param>
-        /// <returns>A dataset with all workbook contents</returns>
+        /// <param name="self">The IExcelDataReader instance.</param>
+        /// <param name="configuration">An optional configuration object to modify the behavior of the conversion.</param>
+        /// <returns>A dataset with all workbook contents.</returns>
         public static DataSet AsDataSet(this IExcelDataReader self, ExcelDataSetConfiguration configuration = null)
         {
-            if (configuration == null)
-            {
-                configuration = new ExcelDataSetConfiguration();
-            }
+            configuration ??= new ExcelDataSetConfiguration();
 
             self.Reset();
 
@@ -38,10 +35,7 @@ namespace ExcelDataReader
                     ? configuration.ConfigureDataTable(self)
                     : null;
 
-                if (tableConfiguration == null)
-                {
-                    tableConfiguration = new ExcelDataTableConfiguration();
-                }
+                tableConfiguration ??= new ExcelDataTableConfiguration();
 
                 var table = AsDataTable(self, tableConfiguration);
                 result.Tables.Add(table);
@@ -220,8 +214,7 @@ namespace ExcelDataReader
                     if (type == null)
                         continue;
                     convert = true;
-                    if (newTable == null)
-                        newTable = table.Clone();
+                    newTable ??= table.Clone();
                     newTable.Columns[i].DataType = type;
                 }
 

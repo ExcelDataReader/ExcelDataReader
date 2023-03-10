@@ -1,7 +1,7 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents BIFF EOF resord
+    /// Represents BIFF EOF resord.
     /// </summary>
     internal class XlsBiffEof : XlsBiffRecord
     {

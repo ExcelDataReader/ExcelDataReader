@@ -9,7 +9,7 @@ using ExcelDataReader.Exceptions;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents Globals section of workbook
+    /// Represents Globals section of workbook.
     /// </summary>
     internal class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
     {
@@ -17,7 +17,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             Stream = stream;
 
-            using (var biffStream = new XlsBiffStream(stream, 0, 0, password))
+            using (var biffStream = new XlsBiffStream(stream, password: password))
             {
                 if (biffStream.BiffVersion == 0)
                     throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
@@ -72,7 +72,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public List<XlsBiffBoundSheet> Sheets { get; } = new List<XlsBiffBoundSheet>();
 
         /// <summary>
-        /// Gets or sets the Shared String Table of workbook
+        /// Gets or sets the Shared String Table of workbook.
         /// </summary>
         public XlsBiffSST SST { get; set; }
 
@@ -140,16 +140,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         internal void AddXf(XlsBiffXF xf)
         {
-            var extendedFormat = new ExtendedFormat()
-            {
-                FontIndex = xf.Font,
-                NumberFormatIndex = xf.Format,
-                Locked = xf.IsLocked,
-                Hidden = xf.IsHidden,
-                HorizontalAlignment = xf.HorizontalAlignment,
-                IndentLevel = xf.IndentLevel,
-                ParentCellStyleXf = xf.ParentCellStyleXf,
-            };
+            var extendedFormat = new ExtendedFormat(xf.ParentCellStyleXf, xf.Font, xf.Format, xf.IsLocked, xf.IsHidden, xf.IndentLevel, xf.HorizontalAlignment);
 
             // The workbook holds two kinds of XF records: Cell XFs, and Cell Style XFs.
             // In the binary XLS format, both kinds of XF records are saved in a single list,

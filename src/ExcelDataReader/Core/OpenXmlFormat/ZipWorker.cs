@@ -1,14 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Xml;
 using ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
-using ExcelDataReader.Core.OpenXmlFormat.Records;
 using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
-#if !NET20
-using System.IO.Compression;
-#endif
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
@@ -26,9 +22,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         {
             IgnoreComments = true, 
             IgnoreWhitespace = true,
-#if !NETSTANDARD1_3
-            XmlResolver = null,
-#endif
         };
 
         private readonly Dictionary<string, ZipArchiveEntry> _entries;

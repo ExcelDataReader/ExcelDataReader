@@ -12,22 +12,22 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
         public static string ReadStringItem(XmlReader reader, string nsSpreadsheetMl)
         {
-            string result = string.Empty;
             if (!XmlReaderHelper.ReadFirstContent(reader))
             {
-                return result;
+                return string.Empty;
             }
 
+            StringBuilder sb = new StringBuilder();
             while (!reader.EOF)
             {
                 if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
                 {
                     // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
-                    result += reader.ReadElementContentAsString();
+                    sb.Append(reader.ReadElementContentAsString());
                 }
                 else if (reader.IsStartElement(ElementR, nsSpreadsheetMl))
                 {
-                    result += ReadRichTextRun(reader, nsSpreadsheetMl);
+                    ReadRichTextRun(reader, sb, nsSpreadsheetMl);
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))
                 {
@@ -35,30 +35,27 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                 }
             }
 
-            return result;
+            return sb.ToString();
         }
 
-        private static string ReadRichTextRun(XmlReader reader, string nsSpreadsheetMl)
+        private static void ReadRichTextRun(XmlReader reader, StringBuilder sb, string nsSpreadsheetMl)
         {
-            string result = string.Empty;
             if (!XmlReaderHelper.ReadFirstContent(reader))
             {
-                return result;
+                return;
             }
 
             while (!reader.EOF)
             {
                 if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
                 {
-                    result += reader.ReadElementContentAsString();
+                    sb.Append(reader.ReadElementContentAsString());
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))
                 {
                     break;
                 }
             }
-
-            return result;
-        }        
+        }
     }
 }

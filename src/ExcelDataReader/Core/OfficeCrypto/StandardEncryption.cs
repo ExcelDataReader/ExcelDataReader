@@ -239,7 +239,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
         }
 
         /// <summary>
-        /// 2.3.5.2 RC4 CryptoAPI Encryption Key Generation
+        /// 2.3.5.2 RC4 CryptoAPI Encryption Key Generation.
         /// </summary>
         private static byte[] GenerateCryptoApiSecretKey(string password, byte[] saltValue, HashIdentifier hashAlgorithm, int keySize)
         {
@@ -247,7 +247,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
         }
 
         /// <summary>
-        /// 2.3.4.7 ECMA-376 Document Encryption Key Generation (Standard Encryption)
+        /// 2.3.4.7 ECMA-376 Document Encryption Key Generation (Standard Encryption).
         /// </summary>
         private static byte[] GenerateEcma376SecretKey(string password, byte[] saltValue, HashIdentifier hashIdentifier, int keySize, int verifierHashSize)
         {

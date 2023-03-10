@@ -7,7 +7,7 @@ using ExcelDataReader.Misc;
 namespace ExcelDataReader.Core
 {
     /// <summary>
-    /// Helpers class
+    /// Helpers class.
     /// </summary>
     internal static class Helpers
     {

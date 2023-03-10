@@ -1,7 +1,8 @@
 ﻿namespace ExcelDataReader
 {
+#pragma warning disable SA1629 // Documentation text should end with a period
     /// <summary>
-    /// Formula error
+    /// Formula error. 
     /// </summary>
     public enum CellError : byte
     {
@@ -45,4 +46,5 @@
         /// </summary>
         GETTING_DATA = 0x2B,
     }
+#pragma warning restore SA1629 // Documentation text should end with a period
 }

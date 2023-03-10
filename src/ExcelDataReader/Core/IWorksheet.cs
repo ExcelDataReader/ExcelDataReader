@@ -3,7 +3,7 @@
 namespace ExcelDataReader.Core
 {
     /// <summary>
-    /// The common worksheet interface between the binary and OpenXml formats
+    /// The common worksheet interface between the binary and OpenXml formats.
     /// </summary>
     internal interface IWorksheet
     {
