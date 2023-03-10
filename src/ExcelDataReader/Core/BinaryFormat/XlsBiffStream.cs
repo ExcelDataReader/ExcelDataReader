@@ -148,7 +148,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             var recordOffset = (int)stream.Position;
             var header = new byte[4];
-            stream.Read(header, 0, 4);
+            stream.ReadAtLeast(header, 0, 4);
 
             // Does this work on a big endian system?
             var id = (BIFFRECORDTYPE)BitConverter.ToUInt16(header, 0);
@@ -156,7 +156,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             var bytes = new byte[4 + recordSize];
             Array.Copy(header, bytes, 4);
-            stream.Read(bytes, 4, recordSize);
+            stream.ReadAtLeast(bytes, 4, recordSize);
             
             if (SecretKey != null)
                 DecryptRecord(recordOffset, id, bytes);

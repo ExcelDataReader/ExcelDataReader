@@ -98,7 +98,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             using (var cfb = new CompoundStream(this, stream, baseSector, length, isMini, true))
             {
                 var bytes = new byte[length];
-                cfb.Read(bytes, 0, length);
+                cfb.ReadAtLeast(bytes, 0, length);
                 return bytes;
             }
         }
@@ -108,7 +108,7 @@ namespace ExcelDataReader.Core.CompoundFormat
             using (var cfb = new CompoundStream(this, stream, sectors, length, true))
             {
                 var bytes = new byte[length];
-                cfb.Read(bytes, 0, length);
+                cfb.ReadAtLeast(bytes, 0, length);
                 return bytes;
             }
         }

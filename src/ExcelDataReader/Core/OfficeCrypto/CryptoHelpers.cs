@@ -102,7 +102,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
                 using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, transform, CryptoStreamMode.Read))
                 {
                     var result = new byte[length];
-                    csDecrypt.Read(result, 0, length);
+                    csDecrypt.ReadAtLeast(result, 0, length);
                     return result;
                 }
             }

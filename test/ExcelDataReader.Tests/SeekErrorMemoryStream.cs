@@ -20,24 +20,14 @@ namespace ExcelDataReader.Tests
         {
             var forwardStream = new SeekErrorMemoryStream { _canSeek = true };
 
-            CopyStream(source, forwardStream);
+            source.CopyTo(forwardStream);
+
             forwardStream.Seek(0, SeekOrigin.Begin);
 
             // now disable seek
             forwardStream._canSeek = false;
 
             return forwardStream;
-        }
-
-        // Merged From linked CopyStream below and Jon Skeet's ReadFully example
-        public static void CopyStream(Stream input, Stream output)
-        {
-            byte[] buffer = new byte[16 * 1024];
-            int read;
-            while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                output.Write(buffer, 0, read);
-            }
         }
 
         public override long Seek(long offset, SeekOrigin loc)

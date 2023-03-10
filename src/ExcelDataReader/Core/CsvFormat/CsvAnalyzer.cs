@@ -16,7 +16,7 @@ namespace ExcelDataReader.Core.CsvFormat
             var bufferSize = 1024;
             var probeSize = 16;
             var buffer = new byte[bufferSize];
-            var bytesRead = stream.Read(buffer, 0, probeSize);
+            var bytesRead = stream.ReadAtLeast(buffer, 0, probeSize);
 
             autodetectEncoding = GetEncodingFromBom(buffer, out bomLength);
             if (autodetectEncoding == null)
@@ -82,7 +82,7 @@ namespace ExcelDataReader.Core.CsvFormat
 
             while (inputStream.Position < inputStream.Length)
             {
-                var bytesRead = inputStream.Read(buffer, 0, buffer.Length);
+                var bytesRead = inputStream.ReadAtLeast(buffer, 0, buffer.Length);
                 ParseSeparatorsBuffer(buffer, 0, bytesRead, separators, separatorInfos);
                 if (IsMinNumberOfRowAnalyzed(analyzeInitialCsvRows, separatorInfos))
                 {

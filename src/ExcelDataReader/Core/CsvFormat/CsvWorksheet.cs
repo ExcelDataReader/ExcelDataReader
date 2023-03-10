@@ -87,7 +87,7 @@ namespace ExcelDataReader.Core.CsvFormat
             Stream.Seek(0, SeekOrigin.Begin);
             while (Stream.Position < Stream.Length)
             {
-                var bytesRead = Stream.Read(buffer, 0, bufferSize);
+                var bytesRead = Stream.ReadAtLeast(buffer, 0, bufferSize);
                 csv.ParseBuffer(buffer, skipBomBytes, bytesRead - skipBomBytes, out var bufferRows);
 
                 skipBomBytes = 0; // Only skip bom on first iteration
