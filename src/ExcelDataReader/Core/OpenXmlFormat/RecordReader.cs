@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 using ExcelDataReader.Core.OpenXmlFormat.Records;
+using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
 #nullable enable
 
@@ -20,7 +21,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         {
             Dispose(true);
             GC.SuppressFinalize(this);
-        }
+        }       
 
         public abstract Record? Read();
 

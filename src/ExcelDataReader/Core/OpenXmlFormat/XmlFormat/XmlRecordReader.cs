@@ -10,10 +10,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
     {
         private IEnumerator<Record> _enumerator;
 
-        public XmlRecordReader(XmlReader reader)
+        public XmlRecordReader(XmlReader reader, XmlProperNamespaces properNamespaces)
         {
             Reader = reader;
+            ProperNamespaces = properNamespaces;
         }
+
+        public XmlProperNamespaces ProperNamespaces { get; set; }
 
         protected XmlReader Reader { get; }
 

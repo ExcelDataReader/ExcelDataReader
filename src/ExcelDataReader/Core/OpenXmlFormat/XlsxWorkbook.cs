@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Xml;
 
 using ExcelDataReader.Core.OpenXmlFormat.Records;
+using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
@@ -16,16 +17,18 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         private const string AttributeTarget = "Target";
 
         private readonly ZipWorker _zipWorker;
-
+               
         public XlsxWorkbook(ZipWorker zipWorker)
         {
             _zipWorker = zipWorker;
-
+            ProperNamespaces = new XmlProperNamespaces();
             ReadWorkbook();
             ReadWorkbookRels();
             ReadSharedStrings();
             ReadStyles();
         }
+
+        public XmlProperNamespaces ProperNamespaces { get; private set; }
 
         public List<SheetRecord> Sheets { get; } = new List<SheetRecord>();
 
@@ -45,11 +48,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         private void ReadWorkbook()
         {
-            using var reader = _zipWorker.GetWorkbookReader();
-
+            using RecordReader reader = _zipWorker.GetWorkbookReader(ProperNamespaces);            
+            
             Record record;
             while ((record = reader.Read()) != null)
-            {
+            {                
                 switch (record)
                 {
                     case WorkbookPrRecord pr:
@@ -111,7 +114,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         private void ReadSharedStrings()
         {
-            using var reader = _zipWorker.GetSharedStringsReader();
+            using var reader = _zipWorker.GetSharedStringsReader(ProperNamespaces);
             if (reader == null)
                 return;
 
@@ -129,7 +132,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         private void ReadStyles()
         {
-            using var reader = _zipWorker.GetStylesReader();
+            using var reader = _zipWorker.GetStylesReader(ProperNamespaces);
             if (reader == null)
                 return;
 
@@ -147,6 +150,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     case NumberFormatRecord nf:
                         AddNumberFormat(nf.FormatIndexInFile, nf.FormatString);
                         break;
+                    default:
+                        {
+                            break;
+                        }
                 }
             }
         }

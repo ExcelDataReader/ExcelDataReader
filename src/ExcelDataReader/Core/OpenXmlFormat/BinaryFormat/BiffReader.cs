@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 
 using ExcelDataReader.Core.OpenXmlFormat.Records;
+using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
 #nullable enable
 
