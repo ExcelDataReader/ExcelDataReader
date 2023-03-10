@@ -1,6 +1,6 @@
 ﻿namespace ExcelDataReader.Core.NumberFormat
 {
-    internal class Condition
+    internal sealed class Condition
     {
         public string Operator { get; set; }
 

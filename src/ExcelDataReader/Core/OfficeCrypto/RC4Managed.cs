@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
     /// <summary>
     /// Minimal RC4 decryption compatible with System.Security.Cryptography.SymmetricAlgorithm.
     /// </summary>
-    internal class RC4Managed : SymmetricAlgorithm
+    internal sealed class RC4Managed : SymmetricAlgorithm
     {
         public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[] rgbIV)
         {
@@ -28,7 +28,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
             throw new NotImplementedException();
         }
 
-        internal class RC4Transform : ICryptoTransform
+        internal sealed class RC4Transform : ICryptoTransform
         {
             private readonly byte[] _s = new byte[256];
 

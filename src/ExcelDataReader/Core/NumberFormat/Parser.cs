@@ -39,7 +39,11 @@ namespace ExcelDataReader.Core.NumberFormat
                     hasTextPart |= true;
                     tokens.Add(token);
                 }
-                else if (token.StartsWith("["))
+#if NETSTANDARD2_1_OR_GREATER
+                else if (token.StartsWith('['))
+#else
+                else if (token.StartsWith("[", StringComparison.Ordinal))
+#endif
                 {
                     // Does not add to tokens. Absolute/elapsed time tokens
                     // also start with '[', but handled as date part above
@@ -156,7 +160,11 @@ namespace ExcelDataReader.Core.NumberFormat
                 {
                     remainder.Add(token);
                 }
-                else if (token.StartsWith("["))
+#if NETSTANDARD2_1_OR_GREATER
+                else if (token.StartsWith('['))
+#else
+                else if (token.StartsWith("[", StringComparison.Ordinal))
+#endif
                 {
                     // ignore
                 }

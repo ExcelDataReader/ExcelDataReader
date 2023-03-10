@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents a string value of formula.
     /// </summary>
-    internal class XlsBiffFormulaString : XlsBiffRecord
+    internal sealed class XlsBiffFormulaString : XlsBiffRecord
     {
         private readonly IXlsString _xlsString;
 

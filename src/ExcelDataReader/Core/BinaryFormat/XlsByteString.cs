@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Word-sized string, stored as single bytes with encoding from CodePage record. Used in BIFF2-5. 
     /// </summary>
-    internal class XlsByteString : IXlsString
+    internal sealed class XlsByteString : IXlsString
     {
         private readonly byte[] _bytes;
         private readonly uint _offset;

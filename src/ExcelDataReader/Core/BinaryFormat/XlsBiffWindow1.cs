@@ -5,7 +5,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents Workbook's global window description.
     /// </summary>
-    internal class XlsBiffWindow1 : XlsBiffRecord
+    internal sealed class XlsBiffWindow1 : XlsBiffRecord
     {
         internal XlsBiffWindow1(byte[] bytes)
             : base(bytes)

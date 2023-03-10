@@ -182,7 +182,7 @@ namespace ExcelDataReader.Core.CsvFormat
             return true;
         }
 
-        private class SeparatorInfo
+        private sealed class SeparatorInfo
         {
             public int MaxFieldCount { get; set; }
 

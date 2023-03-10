@@ -7,7 +7,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
     /// <summary>
     /// Represents the binary RC4+MD5 encryption header used in XLS.
     /// </summary>
-    internal class RC4Encryption : EncryptionInfo
+    internal sealed class RC4Encryption : EncryptionInfo
     {
         public RC4Encryption(byte[] bytes)
         {

@@ -8,7 +8,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
     /// Represents the binary "Standard Encryption" header used in XLS and XLSX.
     /// XLS uses RC4+SHA1. XLSX uses AES+SHA1.
     /// </summary>
-    internal class StandardEncryption : EncryptionInfo
+    internal sealed class StandardEncryption : EncryptionInfo
     {
         private const int AesBlockSize = 128;
         private const int RC4BlockSize = 8;
@@ -172,7 +172,9 @@ namespace ExcelDataReader.Core.OfficeCrypto
                 salt = CryptoHelpers.HashBytes(salt, HashAlgorithm);
                 Array.Resize(ref salt, (int)KeySize / 8);
                 return salt;*/
+#pragma warning disable CA2201 // Do not raise reserved exception types
                 throw new Exception("Block key for ECMA-376 Standard Encryption not implemented");
+#pragma warning restore CA2201 // Do not raise reserved exception types
             }
             else if ((Flags & EncryptionHeaderFlags.CryptoAPI) != 0)
             {

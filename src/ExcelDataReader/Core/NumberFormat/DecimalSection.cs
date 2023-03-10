@@ -2,7 +2,7 @@
 
 namespace ExcelDataReader.Core.NumberFormat
 {
-    internal class DecimalSection
+    internal sealed class DecimalSection
     {
         public bool ThousandSeparator { get; set; }
 

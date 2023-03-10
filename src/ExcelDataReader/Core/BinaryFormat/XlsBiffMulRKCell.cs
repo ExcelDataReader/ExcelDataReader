@@ -3,7 +3,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents multiple RK number cells.
     /// </summary>
-    internal class XlsBiffMulRKCell : XlsBiffBlankCell
+    internal sealed class XlsBiffMulRKCell : XlsBiffBlankCell
     {
         internal XlsBiffMulRKCell(byte[] bytes)
             : base(bytes)

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ExcelDataReader.Core.CsvFormat
 {
-    internal class CsvWorksheet : IWorksheet
+    internal sealed class CsvWorksheet : IWorksheet
     {
         public CsvWorksheet(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
         {
@@ -107,7 +107,7 @@ namespace ExcelDataReader.Core.CsvFormat
             }
         }
 
-        private IEnumerable<Row> GetReaderRows(int rowIndex, List<List<string>> rows)
+        private static IEnumerable<Row> GetReaderRows(int rowIndex, List<List<string>> rows)
         {
             foreach (var row in rows)
             {

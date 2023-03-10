@@ -3,7 +3,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents Dimensions of worksheet.
     /// </summary>
-    internal class XlsBiffDimensions : XlsBiffRecord
+    internal sealed class XlsBiffDimensions : XlsBiffRecord
     {
         internal XlsBiffDimensions(byte[] bytes, int biffVersion)
             : base(bytes)

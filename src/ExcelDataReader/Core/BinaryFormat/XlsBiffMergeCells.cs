@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// [MS-XLS] 2.4.168 MergeCells
     ///  If the count of the merged cells in the document is greater than 1026, the file will contain multiple adjacent MergeCells records.
     /// </summary>
-    internal class XlsBiffMergeCells : XlsBiffRecord
+    internal sealed class XlsBiffMergeCells : XlsBiffRecord
     {
         public XlsBiffMergeCells(byte[] bytes)
             : base(bytes)

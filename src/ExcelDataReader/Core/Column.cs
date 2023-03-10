@@ -2,7 +2,7 @@
 
 namespace ExcelDataReader.Core
 {
-    internal class Column
+    internal sealed class Column
     {
         public Column(int minimum, int maximum, bool hidden, double? width)
         {

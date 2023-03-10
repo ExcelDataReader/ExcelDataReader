@@ -176,8 +176,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                             var customWidth = Reader.GetAttribute(ACustomWidth);
                             var hidden = Reader.GetAttribute(AHidden);
 
-                            var maxVal = int.Parse(max);
-                            var minVal = int.Parse(min);
+                            var maxVal = int.Parse(max, CultureInfo.InvariantCulture);
+                            var minVal = int.Parse(min, CultureInfo.InvariantCulture);
                             double.TryParse(width, NumberStyles.Float, CultureInfo.InvariantCulture, out double widthVal);
 
                             // Note: column indexes need to be converted to be zero-indexed

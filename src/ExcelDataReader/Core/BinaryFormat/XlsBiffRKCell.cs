@@ -5,7 +5,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents an RK number cell.
     /// </summary>
-    internal class XlsBiffRKCell : XlsBiffBlankCell
+    internal sealed class XlsBiffRKCell : XlsBiffBlankCell
     {
         internal XlsBiffRKCell(byte[] bytes)
             : base(bytes)

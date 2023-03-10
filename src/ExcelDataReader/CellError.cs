@@ -44,7 +44,9 @@
         /// <summary>
         /// #GETTING_DATA
         /// </summary>
+#pragma warning disable CA1707 // Identifiers should not contain underscores
         GETTING_DATA = 0x2B,
+#pragma warning restore CA1707 // Identifiers should not contain underscores
     }
 #pragma warning restore SA1629 // Documentation text should end with a period
 }

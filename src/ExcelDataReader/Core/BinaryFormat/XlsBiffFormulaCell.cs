@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents a cell containing formula.
     /// </summary>
-    internal class XlsBiffFormulaCell : XlsBiffBlankCell
+    internal sealed class XlsBiffFormulaCell : XlsBiffBlankCell
     {
         // private FormulaFlags _flags;
         private readonly int _biffVersion;

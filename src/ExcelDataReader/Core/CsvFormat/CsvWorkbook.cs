@@ -6,7 +6,7 @@ using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core.CsvFormat
 {
-    internal class CsvWorkbook : IWorkbook<CsvWorksheet>
+    internal sealed class CsvWorkbook : IWorkbook<CsvWorksheet>
     {
         public CsvWorkbook(Stream stream, Encoding encoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
         {

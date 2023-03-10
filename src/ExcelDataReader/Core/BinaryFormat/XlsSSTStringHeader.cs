@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// [MS-XLS] 2.5.293 XLUnicodeRichExtendedString
     /// Word-sized formatted string in SST, stored as single or multibyte unicode characters potentially spanning multiple Continue records.
     /// </summary>
-    internal class XlsSSTStringHeader
+    internal sealed class XlsSSTStringHeader
     {
         private readonly byte[] _bytes;
         private readonly int _offset;

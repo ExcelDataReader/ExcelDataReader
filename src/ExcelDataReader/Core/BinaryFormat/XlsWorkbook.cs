@@ -11,7 +11,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents Globals section of workbook.
     /// </summary>
-    internal class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
+    internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
     {
         internal XlsWorkbook(Stream stream, string password, Encoding fallbackEncoding)
         {

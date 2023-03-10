@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Globalization;
+using System.IO;
 
 #nullable enable
 
@@ -11,7 +12,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.Records
             Name = name;
             Id = id;
             Rid = rid;
-            VisibleState = string.IsNullOrEmpty(visibleState) ? "visible" : visibleState.ToLower();
+            VisibleState = string.IsNullOrEmpty(visibleState) ? "visible" : visibleState.ToLower(CultureInfo.InvariantCulture);
         }
 
         public string Name { get; }

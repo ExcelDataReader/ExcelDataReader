@@ -7,7 +7,7 @@ using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
-    internal class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
+    internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
     {
         private const string NsRelationship = "http://schemas.openxmlformats.org/package/2006/relationships";
 

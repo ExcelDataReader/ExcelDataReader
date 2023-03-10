@@ -5,7 +5,7 @@ using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.CompoundFormat
 {
-    internal class CompoundStream : Stream
+    internal sealed class CompoundStream : Stream
     {
         public CompoundStream(CompoundDocument document, Stream baseStream, List<uint> sectorChain, int length, bool leaveOpen)
         {
@@ -28,12 +28,12 @@ namespace ExcelDataReader.Core.CompoundFormat
 
             if (IsMini)
             {
-                SectorChain = Document.GetSectorChain(baseSector, Document.MiniSectorTable);
-                RootSectorChain = Document.GetSectorChain(Document.RootEntry.StreamFirstSector, Document.SectorTable);
+                SectorChain = CompoundDocument.GetSectorChain(baseSector, Document.MiniSectorTable);
+                RootSectorChain = CompoundDocument.GetSectorChain(Document.RootEntry.StreamFirstSector, Document.SectorTable);
             }
             else
             {
-                SectorChain = Document.GetSectorChain(baseSector, Document.SectorTable);
+                SectorChain = CompoundDocument.GetSectorChain(baseSector, Document.SectorTable);
             }
 
             ReadSector();

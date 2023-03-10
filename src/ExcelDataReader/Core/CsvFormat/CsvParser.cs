@@ -7,7 +7,7 @@ namespace ExcelDataReader.Core.CsvFormat
     /// <summary>
     /// Low level, reentrant CSV parser. Call ParseBuffer() in a loop, and finally Flush() to empty the internal buffers.
     /// </summary>
-    internal class CsvParser
+    internal sealed class CsvParser
     {
         public CsvParser(char separator, Encoding encoding)
         {

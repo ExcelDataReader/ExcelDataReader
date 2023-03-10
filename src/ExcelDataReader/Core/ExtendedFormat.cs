@@ -1,6 +1,6 @@
 ﻿namespace ExcelDataReader.Core
 {
-    internal class ExtendedFormat
+    internal sealed class ExtendedFormat
     {
         public ExtendedFormat(int numberFormatIndex)
         {

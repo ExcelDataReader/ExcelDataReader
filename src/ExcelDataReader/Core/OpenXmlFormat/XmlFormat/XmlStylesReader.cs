@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Xml;
 using ExcelDataReader.Core.OpenXmlFormat.Records;
@@ -72,7 +73,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                     {
                         if (Reader.IsStartElement(NNumFmt, ProperNamespaces.NsSpreadsheetMl))
                         {
-                            int.TryParse(Reader.GetAttribute(ANumFmtId), out var numFmtId);
+                            int.TryParse(Reader.GetAttribute(ANumFmtId), NumberStyles.Integer, CultureInfo.InvariantCulture, out var numFmtId);
                             var formatCode = Reader.GetAttribute(AFormatCode);
 
                             yield return new NumberFormatRecord(numFmtId, formatCode);
@@ -102,8 +103,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             {
                 if (Reader.IsStartElement(NXF, nsSpreadsheetMl))
                 {
-                    int.TryParse(Reader.GetAttribute(AXFId), out var xfId);
-                    int.TryParse(Reader.GetAttribute(ANumFmtId), out var numFmtId);
+                    int.TryParse(Reader.GetAttribute(AXFId), NumberStyles.Integer, CultureInfo.InvariantCulture, out var xfId);
+                    int.TryParse(Reader.GetAttribute(ANumFmtId), NumberStyles.Integer, CultureInfo.InvariantCulture, out var numFmtId);
                     // var applyNumberFormat = Reader.GetAttribute(AApplyNumberFormat) == "1";
                     // var applyAlignment = Reader.GetAttribute(AApplyAlignment) == "1";
                     // var applyProtection = Reader.GetAttribute(AApplyProtection) == "1";
@@ -118,47 +119,47 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                     break;
                 }
             }
-        }
 
-        private void ReadAlignment(XmlReader reader, string nsSpreadsheetMl, out int indentLevel, out HorizontalAlignment horizontalAlignment, out bool hidden, out bool locked)
-        {
-            indentLevel = 0;
-            horizontalAlignment = HorizontalAlignment.General;
-            hidden = false;
-            locked = false;
-
-            if (!XmlReaderHelper.ReadFirstContent(reader))
+            static void ReadAlignment(XmlReader reader, string nsSpreadsheetMl, out int indentLevel, out HorizontalAlignment horizontalAlignment, out bool hidden, out bool locked)
             {
-                return;
-            }
+                indentLevel = 0;
+                horizontalAlignment = HorizontalAlignment.General;
+                hidden = false;
+                locked = false;
 
-            while (!reader.EOF)
-            {
-                if (reader.IsStartElement(NAlignment, nsSpreadsheetMl))
+                if (!XmlReaderHelper.ReadFirstContent(reader))
                 {
-                    int.TryParse(reader.GetAttribute(AIndent), out indentLevel);
-                    try
-                    {
-                        horizontalAlignment = (HorizontalAlignment)Enum.Parse(typeof(HorizontalAlignment), reader.GetAttribute(AHorizontal), true);
-                    }
-                    catch (ArgumentException)
-                    {
-                    }
-                    catch (OverflowException)
-                    {
-                    }
+                    return;
+                }
 
-                    reader.Skip();
-                }
-                else if (reader.IsStartElement(NProtection, nsSpreadsheetMl))
+                while (!reader.EOF)
                 {
-                    locked = reader.GetAttribute(ALocked) == "1";
-                    hidden = reader.GetAttribute(AHidden) == "1";
-                    reader.Skip();
-                }
-                else if (!XmlReaderHelper.SkipContent(reader))
-                {
-                    break;
+                    if (reader.IsStartElement(NAlignment, nsSpreadsheetMl))
+                    {
+                        int.TryParse(reader.GetAttribute(AIndent), NumberStyles.Integer, CultureInfo.InvariantCulture, out indentLevel);
+                        try
+                        {
+                            horizontalAlignment = (HorizontalAlignment)Enum.Parse(typeof(HorizontalAlignment), reader.GetAttribute(AHorizontal), true);
+                        }
+                        catch (ArgumentException)
+                        {
+                        }
+                        catch (OverflowException)
+                        {
+                        }
+
+                        reader.Skip();
+                    }
+                    else if (reader.IsStartElement(NProtection, nsSpreadsheetMl))
+                    {
+                        locked = reader.GetAttribute(ALocked) == "1";
+                        hidden = reader.GetAttribute(AHidden) == "1";
+                        reader.Skip();
+                    }
+                    else if (!XmlReaderHelper.SkipContent(reader))
+                    {
+                        break;
+                    }
                 }
             }
         }

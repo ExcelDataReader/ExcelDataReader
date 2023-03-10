@@ -5,7 +5,7 @@ namespace ExcelDataReader.Core.CompoundFormat
     /// <summary>
     /// Represents single Root Directory record.
     /// </summary>
-    internal class CompoundDirectoryEntry
+    internal sealed class CompoundDirectoryEntry
     {
         /// <summary>
         /// Gets or sets the name of directory entry.

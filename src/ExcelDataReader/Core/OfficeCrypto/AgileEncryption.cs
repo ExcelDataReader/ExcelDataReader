@@ -8,7 +8,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
     /// <summary>
     /// Represents "Agile Encryption" used in XLSX (Office 2010 and newer).
     /// </summary>
-    internal class AgileEncryption : EncryptionInfo
+    internal sealed class AgileEncryption : EncryptionInfo
     {
         private const string NEncryption = "encryption";
         private const string NKeyData = "keyData";

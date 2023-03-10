@@ -25,8 +25,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public abstract Record? Read();
 
-        protected virtual void Dispose(bool disposing) 
-        {
-        }
+        protected abstract void Dispose(bool disposing);
     }
 }
