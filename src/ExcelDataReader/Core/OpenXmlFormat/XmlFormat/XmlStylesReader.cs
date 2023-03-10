@@ -17,10 +17,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         private const string ElementCellStyleCrossReference = "cellStyleXfs";
         private const string NXF = "xf";
         private const string AXFId = "xfId";
-        private const string AApplyNumberFormat = "applyNumberFormat";
-        private const string AApplyAlignment = "applyAlignment";
-        private const string AApplyProtection = "applyProtection";
 
+        // private const string AApplyNumberFormat = "applyNumberFormat";
+        // private const string AApplyAlignment = "applyAlignment";
+        // private const string AApplyProtection = "applyProtection";
         private const string ElementNumberFormats = "numFmts";
         private const string NNumFmt = "numFmt";
         private const string AFormatCode = "formatCode";
@@ -105,6 +105,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                 {
                     int.TryParse(Reader.GetAttribute(AXFId), NumberStyles.Integer, CultureInfo.InvariantCulture, out var xfId);
                     int.TryParse(Reader.GetAttribute(ANumFmtId), NumberStyles.Integer, CultureInfo.InvariantCulture, out var numFmtId);
+                    
                     // var applyNumberFormat = Reader.GetAttribute(AApplyNumberFormat) == "1";
                     // var applyAlignment = Reader.GetAttribute(AApplyAlignment) == "1";
                     // var applyProtection = Reader.GetAttribute(AApplyProtection) == "1";
