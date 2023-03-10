@@ -15,7 +15,7 @@ namespace ExcelDataReader
         /// <summary>
         /// Gets or sets a value indicating whether to use a row from the data as column names.
         /// </summary>
-        public bool UseHeaderRow { get; set; } = false;
+        public bool UseHeaderRow { get; set; }
 
         /// <summary>
         /// Gets or sets a callback to determine which row is the header row. Only called when UseHeaderRow = true.

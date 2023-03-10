@@ -27,7 +27,7 @@ namespace ExcelDataReader.Core
 
         public static string ConvertEscapeChars(string input)
         {
-            return EscapeRegex.Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber)).ToString());
+            return EscapeRegex.Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString());
         }
 
         /// <summary>

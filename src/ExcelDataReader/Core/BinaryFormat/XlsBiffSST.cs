@@ -7,7 +7,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents a Shared String Table in BIFF8 format.
     /// </summary>
-    internal class XlsBiffSST : XlsBiffRecord
+    internal sealed class XlsBiffSST : XlsBiffRecord
     {
         private readonly List<IXlsString> _strings;
         private readonly XlsSSTReader _reader = new XlsSSTReader();

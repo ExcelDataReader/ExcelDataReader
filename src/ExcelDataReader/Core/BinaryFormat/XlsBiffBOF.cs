@@ -3,7 +3,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents BIFF BOF record.
     /// </summary>
-    internal class XlsBiffBOF : XlsBiffRecord
+    internal sealed class XlsBiffBOF : XlsBiffRecord
     {
         internal XlsBiffBOF(byte[] bytes)
             : base(bytes)

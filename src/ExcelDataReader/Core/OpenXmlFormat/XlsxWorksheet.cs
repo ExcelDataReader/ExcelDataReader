@@ -5,7 +5,7 @@ using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
-    internal class XlsxWorksheet : IWorksheet
+    internal sealed class XlsxWorksheet : IWorksheet
     {
         public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, SheetRecord refSheet)
         {

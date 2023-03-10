@@ -4,7 +4,7 @@ using ExcelDataReader.Core.BinaryFormat;
 
 namespace ExcelDataReader
 {
-    internal class ExcelBinaryReader : ExcelDataReader<XlsWorkbook, XlsWorksheet>
+    internal sealed class ExcelBinaryReader : ExcelDataReader<XlsWorkbook, XlsWorksheet>
     {
         public ExcelBinaryReader(Stream stream, string password, Encoding fallbackEncoding)
         {

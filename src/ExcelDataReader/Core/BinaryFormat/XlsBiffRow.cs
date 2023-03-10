@@ -3,7 +3,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents row record in table.
     /// </summary>
-    internal class XlsBiffRow : XlsBiffRecord
+    internal sealed class XlsBiffRow : XlsBiffRecord
     {
         internal XlsBiffRow(byte[] bytes)
             : base(bytes)

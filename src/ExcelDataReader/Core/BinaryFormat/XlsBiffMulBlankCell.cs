@@ -3,7 +3,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents multiple Blank cell.
     /// </summary>
-    internal class XlsBiffMulBlankCell : XlsBiffBlankCell
+    internal sealed class XlsBiffMulBlankCell : XlsBiffBlankCell
     {
         internal XlsBiffMulBlankCell(byte[] bytes)
             : base(bytes)

@@ -7,7 +7,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// [MS-XLS] 2.5.294 XLUnicodeString
     /// Word-sized string, stored as single or multibyte unicode characters.
     /// </summary>
-    internal class XlsUnicodeString : IXlsString
+    internal sealed class XlsUnicodeString : IXlsString
     {
         private readonly byte[] _bytes;
         private readonly uint _offset;

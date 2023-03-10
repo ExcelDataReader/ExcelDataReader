@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Xml;
@@ -8,7 +9,7 @@ using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
-    internal partial class ZipWorker : IDisposable
+    internal sealed partial class ZipWorker : IDisposable
     {
         private const string FileSharedStrings = "xl/sharedStrings.{0}";
         private const string FileStyles = "xl/styles.{0}";
@@ -49,11 +50,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         /// </summary>
         public RecordReader GetSharedStringsReader()
         {
-            var entry = FindEntry(string.Format(FileSharedStrings, Format));
+            var entry = FindEntry(string.Format(CultureInfo.InvariantCulture, FileSharedStrings, Format));
             if (entry != null)
                 return new XmlSharedStringsReader(XmlReader.Create(entry.Open(), XmlSettings));
 
-            entry = FindEntry(string.Format(FileSharedStrings, BinFormat));
+            entry = FindEntry(string.Format(CultureInfo.InvariantCulture, FileSharedStrings, BinFormat));
             if (entry != null)
                 return new BiffSharedStringsReader(entry.Open());
 
@@ -65,11 +66,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         /// </summary>
         public RecordReader GetStylesReader()
         {
-            var entry = FindEntry(string.Format(FileStyles, Format));
+            var entry = FindEntry(string.Format(CultureInfo.InvariantCulture, FileStyles, Format));
             if (entry != null)
                 return new XmlStylesReader(XmlReader.Create(entry.Open(), XmlSettings));
 
-            entry = FindEntry(string.Format(FileStyles, BinFormat));
+            entry = FindEntry(string.Format(CultureInfo.InvariantCulture, FileStyles, BinFormat));
             if (entry != null)
                 return new BiffStylesReader(entry.Open());
 
@@ -81,11 +82,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         /// </summary>
         public RecordReader GetWorkbookReader()
         {
-            var entry = FindEntry(string.Format(FileWorkbook, Format));
+            var entry = FindEntry(string.Format(CultureInfo.InvariantCulture, FileWorkbook, Format));
             if (entry != null)
                 return new XmlWorkbookReader(XmlReader.Create(entry.Open(), XmlSettings));
 
-            entry = FindEntry(string.Format(FileWorkbook, BinFormat));
+            entry = FindEntry(string.Format(CultureInfo.InvariantCulture, FileWorkbook, BinFormat));
             if (entry != null)
                 return new BiffWorkbookReader(entry.Open());
 
@@ -121,11 +122,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         /// <returns>The rels stream.</returns>
         public Stream GetWorkbookRelsStream()
         {
-            var zipEntry = FindEntry(string.Format(FileRels, Format));
+            var zipEntry = FindEntry(string.Format(CultureInfo.InvariantCulture, FileRels, Format));
             if (zipEntry != null)
                 return zipEntry.Open();
 
-            zipEntry = FindEntry(string.Format(FileRels, BinFormat));
+            zipEntry = FindEntry(string.Format(CultureInfo.InvariantCulture, FileRels, BinFormat));
             if (zipEntry != null)
                 return zipEntry.Open();
 

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace ExcelDataReader.Core
 {
-    internal class Row
+    internal sealed class Row
     {
         public Row(int rowIndex, double height, List<Cell> cells) 
         {

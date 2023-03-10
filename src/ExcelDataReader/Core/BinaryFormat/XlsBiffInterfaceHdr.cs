@@ -3,7 +3,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents InterfaceHdr record in Wokrbook Globals.
     /// </summary>
-    internal class XlsBiffInterfaceHdr : XlsBiffRecord
+    internal sealed class XlsBiffInterfaceHdr : XlsBiffRecord
     {
         internal XlsBiffInterfaceHdr(byte[] bytes)
             : base(bytes)

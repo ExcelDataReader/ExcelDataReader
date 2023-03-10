@@ -184,7 +184,8 @@ namespace ExcelDataReader.Core.BinaryFormat
         XL5MODIFY = 0x0162,
         OBJ = 0x005D,
         NOTE = 0x001C,
-        SXEXT = 0x00DC,
+        
+        // SXEXT = 0x00DC,
         VERTICALPAGEBREAKS = 0x001A,
         XCT = 0x0059,
 

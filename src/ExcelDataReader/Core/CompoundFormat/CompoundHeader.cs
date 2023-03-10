@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core.CompoundFormat
     /// <summary>
     /// Represents Excel file header.
     /// </summary>
-    internal class CompoundHeader
+    internal sealed class CompoundHeader
     {
         /// <summary>
         /// Gets or sets the file signature.

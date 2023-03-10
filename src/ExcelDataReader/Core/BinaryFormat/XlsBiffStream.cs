@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
 using ExcelDataReader.Core.OfficeCrypto;
@@ -19,7 +20,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             var record = Read();
             if (record is XlsBiffBOF bof)
             {
-                BiffVersion = explicitVersion == 0 ? GetBiffVersion(bof) : explicitVersion;
+                BiffVersion = explicitVersion == 0 ? XlsBiffStream.GetBiffVersion(bof) : explicitVersion;
                 BiffType = bof.Type;
 
                 if (secretKey == null)
@@ -107,9 +108,9 @@ namespace ExcelDataReader.Core.BinaryFormat
             BaseStream.Seek(offset, origin);
 
             if (Position < 0)
-                throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalBefore, offset));
+                throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "{0} On offset={1}", Errors.ErrorBiffIlegalBefore, offset));
             if (Position > Size)
-                throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalAfter, offset));
+                throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "{0} On offset={1}", Errors.ErrorBiffIlegalAfter, offset));
 
             if (SecretKey != null)
             { 
@@ -275,7 +276,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             ((IDisposable)Cipher)?.Dispose();
         }
 
-        private int GetBiffVersion(XlsBiffBOF bof)
+        private static int GetBiffVersion(XlsBiffBOF bof)
         {
             switch (bof.Id)
             {

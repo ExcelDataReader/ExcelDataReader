@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
-    internal class XlsBiffDefaultRowHeight : XlsBiffRecord
+    internal sealed class XlsBiffDefaultRowHeight : XlsBiffRecord
     {
         public XlsBiffDefaultRowHeight(byte[] bytes, int biffVersion)
             : base(bytes)

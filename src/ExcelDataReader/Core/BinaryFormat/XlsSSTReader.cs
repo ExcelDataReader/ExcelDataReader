@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Helper class for parsing the BIFF8 Shared String Table (SST).
     /// </summary>
-    internal class XlsSSTReader
+    internal sealed class XlsSSTReader
     {
         private enum SstState
         {
@@ -37,7 +37,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private int CurrentTailBytes { get; set; }
 
-        private bool CurrentIsMultiByte { get; set; } = false;
+        private bool CurrentIsMultiByte { get; set; }
 
         public IEnumerable<IXlsString> ReadStringsFromSST(XlsBiffSST sst)
         {

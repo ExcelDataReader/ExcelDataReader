@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 
 namespace ExcelDataReader
 {
@@ -60,7 +61,7 @@ namespace ExcelDataReader
             var i = 1;
             while (table.Columns[columnName] != null)
             {
-                columnName = string.Format("{0}_{1}", name, i);
+                columnName = name + "_" + i;
                 i++;
             }
 
@@ -91,7 +92,7 @@ namespace ExcelDataReader
                         }
 
                         var name = configuration.UseHeaderRow
-                            ? Convert.ToString(self.GetValue(i))
+                            ? Convert.ToString(self.GetValue(i), CultureInfo.CurrentCulture)
                             : null;
 
                         if (string.IsNullOrEmpty(name))

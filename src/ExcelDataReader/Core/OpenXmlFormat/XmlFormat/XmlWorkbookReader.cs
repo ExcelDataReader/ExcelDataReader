@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -63,7 +64,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                         {
                             yield return new SheetRecord(
                                 Reader.GetAttribute(AttributeName),
-                                uint.Parse(Reader.GetAttribute(AttributeSheetId)),
+                                uint.Parse(Reader.GetAttribute(AttributeSheetId), CultureInfo.InvariantCulture),
                                 Reader.GetAttribute(AttributeRelationshipId, NsDocumentRelationship),
                                 Reader.GetAttribute(AttributeVisibleState));
                             Reader.Skip();

@@ -7,7 +7,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// [MS-XLS] 2.4.148 Label
     /// Represents a string.
     /// </summary>
-    internal class XlsBiffLabelCell : XlsBiffBlankCell
+    internal sealed class XlsBiffLabelCell : XlsBiffBlankCell
     {
         private readonly IXlsString _xlsString;
 

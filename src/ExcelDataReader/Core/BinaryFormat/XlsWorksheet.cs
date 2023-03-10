@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using ExcelDataReader.Core.NumberFormat;
 using ExcelDataReader.Log;
 
 namespace ExcelDataReader.Core.BinaryFormat
@@ -10,7 +9,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents Worksheet section in workbook.
     /// </summary>
-    internal class XlsWorksheet : IWorksheet
+    internal sealed class XlsWorksheet : IWorksheet
     {
         public XlsWorksheet(XlsWorkbook workbook, XlsBiffBoundSheet refSheet, Stream stream)
         {
@@ -453,7 +452,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 var rec = biffStream.Read();
                 var columnWidths = new List<Column>();
 
-                while (rec != null && !(rec is XlsBiffEof))
+                while (rec != null && rec is not XlsBiffEof)
                 {
                     switch (rec)
                     {
@@ -530,7 +529,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
                             SetMinMaxRowOffset(cell.RowIndex, recordOffset, maxRowCount - 1);
                             break;
-                        case XlsBiffRecord ixfe when rec.Id == BIFFRECORDTYPE.IXFE:
+                        case XlsBiffRecord when rec.Id == BIFFRECORDTYPE.IXFE:
                             ixfeOffset = recordOffset; 
                             break;
                     }
@@ -599,12 +598,12 @@ namespace ExcelDataReader.Core.BinaryFormat
             rowOffset.MaxOverlapRowIndex = Math.Max(maxOverlapRow, rowOffset.MaxOverlapRowIndex);
         }
 
-        internal class XlsRowBlock
+        internal sealed class XlsRowBlock
         {
             public Dictionary<int, Row> Rows { get; set; }
         }
 
-        internal class XlsRowOffset
+        internal sealed class XlsRowOffset
         {
             public XlsBiffRow Record { get; set; }
 

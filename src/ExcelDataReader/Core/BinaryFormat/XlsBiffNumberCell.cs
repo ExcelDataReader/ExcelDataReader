@@ -3,7 +3,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents a floating-point number. 
     /// </summary>
-    internal class XlsBiffNumberCell : XlsBiffBlankCell
+    internal sealed class XlsBiffNumberCell : XlsBiffBlankCell
     {
         internal XlsBiffNumberCell(byte[] bytes)
             : base(bytes)

@@ -2,7 +2,7 @@
 
 namespace ExcelDataReader.Core
 {
-    internal class Cell
+    internal sealed class Cell
     {
         public Cell(int columnIndex, object value, ExtendedFormat effectiveStyle, CellError? error)
         {

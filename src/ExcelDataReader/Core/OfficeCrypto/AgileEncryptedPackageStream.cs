@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
     /// <summary>
     /// A seekable stream for reading an EncryptedPackage blob using OpenXml Agile Encryption. 
     /// </summary>
-    internal class AgileEncryptedPackageStream : Stream
+    internal sealed class AgileEncryptedPackageStream : Stream
     {
         private const int SegmentLength = 4096;
 

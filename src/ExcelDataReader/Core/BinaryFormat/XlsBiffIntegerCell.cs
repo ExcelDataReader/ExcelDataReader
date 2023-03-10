@@ -3,7 +3,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// Represents a constant integer number in range 0..65535.
     /// </summary>
-    internal class XlsBiffIntegerCell : XlsBiffBlankCell
+    internal sealed class XlsBiffIntegerCell : XlsBiffBlankCell
     {
         internal XlsBiffIntegerCell(byte[] bytes)
             : base(bytes)

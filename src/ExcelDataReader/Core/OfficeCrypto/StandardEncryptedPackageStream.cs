@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace ExcelDataReader.Core.OfficeCrypto
 {
-    internal class StandardEncryptedPackageStream : Stream
+    internal sealed class StandardEncryptedPackageStream : Stream
     {
         public StandardEncryptedPackageStream(Stream underlyingStream, byte[] secretKey, StandardEncryption encryption)
         {
