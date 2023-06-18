@@ -421,5 +421,13 @@ namespace ExcelDataReader.Tests
                 Assert.That(dataSet.Tables[0].Rows[0].ItemArray, Is.EqualTo(new[] { "Column1", "Column2", "Column3" }));
             }
         }
+
+        [Test]
+        public void GitIssue629()
+        {
+            using var reader = OpenReader("Test_git_issue_629");
+            var dataSet = reader.AsDataSet();
+            Assert.That(dataSet.Tables[0].Rows[9].ItemArray[0], Is.EqualTo("Transref. AM"));
+        }
     }
 }

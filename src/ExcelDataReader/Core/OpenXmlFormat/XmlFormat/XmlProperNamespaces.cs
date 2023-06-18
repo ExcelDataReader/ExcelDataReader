@@ -7,20 +7,20 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
     /// </summary>
     internal sealed class XmlProperNamespaces
     {
+        public XmlProperNamespaces(bool isStrict)
+        {
+            NsSpreadsheetMl = isStrict ? XmlNamespaces.StrictNsSpreadsheetMl : XmlNamespaces.NsSpreadsheetMl;
+            NsDocumentRelationship = isStrict ? XmlNamespaces.StrictNsDocumentRelationship : XmlNamespaces.NsDocumentRelationship;
+        }
+
         /// <summary>
         /// Gets the SpreadsheetMl namespace. 
         /// </summary>
-        public string NsSpreadsheetMl { get; private set; } = XmlNamespaces.NsSpreadsheetMl;
+        public string NsSpreadsheetMl { get; }
 
         /// <summary>
         /// Gets the DocumentRelationship namespace.
         /// </summary>
-        public string NsDocumentRelationship { get; private set; } = XmlNamespaces.NsDocumentRelationship;
-
-        internal void SetStrictNamespaces()
-        {
-            NsSpreadsheetMl = XmlNamespaces.StrictNsSpreadsheetMl;
-            NsDocumentRelationship = XmlNamespaces.StrictNsDocumentRelationship;
-        }
+        public string NsDocumentRelationship { get; }
     }
 }

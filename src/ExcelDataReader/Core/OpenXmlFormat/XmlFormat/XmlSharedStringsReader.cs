@@ -11,8 +11,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         private const string ElementSst = "sst";
         private const string ElementStringItem = "si";
 
-        public XmlSharedStringsReader(XmlReader reader, XmlProperNamespaces properNamespaces)
-            : base(reader, properNamespaces)
+        public XmlSharedStringsReader(XmlReader reader)
+            : base(reader)
         {
         }
 
