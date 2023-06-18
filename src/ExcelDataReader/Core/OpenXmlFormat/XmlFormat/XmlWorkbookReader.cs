@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Text;
 using System.Xml;
 
 using ExcelDataReader.Core.OpenXmlFormat.Records;
@@ -22,9 +18,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         private const string AttributeName = "name";
         private const string AttributeRelationshipId = "id";
 
-        public XmlWorkbookReader(XmlReader reader, XmlProperNamespaces properNamespaces)
-            : base(reader, properNamespaces)
+        private readonly Dictionary<string, string> _worksheetsRels;
+
+        public XmlWorkbookReader(XmlReader reader, Dictionary<string, string> worksheetsRels)
+            : base(reader)
         {
+            _worksheetsRels = worksheetsRels;
         }
 
         protected override IEnumerable<Record> ReadOverride()
@@ -59,11 +58,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                     {
                         if (Reader.IsStartElement(ElementSheet, ProperNamespaces.NsSpreadsheetMl))
                         {
+                            var rid = Reader.GetAttribute(AttributeRelationshipId, ProperNamespaces.NsDocumentRelationship);
                             yield return new SheetRecord(
                                 Reader.GetAttribute(AttributeName),
                                 uint.Parse(Reader.GetAttribute(AttributeSheetId), CultureInfo.InvariantCulture),
-                                Reader.GetAttribute(AttributeRelationshipId, ProperNamespaces.NsDocumentRelationship),
-                                Reader.GetAttribute(AttributeVisibleState));
+                                rid,
+                                Reader.GetAttribute(AttributeVisibleState),
+                                rid != null && _worksheetsRels.TryGetValue(rid, out var path) ? path : null);
                             Reader.Skip();
                         }
                         else if (!XmlReaderHelper.SkipContent(Reader))
@@ -81,14 +82,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
         private bool CheckStartElementAndApplyNamespaces(string element)
         {
-            if (Reader.IsStartElement(element, XmlNamespaces.NsSpreadsheetMl))
+            if (Reader.IsStartElement(element, ProperNamespaces.NsSpreadsheetMl))
             {
-                return true;
-            }
-
-            if (Reader.IsStartElement(element, XmlNamespaces.StrictNsSpreadsheetMl))
-            {
-                ProperNamespaces.SetStrictNamespaces();
                 return true;
             }
 

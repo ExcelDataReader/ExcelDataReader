@@ -12,10 +12,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
     {
         private const int WorkbookPr = 0x99;
         private const int Sheet = 0x9C;
+        
+        private readonly Dictionary<string, string> _worksheetRels;
 
-        public BiffWorkbookReader(Stream stream)
+        public BiffWorkbookReader(Stream stream, Dictionary<string, string> worksheetRels)
             : base(stream)
         {
+            _worksheetRels = worksheetRels;
         }
 
         private enum SheetVisibility : byte
@@ -48,7 +51,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
                     uint nameLength = GetDWord(buffer, offset);
                     string name = GetString(buffer, offset + 4, nameLength);
 
-                    return new SheetRecord(name, id, rid, state);
+                    return new SheetRecord(name, id, rid, state, rid != null && _worksheetRels.TryGetValue(rid, out var path) ? path : null);
                 default:
                     return Record.Default;
             }

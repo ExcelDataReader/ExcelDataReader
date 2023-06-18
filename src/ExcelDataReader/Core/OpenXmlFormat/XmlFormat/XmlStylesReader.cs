@@ -33,8 +33,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         private const string AHidden = "hidden";
         private const string ALocked = "locked";
 
-        public XmlStylesReader(XmlReader reader, XmlProperNamespaces properNamespaces) 
-            : base(reader, properNamespaces)
+        public XmlStylesReader(XmlReader reader) 
+            : base(reader)
         {
         }
 

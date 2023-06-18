@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Xml;
 using ExcelDataReader.Core.NumberFormat;
 using ExcelDataReader.Core.OpenXmlFormat.Records;
-using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
@@ -26,7 +23,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             if (string.IsNullOrEmpty(Path))
                 return;
 
-            using var sheetStream = Document.GetWorksheetReader(Path, Workbook.ProperNamespaces);
+            using var sheetStream = Document.GetWorksheetReader(Path);
             
             if (sheetStream == null)
                 return;
@@ -119,7 +116,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             if (string.IsNullOrEmpty(Path))
                 yield break;
 
-            using RecordReader sheetStream = Document.GetWorksheetReader(Path, Workbook.ProperNamespaces);
+            using RecordReader sheetStream = Document.GetWorksheetReader(Path);
             if (sheetStream == null)
                 yield break;
 
