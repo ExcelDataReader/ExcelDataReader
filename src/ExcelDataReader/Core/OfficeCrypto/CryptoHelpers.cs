@@ -31,10 +31,8 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         public static byte[] HashBytes(byte[] bytes, HashIdentifier hashAlgorithm)
         {
-            using (HashAlgorithm hash = Create(hashAlgorithm))
-            {
-                return hash.ComputeHash(bytes);
-            }
+            using HashAlgorithm hash = Create(hashAlgorithm);
+            return hash.ComputeHash(bytes);
         }
 
         public static byte[] Combine(params byte[][] arrays)
@@ -88,24 +86,18 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         public static byte[] DecryptBytes(SymmetricAlgorithm algo, byte[] bytes, byte[] key, byte[] iv)
         {
-            using (var decryptor = algo.CreateDecryptor(key, iv))
-            {
-                return DecryptBytes(decryptor, bytes);
-            }
+            using var decryptor = algo.CreateDecryptor(key, iv);
+            return DecryptBytes(decryptor, bytes);
         }
 
         public static byte[] DecryptBytes(ICryptoTransform transform, byte[] bytes)
         {
             var length = bytes.Length;
-            using (MemoryStream msDecrypt = new MemoryStream(bytes, 0, length))
-            {
-                using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, transform, CryptoStreamMode.Read))
-                {
-                    var result = new byte[length];
-                    csDecrypt.ReadAtLeast(result, 0, length);
-                    return result;
-                }
-            }
+            using MemoryStream msDecrypt = new(bytes, 0, length);
+            using CryptoStream csDecrypt = new(msDecrypt, transform, CryptoStreamMode.Read);
+            var result = new byte[length];
+            csDecrypt.ReadAtLeast(result, 0, length);
+            return result;
         }
     }
 }

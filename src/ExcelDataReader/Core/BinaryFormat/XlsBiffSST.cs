@@ -9,13 +9,12 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// </summary>
     internal sealed class XlsBiffSST : XlsBiffRecord
     {
-        private readonly List<IXlsString> _strings;
-        private readonly XlsSSTReader _reader = new XlsSSTReader();
+        private readonly List<IXlsString> _strings = new();
+        private readonly XlsSSTReader _reader = new();
 
         internal XlsBiffSST(byte[] bytes)
             : base(bytes)
         {
-            _strings = new List<IXlsString>();
             ReadSstStrings();
         }
 

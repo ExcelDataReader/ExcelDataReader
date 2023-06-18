@@ -11,7 +11,7 @@ namespace ExcelDataReader.Core
     /// </summary>
     internal static class Helpers
     {
-        private static readonly Regex EscapeRegex = new Regex("_x([0-9A-F]{4,4})_");
+        private static readonly Regex EscapeRegex = new("_x([0-9A-F]{4,4})_");
 
         /// <summary>
         /// Determines whether the encoding is single byte or not.

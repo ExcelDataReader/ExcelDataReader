@@ -17,29 +17,27 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             Stream = stream;
 
-            using (var biffStream = new XlsBiffStream(stream, password: password))
+            using var biffStream = new XlsBiffStream(stream, password: password);
+            if (biffStream.BiffVersion == 0)
+                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+
+            BiffVersion = biffStream.BiffVersion;
+            SecretKey = biffStream.SecretKey;
+            Encryption = biffStream.Encryption;
+            Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
+
+            if (biffStream.BiffType == BIFFTYPE.WorkbookGlobals)
             {
-                if (biffStream.BiffVersion == 0)
-                    throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
-
-                BiffVersion = biffStream.BiffVersion;
-                SecretKey = biffStream.SecretKey;
-                Encryption = biffStream.Encryption;
-                Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
-
-                if (biffStream.BiffType == BIFFTYPE.WorkbookGlobals)
-                {
-                    ReadWorkbookGlobals(biffStream);
-                }
-                else if (biffStream.BiffType == BIFFTYPE.Worksheet)
-                {
-                    // set up 'virtual' bound sheet pointing at this
-                    Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
-                }
-                else
-                {
-                    throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
-                }
+                ReadWorkbookGlobals(biffStream);
+            }
+            else if (biffStream.BiffType == BIFFTYPE.Worksheet)
+            {
+                // set up 'virtual' bound sheet pointing at this
+                Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
+            }
+            else
+            {
+                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
             }
         }
 
@@ -156,7 +154,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             var formats = new Dictionary<int, XlsBiffFormatString>();
 
             XlsBiffRecord rec;
-            while ((rec = biffStream.Read()) != null && !(rec is XlsBiffEof))
+            while ((rec = biffStream.Read()) != null && rec is not XlsBiffEof)
             {
                 switch (rec)
                 {
@@ -196,11 +194,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         SST = sst;
                         break;
                     case XlsBiffContinue sstContinue:
-                        if (SST != null)
-                        {
-                            SST.ReadContinueStrings(sstContinue);
-                        }
-
+                        SST?.ReadContinueStrings(sstContinue);
                         break;
                     case XlsBiffRecord _ when rec.Id == BIFFRECORDTYPE.MMS:
                         Mms = rec;
@@ -222,10 +216,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 }
             }
 
-            if (SST != null)
-            {
-                SST.Flush();
-            }
+            SST?.Flush();
 
             foreach (var format in formats)
             {

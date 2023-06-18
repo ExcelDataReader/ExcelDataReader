@@ -310,10 +310,7 @@ namespace ExcelDataReader
                 _cachedWorksheets = new List<TWorksheet>();
             }
 
-            if (_cachedWorksheetIterator == null)
-            {
-                _cachedWorksheetIterator = Workbook.ReadWorksheets().GetEnumerator();
-            }
+            _cachedWorksheetIterator ??= Workbook.ReadWorksheets().GetEnumerator();
 
             while (_cachedWorksheetIterator.MoveNext())
             {
@@ -333,10 +330,7 @@ namespace ExcelDataReader
 
         private void ReadCurrentRow()
         {
-            if (RowCells == null)
-            {
-                RowCells = new Cell[FieldCount];
-            }
+            RowCells ??= new Cell[FieldCount];
 
             Array.Clear(RowCells, 0, RowCells.Length);
 

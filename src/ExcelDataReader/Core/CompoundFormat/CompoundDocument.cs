@@ -45,7 +45,7 @@ namespace ExcelDataReader.Core.CompoundFormat
 
         internal static List<uint> GetSectorChain(uint sector, List<uint> sectorTable)
         {
-            List<uint> chain = new List<uint>();
+            List<uint> chain = new();
             while (sector != (uint)FATMARKERS.FAT_EndOfChain)
             {
                 chain.Add(sector);
@@ -95,22 +95,18 @@ namespace ExcelDataReader.Core.CompoundFormat
         /// </summary>
         internal byte[] ReadStream(Stream stream, uint baseSector, int length, bool isMini)
         {
-            using (var cfb = new CompoundStream(this, stream, baseSector, length, isMini, true))
-            {
-                var bytes = new byte[length];
-                cfb.ReadAtLeast(bytes, 0, length);
-                return bytes;
-            }
+            using var cfb = new CompoundStream(this, stream, baseSector, length, isMini, true);
+            var bytes = new byte[length];
+            cfb.ReadAtLeast(bytes, 0, length);
+            return bytes;
         }
 
         internal byte[] ReadStream(Stream stream, List<uint> sectors, int length)
         {
-            using (var cfb = new CompoundStream(this, stream, sectors, length, true))
-            {
-                var bytes = new byte[length];
-                cfb.ReadAtLeast(bytes, 0, length);
-                return bytes;
-            }
+            using var cfb = new CompoundStream(this, stream, sectors, length, true);
+            var bytes = new byte[length];
+            cfb.ReadAtLeast(bytes, 0, length);
+            return bytes;
         }
 
         private static CompoundHeader ReadHeader(BinaryReader reader)
@@ -168,19 +164,15 @@ namespace ExcelDataReader.Core.CompoundFormat
             try
             {
                 Entries = new List<CompoundDirectoryEntry>();
-                using (var stream = new MemoryStream(bytes))
-                {
-                    using (var reader = new BinaryReader(stream))
-                    {
-                        RootEntry = ReadDirectoryEntry(reader);
-                        Entries.Add(RootEntry);
+                using var stream = new MemoryStream(bytes);
+                using var reader = new BinaryReader(stream);
+                RootEntry = ReadDirectoryEntry(reader);
+                Entries.Add(RootEntry);
 
-                        while (stream.Position < stream.Length)
-                        {
-                            var entry = ReadDirectoryEntry(reader);
-                            Entries.Add(entry);
-                        }
-                    }
+                while (stream.Position < stream.Length)
+                {
+                    var entry = ReadDirectoryEntry(reader);
+                    Entries.Add(entry);
                 }
             }
             catch (EndOfStreamException ex)

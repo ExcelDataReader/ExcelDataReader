@@ -58,7 +58,7 @@ namespace ExcelDataReader.Core.CsvFormat
         {
             while (count > 0)
             {
-                Decoder.Convert(bytes, offset, count, CharBuffer, 0, CharBuffer.Length, false, out var bytesUsed, out var charsUsed, out var completed);
+                Decoder.Convert(bytes, offset, count, CharBuffer, 0, CharBuffer.Length, false, out var bytesUsed, out var charsUsed, out _);
 
                 offset += bytesUsed;
                 count -= bytesUsed;

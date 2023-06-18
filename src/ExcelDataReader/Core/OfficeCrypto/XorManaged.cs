@@ -9,20 +9,20 @@ namespace ExcelDataReader.Core.OfficeCrypto
     /// </summary>
     internal sealed class XorManaged : SymmetricAlgorithm
     {
-        private static byte[] padArray = new byte[]
+        private static readonly byte[] PadArray = new byte[]
         {
             0xBB, 0xFF, 0xFF, 0xBA, 0xFF, 0xFF, 0xB9, 0x80,
             0x00, 0xBE, 0x0F, 0x00, 0xBF, 0x0F, 0x00
         };
 
-        private static ushort[] initialCode = new ushort[]
+        private static readonly ushort[] InitialCode = new ushort[]
         {
             0xE1F0, 0x1D0F, 0xCC9C, 0x84C0, 0x110C,
             0x0E10, 0xF1CE, 0x313E, 0x1872, 0xE139,
             0xD40F, 0x84F9, 0x280C, 0xA96A, 0x4EC3
         };
 
-        private static ushort[] xorMatrix = new ushort[]
+        private static readonly ushort[] XorMatrix = new ushort[]
         {
             0xAEFC, 0x4DD9, 0x9BB2, 0x2745, 0x4E8A, 0x9D14, 0x2A09,
             0x7B61, 0xF6C2, 0xFDA5, 0xEB6B, 0xC6F7, 0x9DCF, 0x2BBF,
@@ -84,7 +84,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         internal static ushort CreateXorKey_Method1(byte[] passwordBytes)
         {
-            ushort xorKey = initialCode[passwordBytes.Length - 1];
+            ushort xorKey = InitialCode[passwordBytes.Length - 1];
             var currentElement = 0x68;
 
             for (var i = 0; i < passwordBytes.Length; ++i)
@@ -94,7 +94,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
                 {
                     if ((c & 0x40) != 0)
                     {
-                        xorKey ^= xorMatrix[currentElement];
+                        xorKey ^= XorMatrix[currentElement];
                     }
 
                     c *= 2;
@@ -110,10 +110,9 @@ namespace ExcelDataReader.Core.OfficeCrypto
         /// </summary>
         internal static byte[] CreateXorArray_Method1(byte[] passwordBytes)
         {
-            var index = passwordBytes.Length;
             var obfuscationArray = new byte[16];
             Array.Copy(passwordBytes, 0, obfuscationArray, 0, passwordBytes.Length);
-            Array.Copy(padArray, 0, obfuscationArray, passwordBytes.Length, padArray.Length - passwordBytes.Length + 1);
+            Array.Copy(PadArray, 0, obfuscationArray, passwordBytes.Length, PadArray.Length - passwordBytes.Length + 1);
 
             var xorKey = CreateXorKey_Method1(passwordBytes);
             byte[] baseKeyLE = new byte[] { (byte)(xorKey & 0xFF), (byte)((xorKey >> 8) & 0xFF) };

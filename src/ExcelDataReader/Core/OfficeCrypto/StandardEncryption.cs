@@ -40,7 +40,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
             KeySize = BitConverter.ToInt32(bytes, 28);
 
             // Don't use this; is implementation-specific
-            var providerType = (StandardProvider)BitConverter.ToUInt32(bytes, 32);
+            // var providerType = (StandardProvider)BitConverter.ToUInt32(bytes, 32);
 
             // skip two reserved dwords
             CSPName = System.Text.Encoding.Unicode.GetString(bytes, 44, headerSize - 44 + 12); // +12 because we start counting from the offset after HeaderSize
@@ -221,23 +221,19 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
             var blockKey = ((Flags & EncryptionHeaderFlags.AES) != 0) ? secretKey : GenerateBlockKey(0, secretKey);
 
-            using (var cipher = CryptoHelpers.CreateCipher(CipherAlgorithm, KeySize, BlockSize, CipherMode.ECB))
+            using var cipher = CryptoHelpers.CreateCipher(CipherAlgorithm, KeySize, BlockSize, CipherMode.ECB);
+            using var transform = cipher.CreateDecryptor(blockKey, SaltValue);
+            var decryptedVerifier = CryptoHelpers.DecryptBytes(transform, Verifier);
+            var decryptedVerifierHash = CryptoHelpers.DecryptBytes(transform, VerifierHash);
+
+            var verifierHash = CryptoHelpers.HashBytes(decryptedVerifier, HashAlgorithm);
+            for (var i = 0; i < 16; ++i)
             {
-                using (var transform = cipher.CreateDecryptor(blockKey, SaltValue))
-                {
-                    var decryptedVerifier = CryptoHelpers.DecryptBytes(transform, Verifier);
-                    var decryptedVerifierHash = CryptoHelpers.DecryptBytes(transform, VerifierHash);
-
-                    var verifierHash = CryptoHelpers.HashBytes(decryptedVerifier, HashAlgorithm);
-                    for (var i = 0; i < 16; ++i)
-                    {
-                        if (decryptedVerifierHash[i] != verifierHash[i])
-                            return false;
-                    }
-
-                    return true;
-                }
+                if (decryptedVerifierHash[i] != verifierHash[i])
+                    return false;
             }
+
+            return true;
         }
 
         /// <summary>

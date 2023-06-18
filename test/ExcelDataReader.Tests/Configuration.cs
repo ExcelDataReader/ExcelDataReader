@@ -25,25 +25,25 @@ namespace ExcelDataReader.Tests
             return path;
         }
 
-        public static ExcelDataSetConfiguration NoColumnNamesConfiguration = new ExcelDataSetConfiguration()
+        public static ExcelDataSetConfiguration NoColumnNamesConfiguration = new()
         {
-            ConfigureDataTable = reader => new ExcelDataTableConfiguration
+            ConfigureDataTable = reader => new()
             {
                 UseHeaderRow = false
             }
         };
 
-        public static ExcelDataSetConfiguration FirstRowColumnNamesConfiguration = new ExcelDataSetConfiguration()
+        public static ExcelDataSetConfiguration FirstRowColumnNamesConfiguration = new()
         {
-            ConfigureDataTable = reader => new ExcelDataTableConfiguration
+            ConfigureDataTable = reader => new()
             {
                 UseHeaderRow = true
             }
         };
 
-        public static ExcelDataSetConfiguration FirstRowColumnNamesPrefixConfiguration = new ExcelDataSetConfiguration()
+        public static ExcelDataSetConfiguration FirstRowColumnNamesPrefixConfiguration = new()
         {
-            ConfigureDataTable = reader => new ExcelDataTableConfiguration
+            ConfigureDataTable = reader => new()
             {
                 UseHeaderRow = true,
                 EmptyColumnNamePrefix = "Prefix"

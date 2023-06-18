@@ -25,10 +25,7 @@ namespace ExcelDataReader
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
-            if (configuration == null)
-            {
-                configuration = new ExcelReaderConfiguration();
-            }
+            configuration ??= new ExcelReaderConfiguration();
 
             if (configuration.LeaveOpen)
             {
@@ -79,10 +76,7 @@ namespace ExcelDataReader
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateBinaryReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
-            if (configuration == null)
-            {
-                configuration = new ExcelReaderConfiguration();
-            }
+            configuration ??= new ExcelReaderConfiguration();
 
             if (configuration.LeaveOpen)
             {
@@ -124,10 +118,7 @@ namespace ExcelDataReader
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateOpenXmlReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
-            if (configuration == null)
-            {
-                configuration = new ExcelReaderConfiguration();
-            }
+            configuration ??= new ExcelReaderConfiguration();
 
             if (configuration.LeaveOpen)
             {
@@ -168,10 +159,7 @@ namespace ExcelDataReader
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateCsvReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
-            if (configuration == null)
-            {
-                configuration = new ExcelReaderConfiguration();
-            }
+            configuration ??= new ExcelReaderConfiguration();
 
             if (configuration.LeaveOpen)
             {

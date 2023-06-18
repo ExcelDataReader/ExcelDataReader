@@ -31,8 +31,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             int rowIndexMaximum = int.MinValue;
             int columnIndexMaximum = int.MinValue;
 
-            List<Column> columnWidths = new List<Column>();
-            List<CellRange> cellRanges = new List<CellRange>();
+            List<Column> columnWidths = new();
+            List<CellRange> cellRanges = new();
 
             bool inSheetData = false;
 

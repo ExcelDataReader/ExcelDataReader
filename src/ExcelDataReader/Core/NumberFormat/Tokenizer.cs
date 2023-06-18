@@ -5,7 +5,7 @@ namespace ExcelDataReader.Core.NumberFormat
 {
     internal sealed class Tokenizer
     {
-        private string formatString;
+        private readonly string formatString;
         private int formatStringPosition;
 
         public Tokenizer(string fmt)

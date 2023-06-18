@@ -68,23 +68,19 @@ namespace ExcelDataReader.Core.OfficeCrypto
             var secretKey = GenerateSecretKey(password);
             var blockKey = GenerateBlockKey(0, secretKey);
 
-            using (var cipher = CryptoHelpers.CreateCipher(CipherIdentifier.RC4, 0, 0, 0))
+            using var cipher = CryptoHelpers.CreateCipher(CipherIdentifier.RC4, 0, 0, 0);
+            using var transform = cipher.CreateDecryptor(blockKey, null);
+            var decryptedVerifier = CryptoHelpers.DecryptBytes(transform, EncryptedVerifier);
+            var decryptedVerifierHash = CryptoHelpers.DecryptBytes(transform, EncryptedVerifierHash);
+
+            var verifierHash = CryptoHelpers.HashBytes(decryptedVerifier, HashIdentifier.MD5);
+            for (var i = 0; i < 16; ++i)
             {
-                using (var transform = cipher.CreateDecryptor(blockKey, null))
-                {
-                    var decryptedVerifier = CryptoHelpers.DecryptBytes(transform, EncryptedVerifier);
-                    var decryptedVerifierHash = CryptoHelpers.DecryptBytes(transform, EncryptedVerifierHash);
-
-                    var verifierHash = CryptoHelpers.HashBytes(decryptedVerifier, HashIdentifier.MD5);
-                    for (var i = 0; i < 16; ++i)
-                    {
-                        if (decryptedVerifierHash[i] != verifierHash[i])
-                            return false;
-                    }
-
-                    return true;
-                }
+                if (decryptedVerifierHash[i] != verifierHash[i])
+                    return false;
             }
+
+            return true;
         }
     }
 }

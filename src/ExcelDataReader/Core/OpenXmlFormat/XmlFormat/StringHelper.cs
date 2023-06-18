@@ -17,7 +17,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                 return string.Empty;
             }
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             while (!reader.EOF)
             {
                 if (reader.IsStartElement(ElementT, nsSpreadsheetMl))

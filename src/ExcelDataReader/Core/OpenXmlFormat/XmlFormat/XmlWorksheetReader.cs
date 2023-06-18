@@ -360,31 +360,19 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                 }
             }
 
-            static CellError? ConvertError(string e)
+            // 2.5.97.2 BErr
+            static CellError? ConvertError(string e) => e switch
             {
-                // 2.5.97.2 BErr
-                switch (e)
-                {
-                    case "#NULL!":
-                        return CellError.NULL;
-                    case "#DIV/0!":
-                        return CellError.DIV0;
-                    case "#VALUE!":
-                        return CellError.VALUE;
-                    case "#REF!":
-                        return CellError.REF;
-                    case "#NAME?":
-                        return CellError.NAME;
-                    case "#NUM!":
-                        return CellError.NUM;
-                    case "#N/A":
-                        return CellError.NA;
-                    case "#GETTING_DATA":
-                        return CellError.GETTING_DATA;
-                    default:
-                        return null;
-                }
-            }
+                "#NULL!" => CellError.NULL,
+                "#DIV/0!" => CellError.DIV0,
+                "#VALUE!" => CellError.VALUE,
+                "#REF!" => CellError.REF,
+                "#NAME?" => CellError.NAME,
+                "#NUM!" => CellError.NUM,
+                "#N/A" => CellError.NA,
+                "#GETTING_DATA" => CellError.GETTING_DATA,
+                _ => null,
+            };
         }
     }
 }

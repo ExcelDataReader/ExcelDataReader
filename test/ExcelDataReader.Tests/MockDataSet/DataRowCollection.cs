@@ -5,7 +5,7 @@ namespace ExcelDataReader
 {
     public class DataRowCollection : IEnumerable<DataRow>
     {
-        private readonly List<DataRow> rows = new List<DataRow>();
+        private readonly List<DataRow> rows = new();
 
         public int Count => rows.Count;
 

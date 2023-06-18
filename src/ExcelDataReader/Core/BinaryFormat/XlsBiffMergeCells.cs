@@ -13,7 +13,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             var count = ReadUInt16(0);
 
-            MergeCells = new List<CellRange>();
+            MergeCells = new();
             for (int i = 0; i < count; i++)
             {
                 var fromRow = ReadInt16(2 + i * 8 + 0);
@@ -21,7 +21,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 var fromCol = ReadInt16(2 + i * 8 + 4);
                 var toCol = ReadInt16(2 + i * 8 + 6);
 
-                CellRange mergeCell = new CellRange(fromCol, fromRow, toCol, toRow);
+                CellRange mergeCell = new(fromCol, fromRow, toCol, toRow);
                 MergeCells.Add(mergeCell);
             }
         }

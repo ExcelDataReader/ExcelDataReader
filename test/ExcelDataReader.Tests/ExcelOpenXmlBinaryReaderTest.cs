@@ -21,6 +21,6 @@ namespace ExcelDataReader.Tests
         }
 
         /// <inheritdoc />
-        protected override DateTime GitIssue82TodayDate => new DateTime(2013, 4, 19);
+        protected override DateTime GitIssue82TodayDate => new(2013, 4, 19);
     }
 }

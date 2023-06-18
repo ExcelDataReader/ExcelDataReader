@@ -9,63 +9,55 @@ namespace ExcelDataReader.Tests
         [Test]
         public void GitIssue14InvalidOADate()
         {
-            using (var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_14_InvalidOADate.xlsx")))
-            {
-                var dataSet = excelReader.AsDataSet();
+            using var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_14_InvalidOADate.xlsx"));
+            var dataSet = excelReader.AsDataSet();
 
-                // Test out of range double formatted as date returns double
-                Assert.AreEqual(1000000000000D, dataSet.Tables[0].Rows[0][0]);
-            }
+            // Test out of range double formatted as date returns double
+            Assert.AreEqual(1000000000000D, dataSet.Tables[0].Rows[0][0]);
         }
 
         [Test]
         public void GitIssue364()
         {
-            using (var reader = OpenReader("test_git_issue_364"))
-            {
-                Assert.AreEqual(1, reader.RowCount);
-                reader.Read();
+            using var reader = OpenReader("test_git_issue_364");
+            Assert.AreEqual(1, reader.RowCount);
+            reader.Read();
 
-                Assert.AreEqual(0, reader.GetNumberFormatIndex(0));
-                Assert.AreEqual(-1, reader.GetNumberFormatIndex(1));
-                Assert.AreEqual(14, reader.GetNumberFormatIndex(2));
-                Assert.AreEqual(164, reader.GetNumberFormatIndex(3));
-            }
+            Assert.AreEqual(0, reader.GetNumberFormatIndex(0));
+            Assert.AreEqual(-1, reader.GetNumberFormatIndex(1));
+            Assert.AreEqual(14, reader.GetNumberFormatIndex(2));
+            Assert.AreEqual(164, reader.GetNumberFormatIndex(3));
         }
 
         [Test]
         public void Issue11516WorkbookWithSingleSheetShouldNotReturnEmptyDataset()
         {
-            using (IExcelDataReader reader = OpenReader("Test_Issue_11516_Single_Tab"))
-            {
-                Assert.AreEqual(1, reader.ResultsCount);
+            using IExcelDataReader reader = OpenReader("Test_Issue_11516_Single_Tab");
+            Assert.AreEqual(1, reader.ResultsCount);
 
-                DataSet dataSet = reader.AsDataSet();
+            DataSet dataSet = reader.AsDataSet();
 
-                Assert.IsTrue(dataSet != null);
-                Assert.AreEqual(1, dataSet.Tables.Count);
-                Assert.AreEqual(260, dataSet.Tables[0].Rows.Count);
-                Assert.AreEqual(29, dataSet.Tables[0].Columns.Count);
-            }
+            Assert.IsTrue(dataSet != null);
+            Assert.AreEqual(1, dataSet.Tables.Count);
+            Assert.AreEqual(260, dataSet.Tables[0].Rows.Count);
+            Assert.AreEqual(29, dataSet.Tables[0].Columns.Count);
         }
 
         [Test]
         public void GitIssue241FirstOddEven()
         {
-            using (var reader = OpenReader("Test_git_issue_224_firstoddeven"))
-            {
-                Assert.That(reader.HeaderFooter, Is.Not.Null);
+            using var reader = OpenReader("Test_git_issue_224_firstoddeven");
+            Assert.That(reader.HeaderFooter, Is.Not.Null);
 
-                Assert.That(reader.HeaderFooter?.HasDifferentFirst, Is.True, "HasDifferentFirst");
-                Assert.That(reader.HeaderFooter?.HasDifferentOddEven, Is.True, "HasDifferentOddEven");
+            Assert.That(reader.HeaderFooter?.HasDifferentFirst, Is.True, "HasDifferentFirst");
+            Assert.That(reader.HeaderFooter?.HasDifferentOddEven, Is.True, "HasDifferentOddEven");
 
-                Assert.That(reader.HeaderFooter?.FirstHeader, Is.EqualTo("&CFirst header center"), "First Header");
-                Assert.That(reader.HeaderFooter?.FirstFooter, Is.EqualTo("&CFirst footer center"), "First Footer");
-                Assert.That(reader.HeaderFooter?.OddHeader, Is.EqualTo("&LLeft åäö &T&COdd page header&RRight  åäö &P"), "Odd Header");
-                Assert.That(reader.HeaderFooter?.OddFooter, Is.EqualTo("&LLeft åäö &P&COdd Footer åäö &P&RRight åäö &D"), "Odd Footer");
-                Assert.That(reader.HeaderFooter?.EvenHeader, Is.EqualTo("&L&A&CEven page header"), "Even Header");
-                Assert.That(reader.HeaderFooter?.EvenFooter, Is.EqualTo("&CEven page footer"), "Even Footer");
-            }
+            Assert.That(reader.HeaderFooter?.FirstHeader, Is.EqualTo("&CFirst header center"), "First Header");
+            Assert.That(reader.HeaderFooter?.FirstFooter, Is.EqualTo("&CFirst footer center"), "First Footer");
+            Assert.That(reader.HeaderFooter?.OddHeader, Is.EqualTo("&LLeft åäö &T&COdd page header&RRight  åäö &P"), "Odd Header");
+            Assert.That(reader.HeaderFooter?.OddFooter, Is.EqualTo("&LLeft åäö &P&COdd Footer åäö &P&RRight åäö &D"), "Odd Footer");
+            Assert.That(reader.HeaderFooter?.EvenHeader, Is.EqualTo("&L&A&CEven page header"), "Even Header");
+            Assert.That(reader.HeaderFooter?.EvenFooter, Is.EqualTo("&CEven page footer"), "Even Footer");
         }
 
 
@@ -77,13 +69,11 @@ namespace ExcelDataReader.Tests
         [TestCase("standard_AES256_SHA1_ECB_pwd_password")]
         public void GitIssue242StandardEncryption(string file)
         {
-            using (var reader = OpenReader(
+            using var reader = OpenReader(
                 OpenStream(file),
-                new ExcelReaderConfiguration() { Password = "password" }))
-            {
-                reader.Read();
-                Assert.AreEqual("Password: password", reader.GetString(0));
-            }
+                new ExcelReaderConfiguration() { Password = "password" });
+            reader.Read();
+            Assert.AreEqual("Password: password", reader.GetString(0));
         }
 
         [TestCase("agile_AES128_MD5_CBC_pwd_password")]
@@ -98,13 +88,11 @@ namespace ExcelDataReader.Tests
         public void GitIssue242AgileEncryption(string file)
         {
             // OpenXml agile encryption aes128+md5+cbc
-            using (var reader = OpenReader(
+            using var reader = OpenReader(
                 OpenStream(file),
-                new ExcelReaderConfiguration() { Password = "password" }))
-            {
-                reader.Read();
-                Assert.AreEqual("Password: password", reader.GetString(0));
-            }
+                new ExcelReaderConfiguration() { Password = "password" });
+            reader.Read();
+            Assert.AreEqual("Password: password", reader.GetString(0));
         }
 
         [Test]
@@ -112,12 +100,10 @@ namespace ExcelDataReader.Tests
         {
             Assert.Throws<Exceptions.InvalidPasswordException>(() =>
             {
-                using (var reader = OpenReader(
+                using var reader = OpenReader(
                     OpenStream("agile_AES128_MD5_CBC_pwd_password"),
-                    new ExcelReaderConfiguration() { Password = "wrongpassword" }))
-                {
-                    reader.Read();
-                }
+                    new ExcelReaderConfiguration() { Password = "wrongpassword" });
+                reader.Read();
             });
         }
 
@@ -126,10 +112,8 @@ namespace ExcelDataReader.Tests
         {
             Assert.Throws<Exceptions.InvalidPasswordException>(() =>
             {
-                using (var reader = OpenReader("agile_AES128_MD5_CBC_pwd_password"))
-                {
-                    reader.Read();
-                }
+                using var reader = OpenReader("agile_AES128_MD5_CBC_pwd_password");
+                reader.Read();
             });
         }
 
@@ -138,10 +122,8 @@ namespace ExcelDataReader.Tests
         {
             Assert.Throws<Exceptions.HeaderException>(() =>
             {
-                using (var reader = OpenReader("EmptyZipFile"))
-                {
-                    reader.Read();
-                }
+                using var reader = OpenReader("EmptyZipFile");
+                reader.Read();
             });
         }
 
@@ -178,21 +160,19 @@ namespace ExcelDataReader.Tests
             };
 
             int index = 0;
-            using (var reader = OpenReader("Test_git_issue_341"))
+            using var reader = OpenReader("Test_git_issue_341");
+            while (reader.Read())
             {
-                while (reader.Read())
+                int[] expectedRow = expected[index];
+                int[] actualRow = new int[reader.FieldCount];
+                for (int i = 0; i < reader.FieldCount; i++)
                 {
-                    int[] expectedRow = expected[index];
-                    int[] actualRow = new int[reader.FieldCount];
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        actualRow[i] = reader.GetCellStyle(i).IndentLevel;
-                    }
-
-                    Assert.AreEqual(expectedRow, actualRow, "Indent level on row '{0}'.", index);
-
-                    index++;
+                    actualRow[i] = reader.GetCellStyle(i).IndentLevel;
                 }
+
+                Assert.AreEqual(expectedRow, actualRow, "Indent level on row '{0}'.", index);
+
+                index++;
             }
         }
 
@@ -209,21 +189,19 @@ namespace ExcelDataReader.Tests
             };
 
             int index = 0;
-            using (var reader = OpenReader("Test_git_issue_341"))
+            using var reader = OpenReader("Test_git_issue_341");
+            while (reader.Read())
             {
-                while (reader.Read())
+                HorizontalAlignment[] expectedRow = expected[index];
+                HorizontalAlignment[] actualRow = new HorizontalAlignment[reader.FieldCount];
+                for (int i = 0; i < reader.FieldCount; i++)
                 {
-                    HorizontalAlignment[] expectedRow = expected[index];
-                    HorizontalAlignment[] actualRow = new HorizontalAlignment[reader.FieldCount];
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        actualRow[i] = reader.GetCellStyle(i).HorizontalAlignment;
-                    }
-
-                    Assert.AreEqual(expectedRow, actualRow, "Horizontal alignment on row '{0}'.", index);
-
-                    index++;
+                    actualRow[i] = reader.GetCellStyle(i).HorizontalAlignment;
                 }
+
+                Assert.AreEqual(expectedRow, actualRow, "Horizontal alignment on row '{0}'.", index);
+
+                index++;
             }
         }
     }

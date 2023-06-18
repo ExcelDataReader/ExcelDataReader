@@ -8,7 +8,7 @@ namespace ExcelDataReader.Log
     /// </summary>
     public static class Log
     {
-        private static readonly object LockObject = new object();
+        private static readonly object LockObject = new();
 
         private static Type logType = typeof(NullLogFactory);
         private static ILogFactory factoryInstance;
@@ -40,10 +40,7 @@ namespace ExcelDataReader.Log
             {
                 lock (LockObject)
                 {
-                    if (factory == null)
-                    {
-                        factory = factoryInstance = (ILogFactory)Activator.CreateInstance(logType);
-                    }
+                    factory ??= factoryInstance = (ILogFactory)Activator.CreateInstance(logType);
                 }
             }
 

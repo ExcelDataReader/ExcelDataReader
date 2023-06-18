@@ -22,8 +22,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
         public override Record Read()
         {
-            if (_enumerator == null)
-                _enumerator = ReadOverride().GetEnumerator();
+            _enumerator ??= ReadOverride().GetEnumerator();
             if (_enumerator.MoveNext())
                 return _enumerator.Current;
             return null;
