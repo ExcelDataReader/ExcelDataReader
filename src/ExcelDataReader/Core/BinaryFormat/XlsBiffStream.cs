@@ -221,7 +221,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.CONTINUE:
                     return new XlsBiffContinue(bytes);
                 case BIFFRECORDTYPE.DIMENSIONS:
-                case BIFFRECORDTYPE.DIMENSIONS_V2:
+                case BIFFRECORDTYPE.DIMENSIONS_V2 when bytes.Length >= 12:
                     return new XlsBiffDimensions(bytes, biffVersion);
                 case BIFFRECORDTYPE.BOUNDSHEET:
                     return new XlsBiffBoundSheet(bytes, biffVersion);
