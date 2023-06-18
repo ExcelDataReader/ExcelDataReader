@@ -23,7 +23,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                 if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
                 {
                     // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
-                    sb.Append(reader.ReadElementContentAsString());
+                    sb.Append(ReadElementContent(reader));
                 }
                 else if (reader.IsStartElement(ElementR, nsSpreadsheetMl))
                 {
@@ -49,13 +49,21 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
             {
                 if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
                 {
-                    sb.Append(reader.ReadElementContentAsString());
+                    sb.Append(ReadElementContent(reader));
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))
                 {
                     break;
                 }
             }
+        }
+
+        private static string ReadElementContent(XmlReader reader)
+        {
+            if (reader.GetAttribute("xml:space") == "preserve")
+                return reader.ReadElementContentAsString();
+            else
+                return reader.ReadElementContentAsString().Trim();
         }
     }
 }
