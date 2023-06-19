@@ -16,11 +16,13 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   
   <ItemGroup Condition="$(MSBuildProjectName.StartsWith('ExcelDataReader'))">
     <None Include="..\ExcelDataReader.snk" Link="ExcelDataReader.snk" />
     <None Include="..\ExcelDataReader.png" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)../README.md" Link="README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
   
   <ItemGroup Condition="$(MSBuildProjectName.StartsWith('ExcelDataReader'))">
