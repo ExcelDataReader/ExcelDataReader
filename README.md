@@ -2,7 +2,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/ExcelDataReader.svg)](https://www.nuget.org/packages/ExcelDataReader)
 
-Lightweight and fast library written in C# for reading Microsoft Excel files (2.0-2007).
+Lightweight and fast library written in C# for reading Microsoft Excel files (2.0-2021, 365).
 
 Please feel free to fork and submit pull requests to the develop branch.
 
