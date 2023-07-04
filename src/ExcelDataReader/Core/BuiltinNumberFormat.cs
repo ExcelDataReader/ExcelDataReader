@@ -5,7 +5,7 @@ namespace ExcelDataReader.Core
 {
     internal static class BuiltinNumberFormat
     {
-        private static Dictionary<int, NumberFormatString> Formats { get; } = new Dictionary<int, NumberFormatString>()
+        private static IReadOnlyDictionary<int, NumberFormatString> Formats { get; } = new Dictionary<int, NumberFormatString>
         {
             { 0, new NumberFormatString("General") },
             { 1, new NumberFormatString("0") },
