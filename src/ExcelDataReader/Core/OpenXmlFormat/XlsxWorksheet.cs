@@ -91,7 +91,9 @@ internal sealed class XlsxWorksheet : IWorksheet
 
     public string VisibleState { get; }
 
-    public HeaderFooter HeaderFooter { get; }
+        public bool IsActiveSheet { get; }
+
+        public HeaderFooter HeaderFooter { get; }
 
     public double DefaultRowHeight { get; }
 

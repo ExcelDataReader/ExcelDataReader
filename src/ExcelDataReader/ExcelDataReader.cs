@@ -28,7 +28,13 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     public string VisibleState => _worksheetIterator?.Current?.VisibleState;
 
-    public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
+        private int _idx = 0;
+
+        public int ActiveSheet => this.Workbook.ActiveSheet;
+
+        public bool IsActiveSheet => _idx == this.Workbook.ActiveSheet;
+
+        public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
 
     // We shouldn't expose the internal array here. 
     public CellRange[] MergeCells => _worksheetIterator?.Current?.MergeCells;
@@ -213,7 +219,9 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         _worksheetIterator = null;
         _rowIterator = null;
 
-        ResetSheetData();
+            _idx = 0;
+
+            ResetSheetData();
 
         if (Workbook != null)
         {
@@ -262,9 +270,12 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
             return false;
         }
 
-        _rowIterator = _worksheetIterator.Current.ReadRows().GetEnumerator();
-        return true;
-    }
+            _rowIterator = _worksheetIterator.Current.ReadRows().GetEnumerator();
+
+            _idx++;
+
+            return true;
+        }
 
     public bool Read()
     {

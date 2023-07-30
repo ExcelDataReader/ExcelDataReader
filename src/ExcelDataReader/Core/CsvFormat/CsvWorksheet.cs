@@ -40,7 +40,11 @@ internal sealed class CsvWorksheet : IWorksheet
 
     public string VisibleState => null;
 
-    public HeaderFooter HeaderFooter => null;
+        public int ActiveSheet => 0;
+
+        public bool IsActiveSheet => true;
+
+        public HeaderFooter HeaderFooter => null;
 
     public CellRange[] MergeCells => null;
 

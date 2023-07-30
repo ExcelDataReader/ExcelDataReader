@@ -47,31 +47,56 @@ internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, str
                     continue;
                 }
 
-                while (!Reader.EOF)
-                {
-                    if (Reader.IsStartElement(ElementSheet, ProperNamespaces.NsSpreadsheetMl))
+                    while (!Reader.EOF)
                     {
-                        var rid = Reader.GetAttribute(AttributeRelationshipId, ProperNamespaces.NsDocumentRelationship);
-                        yield return new SheetRecord(
-                            Reader.GetAttribute(AttributeName),
-                            uint.Parse(Reader.GetAttribute(AttributeSheetId), CultureInfo.InvariantCulture),
-                            rid,
-                            Reader.GetAttribute(AttributeVisibleState),
-                            rid != null && _worksheetsRels.TryGetValue(rid, out var path) ? path : null);
-                        Reader.Skip();
-                    }
-                    else if (!XmlReaderHelper.SkipContent(Reader))
-                    {
-                        break;
+                        if (Reader.IsStartElement(ElementSheet, ProperNamespaces.NsSpreadsheetMl))
+                        {
+                            var rid = Reader.GetAttribute(AttributeRelationshipId, ProperNamespaces.NsDocumentRelationship);
+                            yield return new SheetRecord(
+                                Reader.GetAttribute(AttributeName),
+                                uint.Parse(Reader.GetAttribute(AttributeSheetId), CultureInfo.InvariantCulture),
+                                rid,
+                                Reader.GetAttribute(AttributeVisibleState),
+                                rid != null && _worksheetsRels.TryGetValue(rid, out var path) ? path : null);
+                            Reader.Skip();
+                        }
+                        else if (!XmlReaderHelper.SkipContent(Reader))
+                        {
+                            break;
+                        }
                     }
                 }
-            }
-            else if (!XmlReaderHelper.SkipContent(Reader))
-            {
-                yield break;
+
+                else if (Reader.IsStartElement("bookViews", ProperNamespaces.NsSpreadsheetMl))
+                {
+                    if (!XmlReaderHelper.ReadFirstContent(Reader))
+                    {
+                        continue;
+                    }
+
+                    while (!Reader.EOF)
+                    {
+                        if (Reader.IsStartElement("workbookView", ProperNamespaces.NsSpreadsheetMl))
+                        {
+                            string activeTab = Reader.GetAttribute("activeTab");
+                            int result = -1;
+                            int.TryParse(activeTab, out result);
+                            yield return new WorkbookActRecord(result);
+                            Reader.Skip();
+                        }
+                        else if (!XmlReaderHelper.SkipContent(Reader))
+                        {
+                            break;
+                        }
+                    }
+
+                }
+                else if (!XmlReaderHelper.SkipContent(Reader))
+                {
+                    yield break;
+                }
             }
         }
-    }
 
     private bool CheckStartElementAndApplyNamespaces(string element)
     {

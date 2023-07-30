@@ -22,32 +22,38 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
 
     public int ResultsCount => Sheets?.Count ?? -1;
 
-    public IEnumerable<XlsxWorksheet> ReadWorksheets()
-    {
-        foreach (var sheet in Sheets)
-        {
-            yield return new XlsxWorksheet(_zipWorker, this, sheet);
-        }
-    }
+        public int ActiveSheet { get; private set; }
 
-    private void ReadWorkbook()
-    {
-        using RecordReader reader = _zipWorker.GetWorkbookReader();            
-        
-        Record record;
-        while ((record = reader.Read()) != null)
-        {                
-            switch (record)
+        public IEnumerable<XlsxWorksheet> ReadWorksheets()
+        {
+            foreach (var sheet in Sheets)
             {
-                case WorkbookPrRecord pr:
-                    IsDate1904 = pr.Date1904;
-                    break;
-                case SheetRecord sheet:
-                    Sheets.Add(sheet);
-                    break;
+                yield return new XlsxWorksheet(_zipWorker, this, sheet);
             }
         }
-    }
+
+        private void ReadWorkbook()
+        {
+            using RecordReader reader = _zipWorker.GetWorkbookReader();            
+            
+            Record record;
+            while ((record = reader.Read()) != null)
+            {                
+                switch (record)
+                {
+                    case WorkbookPrRecord pr:
+                        IsDate1904 = pr.Date1904;
+                        break;
+                    case SheetRecord sheet:
+                        Sheets.Add(sheet);
+                        break;
+                    case WorkbookActRecord activeSheet:
+                        ActiveSheet = activeSheet.ActiveSheet;
+                        break;
+
+                }
+            }
+        }
 
     private void ReadSharedStrings()
     {
