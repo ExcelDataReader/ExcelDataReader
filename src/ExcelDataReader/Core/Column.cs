@@ -4,11 +4,11 @@ namespace ExcelDataReader.Core
 {
     internal sealed class Column
     {
-        public Column(int minimum, int maximum, bool hidden, double? width)
+        public Column(int minimum, int maximum, bool isHidden, double? width)
         {
             Minimum = minimum;
             Maximum = maximum;
-            Hidden = hidden;
+            IsHidden = isHidden;
             Width = width;
         }
 
@@ -16,7 +16,7 @@ namespace ExcelDataReader.Core
 
         public int Maximum { get; }
 
-        public bool Hidden { get; }
+        public bool IsHidden { get; }
 
         public double? Width { get; }
     }

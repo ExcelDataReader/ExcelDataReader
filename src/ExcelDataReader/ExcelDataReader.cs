@@ -149,7 +149,7 @@ namespace ExcelDataReader
                 {
                     if (i >= columnWidth.Minimum && i <= columnWidth.Maximum)
                     {
-                        retWidth = columnWidth.Hidden ? 0 : columnWidth.Width;
+                        retWidth = columnWidth.IsHidden ? 0 : columnWidth.Width;
                         break;
                     }
                 }
