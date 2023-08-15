@@ -27,7 +27,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
                 return null;
 
             byte[] buffer = recordLength < _buffer.Length ? _buffer : new byte[recordLength];
-            if (Stream.Read(buffer, 0, (int)recordLength) != recordLength)
+            if (Stream.ReadAtLeast(buffer, 0, (int)recordLength) != recordLength)
                 return null;
 
             return ReadOverride(buffer, recordId, recordLength);
