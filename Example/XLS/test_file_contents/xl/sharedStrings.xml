@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="7" uniqueCount="7">
+  <si>
+    <t>city</t>
+  </si>
+  <si>
+    <t>ID</t>
+  </si>
+  <si>
+    <t>country</t>
+  </si>
+  <si>
+    <t>San Francisco</t>
+  </si>
+  <si>
+    <t>USA</t>
+  </si>
+  <si>
+    <t>Paris</t>
+  </si>
+  <si>
+    <t>France</t>
+  </si>
+</sst>
