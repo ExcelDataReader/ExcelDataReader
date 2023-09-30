@@ -64,27 +64,27 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             using var reader = XmlReader.Create(workbookRelsEntry.Open(), XmlSettings);
             while (reader.Read())
             {
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "Relationship")
-                {
-                    var id = reader.GetAttribute("Id");
-                    var type = reader.GetAttribute("Type");
-                    var target = reader.GetAttribute("Target");
+                if (reader.NodeType != XmlNodeType.Element || reader.Name != "Relationship")
+                    continue;
 
-                    switch (type)
-                    {
-                        case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet":
-                        case "http://purl.oclc.org/ooxml/officeDocument/relationships/worksheet":
-                            _worksheetRels[id] = ResolvePath(basePath, target);
-                            break;
-                        case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles":
-                        case "http://purl.oclc.org/ooxml/officeDocument/relationships/styles":
-                            _fileStyles = ResolvePath(basePath, target);
-                            break;
-                        case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings":
-                        case "http://purl.oclc.org/ooxml/officeDocument/relationships/sharedStrings":
-                            _fileSharedStrings = ResolvePath(basePath, target);
-                            break;
-                    }
+                var id = reader.GetAttribute("Id");
+                var type = reader.GetAttribute("Type");
+                var target = reader.GetAttribute("Target");
+
+                switch (type)
+                {
+                    case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet":
+                    case "http://purl.oclc.org/ooxml/officeDocument/relationships/worksheet":
+                        _worksheetRels[id] = ResolvePath(basePath, target);
+                        break;
+                    case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles":
+                    case "http://purl.oclc.org/ooxml/officeDocument/relationships/styles":
+                        _fileStyles = ResolvePath(basePath, target);
+                        break;
+                    case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings":
+                    case "http://purl.oclc.org/ooxml/officeDocument/relationships/sharedStrings":
+                        _fileSharedStrings = ResolvePath(basePath, target);
+                        break;
                 }
             }
 
@@ -112,17 +112,17 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 using var reader = XmlReader.Create(entry.Open(), XmlSettings);
                 while (reader.Read())
                 {
-                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "Relationship")
-                    {
-                        var type = reader.GetAttribute("Type");
-                        var target = reader.GetAttribute("Target");
+                    if (reader.NodeType != XmlNodeType.Element || reader.Name != "Relationship")
+                        continue;
 
-                        switch (type)
-                        {
-                            case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument":
-                            case "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument":
-                                return target;
-                        }
+                    var type = reader.GetAttribute("Type");
+                    var target = reader.GetAttribute("Target");
+
+                    switch (type)
+                    {
+                        case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument":
+                        case "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument":
+                            return target;
                     }
                 }
 
