@@ -358,5 +358,29 @@ namespace ExcelDataReader.Tests
                 });
             }
         }
+
+        [Test]
+        public void GitIssue578()
+        {
+
+            var stream = Configuration.GetTestWorkbook(@"csv\Test_git_issue578.csv");
+            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()))
+            {
+
+                excelReader.Read();                
+                var values = new object[excelReader.FieldCount];
+                excelReader.GetValues(values);
+                var values2 = new object[excelReader.FieldCount + 1];
+                excelReader.GetValues(values2);
+                var values3 = new object[excelReader.FieldCount - 1];
+                excelReader.GetValues(values3);
+
+                Assert.That(values, Is.EquivalentTo(new object[] { "1", "2", "3", "4", "5" }));
+                Assert.That(values2, Is.EquivalentTo(new object[] { "1", "2", "3", "4", "5", null }));
+                Assert.That(values3, Is.EquivalentTo(new object[] { "1", "2", "3", "4" }));
+            }
+        }
+
+
     }
 }

@@ -108,7 +108,19 @@ namespace ExcelDataReader
             return RowCells[i]?.Value;
         }
 
-        public int GetValues(object[] values) => throw new NotSupportedException();
+        public int GetValues(object[] values)
+        {
+            int readingLenth = values.Length > FieldCount ? FieldCount : values.Length;
+            if (RowCells == null)
+                throw new InvalidOperationException("No data exists for the row/column.");
+
+            for (int i = 0; i < readingLenth; i++)
+            {
+                values[i] = RowCells[i]?.Value;
+            }
+
+            return readingLenth;
+        }
                
         public bool IsDBNull(int i) => GetValue(i) == null;
 
