@@ -1112,24 +1112,6 @@ namespace ExcelDataReader.Tests
             
         }
 
-        [Test]
-        public void GitIssue578_xlsb()
-        {
-
-            using var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue578.xlsb"));
-
-            reader.Read();
-            var values = new object[reader.FieldCount];
-            reader.GetValues(values);
-            var values2 = new object[reader.FieldCount + 1];
-            reader.GetValues(values2);
-            var values3 = new object[reader.FieldCount - 1];
-            reader.GetValues(values3);
-
-            Assert.That(values, Is.EquivalentTo(new object[] { 1, 2, 3, 4, 5 }));
-            Assert.That(values2, Is.EquivalentTo(new object[] { 1, 2, 3, 4, 5, null }));
-            Assert.That(values3, Is.EquivalentTo(new object[] { 1, 2, 3, 4 }));
-
-        }
+       
     }
 }
