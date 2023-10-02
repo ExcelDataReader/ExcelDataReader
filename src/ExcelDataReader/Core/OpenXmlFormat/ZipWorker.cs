@@ -180,17 +180,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             throw new Exceptions.HeaderException(Errors.ErrorZipNoOpenXml);
         }
 
-        private static Stream OpenZipEntry(ZipArchiveEntry zipEntry)
-        {
-            // for some reason, reading of zip entry is slow on NET Core.
-            // fix that with usage of BufferedStream
-#if NETSTANDARD2_0 || NETSTANDARD2_1
-            return new BufferedStream(zipEntry.Open());
-#else
-            return zipEntry.Open();
-#endif
-        }
-
         public RecordReader? GetWorksheetReader(string sheetPath)
         {
             // its possible sheetPath starts with /xl. in this case trim the /
@@ -217,6 +206,17 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             if (name != null && _entries.TryGetValue(name, out var entry))
                 return entry;
             return null;
+        }
+
+        private static Stream OpenZipEntry(ZipArchiveEntry zipEntry)
+        {
+            // for some reason, reading of zip entry is slow on NET Core.
+            // fix that with usage of BufferedStream
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+            return new BufferedStream(zipEntry.Open());
+#else
+            return zipEntry.Open();
+#endif
         }
     }
 
