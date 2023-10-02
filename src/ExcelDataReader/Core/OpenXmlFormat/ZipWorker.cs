@@ -201,13 +201,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             return null;
         }
 
-        private ZipArchiveEntry? FindEntry(string? name)
-        {
-            if (name != null && _entries.TryGetValue(name, out var entry))
-                return entry;
-            return null;
-        }
-
         private static Stream OpenZipEntry(ZipArchiveEntry zipEntry)
         {
             // for some reason, reading of zip entry is slow on NET Core.
@@ -217,6 +210,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 #else
             return zipEntry.Open();
 #endif
+        }
+
+        private ZipArchiveEntry? FindEntry(string? name)
+        {
+            if (name != null && _entries.TryGetValue(name, out var entry))
+                return entry;
+            return null;
         }
     }
 
