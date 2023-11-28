@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ExcelDataReader
 {
@@ -21,6 +22,15 @@ namespace ExcelDataReader
         /// Gets or sets a callback to determine which row is the header row. Only called when UseHeaderRow = true.
         /// </summary>
         public Action<IExcelDataReader> ReadHeaderRow { get; set; }
+
+        /// <summary>
+        /// Gets or sets a callback to allow a custom implementation of header reading.
+        /// The returned list will be used to construct the resulting DataTable.
+        /// Each element of the list specifies a column name and index pair.
+        /// An example use of this would be to combine multiple header rows.
+        /// NOTE: If this field is set, UseHeaderRow, EmptyColumnNamePrefix, and FilterColumn are ignored.
+        /// </summary>
+        public Func<IExcelDataReader, List<KeyValuePair<string, int>>> ReadHeader { get; set; }
 
         /// <summary>
         /// Gets or sets a callback to determine whether to include the current row in the DataTable.
