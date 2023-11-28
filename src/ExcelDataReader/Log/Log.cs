@@ -4,19 +4,19 @@ using ExcelDataReader.Log.Logger;
 namespace ExcelDataReader.Log
 {
     /// <summary>
-    /// logger type initialization
+    /// Logger type initialization.
     /// </summary>
     public static class Log
     {
-        private static readonly object LockObject = new object();
+        private static readonly object LockObject = new();
 
         private static Type logType = typeof(NullLogFactory);
         private static ILogFactory factoryInstance;
 
         /// <summary>
-        /// Sets up logging to be with a certain type
+        /// Sets up logging to be with a certain type.
         /// </summary>
-        /// <typeparam name="T">The type of ILog for the application to use</typeparam>
+        /// <typeparam name="T">The type of ILog for the application to use.</typeparam>
         public static void InitializeWith<T>() 
             where T : ILogFactory, new()
         {
@@ -40,10 +40,7 @@ namespace ExcelDataReader.Log
             {
                 lock (LockObject)
                 {
-                    if (factory == null)
-                    {
-                        factory = factoryInstance = (ILogFactory)Activator.CreateInstance(logType);
-                    }
+                    factory ??= factoryInstance = (ILogFactory)Activator.CreateInstance(logType);
                 }
             }
 

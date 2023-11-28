@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <Configuration>Release</Configuration>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ExcelDataReader\ExcelDataReader.csproj" />
+  </ItemGroup>
+</Project>

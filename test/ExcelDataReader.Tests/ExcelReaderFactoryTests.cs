@@ -12,10 +12,8 @@ namespace ExcelDataReader.Tests
         [TestCase("as3xls_BIFF2.xls")]
         public void ProbeXls(string name)
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook(name)))
-            {
-                Assert.AreEqual(excelReader.GetType().Name, "ExcelBinaryReader");
-            }
+            using IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook(name));
+            Assert.AreEqual(excelReader.GetType().Name, "ExcelBinaryReader");
         }
 
         [TestCase("Test10x10.xlsx")]
@@ -23,10 +21,8 @@ namespace ExcelDataReader.Tests
         [TestCase("TestOpen.xlsb")]
         public void ProbeOpenXml(string name)
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook(name)))
-            {
-                Assert.AreEqual(excelReader.GetType().Name, "ExcelOpenXmlReader");
-            }
+            using IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook(name));
+            Assert.AreEqual(excelReader.GetType().Name, "ExcelOpenXmlReader");
         }
     }
 }

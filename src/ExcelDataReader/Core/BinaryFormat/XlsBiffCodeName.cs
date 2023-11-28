@@ -2,7 +2,7 @@
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
-    internal class XlsBiffCodeName : XlsBiffRecord
+    internal sealed class XlsBiffCodeName : XlsBiffRecord
     {
         private readonly IXlsString _xlsString;
 

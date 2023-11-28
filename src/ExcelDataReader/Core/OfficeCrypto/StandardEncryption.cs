@@ -8,7 +8,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
     /// Represents the binary "Standard Encryption" header used in XLS and XLSX.
     /// XLS uses RC4+SHA1. XLSX uses AES+SHA1.
     /// </summary>
-    internal class StandardEncryption : EncryptionInfo
+    internal sealed class StandardEncryption : EncryptionInfo
     {
         private const int AesBlockSize = 128;
         private const int RC4BlockSize = 8;
@@ -40,7 +40,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
             KeySize = BitConverter.ToInt32(bytes, 28);
 
             // Don't use this; is implementation-specific
-            var providerType = (StandardProvider)BitConverter.ToUInt32(bytes, 32);
+            // var providerType = (StandardProvider)BitConverter.ToUInt32(bytes, 32);
 
             // skip two reserved dwords
             CSPName = System.Text.Encoding.Unicode.GetString(bytes, 44, headerSize - 44 + 12); // +12 because we start counting from the offset after HeaderSize
@@ -172,7 +172,9 @@ namespace ExcelDataReader.Core.OfficeCrypto
                 salt = CryptoHelpers.HashBytes(salt, HashAlgorithm);
                 Array.Resize(ref salt, (int)KeySize / 8);
                 return salt;*/
+#pragma warning disable CA2201 // Do not raise reserved exception types
                 throw new Exception("Block key for ECMA-376 Standard Encryption not implemented");
+#pragma warning restore CA2201 // Do not raise reserved exception types
             }
             else if ((Flags & EncryptionHeaderFlags.CryptoAPI) != 0)
             {
@@ -219,27 +221,23 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
             var blockKey = ((Flags & EncryptionHeaderFlags.AES) != 0) ? secretKey : GenerateBlockKey(0, secretKey);
 
-            using (var cipher = CryptoHelpers.CreateCipher(CipherAlgorithm, KeySize, BlockSize, CipherMode.ECB))
+            using var cipher = CryptoHelpers.CreateCipher(CipherAlgorithm, KeySize, BlockSize, CipherMode.ECB);
+            using var transform = cipher.CreateDecryptor(blockKey, SaltValue);
+            var decryptedVerifier = CryptoHelpers.DecryptBytes(transform, Verifier);
+            var decryptedVerifierHash = CryptoHelpers.DecryptBytes(transform, VerifierHash);
+
+            var verifierHash = CryptoHelpers.HashBytes(decryptedVerifier, HashAlgorithm);
+            for (var i = 0; i < 16; ++i)
             {
-                using (var transform = cipher.CreateDecryptor(blockKey, SaltValue))
-                {
-                    var decryptedVerifier = CryptoHelpers.DecryptBytes(transform, Verifier);
-                    var decryptedVerifierHash = CryptoHelpers.DecryptBytes(transform, VerifierHash);
-
-                    var verifierHash = CryptoHelpers.HashBytes(decryptedVerifier, HashAlgorithm);
-                    for (var i = 0; i < 16; ++i)
-                    {
-                        if (decryptedVerifierHash[i] != verifierHash[i])
-                            return false;
-                    }
-
-                    return true;
-                }
+                if (decryptedVerifierHash[i] != verifierHash[i])
+                    return false;
             }
+
+            return true;
         }
 
         /// <summary>
-        /// 2.3.5.2 RC4 CryptoAPI Encryption Key Generation
+        /// 2.3.5.2 RC4 CryptoAPI Encryption Key Generation.
         /// </summary>
         private static byte[] GenerateCryptoApiSecretKey(string password, byte[] saltValue, HashIdentifier hashAlgorithm, int keySize)
         {
@@ -247,7 +245,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
         }
 
         /// <summary>
-        /// 2.3.4.7 ECMA-376 Document Encryption Key Generation (Standard Encryption)
+        /// 2.3.4.7 ECMA-376 Document Encryption Key Generation (Standard Encryption).
         /// </summary>
         private static byte[] GenerateEcma376SecretKey(string password, byte[] saltValue, HashIdentifier hashIdentifier, int keySize, int verifierHashSize)
         {

@@ -27,7 +27,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
                 return null;
 
             byte[] buffer = recordLength < _buffer.Length ? _buffer : new byte[recordLength];
-            if (Stream.Read(buffer, 0, (int)recordLength) != recordLength)
+            if (Stream.ReadAtLeast(buffer, 0, (int)recordLength) != recordLength)
                 return null;
 
             return ReadOverride(buffer, recordId, recordLength);
@@ -60,7 +60,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
 
         protected static string GetString(byte[] buffer, uint offset, uint length)
         {
-            StringBuilder sb = new StringBuilder((int)length);
+            StringBuilder sb = new((int)length);
             for (uint i = offset; i < offset + 2 * length; i += 2)
                 sb.Append((char)GetWord(buffer, i));
             return sb.ToString();
@@ -72,7 +72,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
             offset += 4;
             if (length == uint.MaxValue)
                 return null;
-            StringBuilder sb = new StringBuilder((int)length);
+            StringBuilder sb = new((int)length);
             uint end = offset + length * 2;
             for (; offset < end; offset += 2)
                 sb.Append((char)GetWord(buffer, offset));

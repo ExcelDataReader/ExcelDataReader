@@ -2,7 +2,7 @@
 
 namespace ExcelDataReader.Misc
 {
-    internal class LeaveOpenStream : Stream
+    internal sealed class LeaveOpenStream : Stream
     {
         public LeaveOpenStream(Stream baseStream)
         {

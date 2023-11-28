@@ -3,7 +3,7 @@ using ExcelDataReader.Core.OpenXmlFormat;
 
 namespace ExcelDataReader
 {
-    internal class ExcelOpenXmlReader : ExcelDataReader<XlsxWorkbook, XlsxWorksheet>
+    internal sealed class ExcelOpenXmlReader : ExcelDataReader<XlsxWorkbook, XlsxWorksheet>
     {
         public ExcelOpenXmlReader(Stream stream)
         {

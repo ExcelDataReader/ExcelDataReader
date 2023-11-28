@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace ExcelDataReader.Core.OfficeCrypto
 {
-    internal class StandardEncryptedPackageStream : Stream
+    internal sealed class StandardEncryptedPackageStream : Stream
     {
         public StandardEncryptedPackageStream(Stream underlyingStream, byte[] secretKey, StandardEncryption encryption)
         {
@@ -12,7 +12,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
             Decryptor = Cipher.CreateDecryptor(secretKey, encryption.SaltValue);
 
             var header = new byte[8];
-            underlyingStream.Read(header, 0, 8);
+            underlyingStream.ReadAtLeast(header, 0, 8);
             DecryptedLength = BitConverter.ToInt32(header, 0);
 
             // Wrap CryptoStream to override the length and dispose the cipher and transform 

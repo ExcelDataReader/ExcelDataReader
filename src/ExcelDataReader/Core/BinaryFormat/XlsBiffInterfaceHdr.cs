@@ -1,9 +1,9 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents InterfaceHdr record in Wokrbook Globals
+    /// Represents InterfaceHdr record in Wokrbook Globals.
     /// </summary>
-    internal class XlsBiffInterfaceHdr : XlsBiffRecord
+    internal sealed class XlsBiffInterfaceHdr : XlsBiffRecord
     {
         internal XlsBiffInterfaceHdr(byte[] bytes)
             : base(bytes)
@@ -11,7 +11,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Gets the CodePage for Interface Header
+        /// Gets the CodePage for Interface Header.
         /// </summary>
         public ushort CodePage => ReadUInt16(0x0);
     }

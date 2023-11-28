@@ -2,7 +2,7 @@
 
 namespace ExcelDataReader.Core.NumberFormat
 {
-    internal class Section
+    internal sealed class Section
     {
         public SectionType Type { get; set; }
 

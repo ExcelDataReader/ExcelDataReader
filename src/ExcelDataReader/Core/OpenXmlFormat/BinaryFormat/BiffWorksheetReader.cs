@@ -21,6 +21,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
         private const uint FormulaBool = 0x0a;
         private const uint FormulaError = 0x0b;
 
+        private const uint BrtCellRString = 0x3E;
+
         // private const uint WorksheetBegin = 0x81;
         // private const uint WorksheetEnd = 0x82;
         private const uint SheetDataBegin = 0x91;
@@ -150,6 +152,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
                         // Must be less than 32768 characters
                         var length = GetDWord(buffer, 8);
                         return ReadCell(GetString(buffer, 8 + 4, length));
+                    }
+
+                case BrtCellRString:
+                    {
+                        // The number of Unicode characters MUST be less than or equal to 0x7FFF         
+                        var length = GetDWord(buffer, 9);
+                        return ReadCell(GetString(buffer, 9 + 4, length));
                     }
 
                 case SharedString:

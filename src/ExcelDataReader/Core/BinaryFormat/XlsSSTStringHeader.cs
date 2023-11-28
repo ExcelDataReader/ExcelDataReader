@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// [MS-XLS] 2.5.293 XLUnicodeRichExtendedString
     /// Word-sized formatted string in SST, stored as single or multibyte unicode characters potentially spanning multiple Continue records.
     /// </summary>
-    internal class XlsSSTStringHeader
+    internal sealed class XlsSSTStringHeader
     {
         private readonly byte[] _bytes;
         private readonly int _offset;
@@ -51,22 +51,22 @@ namespace ExcelDataReader.Core.BinaryFormat
         public bool IsMultiByte => (Flags & FormattedUnicodeStringFlags.MultiByte) == FormattedUnicodeStringFlags.MultiByte;
 
         /// <summary>
-        /// Gets the number of formats used for formatting (0 if string has no formatting)
+        /// Gets the number of formats used for formatting (0 if string has no formatting).
         /// </summary>
         public ushort FormatCount => HasFormatting ? BitConverter.ToUInt16(_bytes, (int)_offset + 3) : (ushort)0;
 
         /// <summary>
-        /// Gets the size of extended string in bytes, 0 if there is no one
+        /// Gets the size of extended string in bytes, 0 if there is no one.
         /// </summary>
         public uint ExtendedStringSize => HasExtString ? (uint)BitConverter.ToUInt32(_bytes, (int)_offset + (HasFormatting ? 5 : 3)) : 0;
 
         /// <summary>
-        /// Gets the head (before string data) size in bytes
+        /// Gets the head (before string data) size in bytes.
         /// </summary>
         public uint HeadSize => (uint)(HasFormatting ? 2 : 0) + (uint)(HasExtString ? 4 : 0) + 3;
 
         /// <summary>
-        /// Gets the tail (after string data) size in bytes
+        /// Gets the tail (after string data) size in bytes.
         /// </summary>
         public uint TailSize => (uint)(HasFormatting ? 4 * FormatCount : 0) + (HasExtString ? ExtendedStringSize : 0);
     }

@@ -55,7 +55,7 @@ namespace ExcelDataReader.Misc
         internal static long DoubleDateToTicks(double value)
         {
             if (value >= OADateMaxAsDouble || value <= OADateMinAsDouble)
-                throw new ArgumentException("Invalid OA Date");
+                throw new ArgumentException("Invalid OA Date", nameof(value));
             long millis = (long)(value * MillisPerDay + (value >= 0 ? 0.5 : -0.5));
 
             // The interesting thing here is when you have a value like 12.5 it all positive 12 days and 12 hours from 01/01/1899

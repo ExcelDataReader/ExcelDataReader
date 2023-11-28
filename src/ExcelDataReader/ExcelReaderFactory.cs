@@ -8,7 +8,7 @@ using ExcelDataReader.Misc;
 namespace ExcelDataReader
 {
     /// <summary>
-    /// The ExcelReader Factory
+    /// The ExcelReader Factory.
     /// </summary>
     public static class ExcelReaderFactory
     {
@@ -18,17 +18,14 @@ namespace ExcelDataReader
         private const string DirectoryEntryEncryptionInfo = "EncryptionInfo";
 
         /// <summary>
-        /// Creates an instance of <see cref="ExcelBinaryReader"/> or <see cref="ExcelOpenXmlReader"/>
+        /// Creates an instance of <see cref="ExcelBinaryReader"/> or <see cref="ExcelOpenXmlReader"/>.
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
         /// <param name="configuration">The configuration object.</param>
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
-            if (configuration == null)
-            {
-                configuration = new ExcelReaderConfiguration();
-            }
+            configuration ??= new ExcelReaderConfiguration();
 
             if (configuration.LeaveOpen)
             {
@@ -37,7 +34,7 @@ namespace ExcelDataReader
 
             var probe = new byte[8];
             fileStream.Seek(0, SeekOrigin.Begin);
-            fileStream.Read(probe, 0, probe.Length);
+            fileStream.ReadAtLeast(probe, 0, probe.Length);
             fileStream.Seek(0, SeekOrigin.Begin);
 
             if (CompoundDocument.IsCompoundDocument(probe))
@@ -72,17 +69,14 @@ namespace ExcelDataReader
         }
 
         /// <summary>
-        /// Creates an instance of <see cref="ExcelBinaryReader"/>
+        /// Creates an instance of <see cref="ExcelBinaryReader"/>.
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
         /// <param name="configuration">The configuration object.</param>
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateBinaryReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
-            if (configuration == null)
-            {
-                configuration = new ExcelReaderConfiguration();
-            }
+            configuration ??= new ExcelReaderConfiguration();
 
             if (configuration.LeaveOpen)
             {
@@ -91,7 +85,7 @@ namespace ExcelDataReader
 
             var probe = new byte[8];
             fileStream.Seek(0, SeekOrigin.Begin);
-            fileStream.Read(probe, 0, probe.Length);
+            fileStream.ReadAtLeast(probe, 0, probe.Length);
             fileStream.Seek(0, SeekOrigin.Begin);
 
             if (CompoundDocument.IsCompoundDocument(probe))
@@ -117,17 +111,14 @@ namespace ExcelDataReader
         }
 
         /// <summary>
-        /// Creates an instance of <see cref="ExcelOpenXmlReader"/>
+        /// Creates an instance of <see cref="ExcelOpenXmlReader"/>.
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
         /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateOpenXmlReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
-            if (configuration == null)
-            {
-                configuration = new ExcelReaderConfiguration();
-            }
+            configuration ??= new ExcelReaderConfiguration();
 
             if (configuration.LeaveOpen)
             {
@@ -136,7 +127,7 @@ namespace ExcelDataReader
 
             var probe = new byte[8];
             fileStream.Seek(0, SeekOrigin.Begin);
-            fileStream.Read(probe, 0, probe.Length);
+            fileStream.ReadAtLeast(probe, 0, probe.Length);
             fileStream.Seek(0, SeekOrigin.Begin);
 
             // Probe for password protected compound document or zip file
@@ -161,17 +152,14 @@ namespace ExcelDataReader
         }
 
         /// <summary>
-        /// Creates an instance of ExcelCsvReader
+        /// Creates an instance of ExcelCsvReader.
         /// </summary>
         /// <param name="fileStream">The file stream.</param>
         /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>
         /// <returns>The excel data reader.</returns>
         public static IExcelDataReader CreateCsvReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
         {
-            if (configuration == null)
-            {
-                configuration = new ExcelReaderConfiguration();
-            }
+            configuration ??= new ExcelReaderConfiguration();
 
             if (configuration.LeaveOpen)
             {

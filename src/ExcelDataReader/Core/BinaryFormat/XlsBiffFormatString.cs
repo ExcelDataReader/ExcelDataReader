@@ -4,9 +4,9 @@ using System.Text;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents a string value of format
+    /// Represents a string value of format.
     /// </summary>
-    internal class XlsBiffFormatString : XlsBiffRecord
+    internal sealed class XlsBiffFormatString : XlsBiffRecord
     {
         private readonly IXlsString _xlsString;
 
@@ -34,19 +34,11 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
         }
 
-        public ushort Index
+        public ushort Index => Id switch
         {
-            get
-            {
-                switch (Id)
-                {
-                    case BIFFRECORDTYPE.FORMAT_V23:
-                        throw new NotSupportedException("Index is not available for BIFF2 and BIFF3 FORMAT records.");
-                    default:
-                        return ReadUInt16(0);
-                }
-            }
-        }
+            BIFFRECORDTYPE.FORMAT_V23 => throw new NotSupportedException("Index is not available for BIFF2 and BIFF3 FORMAT records."),
+            _ => ReadUInt16(0),
+        };
 
         /// <summary>
         /// Gets the string value.

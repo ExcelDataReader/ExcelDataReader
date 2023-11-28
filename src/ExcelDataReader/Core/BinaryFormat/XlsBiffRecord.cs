@@ -5,8 +5,8 @@ using System.Text;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents basic BIFF record
-    /// Base class for all BIFF record types
+    /// Represents basic BIFF record.
+    /// Base class for all BIFF record types.
     /// </summary>
     internal class XlsBiffRecord
     {
@@ -20,17 +20,17 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
         
         /// <summary>
-        /// Gets the type Id of this entry
+        /// Gets the type Id of this entry.
         /// </summary>
         public BIFFRECORDTYPE Id => (BIFFRECORDTYPE)BitConverter.ToUInt16(Bytes, 0);
 
         /// <summary>
-        /// Gets the data size of this entry
+        /// Gets the data size of this entry.
         /// </summary>
         public ushort RecordSize => BitConverter.ToUInt16(Bytes, 2);
 
         /// <summary>
-        /// Gets the whole size of structure
+        /// Gets the whole size of structure.
         /// </summary>
         public int Size => ContentOffset + RecordSize;
         

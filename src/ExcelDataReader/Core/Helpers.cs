@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -7,11 +6,11 @@ using ExcelDataReader.Misc;
 namespace ExcelDataReader.Core
 {
     /// <summary>
-    /// Helpers class
+    /// Helpers class.
     /// </summary>
     internal static class Helpers
     {
-        private static readonly Regex EscapeRegex = new Regex("_x([0-9A-F]{4,4})_");
+        private static readonly Regex EscapeRegex = new("_x([0-9A-F]{4,4})_", RegexOptions.Compiled);
 
         /// <summary>
         /// Determines whether the encoding is single byte or not.
@@ -27,7 +26,7 @@ namespace ExcelDataReader.Core
 
         public static string ConvertEscapeChars(string input)
         {
-            return EscapeRegex.Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber)).ToString());
+            return EscapeRegex.Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString());
         }
 
         /// <summary>

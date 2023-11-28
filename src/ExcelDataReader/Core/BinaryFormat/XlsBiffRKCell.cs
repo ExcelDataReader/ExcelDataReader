@@ -3,24 +3,26 @@ using System;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents an RK number cell
+    /// Represents an RK number cell.
     /// </summary>
-    internal class XlsBiffRKCell : XlsBiffBlankCell
+    internal sealed class XlsBiffRKCell : XlsBiffBlankCell
     {
         internal XlsBiffRKCell(byte[] bytes)
             : base(bytes)
         {
         }
 
+        public override bool IsEmpty => false;
+
         /// <summary>
-        /// Gets the value of this cell
+        /// Gets the value of this cell.
         /// </summary>
         public double Value => NumFromRK(ReadUInt32(0x6));
 
         /// <summary>
-        /// Decodes RK-encoded number
+        /// Decodes RK-encoded number.
         /// </summary>
-        /// <param name="rk">Encoded number</param>
+        /// <param name="rk">Encoded number.</param>
         /// <returns>The number.</returns>
         public static double NumFromRK(uint rk)
         {

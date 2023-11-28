@@ -8,8 +8,8 @@ namespace ExcelDataReader
     /// <summary>
     /// A generic implementation of the IExcelDataReader interface using IWorkbook/IWorksheet to enumerate data.
     /// </summary>
-    /// <typeparam name="TWorkbook">A type implementing IWorkbook</typeparam>
-    /// <typeparam name="TWorksheet">A type implementing IWorksheet</typeparam>
+    /// <typeparam name="TWorkbook">A type implementing IWorkbook.</typeparam>
+    /// <typeparam name="TWorksheet">A type implementing IWorksheet.</typeparam>
     internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReader
         where TWorkbook : IWorkbook<TWorksheet>
         where TWorksheet : IWorksheet
@@ -310,10 +310,7 @@ namespace ExcelDataReader
                 _cachedWorksheets = new List<TWorksheet>();
             }
 
-            if (_cachedWorksheetIterator == null)
-            {
-                _cachedWorksheetIterator = Workbook.ReadWorksheets().GetEnumerator();
-            }
+            _cachedWorksheetIterator ??= Workbook.ReadWorksheets().GetEnumerator();
 
             while (_cachedWorksheetIterator.MoveNext())
             {
@@ -333,10 +330,7 @@ namespace ExcelDataReader
 
         private void ReadCurrentRow()
         {
-            if (RowCells == null)
-            {
-                RowCells = new Cell[FieldCount];
-            }
+            RowCells ??= new Cell[FieldCount];
 
             Array.Clear(RowCells, 0, RowCells.Length);
 

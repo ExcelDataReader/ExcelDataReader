@@ -1,28 +1,17 @@
-using System;
 using System.Collections.Generic;
-using System.Xml;
 
 using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
-    internal class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
+    internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
     {
-        private const string NsRelationship = "http://schemas.openxmlformats.org/package/2006/relationships";
-
-        private const string ElementRelationship = "Relationship";
-        private const string ElementRelationships = "Relationships";
-        private const string AttributeId = "Id";
-        private const string AttributeTarget = "Target";
-
         private readonly ZipWorker _zipWorker;
-
+               
         public XlsxWorkbook(ZipWorker zipWorker)
         {
             _zipWorker = zipWorker;
-
             ReadWorkbook();
-            ReadWorkbookRels();
             ReadSharedStrings();
             ReadStyles();
         }
@@ -45,11 +34,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         private void ReadWorkbook()
         {
-            using var reader = _zipWorker.GetWorkbookReader();
-
+            using RecordReader reader = _zipWorker.GetWorkbookReader();            
+            
             Record record;
             while ((record = reader.Read()) != null)
-            {
+            {                
                 switch (record)
                 {
                     case WorkbookPrRecord pr:
@@ -58,53 +47,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     case SheetRecord sheet:
                         Sheets.Add(sheet);
                         break;
-                }
-            }
-        }
-
-        private void ReadWorkbookRels()
-        {
-            using var stream = _zipWorker.GetWorkbookRelsStream();
-            if (stream == null)
-            {
-                return;
-            }
-
-            using XmlReader reader = XmlReader.Create(stream);
-            ReadWorkbookRels(reader);
-        }
-
-        private void ReadWorkbookRels(XmlReader reader)
-        {
-            if (!reader.IsStartElement(ElementRelationships, NsRelationship))
-            {
-                return;
-            }
-
-            if (!XmlReaderHelper.ReadFirstContent(reader))
-            {
-                return;
-            }
-
-            while (!reader.EOF)
-            {
-                if (reader.IsStartElement(ElementRelationship, NsRelationship))
-                {
-                    string rid = reader.GetAttribute(AttributeId);
-                    foreach (var sheet in Sheets)
-                    {
-                        if (sheet.Rid == rid)
-                        {
-                            sheet.Path = reader.GetAttribute(AttributeTarget);
-                            break;
-                        }
-                    }
-
-                    reader.Skip();
-                }
-                else if (!XmlReaderHelper.SkipContent(reader))
-                {
-                    break;
                 }
             }
         }
@@ -147,6 +89,10 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     case NumberFormatRecord nf:
                         AddNumberFormat(nf.FormatIndexInFile, nf.FormatString);
                         break;
+                    default:
+                        {
+                            break;
+                        }
                 }
             }
         }

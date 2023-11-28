@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core.BinaryFormat
     /// <summary>
     /// The font with index 4 is omitted in all BIFF versions. This means the first four fonts have zero-based indexes, and the fifth font and all following fonts are referenced with one-based indexes.
     /// </summary>
-    internal class XlsBiffFont : XlsBiffRecord
+    internal sealed class XlsBiffFont : XlsBiffRecord
     {
         private readonly IXlsString _fontName;
 

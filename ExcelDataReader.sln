@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29326.143
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{537D3BEA-4A18-4381-A955-DF762D21E100}"
 	ProjectSection(SolutionItems) = preProject
@@ -15,6 +15,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDataReader.DataSet", "src\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj", "{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestApp", "src\TestApp\TestApp.csproj", "{BCE486DF-3DA2-42A2-BF38-376B17CEF434}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDataReader.Benchmarks", "test\ExcelDataReader.Benchmarks\ExcelDataReader.Benchmarks.csproj", "{A40BE62A-B8AE-44D1-8E97-DCB4DA8B8F17}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +40,10 @@ Global
 		{BCE486DF-3DA2-42A2-BF38-376B17CEF434}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCE486DF-3DA2-42A2-BF38-376B17CEF434}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BCE486DF-3DA2-42A2-BF38-376B17CEF434}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A40BE62A-B8AE-44D1-8E97-DCB4DA8B8F17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A40BE62A-B8AE-44D1-8E97-DCB4DA8B8F17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A40BE62A-B8AE-44D1-8E97-DCB4DA8B8F17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A40BE62A-B8AE-44D1-8E97-DCB4DA8B8F17}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

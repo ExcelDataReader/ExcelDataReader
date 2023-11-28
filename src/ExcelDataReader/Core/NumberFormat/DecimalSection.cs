@@ -2,7 +2,7 @@
 
 namespace ExcelDataReader.Core.NumberFormat
 {
-    internal class DecimalSection
+    internal sealed class DecimalSection
     {
         public bool ThousandSeparator { get; set; }
 
@@ -20,8 +20,7 @@ namespace ExcelDataReader.Core.NumberFormat
         {
             if (Parser.ParseNumberTokens(tokens, 0, out var beforeDecimal, out var decimalSeparator, out var afterDecimal) == tokens.Count)
             {
-                bool thousandSeparator;
-                var divisor = GetTrailingCommasDivisor(tokens, out thousandSeparator);
+                var divisor = GetTrailingCommasDivisor(tokens, out bool thousandSeparator);
                 var multiplier = GetPercentMultiplier(tokens);
 
                 format = new DecimalSection()

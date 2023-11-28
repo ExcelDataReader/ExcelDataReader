@@ -13,14 +13,16 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         public XmlRecordReader(XmlReader reader)
         {
             Reader = reader;
+            ProperNamespaces = new(reader.IsStartElement() && reader.NamespaceURI == XmlNamespaces.StrictNsSpreadsheetMl);
         }
+
+        public XmlProperNamespaces ProperNamespaces { get; set; }
 
         protected XmlReader Reader { get; }
 
         public override Record Read()
         {
-            if (_enumerator == null)
-                _enumerator = ReadOverride().GetEnumerator();
+            _enumerator ??= ReadOverride().GetEnumerator();
             if (_enumerator.MoveNext())
                 return _enumerator.Current;
             return null;
@@ -32,13 +34,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
         protected override void Dispose(bool disposing)
         {
             _enumerator?.Dispose();
-#if NET20
-            if (disposing)
-                Reader.Close();
-#else
             if (disposing)
                 Reader.Dispose();
-#endif
         }
     }
 }

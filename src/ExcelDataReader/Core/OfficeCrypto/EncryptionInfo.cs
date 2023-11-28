@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 namespace ExcelDataReader.Core.OfficeCrypto
 {
     /// <summary>
-    /// Base class for the various encryption schemes used by Excel
+    /// Base class for the various encryption schemes used by Excel.
     /// </summary>
     internal abstract class EncryptionInfo
     {

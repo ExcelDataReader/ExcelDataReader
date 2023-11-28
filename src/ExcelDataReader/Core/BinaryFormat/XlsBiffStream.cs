@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
 using ExcelDataReader.Core.OfficeCrypto;
@@ -7,20 +8,28 @@ using ExcelDataReader.Exceptions;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents a BIFF stream
+    /// Represents a BIFF stream.
     /// </summary>
-    internal class XlsBiffStream : IDisposable
+    internal sealed class XlsBiffStream : IDisposable
     {
-        public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, string password = null, byte[] secretKey = null, EncryptionInfo encryption = null)
+        public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, BIFFTYPE? defaultType = null, string password = null, byte[] secretKey = null, EncryptionInfo encryption = null)
         {
             BaseStream = baseStream;
             Position = offset;
 
-            var bof = Read() as XlsBiffBOF;
-            if (bof != null)
-            { 
-                BiffVersion = explicitVersion == 0 ? GetBiffVersion(bof) : explicitVersion;
+            var record = Read();
+            if (record is XlsBiffBOF bof)
+            {
+                BiffVersion = explicitVersion == 0 ? XlsBiffStream.GetBiffVersion(bof) : explicitVersion;
                 BiffType = bof.Type;
+
+                if (secretKey == null)
+                    record = Read();
+            }
+            else if (explicitVersion > 0 && defaultType != null) 
+            {
+                BiffVersion = explicitVersion;
+                BiffType = defaultType.Value;
             }
 
             CipherBlock = -1;
@@ -32,9 +41,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             }
             else
             {
-                var filePass = Read() as XlsBiffFilePass;
-                if (filePass == null)
-                    filePass = Read() as XlsBiffFilePass;
+                var filePass = record as XlsBiffFilePass;
+                filePass ??= Read() as XlsBiffFilePass;
 
                 if (filePass != null)
                 {
@@ -63,12 +71,12 @@ namespace ExcelDataReader.Core.BinaryFormat
         public BIFFTYPE BiffType { get; }
 
         /// <summary>
-        /// Gets the size of BIFF stream in bytes
+        /// Gets the size of BIFF stream in bytes.
         /// </summary>
         public int Size => (int)BaseStream.Length;
 
         /// <summary>
-        /// Gets or sets the current position in BIFF stream
+        /// Gets or sets the current position in BIFF stream.
         /// </summary>
         public int Position { get => (int)BaseStream.Position; set => Seek(value, SeekOrigin.Begin); }
 
@@ -81,28 +89,28 @@ namespace ExcelDataReader.Core.BinaryFormat
         public SymmetricAlgorithm Cipher { get; }
 
         /// <summary>
-        /// Gets or sets the ICryptoTransform instance used to decrypt the current block
+        /// Gets or sets the ICryptoTransform instance used to decrypt the current block.
         /// </summary>
         public ICryptoTransform CipherTransform { get; set; }
 
         /// <summary>
-        /// Gets or sets the current block number being decrypted with CipherTransform
+        /// Gets or sets the current block number being decrypted with CipherTransform.
         /// </summary>
         public int CipherBlock { get; set; }
 
         /// <summary>
-        /// Sets stream pointer to the specified offset
+        /// Sets stream pointer to the specified offset.
         /// </summary>
-        /// <param name="offset">Offset value</param>
-        /// <param name="origin">Offset origin</param>
+        /// <param name="offset">Offset value.</param>
+        /// <param name="origin">Offset origin.</param>
         public void Seek(int offset, SeekOrigin origin)
         {
             BaseStream.Seek(offset, origin);
 
             if (Position < 0)
-                throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalBefore, offset));
+                throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "{0} On offset={1}", Errors.ErrorBiffIlegalBefore, offset));
             if (Position > Size)
-                throw new ArgumentOutOfRangeException(string.Format("{0} On offset={1}", Errors.ErrorBiffIlegalAfter, offset));
+                throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "{0} On offset={1}", Errors.ErrorBiffIlegalAfter, offset));
 
             if (SecretKey != null)
             { 
@@ -112,7 +120,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Reads record under cursor and advances cursor position to next record
+        /// Reads record under cursor and advances cursor position to next record.
         /// </summary>
         /// <returns>The record -or- null.</returns>
         public XlsBiffRecord Read()
@@ -132,15 +140,15 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Returns record at specified offset
+        /// Returns record at specified offset.
         /// </summary>
-        /// <param name="stream">The stream</param>
+        /// <param name="stream">The stream.</param>
         /// <returns>The record -or- null.</returns>
         public XlsBiffRecord GetRecord(Stream stream)
         {
             var recordOffset = (int)stream.Position;
             var header = new byte[4];
-            stream.Read(header, 0, 4);
+            stream.ReadAtLeast(header, 0, 4);
 
             // Does this work on a big endian system?
             var id = (BIFFRECORDTYPE)BitConverter.ToUInt16(header, 0);
@@ -148,7 +156,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             var bytes = new byte[4 + recordSize];
             Array.Copy(header, bytes, 4);
-            stream.Read(bytes, 4, recordSize);
+            stream.ReadAtLeast(bytes, 4, recordSize);
             
             if (SecretKey != null)
                 DecryptRecord(recordOffset, id, bytes);
@@ -213,7 +221,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 case BIFFRECORDTYPE.CONTINUE:
                     return new XlsBiffContinue(bytes);
                 case BIFFRECORDTYPE.DIMENSIONS:
-                case BIFFRECORDTYPE.DIMENSIONS_V2:
+                case BIFFRECORDTYPE.DIMENSIONS_V2 when bytes.Length >= 12:
                     return new XlsBiffDimensions(bytes, biffVersion);
                 case BIFFRECORDTYPE.BOUNDSHEET:
                     return new XlsBiffBoundSheet(bytes, biffVersion);
@@ -268,7 +276,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             ((IDisposable)Cipher)?.Dispose();
         }
 
-        private int GetBiffVersion(XlsBiffBOF bof)
+        private static int GetBiffVersion(XlsBiffBOF bof)
         {
             switch (bof.Id)
             {
@@ -296,7 +304,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Create an ICryptoTransform instance to decrypt a 1024-byte block
+        /// Create an ICryptoTransform instance to decrypt a 1024-byte block.
         /// </summary>
         private void CreateBlockDecryptor(int blockNumber)
         {
@@ -308,7 +316,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Decrypt some dummy bytes to align the decryptor with the position in the current 1024-byte block
+        /// Decrypt some dummy bytes to align the decryptor with the position in the current 1024-byte block.
         /// </summary>
         private void AlignBlockDecryptor(int blockOffset)
         {

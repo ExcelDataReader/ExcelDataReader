@@ -1,7 +1,7 @@
 ﻿namespace ExcelDataReader.Log
 {
     /// <summary>
-    /// 2.0 version of LogExtensions, not as awesome as Extension methods
+    /// 2.0 version of LogExtensions, not as awesome as Extension methods.
     /// </summary>
     public static class LogManager
     {

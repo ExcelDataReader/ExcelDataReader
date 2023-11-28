@@ -1,8 +1,7 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents blank cell
-    /// Base class for all cell types
+    /// Represents a blank cell and is a base class for all cell types.
     /// </summary>
     internal class XlsBiffBlankCell : XlsBiffRecord
     {
@@ -10,6 +9,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             : base(bytes)
         {
         }
+
+        public virtual bool IsEmpty => true;
 
         /// <summary>
         /// Gets the zero-based index of row containing this cell.
@@ -35,22 +36,10 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// Gets a value indicating whether the cell's record identifier is BIFF2-specific. 
         /// The shared binary layout of BIFF2 cells are different from BIFF3+.
         /// </summary>
-        public bool IsBiff2Cell
+        public bool IsBiff2Cell => Id switch
         {
-            get
-            {
-                switch (Id)
-                {
-                    case BIFFRECORDTYPE.NUMBER_OLD:
-                    case BIFFRECORDTYPE.INTEGER_OLD:
-                    case BIFFRECORDTYPE.LABEL_OLD:
-                    case BIFFRECORDTYPE.BLANK_OLD:
-                    case BIFFRECORDTYPE.BOOLERR_OLD:
-                        return true;
-                    default:
-                        return false;
-                }
-            }
-        }
+            BIFFRECORDTYPE.NUMBER_OLD or BIFFRECORDTYPE.INTEGER_OLD or BIFFRECORDTYPE.LABEL_OLD or BIFFRECORDTYPE.BLANK_OLD or BIFFRECORDTYPE.BOOLERR_OLD => true,
+            _ => false,
+        };
     }
 }

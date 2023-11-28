@@ -8,7 +8,6 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 {
     internal sealed class XmlSharedStringsReader : XmlRecordReader
     {
-        private const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
         private const string ElementSst = "sst";
         private const string ElementStringItem = "si";
 
@@ -19,7 +18,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
         protected override IEnumerable<Record> ReadOverride()
         {
-            if (!Reader.IsStartElement(ElementSst, NsSpreadsheetMl))
+            if (!Reader.IsStartElement(ElementSst, ProperNamespaces.NsSpreadsheetMl))
             {
                 yield break;
             }
@@ -31,9 +30,9 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 
             while (!Reader.EOF)
             {
-                if (Reader.IsStartElement(ElementStringItem, NsSpreadsheetMl))
+                if (Reader.IsStartElement(ElementStringItem, ProperNamespaces.NsSpreadsheetMl))
                 {
-                    var value = StringHelper.ReadStringItem(Reader);
+                    var value = StringHelper.ReadStringItem(Reader, ProperNamespaces.NsSpreadsheetMl);
                     yield return new SharedStringRecord(value);
                 }
                 else if (!XmlReaderHelper.SkipContent(Reader))

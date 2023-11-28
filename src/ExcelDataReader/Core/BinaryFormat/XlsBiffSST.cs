@@ -5,32 +5,31 @@ using System.Text;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents a Shared String Table in BIFF8 format
+    /// Represents a Shared String Table in BIFF8 format.
     /// </summary>
-    internal class XlsBiffSST : XlsBiffRecord
+    internal sealed class XlsBiffSST : XlsBiffRecord
     {
-        private readonly List<IXlsString> _strings;
-        private readonly XlsSSTReader _reader = new XlsSSTReader();
+        private readonly List<IXlsString> _strings = new();
+        private readonly XlsSSTReader _reader = new();
 
         internal XlsBiffSST(byte[] bytes)
             : base(bytes)
         {
-            _strings = new List<IXlsString>();
             ReadSstStrings();
         }
 
         /// <summary>
-        /// Gets the number of strings in SST
+        /// Gets the number of strings in SST.
         /// </summary>
         public uint Count => ReadUInt32(0x0);
 
         /// <summary>
-        /// Gets the count of unique strings in SST
+        /// Gets the count of unique strings in SST.
         /// </summary>
         public uint UniqueCount => ReadUInt32(0x4);
 
         /// <summary>
-        /// Parses strings out of a Continue record
+        /// Parses strings out of a Continue record.
         /// </summary>
         public void ReadContinueStrings(XlsBiffContinue sstContinue)
         {
@@ -60,11 +59,11 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Returns string at specified index
+        /// Returns string at specified index.
         /// </summary>
-        /// <param name="sstIndex">Index of string to get</param>
-        /// <param name="encoding">Workbook encoding</param>
-        /// <returns>string value if it was found, empty string otherwise</returns>
+        /// <param name="sstIndex">Index of string to get.</param>
+        /// <param name="encoding">Workbook encoding.</param>
+        /// <returns>string value if it was found, empty string otherwise.</returns>
         public string GetString(uint sstIndex, Encoding encoding)
         {
             if (sstIndex < _strings.Count)
@@ -74,7 +73,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Parses strings out of this SST record
+        /// Parses strings out of this SST record.
         /// </summary>
         private void ReadSstStrings()
         {

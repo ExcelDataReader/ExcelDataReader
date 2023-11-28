@@ -4,9 +4,9 @@ using System.Text;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents a cell containing formula
+    /// Represents a cell containing formula.
     /// </summary>
-    internal class XlsBiffFormulaCell : XlsBiffBlankCell
+    internal sealed class XlsBiffFormulaCell : XlsBiffBlankCell
     {
         // private FormulaFlags _flags;
         private readonly int _biffVersion;
@@ -59,6 +59,8 @@ namespace ExcelDataReader.Core.BinaryFormat
             /// </summary>
             Number
         }
+
+        public override bool IsEmpty => false;
 
         /// <summary>
         /// Gets the formula value type.

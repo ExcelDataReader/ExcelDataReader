@@ -15,7 +15,7 @@ namespace ExcelDataReader.Core.NumberFormat
             Condition condition = null;
             Color color = null;
             string token;
-            List<string> tokens = new List<string>();
+            List<string> tokens = new();
 
             syntaxError = false;
             while ((token = ReadToken(reader, out syntaxError)) != null)
@@ -39,7 +39,11 @@ namespace ExcelDataReader.Core.NumberFormat
                     hasTextPart |= true;
                     tokens.Add(token);
                 }
-                else if (token.StartsWith("["))
+#if NETSTANDARD2_1_OR_GREATER
+                else if (token.StartsWith('['))
+#else
+                else if (token.StartsWith("[", StringComparison.Ordinal))
+#endif
                 {
                     // Does not add to tokens. Absolute/elapsed time tokens
                     // also start with '[', but handled as date part above
@@ -140,7 +144,7 @@ namespace ExcelDataReader.Core.NumberFormat
             afterDecimal = null;
             decimalSeparator = false;
 
-            List<string> remainder = new List<string>();
+            List<string> remainder = new();
             var index = 0;
             for (index = 0; index < tokens.Count; ++index)
             {
@@ -150,13 +154,17 @@ namespace ExcelDataReader.Core.NumberFormat
                     decimalSeparator = true;
                     beforeDecimal = tokens.GetRange(0, index); // TODO: why not remainder? has only valid tokens...
 
-                    remainder = new List<string>();
+                    remainder = new();
                 }
                 else if (Token.IsNumberLiteral(token))
                 {
                     remainder.Add(token);
                 }
-                else if (token.StartsWith("["))
+#if NETSTANDARD2_1_OR_GREATER
+                else if (token.StartsWith('['))
+#else
+                else if (token.StartsWith("[", StringComparison.Ordinal))
+#endif
                 {
                     // ignore
                 }

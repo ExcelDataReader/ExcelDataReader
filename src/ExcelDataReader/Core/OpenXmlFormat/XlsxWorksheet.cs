@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Xml;
 using ExcelDataReader.Core.NumberFormat;
 using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
-    internal class XlsxWorksheet : IWorksheet
+    internal sealed class XlsxWorksheet : IWorksheet
     {
         public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, SheetRecord refSheet)
         {
@@ -23,14 +24,15 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                 return;
 
             using var sheetStream = Document.GetWorksheetReader(Path);
+            
             if (sheetStream == null)
                 return;
 
             int rowIndexMaximum = int.MinValue;
             int columnIndexMaximum = int.MinValue;
 
-            List<Column> columnWidths = new List<Column>();
-            List<CellRange> cellRanges = new List<CellRange>();
+            List<Column> columnWidths = new();
+            List<CellRange> cellRanges = new();
 
             bool inSheetData = false;
 
@@ -49,7 +51,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                         rowIndexMaximum = Math.Max(rowIndexMaximum, row.RowIndex);
                         break;
                     case CellRecord cell when inSheetData:
-                        columnIndexMaximum = Math.Max(columnIndexMaximum, cell.ColumnIndex);
+                        if (cell.Value != null || cell.Error != null)
+                            columnIndexMaximum = Math.Max(columnIndexMaximum, cell.ColumnIndex);
                         break;
                     case ColumnRecord column:
                         columnWidths.Add(column.Column);
@@ -113,7 +116,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             if (string.IsNullOrEmpty(Path))
                 yield break;
 
-            using var sheetStream = Document.GetWorksheetReader(Path);
+            using RecordReader sheetStream = Document.GetWorksheetReader(Path);
             if (sheetStream == null)
                 yield break;
 
@@ -189,9 +192,24 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     }
 
                     return number;
+
+                case DateTime date:
+                    return date;
+
                 default:
+                    if (value == null)
+                        return value;
+                    NumberFormatString numberFormat = Workbook.GetNumberFormatString(numberFormatIndex);
+                    if (numberFormat.IsTimeSpanFormat)
+                        return XmlConvert.ToTimeSpan(value.ToString());
+                    if (numberFormat.IsDateTimeFormat)
+                    {
+                        if (DateTimeOffset.TryParse(value.ToString(), out DateTimeOffset dateTimeOffset))
+                            return dateTimeOffset;
+                    }
+
                     return value;
             }
-        }
+        }        
     }
 }

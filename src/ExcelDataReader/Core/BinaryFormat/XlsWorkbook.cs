@@ -9,37 +9,35 @@ using ExcelDataReader.Exceptions;
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents Globals section of workbook
+    /// Represents Globals section of workbook.
     /// </summary>
-    internal class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
+    internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
     {
         internal XlsWorkbook(Stream stream, string password, Encoding fallbackEncoding)
         {
             Stream = stream;
 
-            using (var biffStream = new XlsBiffStream(stream, 0, 0, password))
+            using var biffStream = new XlsBiffStream(stream, password: password);
+            if (biffStream.BiffVersion == 0)
+                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+
+            BiffVersion = biffStream.BiffVersion;
+            SecretKey = biffStream.SecretKey;
+            Encryption = biffStream.Encryption;
+            Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
+
+            if (biffStream.BiffType == BIFFTYPE.WorkbookGlobals)
             {
-                if (biffStream.BiffVersion == 0)
-                    throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
-
-                BiffVersion = biffStream.BiffVersion;
-                SecretKey = biffStream.SecretKey;
-                Encryption = biffStream.Encryption;
-                Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
-
-                if (biffStream.BiffType == BIFFTYPE.WorkbookGlobals)
-                {
-                    ReadWorkbookGlobals(biffStream);
-                }
-                else if (biffStream.BiffType == BIFFTYPE.Worksheet)
-                {
-                    // set up 'virtual' bound sheet pointing at this
-                    Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
-                }
-                else
-                {
-                    throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
-                }
+                ReadWorkbookGlobals(biffStream);
+            }
+            else if (biffStream.BiffType == BIFFTYPE.Worksheet)
+            {
+                // set up 'virtual' bound sheet pointing at this
+                Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
+            }
+            else
+            {
+                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
             }
         }
 
@@ -72,7 +70,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         public List<XlsBiffBoundSheet> Sheets { get; } = new List<XlsBiffBoundSheet>();
 
         /// <summary>
-        /// Gets or sets the Shared String Table of workbook
+        /// Gets or sets the Shared String Table of workbook.
         /// </summary>
         public XlsBiffSST SST { get; set; }
 
@@ -140,16 +138,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         internal void AddXf(XlsBiffXF xf)
         {
-            var extendedFormat = new ExtendedFormat()
-            {
-                FontIndex = xf.Font,
-                NumberFormatIndex = xf.Format,
-                Locked = xf.IsLocked,
-                Hidden = xf.IsHidden,
-                HorizontalAlignment = xf.HorizontalAlignment,
-                IndentLevel = xf.IndentLevel,
-                ParentCellStyleXf = xf.ParentCellStyleXf,
-            };
+            var extendedFormat = new ExtendedFormat(xf.ParentCellStyleXf, xf.Font, xf.Format, xf.IsLocked, xf.IsHidden, xf.IndentLevel, xf.HorizontalAlignment);
 
             // The workbook holds two kinds of XF records: Cell XFs, and Cell Style XFs.
             // In the binary XLS format, both kinds of XF records are saved in a single list,
@@ -165,7 +154,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             var formats = new Dictionary<int, XlsBiffFormatString>();
 
             XlsBiffRecord rec;
-            while ((rec = biffStream.Read()) != null && !(rec is XlsBiffEof))
+            while ((rec = biffStream.Read()) != null && rec is not XlsBiffEof)
             {
                 switch (rec)
                 {
@@ -205,11 +194,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         SST = sst;
                         break;
                     case XlsBiffContinue sstContinue:
-                        if (SST != null)
-                        {
-                            SST.ReadContinueStrings(sstContinue);
-                        }
-
+                        SST?.ReadContinueStrings(sstContinue);
                         break;
                     case XlsBiffRecord _ when rec.Id == BIFFRECORDTYPE.MMS:
                         Mms = rec;
@@ -231,10 +216,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                 }
             }
 
-            if (SST != null)
-            {
-                SST.Flush();
-            }
+            SST?.Flush();
 
             foreach (var format in formats)
             {

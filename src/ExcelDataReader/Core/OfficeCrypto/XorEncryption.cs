@@ -7,7 +7,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
     /// <summary>
     /// Represents "XOR Deobfucation Method 1" used in XLS.
     /// </summary>
-    internal class XorEncryption : EncryptionInfo
+    internal sealed class XorEncryption : EncryptionInfo
     {
         public ushort EncryptionKey { get; set; }
 

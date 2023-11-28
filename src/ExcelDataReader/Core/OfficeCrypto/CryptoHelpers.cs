@@ -17,9 +17,13 @@ namespace ExcelDataReader.Core.OfficeCrypto
                 case HashIdentifier.SHA256:
                     return SHA256.Create();
                 case HashIdentifier.SHA1:
+#pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
                     return SHA1.Create();
+#pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
                 case HashIdentifier.MD5:
+#pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
                     return MD5.Create();
+#pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
                 default:
                     throw new InvalidOperationException("Unsupported hash algorithm");
             }
@@ -27,10 +31,8 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         public static byte[] HashBytes(byte[] bytes, HashIdentifier hashAlgorithm)
         {
-            using (HashAlgorithm hash = Create(hashAlgorithm))
-            {
-                return hash.ComputeHash(bytes);
-            }
+            using HashAlgorithm hash = Create(hashAlgorithm);
+            return hash.ComputeHash(bytes);
         }
 
         public static byte[] Combine(params byte[][] arrays)
@@ -57,18 +59,17 @@ namespace ExcelDataReader.Core.OfficeCrypto
                 case CipherIdentifier.RC4:
                     return new RC4Managed();
                 case CipherIdentifier.DES3:
+#pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
                     return InitCipher(TripleDES.Create(), keySize, blockSize, mode);
-#if NET20 || NET45 || NETSTANDARD2_0
+#pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
+#pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
                 case CipherIdentifier.RC2:
                     return InitCipher(RC2.Create(), keySize, blockSize, mode);
                 case CipherIdentifier.DES:
                     return InitCipher(DES.Create(), keySize, blockSize, mode);
+#pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
                 case CipherIdentifier.AES:
                     return InitCipher(new RijndaelManaged(), keySize, blockSize, mode);
-#else
-                case CipherIdentifier.AES:
-                    return InitCipher(Aes.Create(), keySize, blockSize, mode);
-#endif
             }
 
             throw new InvalidOperationException("Unsupported encryption method: " + identifier.ToString());
@@ -85,24 +86,18 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         public static byte[] DecryptBytes(SymmetricAlgorithm algo, byte[] bytes, byte[] key, byte[] iv)
         {
-            using (var decryptor = algo.CreateDecryptor(key, iv))
-            {
-                return DecryptBytes(decryptor, bytes);
-            }
+            using var decryptor = algo.CreateDecryptor(key, iv);
+            return DecryptBytes(decryptor, bytes);
         }
 
         public static byte[] DecryptBytes(ICryptoTransform transform, byte[] bytes)
         {
             var length = bytes.Length;
-            using (MemoryStream msDecrypt = new MemoryStream(bytes, 0, length))
-            {
-                using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, transform, CryptoStreamMode.Read))
-                {
-                    var result = new byte[length];
-                    csDecrypt.Read(result, 0, length);
-                    return result;
-                }
-            }
+            using MemoryStream msDecrypt = new(bytes, 0, length);
+            using CryptoStream csDecrypt = new(msDecrypt, transform, CryptoStreamMode.Read);
+            var result = new byte[length];
+            csDecrypt.ReadAtLeast(result, 0, length);
+            return result;
         }
     }
 }

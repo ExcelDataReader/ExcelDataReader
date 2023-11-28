@@ -2,15 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using ExcelDataReader.Core.NumberFormat;
 using ExcelDataReader.Log;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents Worksheet section in workbook
+    /// Represents Worksheet section in workbook.
     /// </summary>
-    internal class XlsWorksheet : IWorksheet
+    internal sealed class XlsWorksheet : IWorksheet
     {
         public XlsWorksheet(XlsWorkbook workbook, XlsBiffBoundSheet refSheet, Stream stream)
         {
@@ -35,14 +34,14 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Gets the worksheet name
+        /// Gets the worksheet name.
         /// </summary>
         public string Name { get; }
 
         public string CodeName { get; private set; }
 
         /// <summary>
-        /// Gets the visibility of worksheet
+        /// Gets the visibility of worksheet.
         /// </summary>
         public string VisibleState { get; }
 
@@ -91,25 +90,23 @@ namespace ExcelDataReader.Core.BinaryFormat
         public IEnumerable<Row> ReadRows()
         {
             var rowIndex = 0;
-            using (var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, null, Workbook.SecretKey, Workbook.Encryption))
+            using var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, BIFFTYPE.Worksheet, secretKey: Workbook.SecretKey, encryption: Workbook.Encryption);
+            foreach (var rowBlock in ReadWorksheetRows(biffStream))
             {
-                foreach (var rowBlock in ReadWorksheetRows(biffStream))
+                for (; rowIndex < rowBlock.RowIndex; ++rowIndex)
                 {
-                    for (; rowIndex < rowBlock.RowIndex; ++rowIndex)
-                    {
-                        yield return new Row(rowIndex, DefaultRowHeight / 20.0, new List<Cell>());
-                    }
-
-                    rowIndex++;
-                    yield return rowBlock;
+                    yield return new Row(rowIndex, DefaultRowHeight / 20.0, new List<Cell>());
                 }
+
+                rowIndex++;
+                yield return rowBlock;
             }
         }
 
         /// <summary>
         /// Find how many rows to read at a time and their offset in the file.
         /// If rows are stored sequentially in the file, returns a block size of up to 32 rows.
-        /// If rows are stored non-sequentially, the block size may extend up to the entire worksheet stream
+        /// If rows are stored non-sequentially, the block size may extend up to the entire worksheet stream.
         /// </summary>
         private void GetBlockSize(int startRow, out int blockRowCount, out int minOffset, out int maxOffset)
         {
@@ -255,7 +252,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Reads additional records if needed: a string record might follow a formula result
+        /// Reads additional records if needed: a string record might follow a formula result.
         /// </summary>
         private Cell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, int xfIndex)
         {
@@ -432,134 +429,139 @@ namespace ExcelDataReader.Core.BinaryFormat
 
         private void ReadWorksheetGlobals()
         {
-            using (var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, null, Workbook.SecretKey, Workbook.Encryption))
+            using var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, BIFFTYPE.Worksheet, secretKey: Workbook.SecretKey, encryption: Workbook.Encryption);
+            
+            // Check the expected BOF record was found in the BIFF stream
+            if (biffStream.BiffVersion == 0 || biffStream.BiffType != BIFFTYPE.Worksheet)
+                return;
+
+            XlsBiffHeaderFooterString header = null;
+            XlsBiffHeaderFooterString footer = null;
+
+            var ixfeOffset = -1;
+
+            int maxCellColumn = 0;
+            int maxRowCount = 0; // number of rows with cell records
+            int maxRowCountFromRowRecord = 0; // number of rows with row records
+
+            var mergeCells = new List<CellRange>();
+            var biffFormats = new Dictionary<ushort, XlsBiffFormatString>();
+            var recordOffset = biffStream.Position;
+            var rec = biffStream.Read();
+            var columnWidths = new List<Column>();
+
+            while (rec != null && rec is not XlsBiffEof)
             {
-                // Check the expected BOF record was found in the BIFF stream
-                if (biffStream.BiffVersion == 0 || biffStream.BiffType != BIFFTYPE.Worksheet)
-                    return;
-
-                XlsBiffHeaderFooterString header = null;
-                XlsBiffHeaderFooterString footer = null;
-                
-                var ixfeOffset = -1;
-
-                int maxCellColumn = 0;
-                int maxRowCount = 0; // number of rows with cell records
-                int maxRowCountFromRowRecord = 0; // number of rows with row records
-
-                var mergeCells = new List<CellRange>();
-                var biffFormats = new Dictionary<ushort, XlsBiffFormatString>();
-                var recordOffset = biffStream.Position;
-                var rec = biffStream.Read();
-                var columnWidths = new List<Column>();
-
-                while (rec != null && !(rec is XlsBiffEof))
+                switch (rec)
                 {
-                    switch (rec)
-                    {
-                        case XlsBiffDimensions dims:
-                            FieldCount = dims.LastColumn;
-                            RowCount = (int)dims.LastRow;
-                            break;
-                        case XlsBiffDefaultRowHeight defaultRowHeightRecord:
-                            DefaultRowHeight = defaultRowHeightRecord.RowHeight;
-                            break;
-                        case XlsBiffSimpleValueRecord is1904 when rec.Id == BIFFRECORDTYPE.RECORD1904:
-                            IsDate1904 = is1904.Value == 1;
-                            break;
-                        case XlsBiffXF xf when rec.Id == BIFFRECORDTYPE.XF_V2 || rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4:
-                            // NOTE: XF records should only occur in raw BIFF2-4 single worksheet documents without the workbook stream, or globally in the workbook stream.
-                            // It is undefined behavior if multiple worksheets in a workbook declare XF records.
-                            Workbook.AddXf(xf);
-                            break;
-                        case XlsBiffMergeCells mc:
-                            mergeCells.AddRange(mc.MergeCells);
-                            break;
-                        case XlsBiffColInfo colInfo:
-                            columnWidths.Add(colInfo.Value);
-                            break;
-                        case XlsBiffFormatString fmt when rec.Id == BIFFRECORDTYPE.FORMAT:
-                            if (Workbook.BiffVersion >= 5)
-                            {
-                                // fmt.Index exists on BIFF5+ only
-                                biffFormats.Add(fmt.Index, fmt);
-                            }
+                    case XlsBiffDimensions dims:
+                        // FieldCount = dims.LastColumn;
+                        RowCount = (int)dims.LastRow;
+                        break;
+                    case XlsBiffDefaultRowHeight defaultRowHeightRecord:
+                        DefaultRowHeight = defaultRowHeightRecord.RowHeight;
+                        break;
+                    case XlsBiffSimpleValueRecord is1904 when rec.Id == BIFFRECORDTYPE.RECORD1904:
+                        IsDate1904 = is1904.Value == 1;
+                        break;
+                    case XlsBiffXF xf when rec.Id == BIFFRECORDTYPE.XF_V2 || rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4:
+                        // NOTE: XF records should only occur in raw BIFF2-4 single worksheet documents without the workbook stream, or globally in the workbook stream.
+                        // It is undefined behavior if multiple worksheets in a workbook declare XF records.
+                        Workbook.AddXf(xf);
+                        break;
+                    case XlsBiffMergeCells mc:
+                        mergeCells.AddRange(mc.MergeCells);
+                        break;
+                    case XlsBiffColInfo colInfo:
+                        columnWidths.Add(colInfo.Value);
+                        break;
+                    case XlsBiffFormatString fmt when rec.Id == BIFFRECORDTYPE.FORMAT:
+                        if (Workbook.BiffVersion >= 5)
+                        {
+                            // fmt.Index exists on BIFF5+ only
+                            biffFormats.Add(fmt.Index, fmt);
+                        }
+                        else
+                        {
+                            biffFormats.Add((ushort)biffFormats.Count, fmt);
+                        }
+
+                        break;
+
+                    case XlsBiffFormatString fmt23 when rec.Id == BIFFRECORDTYPE.FORMAT_V23:
+                        biffFormats.Add((ushort)biffFormats.Count, fmt23);
+                        break;
+                    case XlsBiffSimpleValueRecord codePage when rec.Id == BIFFRECORDTYPE.CODEPAGE:
+                        Encoding = EncodingHelper.GetEncoding(codePage.Value);
+                        break;
+                    case XlsBiffHeaderFooterString h when rec.Id == BIFFRECORDTYPE.HEADER && rec.RecordSize > 0:
+                        header = h;
+                        break;
+                    case XlsBiffHeaderFooterString f when rec.Id == BIFFRECORDTYPE.FOOTER && rec.RecordSize > 0:
+                        footer = f;
+                        break;
+                    case XlsBiffCodeName codeName:
+                        CodeName = codeName.GetValue(Encoding);
+                        break;
+                    case XlsBiffRow row:
+                        SetMinMaxRow(row.RowIndex, row);
+
+                        // Count rows by row records without affecting the overlap in OffsetMap
+                        maxRowCountFromRowRecord = Math.Max(maxRowCountFromRowRecord, row.RowIndex + 1);
+                        break;
+                    case XlsBiffBlankCell cell:
+                        if (!cell.IsEmpty)
+                        {
+                            if (cell is XlsBiffMulRKCell mcell)
+                                maxCellColumn = Math.Max(maxCellColumn, mcell.LastColumnIndex + 1);
                             else
-                            {
-                                biffFormats.Add((ushort)biffFormats.Count, fmt);
-                            }
+                                maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
+                        }
 
-                            break;
+                        maxRowCount = Math.Max(maxRowCount, cell.RowIndex + 1);
+                        if (ixfeOffset != -1)
+                        {
+                            SetMinMaxRowOffset(cell.RowIndex, ixfeOffset, maxRowCount - 1);
+                            ixfeOffset = -1;
+                        }
 
-                        case XlsBiffFormatString fmt23 when rec.Id == BIFFRECORDTYPE.FORMAT_V23:
-                            biffFormats.Add((ushort)biffFormats.Count, fmt23);
-                            break;
-                        case XlsBiffSimpleValueRecord codePage when rec.Id == BIFFRECORDTYPE.CODEPAGE:
-                            Encoding = EncodingHelper.GetEncoding(codePage.Value);
-                            break;
-                        case XlsBiffHeaderFooterString h when rec.Id == BIFFRECORDTYPE.HEADER && rec.RecordSize > 0:
-                            header = h;
-                            break;
-                        case XlsBiffHeaderFooterString f when rec.Id == BIFFRECORDTYPE.FOOTER && rec.RecordSize > 0:
-                            footer = f;
-                            break;
-                        case XlsBiffCodeName codeName:
-                            CodeName = codeName.GetValue(Encoding);
-                            break;
-                        case XlsBiffRow row:
-                            SetMinMaxRow(row.RowIndex, row);
-
-                            // Count rows by row records without affecting the overlap in OffsetMap
-                            maxRowCountFromRowRecord = Math.Max(maxRowCountFromRowRecord, row.RowIndex + 1);
-                            break;
-                        case XlsBiffBlankCell cell:
-                            maxCellColumn = Math.Max(maxCellColumn, cell.ColumnIndex + 1);
-                            maxRowCount = Math.Max(maxRowCount, cell.RowIndex + 1);
-                            if (ixfeOffset != -1)
-                            {
-                                SetMinMaxRowOffset(cell.RowIndex, ixfeOffset, maxRowCount - 1);
-                                ixfeOffset = -1;
-                            }
-
-                            SetMinMaxRowOffset(cell.RowIndex, recordOffset, maxRowCount - 1);
-                            break;
-                        case XlsBiffRecord ixfe when rec.Id == BIFFRECORDTYPE.IXFE:
-                            ixfeOffset = recordOffset; 
-                            break;
-                    }
-
-                    recordOffset = biffStream.Position;
-                    rec = biffStream.Read();
-
-                    // Stop if we find the start out a new substream. Not always that files have the required EOF before a substream BOF.
-                    if (rec is XlsBiffBOF)
+                        SetMinMaxRowOffset(cell.RowIndex, recordOffset, maxRowCount - 1);
+                        break;
+                    case XlsBiffRecord when rec.Id == BIFFRECORDTYPE.IXFE:
+                        ixfeOffset = recordOffset;
                         break;
                 }
 
-                if (header != null || footer != null)
-                {
-                    HeaderFooter = new HeaderFooter(footer?.GetValue(Encoding), header?.GetValue(Encoding));
-                }
+                recordOffset = biffStream.Position;
+                rec = biffStream.Read();
 
-                foreach (var biffFormat in biffFormats)
-                {
-                    Workbook.AddNumberFormat(biffFormat.Key, biffFormat.Value.GetValue(Encoding));
-                }
+                // Stop if we find the start out a new substream. Not always that files have the required EOF before a substream BOF.
+                if (rec is XlsBiffBOF)
+                    break;
+            }
 
-                if (mergeCells.Count > 0)
-                    MergeCells = mergeCells.ToArray();
+            if (header != null || footer != null)
+            {
+                HeaderFooter = new HeaderFooter(footer?.GetValue(Encoding), header?.GetValue(Encoding));
+            }
 
-                if (FieldCount < maxCellColumn)
-                    FieldCount = maxCellColumn;
+            foreach (var biffFormat in biffFormats)
+            {
+                Workbook.AddNumberFormat(biffFormat.Key, biffFormat.Value.GetValue(Encoding));
+            }
 
-                maxRowCount = Math.Max(maxRowCount, maxRowCountFromRowRecord);
-                if (RowCount < maxRowCount)
-                    RowCount = maxRowCount;
+            if (mergeCells.Count > 0)
+                MergeCells = mergeCells.ToArray();
 
-                if (columnWidths.Count > 0)
-                {
-                    ColumnWidths = columnWidths.ToArray();
-                }
+            FieldCount = maxCellColumn;
+
+            maxRowCount = Math.Max(maxRowCount, maxRowCountFromRowRecord);
+            if (RowCount < maxRowCount)
+                RowCount = maxRowCount;
+
+            if (columnWidths.Count > 0)
+            {
+                ColumnWidths = columnWidths.ToArray();
             }
         }
 
@@ -567,10 +569,13 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             if (!RowOffsetMap.TryGetValue(rowIndex, out var rowOffset))
             {
-                rowOffset = new XlsRowOffset();
-                rowOffset.MinCellOffset = int.MaxValue;
-                rowOffset.MaxCellOffset = int.MinValue;
-                rowOffset.MaxOverlapRowIndex = int.MinValue;
+                rowOffset = new()
+                {
+                    MinCellOffset = int.MaxValue,
+                    MaxCellOffset = int.MinValue,
+                    MaxOverlapRowIndex = int.MinValue
+                };
+
                 RowOffsetMap.Add(rowIndex, rowOffset);
             }
 
@@ -581,10 +586,13 @@ namespace ExcelDataReader.Core.BinaryFormat
         {
             if (!RowOffsetMap.TryGetValue(rowIndex, out var rowOffset))
             {
-                rowOffset = new XlsRowOffset();
-                rowOffset.MinCellOffset = int.MaxValue;
-                rowOffset.MaxCellOffset = int.MinValue;
-                rowOffset.MaxOverlapRowIndex = int.MinValue;
+                rowOffset = new()
+                {
+                    MinCellOffset = int.MaxValue,
+                    MaxCellOffset = int.MinValue,
+                    MaxOverlapRowIndex = int.MinValue
+                };
+
                 RowOffsetMap.Add(rowIndex, rowOffset);
             }
 
@@ -593,12 +601,12 @@ namespace ExcelDataReader.Core.BinaryFormat
             rowOffset.MaxOverlapRowIndex = Math.Max(maxOverlapRow, rowOffset.MaxOverlapRowIndex);
         }
 
-        internal class XlsRowBlock
+        internal sealed class XlsRowBlock
         {
             public Dictionary<int, Row> Rows { get; set; }
         }
 
-        internal class XlsRowOffset
+        internal sealed class XlsRowOffset
         {
             public XlsBiffRow Record { get; set; }
 

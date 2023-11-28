@@ -6,30 +6,28 @@ using System.Xml;
 namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 {
     internal static class StringHelper
-    {
-        private const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-
+    {       
         private const string ElementT = "t";
         private const string ElementR = "r";
 
-        public static string ReadStringItem(XmlReader reader)
+        public static string ReadStringItem(XmlReader reader, string nsSpreadsheetMl)
         {
-            string result = string.Empty;
             if (!XmlReaderHelper.ReadFirstContent(reader))
             {
-                return result;
+                return string.Empty;
             }
 
+            StringBuilder sb = new();
             while (!reader.EOF)
             {
-                if (reader.IsStartElement(ElementT, NsSpreadsheetMl))
+                if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
                 {
                     // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
-                    result += reader.ReadElementContentAsString();
+                    sb.Append(ReadElementContent(reader));
                 }
-                else if (reader.IsStartElement(ElementR, NsSpreadsheetMl))
+                else if (reader.IsStartElement(ElementR, nsSpreadsheetMl))
                 {
-                    result += ReadRichTextRun(reader);
+                    ReadRichTextRun(reader, sb, nsSpreadsheetMl);
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))
                 {
@@ -37,30 +35,35 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                 }
             }
 
-            return result;
+            return sb.ToString();
         }
 
-        private static string ReadRichTextRun(XmlReader reader)
+        private static void ReadRichTextRun(XmlReader reader, StringBuilder sb, string nsSpreadsheetMl)
         {
-            string result = string.Empty;
             if (!XmlReaderHelper.ReadFirstContent(reader))
             {
-                return result;
+                return;
             }
 
             while (!reader.EOF)
             {
-                if (reader.IsStartElement(ElementT, NsSpreadsheetMl))
+                if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
                 {
-                    result += reader.ReadElementContentAsString();
+                    sb.Append(ReadElementContent(reader));
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))
                 {
                     break;
                 }
             }
+        }
 
-            return result;
+        private static string ReadElementContent(XmlReader reader)
+        {
+            if (reader.GetAttribute("xml:space") == "preserve")
+                return reader.ReadElementContentAsString();
+            else
+                return reader.ReadElementContentAsString().Trim();
         }
     }
 }

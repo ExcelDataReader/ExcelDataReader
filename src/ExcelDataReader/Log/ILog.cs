@@ -3,7 +3,7 @@
 namespace ExcelDataReader.Log
 {
     /// <summary>
-    /// Custom interface for logging messages
+    /// Custom interface for logging messages.
     /// </summary>
     public interface ILog
     {
@@ -33,7 +33,9 @@ namespace ExcelDataReader.Log
         /// </summary>
         /// <param name="message">The message.</param>
         /// <param name="formatting">The formatting.</param>
+#pragma warning disable CA1716 // Identifiers should not match keywords
         void Error(string message, params object[] formatting);
+#pragma warning restore CA1716 // Identifiers should not match keywords
 
         /// <summary>
         /// Fatal level of the specified message. The other method is preferred since the execution is deferred.

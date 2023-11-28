@@ -2,7 +2,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/ExcelDataReader.svg)](https://www.nuget.org/packages/ExcelDataReader)
 
-Lightweight and fast library written in C# for reading Microsoft Excel files (2.0-2007).
+Lightweight and fast library written in C# for reading Microsoft Excel files (2.0-2021, 365).
 
 Please feel free to fork and submit pull requests to the develop branch.
 
@@ -34,9 +34,9 @@ It is recommended to use NuGet through the VS Package Manager Console `Install-P
 
 As of ExcelDataReader version 3.0, the project was split into multiple packages:
 
-Install the `ExcelDataReader` base package to use the "low level" reader interface. Compatible with net20, net45, netstandard1.3 and netstandard2.0.
+Install the `ExcelDataReader` base package to use the "low level" reader interface. Compatible with met462, netstandard2.0 and netstandard2.1.
 
-Install the `ExcelDataReader.DataSet` extension package to use the `AsDataSet()` method to populate a `System.Data.DataSet`. This will also pull in the base package. Compatible with net20, net45 and netstandard2.0.
+Install the `ExcelDataReader.DataSet` extension package to use the `AsDataSet()` method to populate a `System.Data.DataSet`. This will also pull in the base package. Compatible with net462, netstandard2.0 and netstandard2.1.
 
 ## How to use
 
@@ -250,7 +250,7 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
 
 ## Important note on .NET Core
 
-By default, ExcelDataReader throws a NotSupportedException "No data is available for encoding 1252." on .NET Core.
+By default, ExcelDataReader throws a NotSupportedException "No data is available for encoding 1252." on .NET Core and .NET 5.0 or later.
 
 To fix, add a dependency to the package `System.Text.Encoding.CodePages` and then add code to register the code page provider during application initialization (f.ex in Startup.cs):
 
@@ -258,4 +258,4 @@ To fix, add a dependency to the package `System.Text.Encoding.CodePages` and the
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 ```
 
-This is required to parse strings in binary BIFF2-5 Excel documents encoded with DOS-era code pages. These encodings are registered by default in the full .NET Framework, but not on .NET Core.
+This is required to parse strings in binary BIFF2-5 Excel documents encoded with DOS-era code pages. These encodings are registered by default in the full .NET Framework, but not on .NET Core and .NET 5.0 or later.

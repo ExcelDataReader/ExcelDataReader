@@ -3,9 +3,9 @@ using System.Collections.Generic;
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
     /// <summary>
-    /// Shared string table
+    /// Shared string table.
     /// </summary>
-    internal class XlsxSST : List<string>
+    internal sealed class XlsxSST : List<string>
     {
     }
 }

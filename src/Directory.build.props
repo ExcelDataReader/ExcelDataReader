@@ -1,0 +1,33 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  
+  <PropertyGroup Condition="$(MSBuildProjectName.StartsWith('ExcelDataReader'))">
+    <VersionPrefix>3.7.0</VersionPrefix>
+    <TargetFrameworks>net462;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <AssemblyOriginatorKeyFile>..\ExcelDataReader.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
+    <PackageTags>excel;xls;xlsx;dataset</PackageTags>
+    <PackageIcon>ExcelDataReader.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/ExcelDataReader/ExcelDataReader</PackageProjectUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  
+  <ItemGroup Condition="$(MSBuildProjectName.StartsWith('ExcelDataReader'))">
+    <None Include="..\ExcelDataReader.snk" Link="ExcelDataReader.snk" />
+    <None Include="..\ExcelDataReader.png" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)../README.md" Link="README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+  
+  <ItemGroup Condition="$(MSBuildProjectName.StartsWith('ExcelDataReader'))">
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>

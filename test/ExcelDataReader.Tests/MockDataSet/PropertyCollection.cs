@@ -5,7 +5,7 @@ namespace ExcelDataReader
 {
     public class PropertyCollection : IEnumerable<KeyValuePair<string, string>>
     {
-        private readonly Dictionary<string, string> dict = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> dict = new();
 
         public string this[string key] => dict[key];
 
