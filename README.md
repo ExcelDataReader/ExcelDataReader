@@ -34,7 +34,7 @@ It is recommended to use NuGet through the VS Package Manager Console `Install-P
 
 As of ExcelDataReader version 3.0, the project was split into multiple packages:
 
-Install the `ExcelDataReader` base package to use the "low level" reader interface. Compatible with met462, netstandard2.0 and netstandard2.1.
+Install the `ExcelDataReader` base package to use the "low level" reader interface. Compatible with net462, netstandard2.0 and netstandard2.1.
 
 Install the `ExcelDataReader.DataSet` extension package to use the `AsDataSet()` method to populate a `System.Data.DataSet`. This will also pull in the base package. Compatible with net462, netstandard2.0 and netstandard2.1.
 
