@@ -15,31 +15,31 @@ namespace ExcelDataReader.Tests
         [Test]
         public void NumberFormatTestIsDateFormatString()
         {
-            Assert.IsTrue(IsDateFormatString("dd/mm/yyyy"));
-            Assert.IsTrue(IsDateFormatString("dd-mmm-yy"));
-            Assert.IsTrue(IsDateFormatString("dd-mmmm"));
-            Assert.IsTrue(IsDateFormatString("mmm-yy"));
-            Assert.IsTrue(IsDateFormatString("h:mm AM/PM"));
-            Assert.IsTrue(IsDateFormatString("h:mm:ss AM/PM"));
-            Assert.IsTrue(IsDateFormatString("hh:mm"));
-            Assert.IsTrue(IsDateFormatString("hh:mm:ss"));
-            Assert.IsTrue(IsDateFormatString("dd/mm/yyyy hh:mm"));
-            Assert.IsTrue(IsDateFormatString("mm:ss"));
-            Assert.IsTrue(IsDateFormatString("mm:ss.0"));
-            Assert.IsTrue(IsDateFormatString("[$-809]dd mmmm yyyy"));
-            Assert.IsFalse(IsDateFormatString("#,##0;[Red]-#,##0"));
-            Assert.IsFalse(IsDateFormatString("0_);[Red](0)"));
-            Assert.IsFalse(IsDateFormatString(@"0\h"));
-            Assert.IsFalse(IsDateFormatString("0\"h\""));
-            Assert.IsFalse(IsDateFormatString("0%"));
-            Assert.IsFalse(IsDateFormatString("General"));
-            Assert.IsFalse(IsDateFormatString(@"_-* #,##0\ _P_t_s_-;\-* #,##0\ _P_t_s_-;_-* "" - ""??\ _P_t_s_-;_-@_- "));
+            Assert.That(IsDateFormatString("dd/mm/yyyy"), Is.True);
+            Assert.That(IsDateFormatString("dd-mmm-yy"), Is.True);
+            Assert.That(IsDateFormatString("dd-mmmm"), Is.True);
+            Assert.That(IsDateFormatString("mmm-yy"), Is.True);
+            Assert.That(IsDateFormatString("h:mm AM/PM"), Is.True);
+            Assert.That(IsDateFormatString("h:mm:ss AM/PM"), Is.True);
+            Assert.That(IsDateFormatString("hh:mm"), Is.True);
+            Assert.That(IsDateFormatString("hh:mm:ss"), Is.True);
+            Assert.That(IsDateFormatString("dd/mm/yyyy hh:mm"), Is.True);
+            Assert.That(IsDateFormatString("mm:ss"), Is.True);
+            Assert.That(IsDateFormatString("mm:ss.0"), Is.True);
+            Assert.That(IsDateFormatString("[$-809]dd mmmm yyyy"), Is.True);
+            Assert.That(IsDateFormatString("#,##0;[Red]-#,##0"), Is.False);
+            Assert.That(IsDateFormatString("0_);[Red](0)"), Is.False);
+            Assert.That(IsDateFormatString(@"0\h"), Is.False);
+            Assert.That(IsDateFormatString("0\"h\""), Is.False);
+            Assert.That(IsDateFormatString("0%"), Is.False);
+            Assert.That(IsDateFormatString("General"), Is.False);
+            Assert.That(IsDateFormatString(@"_-* #,##0\ _P_t_s_-;\-* #,##0\ _P_t_s_-;_-* "" - ""??\ _P_t_s_-;_-@_- "), Is.False);
         }
 
         private static void TestValid(string format)
         {
             var to = new NumberFormatString(format);
-            Assert.IsTrue(to.IsValid, "Invalid format: {0}", format);
+            Assert.That(to.IsValid, Is.True, $"Invalid format: {format}");
         }
 
         [Test]

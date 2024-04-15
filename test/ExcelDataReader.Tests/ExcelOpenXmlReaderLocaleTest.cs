@@ -17,9 +17,9 @@ namespace ExcelDataReader.Tests
             using var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_Issue_xxx_LocaleTime.xlsx"));
             var dataSet = reader.AsDataSet();
 
-            Assert.AreEqual(new System.DateTime(1899, 12, 31, 1, 34, 0), dataSet.Tables[0].Rows[1][1]);
-            Assert.AreEqual(new System.DateTime(1899, 12, 31, 1, 34, 0), dataSet.Tables[0].Rows[2][1]);
-            Assert.AreEqual(new System.DateTime(1899, 12, 31, 18, 47, 0), dataSet.Tables[0].Rows[3][1]);
+            Assert.That(dataSet.Tables[0].Rows[1][1], Is.EqualTo(new System.DateTime(1899, 12, 31, 1, 34, 0)));
+            Assert.That(dataSet.Tables[0].Rows[2][1], Is.EqualTo(new System.DateTime(1899, 12, 31, 1, 34, 0)));
+            Assert.That(dataSet.Tables[0].Rows[3][1], Is.EqualTo(new System.DateTime(1899, 12, 31, 18, 47, 0)));
 
             reader.Close();
         }
@@ -37,10 +37,10 @@ namespace ExcelDataReader.Tests
 
             excelReader.Close();
 
-            Assert.AreEqual(0.01, dataSet.Tables[0].Rows[0][0]);
-            Assert.AreEqual(0.0001, dataSet.Tables[0].Rows[1][0]);
-            Assert.AreEqual(0.123456789, dataSet.Tables[0].Rows[2][0]);
-            Assert.AreEqual(0.00000000001, dataSet.Tables[0].Rows[3][0]);
+            Assert.That(dataSet.Tables[0].Rows[0][0], Is.EqualTo(0.01));
+            Assert.That(dataSet.Tables[0].Rows[1][0], Is.EqualTo(0.0001));
+            Assert.That(dataSet.Tables[0].Rows[2][0], Is.EqualTo(0.123456789));
+            Assert.That(dataSet.Tables[0].Rows[3][0], Is.EqualTo(0.00000000001));
         }
 
         [TestMethod]

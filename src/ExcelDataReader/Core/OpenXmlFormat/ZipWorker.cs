@@ -91,7 +91,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             static string ResolvePath(string? basePath, string path)
             {
                 // Can there be relative paths?
+#if NETSTANDARD2_1_OR_GREATER
+                if (path.StartsWith('/'))
+#else
                 if (path.StartsWith("/", StringComparison.Ordinal))
+#endif
                     return path.Substring(1);
                 return basePath + path;
             }

@@ -13,34 +13,34 @@ namespace ExcelDataReader.Tests
             var dataSet = excelReader.AsDataSet();
 
             // Test out of range double formatted as date returns double
-            Assert.AreEqual(1000000000000D, dataSet.Tables[0].Rows[0][0]);
+            Assert.That(dataSet.Tables[0].Rows[0][0], Is.EqualTo(1000000000000D));
         }
 
         [Test]
         public void GitIssue364()
         {
             using var reader = OpenReader("test_git_issue_364");
-            Assert.AreEqual(1, reader.RowCount);
+            Assert.That(reader.RowCount, Is.EqualTo(1));
             reader.Read();
 
-            Assert.AreEqual(0, reader.GetNumberFormatIndex(0));
-            Assert.AreEqual(-1, reader.GetNumberFormatIndex(1));
-            Assert.AreEqual(14, reader.GetNumberFormatIndex(2));
-            Assert.AreEqual(164, reader.GetNumberFormatIndex(3));
+            Assert.That(reader.GetNumberFormatIndex(0), Is.EqualTo(0));
+            Assert.That(reader.GetNumberFormatIndex(1), Is.EqualTo(-1));
+            Assert.That(reader.GetNumberFormatIndex(2), Is.EqualTo(14));
+            Assert.That(reader.GetNumberFormatIndex(3), Is.EqualTo(164));
         }
 
         [Test]
         public void Issue11516WorkbookWithSingleSheetShouldNotReturnEmptyDataset()
         {
             using IExcelDataReader reader = OpenReader("Test_Issue_11516_Single_Tab");
-            Assert.AreEqual(1, reader.ResultsCount);
+            Assert.That(reader.ResultsCount, Is.EqualTo(1));
 
             DataSet dataSet = reader.AsDataSet();
 
-            Assert.IsTrue(dataSet != null);
-            Assert.AreEqual(1, dataSet.Tables.Count);
-            Assert.AreEqual(260, dataSet.Tables[0].Rows.Count);
-            Assert.AreEqual(29, dataSet.Tables[0].Columns.Count);
+            Assert.That(dataSet != null, Is.True);
+            Assert.That(dataSet.Tables.Count, Is.EqualTo(1));
+            Assert.That(dataSet.Tables[0].Rows.Count, Is.EqualTo(260));
+            Assert.That(dataSet.Tables[0].Columns.Count, Is.EqualTo(29));
         }
 
         [Test]
@@ -73,7 +73,7 @@ namespace ExcelDataReader.Tests
                 OpenStream(file),
                 new ExcelReaderConfiguration() { Password = "password" });
             reader.Read();
-            Assert.AreEqual("Password: password", reader.GetString(0));
+            Assert.That(reader.GetString(0), Is.EqualTo("Password: password"));
         }
 
         [TestCase("agile_AES128_MD5_CBC_pwd_password")]
@@ -92,7 +92,7 @@ namespace ExcelDataReader.Tests
                 OpenStream(file),
                 new ExcelReaderConfiguration() { Password = "password" });
             reader.Read();
-            Assert.AreEqual("Password: password", reader.GetString(0));
+            Assert.That(reader.GetString(0), Is.EqualTo("Password: password"));
         }
 
         [Test]
@@ -170,7 +170,7 @@ namespace ExcelDataReader.Tests
                     actualRow[i] = reader.GetCellStyle(i).IndentLevel;
                 }
 
-                Assert.AreEqual(expectedRow, actualRow, "Indent level on row '{0}'.", index);
+                Assert.That(actualRow, Is.EqualTo(expectedRow), $"Indent level on row '{index}'.");
 
                 index++;
             }
@@ -199,7 +199,7 @@ namespace ExcelDataReader.Tests
                     actualRow[i] = reader.GetCellStyle(i).HorizontalAlignment;
                 }
 
-                Assert.AreEqual(expectedRow, actualRow, "Horizontal alignment on row '{0}'.", index);
+                Assert.That(actualRow, Is.EqualTo(expectedRow), $"Horizontal alignment on row '{index}'.");
 
                 index++;
             }
