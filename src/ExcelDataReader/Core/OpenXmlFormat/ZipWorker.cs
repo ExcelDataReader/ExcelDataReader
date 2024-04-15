@@ -196,13 +196,24 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             {
                 return Path.GetExtension(sheetPath) switch
                 {
-                    ".xml" => new XmlWorksheetReader(XmlReader.Create(zipEntry.Open(), XmlSettings)),
-                    ".bin" => new BiffWorksheetReader(zipEntry.Open()),
+                    ".xml" => new XmlWorksheetReader(XmlReader.Create(OpenZipEntry(zipEntry), XmlSettings)),
+                    ".bin" => new BiffWorksheetReader(OpenZipEntry(zipEntry)),
                     _ => null,
                 };
             }
 
             return null;
+        }
+
+        private static Stream OpenZipEntry(ZipArchiveEntry zipEntry)
+        {
+            // for some reason, reading of zip entry is slow on NET Core.
+            // fix that with usage of BufferedStream
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+            return new BufferedStream(zipEntry.Open());
+#else
+            return zipEntry.Open();
+#endif
         }
 
         private ZipArchiveEntry? FindEntry(string? name)
