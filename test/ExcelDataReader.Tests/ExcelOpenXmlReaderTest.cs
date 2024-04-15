@@ -388,5 +388,69 @@ namespace ExcelDataReader.Tests
             Assert.That(dataSet.Tables[0].Rows[1].ItemArray[0], Is.EqualTo("text"));
             Assert.That(dataSet.Tables[0].Rows[2].ItemArray[0], Is.EqualTo("text    text"));
         }
+
+        [Test]
+        public void GitIssue518MultipleHeaderRows()
+        {
+            using (var reader = OpenReader("Test_git_issue_518"))
+            {
+                var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
+                {
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+                    {
+                        UseHeaderRow = true,
+                        ReadHeader = self =>
+                        {
+                            var headerNames = new List<string>();
+
+                            // read first header row
+                            for (var i = 0; i < self.FieldCount; i++)
+                            {
+                                var s = Convert.ToString(self.GetValue(i));
+                                headerNames.Add(s);
+                            }
+
+                            // append second header row
+                            if (!self.Read()) {
+                                throw new Exception();
+                            }
+                            var result = new Dictionary<int, string>();
+                            for (var i = 0; i < self.FieldCount; i++)
+                            {
+                                var first = headerNames[i];
+                                var second = Convert.ToString(self.GetValue(i));
+                                string name;
+                                if (first.Length == 0) 
+                                {
+                                    name = second;
+                                } 
+                                else if (second.Length == 0) 
+                                {
+                                    name = first;
+                                } 
+                                else 
+                                {
+                                    name = first + " " + second;
+                                }
+                                if (string.IsNullOrEmpty(name))
+                                {
+                                    name = "Column" + i;
+                                }
+                                result.Add(i, name);
+                            }
+                            return result;
+                        }
+                    }
+                });
+
+                var columns = dataSet.Tables[0].Columns;
+                Assert.That(columns[0].ColumnName.ToString(), Is.EqualTo("ColName1 A"));
+                Assert.That(columns[1].ColumnName.ToString(), Is.EqualTo("ColName1 B"));
+                Assert.That(columns[2].ColumnName.ToString(), Is.EqualTo("ColName2 B"));
+                Assert.That(columns[3].ColumnName.ToString(), Is.EqualTo("FirstOnly"));
+                Assert.That(columns[4].ColumnName.ToString(), Is.EqualTo("SecondOnly"));
+                Assert.That(columns[5].ColumnName.ToString(), Is.EqualTo("Another One"));
+            }
+        }
     }
 }
