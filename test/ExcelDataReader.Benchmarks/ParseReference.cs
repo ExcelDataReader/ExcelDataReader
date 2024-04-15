@@ -1,6 +1,4 @@
-﻿using System;
-using System.Globalization;
-using BenchmarkDotNet;
+﻿using System.Globalization;
 using BenchmarkDotNet.Attributes;
 
 namespace ExcelDataReader.Benchmarks

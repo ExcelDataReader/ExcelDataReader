@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Globalization;
 
 namespace ExcelDataReader
@@ -18,7 +16,7 @@ namespace ExcelDataReader
         /// <returns>A dataset with all workbook contents.</returns>
         public static DataSet AsDataSet(this IExcelDataReader self, ExcelDataSetConfiguration configuration = null)
         {
-            configuration ??= new ExcelDataSetConfiguration();
+            configuration ??= new();
 
             self.Reset();
 
@@ -36,7 +34,7 @@ namespace ExcelDataReader
                     ? configuration.ConfigureDataTable(self)
                     : null;
 
-                tableConfiguration ??= new ExcelDataTableConfiguration();
+                tableConfiguration ??= new();
 
                 var table = AsDataTable(self, tableConfiguration);
                 result.Tables.Add(table);

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ExcelDataReader.Core.NumberFormat
+﻿namespace ExcelDataReader.Core.NumberFormat
 {
     internal sealed class DecimalSection
     {

@@ -2,6 +2,7 @@
   <PropertyGroup>
     <Authors>ExcelDataReader developers</Authors>
     <LangVersion>10.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   
   <ItemGroup>

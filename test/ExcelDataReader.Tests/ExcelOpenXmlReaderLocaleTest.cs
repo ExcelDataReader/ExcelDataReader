@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Threading;
 using NUnit.Framework;
 using TestClass = NUnit.Framework.TestFixtureAttribute;
 using TestMethod = NUnit.Framework.TestAttribute;

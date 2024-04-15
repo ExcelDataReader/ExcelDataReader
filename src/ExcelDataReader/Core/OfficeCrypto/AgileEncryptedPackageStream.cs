@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace ExcelDataReader.Core.OfficeCrypto
+﻿namespace ExcelDataReader.Core.OfficeCrypto
 {
     /// <summary>
     /// A seekable stream for reading an EncryptedPackage blob using OpenXml Agile Encryption. 

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ExcelDataReader.Core.NumberFormat
+﻿namespace ExcelDataReader.Core.NumberFormat
 {
     internal static class Token
     {

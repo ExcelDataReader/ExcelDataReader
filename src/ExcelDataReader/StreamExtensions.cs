@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace ExcelDataReader
+﻿namespace ExcelDataReader
 {
     internal static class StreamExtensions
     {

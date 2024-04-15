@@ -1,7 +1,4 @@
-﻿using System;
-using System.Globalization;
-
-namespace ExcelDataReader.Core
+﻿namespace ExcelDataReader.Core
 {
     internal static class ReferenceHelper
     {

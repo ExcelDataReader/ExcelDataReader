@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace ExcelDataReader.Core.OpenXmlFormat.Records
+﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records
 {
     internal sealed class WorkbookPrRecord : Record
     {

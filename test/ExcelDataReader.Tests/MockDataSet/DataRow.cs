@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ExcelDataReader
+﻿namespace ExcelDataReader
 {
     public class DataRow
     {

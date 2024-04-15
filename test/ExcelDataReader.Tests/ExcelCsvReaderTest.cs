@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 using NUnit.Framework;
 
 // Most CSV test data came from csv-spectrum: https://github.com/maxogden/csv-spectrum

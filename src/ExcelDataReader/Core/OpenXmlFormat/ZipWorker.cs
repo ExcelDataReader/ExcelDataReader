@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
 using System.Xml;
 using ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
@@ -208,7 +205,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             // for some reason, reading of zip entry is slow on NET Core.
             // fix that with usage of BufferedStream
 #if NETSTANDARD2_0_OR_GREATER
-        private static BufferedStream OpenZipEntry(ZipArchiveEntry zipEntry) => new BufferedStream(zipEntry.Open());
+        private static BufferedStream OpenZipEntry(ZipArchiveEntry zipEntry) => new(zipEntry.Open());
 #else
         private static Stream OpenZipEntry(ZipArchiveEntry zipEntry) => zipEntry.Open();
 #endif

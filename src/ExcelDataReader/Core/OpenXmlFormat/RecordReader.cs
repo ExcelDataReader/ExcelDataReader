@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using ExcelDataReader.Core.OpenXmlFormat.Records;
-using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
+﻿using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 #nullable enable
 

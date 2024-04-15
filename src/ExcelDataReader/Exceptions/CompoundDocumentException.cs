@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ExcelDataReader.Exceptions
+﻿namespace ExcelDataReader.Exceptions
 {
     /// <summary>
     /// Thrown when there is a problem parsing the Compound Document container format used by XLS and password-protected XLSX.

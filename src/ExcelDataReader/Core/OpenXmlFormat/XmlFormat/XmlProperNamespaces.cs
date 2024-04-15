@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
+﻿namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
 {
     /// <summary>
     /// Keeps the proper XML namespaces according to the format of the EXCEL file.

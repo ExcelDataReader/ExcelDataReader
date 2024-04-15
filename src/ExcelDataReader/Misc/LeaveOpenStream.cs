@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace ExcelDataReader.Misc
+﻿namespace ExcelDataReader.Misc
 {
     internal sealed class LeaveOpenStream : Stream
     {

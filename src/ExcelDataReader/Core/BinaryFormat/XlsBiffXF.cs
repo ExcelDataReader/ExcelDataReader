@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ExcelDataReader.Core.BinaryFormat
+﻿namespace ExcelDataReader.Core.BinaryFormat
 {
     internal sealed class XlsBiffXF : XlsBiffRecord
     {

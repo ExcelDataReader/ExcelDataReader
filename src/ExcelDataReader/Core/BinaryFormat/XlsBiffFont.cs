@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {

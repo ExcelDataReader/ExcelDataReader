@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using ExcelDataReader.Core.NumberFormat;
 using ExcelDataReader.Core.OfficeCrypto;
@@ -167,7 +164,7 @@ namespace ExcelDataReader.Core.BinaryFormat
                         Sheets.Add(sheet);
                         break;
                     case XlsBiffSimpleValueRecord codePage when rec.Id == BIFFRECORDTYPE.CODEPAGE:
-                        // [MS-XLS 2.4.52 CodePage] An unsigned integer that specifies the workbook’s code page.The value MUST be one
+                        // [MS-XLS 2.4.52 CodePage] An unsigned integer that specifies the workbookï¿½s code page.The value MUST be one
                         // of the code page values specified in [CODEPG] or the special value 1200, which means that the
                         // workbook is Unicode.
                         CodePage = codePage;

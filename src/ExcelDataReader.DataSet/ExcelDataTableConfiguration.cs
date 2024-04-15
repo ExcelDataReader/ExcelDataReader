@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ExcelDataReader
+﻿namespace ExcelDataReader
 {
     /// <summary>
     /// Processing configuration options and callbacks for AsDataTable().

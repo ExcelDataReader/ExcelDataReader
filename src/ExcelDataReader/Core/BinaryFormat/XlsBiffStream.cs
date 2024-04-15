@@ -1,6 +1,4 @@
-using System;
 using System.Globalization;
-using System.IO;
 using System.Security.Cryptography;
 using ExcelDataReader.Core.OfficeCrypto;
 using ExcelDataReader.Exceptions;

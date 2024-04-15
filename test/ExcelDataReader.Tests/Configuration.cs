@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
 #if MSTEST_DEBUG || MSTEST_RELEASE
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ExcelDataReader.Core
+﻿namespace ExcelDataReader.Core
 {
     /// <summary>
     /// The common worksheet interface between the binary and OpenXml formats.

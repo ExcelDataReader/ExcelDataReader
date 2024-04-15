@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Xml;
 
 namespace ExcelDataReader.Core.OfficeCrypto
