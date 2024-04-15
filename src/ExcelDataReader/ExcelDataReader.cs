@@ -110,10 +110,10 @@ namespace ExcelDataReader
 
         public int GetValues(object[] values)
         {
-            int readingLenth = values.Length > FieldCount ? FieldCount : values.Length;
             if (RowCells == null)
                 throw new InvalidOperationException("No data exists for the row/column.");
 
+            int readingLenth = values.Length > FieldCount ? FieldCount : values.Length;
             for (int i = 0; i < readingLenth; i++)
             {
                 values[i] = RowCells[i]?.Value;
