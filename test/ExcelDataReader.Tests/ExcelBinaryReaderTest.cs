@@ -1092,7 +1092,6 @@ namespace ExcelDataReader.Tests
         {
             using var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_git_issue578.xls"));
 
-
             reader.Read();
             var values = new object[reader.FieldCount];
             reader.GetValues(values);
@@ -1101,12 +1100,9 @@ namespace ExcelDataReader.Tests
             var values3 = new object[reader.FieldCount - 1];
             reader.GetValues(values3);
 
-            Assert.That(values, Is.EquivalentTo(new object[] { 1, 2, 3, 4,5 }));
-            Assert.That(values2, Is.EquivalentTo(new object[] { 1, 2, 3, 4, 5, null }));
-            Assert.That(values3, Is.EquivalentTo(new object[] { 1, 2, 3, 4 }));
-            
+            Assert.That(values, Is.EqualTo(new object[] { 1, 2, 3, 4,5 }));
+            Assert.That(values2, Is.EqualTo(new object[] { 1, 2, 3, 4, 5, null }));
+            Assert.That(values3, Is.EqualTo(new object[] { 1, 2, 3, 4 }));
         }
-
-       
     }
 }
