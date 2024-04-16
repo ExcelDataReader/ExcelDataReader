@@ -82,27 +82,45 @@ namespace ExcelDataReader
                         configuration.ReadHeaderRow(self);
                     }
 
-                    for (var i = 0; i < self.FieldCount; i++)
+                    if (configuration.ReadHeader != null) 
                     {
-                        if (configuration.FilterColumn != null && !configuration.FilterColumn(self, i))
+                        var dict = configuration.ReadHeader(self);
+                        foreach (var kvp in dict)
                         {
-                            continue;
+                            var columnIndex = kvp.Key;
+                            var name = kvp.Value;
+
+                            // if a column already exists with the name append _i to the duplicates
+                            var columnName = GetUniqueColumnName(result, name);
+                            var column = new DataColumn(columnName, typeof(object)) { Caption = name };
+                            result.Columns.Add(column);
+                            columnIndices.Add(columnIndex);
                         }
-
-                        var name = configuration.UseHeaderRow
-                            ? Convert.ToString(self.GetValue(i), CultureInfo.CurrentCulture)
-                            : null;
-
-                        if (string.IsNullOrEmpty(name))
+                    } 
+                    else 
+                    {
+                        for (var i = 0; i < self.FieldCount; i++)
                         {
-                            name = configuration.EmptyColumnNamePrefix + i;
-                        }
+                            if (configuration.FilterColumn != null && !configuration.FilterColumn(self, i))
+                            {
+                                continue;
+                            }
 
-                        // if a column already exists with the name append _i to the duplicates
-                        var columnName = GetUniqueColumnName(result, name);
-                        var column = new DataColumn(columnName, typeof(object)) { Caption = name };
-                        result.Columns.Add(column);
-                        columnIndices.Add(i);
+                            var name = configuration.UseHeaderRow
+                                ? Convert.ToString(self.GetValue(i), CultureInfo.CurrentCulture)
+                                : null;
+
+                            if (string.IsNullOrEmpty(name))
+                            {
+                                name = configuration.EmptyColumnNamePrefix + i;
+                            }
+
+                            // if a column already exists with the name append _i to the duplicates
+                            var columnName = GetUniqueColumnName(result, name);
+                            var column = new DataColumn(columnName, typeof(object)) { Caption = name };
+                            result.Columns.Add(column);
+                            columnIndices.Add(i);
+                        }
                     }
 
                     result.BeginLoadData();
