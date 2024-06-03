@@ -42,7 +42,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
                 if (Reader.IsStartElement(ElementWorkbookProperties, ProperNamespaces.NsSpreadsheetMl))
                 {
                     // Workbook VBA CodeName: reader.GetAttribute("codeName");
-                    bool date1904 = Reader.GetAttribute("date1904") == "1";
+                    bool date1904 = Reader.GetAttribute("date1904") is "1" or "true";
                     yield return new WorkbookPrRecord(date1904);
                     Reader.Skip();
                 }

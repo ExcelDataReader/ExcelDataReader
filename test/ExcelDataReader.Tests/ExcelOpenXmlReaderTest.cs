@@ -390,6 +390,14 @@ namespace ExcelDataReader.Tests
         }
 
         [Test]
+        public void GitIssue649()
+        {
+            using var reader = OpenReader("Test_git_issue_649_Date1904_Parsings");
+            var dataSet = reader.AsDataSet();
+            Assert.That(dataSet.Tables[0].Rows[11].ItemArray[12], Is.EqualTo(new DateTime(2023, 9, 1)));
+        }
+
+        [Test]
         public void GitIssue518MultipleHeaderRows()
         {
             using (var reader = OpenReader("Test_git_issue_518"))
