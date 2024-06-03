@@ -392,5 +392,13 @@ namespace ExcelDataReader.Tests
             Assert.That(dataSet.Tables[0].Rows[1].ItemArray[0], Is.EqualTo("text"));
             Assert.That(dataSet.Tables[0].Rows[2].ItemArray[0], Is.EqualTo("text    text"));
         }
+
+        [Test]
+        public void GitIssue649()
+        {
+            using var reader = OpenReader("Test_git_issue_649_Date1904_Parsings");
+            var dataSet = reader.AsDataSet();
+            Assert.That(dataSet.Tables[0].Rows[11].ItemArray[12], Is.EqualTo(new DateTime(2023, 9, 1)));
+        }
     }
 }
