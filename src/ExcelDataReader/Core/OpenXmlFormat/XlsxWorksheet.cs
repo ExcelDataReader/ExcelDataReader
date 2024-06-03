@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Xml;
 using ExcelDataReader.Core.NumberFormat;
 using ExcelDataReader.Core.OpenXmlFormat.Records;

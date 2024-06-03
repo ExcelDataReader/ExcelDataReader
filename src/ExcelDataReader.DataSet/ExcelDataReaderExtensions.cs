@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Globalization;
 
 namespace ExcelDataReader
@@ -18,7 +16,7 @@ namespace ExcelDataReader
         /// <returns>A dataset with all workbook contents.</returns>
         public static DataSet AsDataSet(this IExcelDataReader self, ExcelDataSetConfiguration configuration = null)
         {
-            configuration ??= new ExcelDataSetConfiguration();
+            configuration ??= new();
 
             self.Reset();
 
@@ -36,7 +34,7 @@ namespace ExcelDataReader
                     ? configuration.ConfigureDataTable(self)
                     : null;
 
-                tableConfiguration ??= new ExcelDataTableConfiguration();
+                tableConfiguration ??= new();
 
                 var table = AsDataTable(self, tableConfiguration);
                 result.Tables.Add(table);
@@ -84,27 +82,45 @@ namespace ExcelDataReader
                         configuration.ReadHeaderRow(self);
                     }
 
-                    for (var i = 0; i < self.FieldCount; i++)
+                    if (configuration.ReadHeader != null) 
                     {
-                        if (configuration.FilterColumn != null && !configuration.FilterColumn(self, i))
+                        var dict = configuration.ReadHeader(self);
+                        foreach (var kvp in dict)
                         {
-                            continue;
+                            var columnIndex = kvp.Key;
+                            var name = kvp.Value;
+
+                            // if a column already exists with the name append _i to the duplicates
+                            var columnName = GetUniqueColumnName(result, name);
+                            var column = new DataColumn(columnName, typeof(object)) { Caption = name };
+                            result.Columns.Add(column);
+                            columnIndices.Add(columnIndex);
                         }
-
-                        var name = configuration.UseHeaderRow
-                            ? Convert.ToString(self.GetValue(i), CultureInfo.CurrentCulture)
-                            : null;
-
-                        if (string.IsNullOrEmpty(name))
+                    } 
+                    else 
+                    {
+                        for (var i = 0; i < self.FieldCount; i++)
                         {
-                            name = configuration.EmptyColumnNamePrefix + i;
-                        }
+                            if (configuration.FilterColumn != null && !configuration.FilterColumn(self, i))
+                            {
+                                continue;
+                            }
 
-                        // if a column already exists with the name append _i to the duplicates
-                        var columnName = GetUniqueColumnName(result, name);
-                        var column = new DataColumn(columnName, typeof(object)) { Caption = name };
-                        result.Columns.Add(column);
-                        columnIndices.Add(i);
+                            var name = configuration.UseHeaderRow
+                                ? Convert.ToString(self.GetValue(i), CultureInfo.CurrentCulture)
+                                : null;
+
+                            if (string.IsNullOrEmpty(name))
+                            {
+                                name = configuration.EmptyColumnNamePrefix + i;
+                            }
+
+                            // if a column already exists with the name append _i to the duplicates
+                            var columnName = GetUniqueColumnName(result, name);
+                            var column = new DataColumn(columnName, typeof(object)) { Caption = name };
+                            result.Columns.Add(column);
+                            columnIndices.Add(i);
+                        }
                     }
 
                     result.BeginLoadData();

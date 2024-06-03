@@ -22,7 +22,7 @@
         {
         }
 
-        public static ExtendedFormat Zero { get; } = new ExtendedFormat();
+        public static ExtendedFormat Zero { get; } = new();
 
         /// <summary>
         /// Gets the to the parent Cell Style CF record with overrides for this XF. Only used with Cell XFs.

@@ -1,4 +1,3 @@
-using System;
 using ExcelDataReader.Core;
 
 namespace ExcelDataReader

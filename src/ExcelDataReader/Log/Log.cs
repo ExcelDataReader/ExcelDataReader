@@ -1,5 +1,4 @@
-﻿using System;
-using ExcelDataReader.Log.Logger;
+﻿using ExcelDataReader.Log.Logger;
 
 namespace ExcelDataReader.Log
 {

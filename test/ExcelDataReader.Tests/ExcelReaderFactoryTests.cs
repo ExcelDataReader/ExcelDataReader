@@ -1,4 +1,3 @@
-using System;
 using NUnit.Framework;
 
 namespace ExcelDataReader.Tests
@@ -13,7 +12,7 @@ namespace ExcelDataReader.Tests
         public void ProbeXls(string name)
         {
             using IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook(name));
-            Assert.AreEqual(excelReader.GetType().Name, "ExcelBinaryReader");
+            Assert.That(excelReader.GetType().Name, Is.EqualTo("ExcelBinaryReader"));
         }
 
         [TestCase("Test10x10.xlsx")]
@@ -22,7 +21,7 @@ namespace ExcelDataReader.Tests
         public void ProbeOpenXml(string name)
         {
             using IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook(name));
-            Assert.AreEqual(excelReader.GetType().Name, "ExcelOpenXmlReader");
+            Assert.That(excelReader.GetType().Name, Is.EqualTo("ExcelOpenXmlReader"));
         }
     }
 }

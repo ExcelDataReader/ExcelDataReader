@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
 using System.Xml;
 using ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
@@ -91,7 +88,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             static string ResolvePath(string? basePath, string path)
             {
                 // Can there be relative paths?
+#if NETSTANDARD2_1_OR_GREATER
+                if (path.StartsWith('/'))
+#else
                 if (path.StartsWith("/", StringComparison.Ordinal))
+#endif
                     return path.Substring(1);
                 return basePath + path;
             }
@@ -192,14 +193,22 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             {
                 return Path.GetExtension(sheetPath) switch
                 {
-                    ".xml" => new XmlWorksheetReader(XmlReader.Create(zipEntry.Open(), XmlSettings)),
-                    ".bin" => new BiffWorksheetReader(zipEntry.Open()),
+                    ".xml" => new XmlWorksheetReader(XmlReader.Create(OpenZipEntry(zipEntry), XmlSettings)),
+                    ".bin" => new BiffWorksheetReader(OpenZipEntry(zipEntry)),
                     _ => null,
                 };
             }
 
             return null;
         }
+
+            // for some reason, reading of zip entry is slow on NET Core.
+            // fix that with usage of BufferedStream
+#if NETSTANDARD2_0_OR_GREATER
+        private static BufferedStream OpenZipEntry(ZipArchiveEntry zipEntry) => new(zipEntry.Open());
+#else
+        private static Stream OpenZipEntry(ZipArchiveEntry zipEntry) => zipEntry.Open();
+#endif
 
         private ZipArchiveEntry? FindEntry(string? name)
         {

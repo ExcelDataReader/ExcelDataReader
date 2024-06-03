@@ -4,7 +4,7 @@ namespace ExcelDataReader.Core.BinaryFormat
 {
     internal sealed class XlsBiffCodeName : XlsBiffRecord
     {
-        private readonly IXlsString _xlsString;
+        private readonly XlsUnicodeString _xlsString;
 
         internal XlsBiffCodeName(byte[] bytes)
             : base(bytes)

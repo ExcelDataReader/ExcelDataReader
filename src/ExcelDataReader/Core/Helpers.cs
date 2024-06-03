@@ -12,6 +12,8 @@ namespace ExcelDataReader.Core
     {
         private static readonly Regex EscapeRegex = new("_x([0-9A-F]{4,4})_", RegexOptions.Compiled);
 
+        private static readonly char[] SingleByteEncodingHelper = new[] { 'a' };
+
         /// <summary>
         /// Determines whether the encoding is single byte or not.
         /// </summary>
@@ -21,7 +23,7 @@ namespace ExcelDataReader.Core
         /// </returns>
         public static bool IsSingleByteEncoding(Encoding encoding)
         {
-            return encoding.GetByteCount(new[] { 'a' }) == 1;
+            return encoding.GetByteCount(SingleByteEncodingHelper) == 1;
         }
 
         public static string ConvertEscapeChars(string input)

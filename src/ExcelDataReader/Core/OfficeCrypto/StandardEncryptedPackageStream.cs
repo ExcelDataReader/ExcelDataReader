@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 
 namespace ExcelDataReader.Core.OfficeCrypto
 {
@@ -35,7 +33,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
             set => BaseStream.Position = value;
         }
 
-        private Stream BaseStream { get; set; }
+        private CryptoStream BaseStream { get; set; }
 
         private SymmetricAlgorithm Cipher { get; set; }
 

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ExcelDataReader.Misc
+﻿namespace ExcelDataReader.Misc
 {
     internal static class DateTimeHelper
     {

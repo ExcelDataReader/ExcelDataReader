@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace ExcelDataReader.Tests
 {
@@ -23,13 +21,13 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader reader = OpenReader(fileName);
             DataTableCollection tables = reader.AsDataSet().Tables;
 
-            Assert.AreEqual(2, tables.Count);
+            Assert.That(tables.Count, Is.EqualTo(2));
 
             foreach (DataTable table in tables)
             {
-                Assert.AreEqual(2, table.Rows.Count);
-                Assert.AreEqual(2, table.Columns.Count);
-                Assert.AreEqual("A1", table.Rows[0][0].ToString());
+                Assert.That(table.Rows.Count, Is.EqualTo(2));
+                Assert.That(table.Columns.Count, Is.EqualTo(2));
+                Assert.That(table.Rows[0][0].ToString(), Is.EqualTo("A1"));
             }
         }
     }

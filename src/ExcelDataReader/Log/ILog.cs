@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ExcelDataReader.Log
+﻿namespace ExcelDataReader.Log
 {
     /// <summary>
     /// Custom interface for logging messages.

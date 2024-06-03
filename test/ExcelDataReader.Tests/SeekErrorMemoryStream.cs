@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace ExcelDataReader.Tests
+﻿namespace ExcelDataReader.Tests
 {
     public class SeekErrorMemoryStream : MemoryStream
     {

@@ -1,5 +1,3 @@
-using System;
-
 namespace ExcelDataReader.Core.CompoundFormat
 {
     /// <summary>

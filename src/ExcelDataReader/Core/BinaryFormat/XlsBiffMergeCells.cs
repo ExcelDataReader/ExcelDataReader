@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ExcelDataReader.Core.BinaryFormat
+﻿namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
     /// [MS-XLS] 2.4.168 MergeCells

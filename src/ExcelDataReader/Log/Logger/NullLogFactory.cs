@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ExcelDataReader.Log.Logger
+﻿namespace ExcelDataReader.Log.Logger
 {
     /// <summary>
     /// The default logger until one is set.

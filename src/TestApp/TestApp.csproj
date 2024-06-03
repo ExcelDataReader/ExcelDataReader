@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;net6.0-windows</TargetFrameworks>
+    <TargetFrameworks>net462;net8.0-windows</TargetFrameworks>
     <AssemblyName>TestApp</AssemblyName>
     <OutputType>WinExe</OutputType>
     <PackageId>TestApp</PackageId>

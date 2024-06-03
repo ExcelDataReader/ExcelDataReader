@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
 #if MSTEST_DEBUG || MSTEST_RELEASE
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else
@@ -21,7 +19,7 @@ namespace ExcelDataReader.Tests
             var resources = Path.Combine(TestContext.CurrentContext.TestDirectory, "../../../../Resources");
             var path = Path.Combine(resources, key);
             path = Path.GetFullPath(path);
-            Assert.IsTrue(File.Exists(path), $"File not found: '{path}'.");
+            Assert.That(path, Does.Exist, $"File not found: '{path}'.");
             return path;
         }
 

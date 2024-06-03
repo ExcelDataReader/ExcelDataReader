@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Text;
+﻿using System.Globalization;
 
 using NUnit.Framework;
 
@@ -28,12 +24,12 @@ namespace ExcelDataReader.Tests
             string val1 = new DateTime(2009, 05, 01).ToShortDateString();
             string val2 = DateTime.Parse(dataSet.Tables[0].Rows[1][1].ToString()).ToShortDateString();
 
-            Assert.AreEqual(val1, val2);
+            Assert.That(val2, Is.EqualTo(val1));
 
             val1 = new DateTime(2009, 1, 1, 11, 0, 0).ToShortTimeString();
             val2 = DateTime.Parse(dataSet.Tables[0].Rows[2][4].ToString()).ToShortTimeString();
 
-            Assert.AreEqual(val1, val2);
+            Assert.That(val2, Is.EqualTo(val1));
         }
 
         [Test]
@@ -42,7 +38,7 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test_Issue_11773_Exponential");
             var dataSet = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
-            Assert.AreEqual(2566.3716814159293D, dataSet.Tables[0].Rows[0][6]);
+            Assert.That(dataSet.Tables[0].Rows[0][6], Is.EqualTo(2566.3716814159293D));
         }
 
         [Test]
@@ -57,7 +53,7 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test_Issue_11773_Exponential");
             var dataSet = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
-            Assert.AreEqual(2566.3716814159293D, dataSet.Tables[0].Rows[0][6]);
+            Assert.That(dataSet.Tables[0].Rows[0][6], Is.EqualTo(2566.3716814159293D));
         }
 
         /// <summary>
@@ -82,7 +78,7 @@ namespace ExcelDataReader.Tests
                     continue;
                 }
 
-                Assert.AreEqual("StaffName", excelReader.GetString(0));
+                Assert.That(excelReader.GetString(0), Is.EqualTo("StaffName"));
             }
             while (excelReader.NextResult());
         }
@@ -91,14 +87,14 @@ namespace ExcelDataReader.Tests
         public void AsDataSetTestReadSheetNames()
         {
             using IExcelDataReader reader = OpenReader("TestOpen");
-            Assert.AreEqual(3, reader.ResultsCount);
+            Assert.That(reader.ResultsCount, Is.EqualTo(3));
 
             DataSet dataSet = reader.AsDataSet();
 
-            Assert.IsTrue(dataSet != null);
-            Assert.AreEqual(3, dataSet.Tables.Count);
-            Assert.AreEqual(7, dataSet.Tables["Sheet1"].Rows.Count);
-            Assert.AreEqual(11, dataSet.Tables["Sheet1"].Columns.Count);
+            Assert.That(dataSet != null, Is.True);
+            Assert.That(dataSet.Tables.Count, Is.EqualTo(3));
+            Assert.That(dataSet.Tables["Sheet1"].Rows.Count, Is.EqualTo(7));
+            Assert.That(dataSet.Tables["Sheet1"].Columns.Count, Is.EqualTo(11));
         }
 
         [Test]
@@ -107,13 +103,13 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("TestChess");
             DataSet result = excelReader.AsDataSet();
 
-            Assert.IsTrue(result != null);
-            Assert.AreEqual(1, result.Tables.Count);
-            Assert.AreEqual(4, result.Tables[0].Rows.Count);
-            Assert.AreEqual(6, result.Tables[0].Columns.Count);
+            Assert.That(result != null, Is.True);
+            Assert.That(result.Tables.Count, Is.EqualTo(1));
+            Assert.That(result.Tables[0].Rows.Count, Is.EqualTo(4));
+            Assert.That(result.Tables[0].Columns.Count, Is.EqualTo(6));
 
-            Assert.AreEqual(1, result.Tables[0].Rows[3][5]);
-            Assert.AreEqual(1, result.Tables[0].Rows[2][0]);
+            Assert.That(result.Tables[0].Rows[3][5], Is.EqualTo(1));
+            Assert.That(result.Tables[0].Rows[2][0], Is.EqualTo(1));
         }
 
         [Test]
@@ -122,7 +118,7 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("TestChess");
             var result = excelReader.AsDataSet(Configuration.NoColumnNamesConfiguration);
 
-            Assert.AreEqual(4, result.Tables[0].Rows.Count);
+            Assert.That(result.Tables[0].Rows.Count, Is.EqualTo(4));
         }
 
         [Test]
@@ -131,7 +127,7 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("TestChess");
             var result = excelReader.AsDataSet(Configuration.FirstRowColumnNamesConfiguration);
 
-            Assert.AreEqual(3, result.Tables[0].Rows.Count);
+            Assert.That(result.Tables[0].Rows.Count, Is.EqualTo(3));
         }
 
         [Test]
@@ -142,10 +138,10 @@ namespace ExcelDataReader.Tests
             reader.Read();
 
             // The expected values do not quite match what you see in Excel, is that correct?
-            Assert.AreEqual(8.43, reader.GetColumnWidth(0));
-            Assert.AreEqual(0, reader.GetColumnWidth(1));
-            Assert.AreEqual(15.140625, reader.GetColumnWidth(2));
-            Assert.AreEqual(28.7109375, reader.GetColumnWidth(3));
+            Assert.That(reader.GetColumnWidth(0), Is.EqualTo(8.43));
+            Assert.That(reader.GetColumnWidth(1), Is.EqualTo(0));
+            Assert.That(reader.GetColumnWidth(2), Is.EqualTo(15.140625));
+            Assert.That(reader.GetColumnWidth(3), Is.EqualTo(28.7109375));
 
             var expectedException = typeof(ArgumentException);
             var exception = Assert.Throws(expectedException, () =>
@@ -153,13 +149,7 @@ namespace ExcelDataReader.Tests
                 reader.GetColumnWidth(4);
             });
 
-#if NET5_0_OR_GREATER
-                Assert.AreEqual($"Column at index 4 does not exist. (Parameter 'i')",
-                    exception.Message);
-#else
-            Assert.AreEqual($"Column at index 4 does not exist.{Environment.NewLine}Parameter name: i",
-                exception.Message);
-#endif
+            Assert.That(exception.Message, Does.StartWith($"Column at index 4 does not exist."));
         }
 
         [Test]
@@ -211,16 +201,16 @@ namespace ExcelDataReader.Tests
             using var reader = OpenReader("CollapsedHide");
             // Verify the row heights are set when expected, and converted to points from twips
             reader.Read();
-            Assert.AreEqual(15, reader.RowHeight);
+            Assert.That(reader.RowHeight, Is.EqualTo(15));
 
             reader.Read();
-            Assert.AreEqual(38.25, reader.RowHeight);
+            Assert.That(reader.RowHeight, Is.EqualTo(38.25));
 
             reader.Read();
-            Assert.AreEqual(6, reader.RowHeight);
+            Assert.That(reader.RowHeight, Is.EqualTo(6));
 
             reader.Read();
-            Assert.AreEqual(0, reader.RowHeight);
+            Assert.That(reader.RowHeight, Is.EqualTo(0));
         }
 
         [Test]
@@ -228,7 +218,7 @@ namespace ExcelDataReader.Tests
         {
             // Test no CodeName = null
             using var reader = OpenReader("Test10x10");
-            Assert.AreEqual(null, reader.CodeName);
+            Assert.That(reader.CodeName, Is.EqualTo(null));
         }
 
         [Test]
@@ -236,7 +226,7 @@ namespace ExcelDataReader.Tests
         {
             // Test CodeName is set
             using var reader = OpenReader("Test_Excel_Dataset");
-            Assert.AreEqual("Sheet1", reader.CodeName);
+            Assert.That(reader.CodeName, Is.EqualTo("Sheet1"));
         }
 
         [Test]
@@ -253,12 +243,12 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test10x10000");
             DataTable result = excelReader.AsDataSet().Tables[0];
 
-            Assert.AreEqual(10000, result.Rows.Count);
-            Assert.AreEqual(10, result.Columns.Count);
-            Assert.AreEqual("1x2", result.Rows[1][1]);
-            Assert.AreEqual("1x10", result.Rows[1][9]);
-            Assert.AreEqual("1x1", result.Rows[9999][0]);
-            Assert.AreEqual("1x10", result.Rows[9999][9]);
+            Assert.That(result.Rows.Count, Is.EqualTo(10000));
+            Assert.That(result.Columns.Count, Is.EqualTo(10));
+            Assert.That(result.Rows[1][1], Is.EqualTo("1x2"));
+            Assert.That(result.Rows[1][9], Is.EqualTo("1x10"));
+            Assert.That(result.Rows[9999][0], Is.EqualTo("1x1"));
+            Assert.That(result.Rows[9999][9], Is.EqualTo("1x10"));
         }
 
 
@@ -268,10 +258,10 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test10x10");
             DataTable result = excelReader.AsDataSet().Tables[0];
 
-            Assert.AreEqual(10, result.Rows.Count);
-            Assert.AreEqual(10, result.Columns.Count);
-            Assert.AreEqual("10x10", result.Rows[1][0]);
-            Assert.AreEqual("10x27", result.Rows[9][9]);
+            Assert.That(result.Rows.Count, Is.EqualTo(10));
+            Assert.That(result.Columns.Count, Is.EqualTo(10));
+            Assert.That(result.Rows[1][0], Is.EqualTo("10x10"));
+            Assert.That(result.Rows[9][9], Is.EqualTo("10x27"));
         }
 
         [Test]
@@ -280,10 +270,10 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test255x10");
             DataTable result = excelReader.AsDataSet().Tables[0];
 
-            Assert.AreEqual(10, result.Rows.Count);
-            Assert.AreEqual(255, result.Columns.Count);
-            Assert.AreEqual("1", result.Rows[9][254].ToString());
-            Assert.AreEqual("one", result.Rows[1][1].ToString());
+            Assert.That(result.Rows.Count, Is.EqualTo(10));
+            Assert.That(result.Columns.Count, Is.EqualTo(255));
+            Assert.That(result.Rows[9][254].ToString(), Is.EqualTo("1"));
+            Assert.That(result.Rows[1][1].ToString(), Is.EqualTo("one"));
         }
 
         [Test]
@@ -292,21 +282,21 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("TestDoublePrecision");
             DataTable result = excelReader.AsDataSet().Tables[0];
 
-            Assert.AreEqual(10, result.Rows.Count);
+            Assert.That(result.Rows.Count, Is.EqualTo(10));
 
             const double excelPi = 3.14159265358979;
 
-            Assert.AreEqual(+excelPi, result.Rows[2][1]);
-            Assert.AreEqual(-excelPi, result.Rows[3][1]);
+            Assert.That(result.Rows[2][1], Is.EqualTo(+excelPi));
+            Assert.That(result.Rows[3][1], Is.EqualTo(-excelPi));
 
-            Assert.AreEqual(+excelPi * 1.0e-300, result.Rows[4][1]);
-            Assert.AreEqual(-excelPi * 1.0e-300, result.Rows[5][1]);
+            Assert.That(result.Rows[4][1], Is.EqualTo(+excelPi * 1.0e-300));
+            Assert.That(result.Rows[5][1], Is.EqualTo(-excelPi * 1.0e-300));
 
-            Assert.AreEqual(+excelPi * 1.0e300, (double)result.Rows[6][1], 1e286); // only accurate to 1e286 because excel only has 15 digits precision
-            Assert.AreEqual(-excelPi * 1.0e300, (double)result.Rows[7][1], 1e286);
+            Assert.That((double)result.Rows[6][1], Is.EqualTo(+excelPi * 1.0e300).Within(1e286)); // only accurate to 1e286 because excel only has 15 digits precision
+            Assert.That((double)result.Rows[7][1], Is.EqualTo(-excelPi * 1.0e300).Within(1e286));
 
-            Assert.AreEqual(+excelPi * 1.0e14, result.Rows[8][1]);
-            Assert.AreEqual(-excelPi * 1.0e14, result.Rows[9][1]);
+            Assert.That(result.Rows[8][1], Is.EqualTo(+excelPi * 1.0e14));
+            Assert.That(result.Rows[9][1], Is.EqualTo(-excelPi * 1.0e14));
         }
 
         protected abstract DateTime GitIssue82TodayDate { get; }
@@ -319,8 +309,8 @@ namespace ExcelDataReader.Tests
             // 4/19/2013 (=TODAY() when file was saved)
 
             DataSet result = excelReader.AsDataSet();
-            Assert.AreEqual(new DateTime(2009, 6, 15), (DateTime)result.Tables[0].Rows[0][0]);
-            Assert.AreEqual(GitIssue82TodayDate, (DateTime)result.Tables[0].Rows[1][0]);
+            Assert.That((DateTime)result.Tables[0].Rows[0][0], Is.EqualTo(new DateTime(2009, 6, 15)));
+            Assert.That((DateTime)result.Tables[0].Rows[1][0], Is.EqualTo(GitIssue82TodayDate));
         }
 
         [Test]
@@ -331,8 +321,8 @@ namespace ExcelDataReader.Tests
             // 4/19/2013 (=TODAY() when file was saved)
 
             DataSet result = excelReader.AsDataSet();
-            Assert.AreEqual(new DateTime(2009, 6, 15), (DateTime)result.Tables[0].Rows[0][0]);
-            Assert.AreEqual(GitIssue82TodayDate, (DateTime)result.Tables[0].Rows[1][0]);
+            Assert.That((DateTime)result.Tables[0].Rows[0][0], Is.EqualTo(new DateTime(2009, 6, 15)));
+            Assert.That((DateTime)result.Tables[0].Rows[1][0], Is.EqualTo(GitIssue82TodayDate));
         }
 
         [Test]
@@ -340,7 +330,7 @@ namespace ExcelDataReader.Tests
         {
             using IExcelDataReader excelReader = OpenReader("Test_BlankHeader");
             excelReader.Read();
-            Assert.AreEqual(4, excelReader.FieldCount);
+            Assert.That(excelReader.FieldCount, Is.EqualTo(4));
             excelReader.Read();
         }
 
@@ -350,11 +340,11 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test_Decimal_1109");
             DataSet dataSet = excelReader.AsDataSet();
 
-            Assert.AreEqual(3.14159, dataSet.Tables[0].Rows[0][0]);
+            Assert.That(dataSet.Tables[0].Rows[0][0], Is.EqualTo(3.14159));
 
             const double val1 = -7080.61;
             double val2 = (double)dataSet.Tables[0].Rows[0][1];
-            Assert.AreEqual(val1, val2);
+            Assert.That(val2, Is.EqualTo(val1));
         }
         
         [Test]
@@ -365,32 +355,32 @@ namespace ExcelDataReader.Tests
 
             string val1 = "Simon Hodgetts";
             string val2 = dataSet.Tables[0].Rows[2][0].ToString();
-            Assert.AreEqual(val1, val2);
+            Assert.That(val2, Is.EqualTo(val1));
 
             val1 = "John test";
             val2 = dataSet.Tables[0].Rows[1][0].ToString();
-            Assert.AreEqual(val1, val2);
+            Assert.That(val2, Is.EqualTo(val1));
 
             // librement réutilisable
             val1 = "librement réutilisable";
             val2 = dataSet.Tables[0].Rows[7][0].ToString();
-            Assert.AreEqual(val1, val2);
+            Assert.That(val2, Is.EqualTo(val1));
 
             val2 = dataSet.Tables[0].Rows[8][0].ToString();
-            Assert.AreEqual(val1, val2);
+            Assert.That(val2, Is.EqualTo(val1));
         }
 
         [Test]
         public void TestIssue11601ReadSheetNames()
         {
             using IExcelDataReader excelReader = OpenReader("Test_Excel_Dataset");
-            Assert.AreEqual("test.csv", excelReader.Name);
+            Assert.That(excelReader.Name, Is.EqualTo("test.csv"));
 
             excelReader.NextResult();
-            Assert.AreEqual("Sheet2", excelReader.Name);
+            Assert.That(excelReader.Name, Is.EqualTo("Sheet2"));
 
             excelReader.NextResult();
-            Assert.AreEqual("Sheet3", excelReader.Name);
+            Assert.That(excelReader.Name, Is.EqualTo("Sheet3"));
         }
 
         [Test]
@@ -399,7 +389,7 @@ namespace ExcelDataReader.Tests
             using var reader = OpenReader("Test_git_issue_250_richtext");
             reader.Read();
             var text = reader.GetString(0);
-            Assert.AreEqual("Lorem ipsum dolor sit amet, ei pri verterem efficiantur, per id meis idque deterruisset.", text);
+            Assert.That(text, Is.EqualTo("Lorem ipsum dolor sit amet, ei pri verterem efficiantur, per id meis idque deterruisset."));
         }
 
         [Test]
@@ -409,7 +399,7 @@ namespace ExcelDataReader.Tests
             using (var reader = OpenReader("Test_git_issue_270"))
             {
                 var dataSet = reader.AsDataSet();
-                Assert.AreEqual(1, dataSet.Tables[0].Rows.Count);
+                Assert.That(dataSet.Tables[0].Rows.Count, Is.EqualTo(1));
             }
 
             // Reader methods do not trim trailing blank rows
@@ -418,7 +408,7 @@ namespace ExcelDataReader.Tests
                 var rowCount = 0;
                 while (reader.Read())
                     rowCount++;
-                Assert.AreEqual(65536, rowCount);
+                Assert.That(rowCount, Is.EqualTo(65536));
             }
         }
         
@@ -427,36 +417,36 @@ namespace ExcelDataReader.Tests
         {
             using var reader = OpenReader("Test_git_issue_283_TimeSpan");
             reader.Read();
-            Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0));
-            Assert.AreEqual((DateTime)reader[2], new DateTime(1899, 12, 31)); // Excel says 1/0/1900, not valid in .NET
+            Assert.That(new TimeSpan(0), Is.EqualTo((TimeSpan)reader[0]));
+            Assert.That(new DateTime(1899, 12, 31), Is.EqualTo((DateTime)reader[2])); // Excel says 1/0/1900, not valid in .NET
 
             reader.Read();
-            Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(1, 0, 0, 0, 0));
-            Assert.AreEqual((DateTime)reader[2], new DateTime(1900, 1, 1));
+            Assert.That(new TimeSpan(1, 0, 0, 0, 0), Is.EqualTo((TimeSpan)reader[0]));
+            Assert.That(new DateTime(1900, 1, 1), Is.EqualTo((DateTime)reader[2]));
 
             reader.Read();
-            Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(2, 0, 0, 0, 0));
+            Assert.That(new TimeSpan(2, 0, 0, 0, 0), Is.EqualTo((TimeSpan)reader[0]));
 
             reader.Read();
-            Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1392, 0, 0, 0));
+            Assert.That(new TimeSpan(0, 1392, 0, 0, 0), Is.EqualTo((TimeSpan)reader[0]));
 
             reader.Read();
-            Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1416, 0, 0, 0));
-            Assert.AreEqual((DateTime)reader[2], new DateTime(1900, 2, 28));
+            Assert.That(new TimeSpan(0, 1416, 0, 0, 0), Is.EqualTo((TimeSpan)reader[0]));
+            Assert.That(new DateTime(1900, 2, 28), Is.EqualTo((DateTime)reader[2]));
 
             reader.Read();
-            Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1440, 0, 0, 0));
-            Assert.AreEqual((DateTime)reader[2], new DateTime(1900, 2, 28)); // Excel says 2/29/1900, not valid in .NET
+            Assert.That(new TimeSpan(0, 1440, 0, 0, 0), Is.EqualTo((TimeSpan)reader[0]));
+            Assert.That(new DateTime(1900, 2, 28), Is.EqualTo((DateTime)reader[2])); // Excel says 2/29/1900, not valid in .NET
 
             reader.Read();
-            Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1464, 0, 0, 0));
-            Assert.AreEqual((DateTime)reader[2], new DateTime(1900, 3, 1));
+            Assert.That(new TimeSpan(0, 1464, 0, 0, 0), Is.EqualTo((TimeSpan)reader[0]));
+            Assert.That(new DateTime(1900, 3, 1), Is.EqualTo((DateTime)reader[2]));
 
             reader.Read();
-            Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1488, 0, 0, 0));
+            Assert.That(new TimeSpan(0, 1488, 0, 0, 0), Is.EqualTo((TimeSpan)reader[0]));
 
             reader.Read();
-            Assert.AreEqual((TimeSpan)reader[0], new TimeSpan(0, 1512, 0, 0, 0));
+            Assert.That(new TimeSpan(0, 1512, 0, 0, 0), Is.EqualTo((TimeSpan)reader[0]));
         }
 
         [Test]
@@ -466,20 +456,20 @@ namespace ExcelDataReader.Tests
             var result = reader.AsDataSet().Tables[0];
 
             // AsDataSet trims trailing empty rows
-            Assert.AreEqual(0, result.Rows.Count);
+            Assert.That(result.Rows.Count, Is.EqualTo(0));
 
             // Check errors on first row return null
             reader.Read();
-            Assert.IsNull(reader.GetValue(0));
-            Assert.AreEqual(CellError.DIV0, reader.GetCellError(0));
+            Assert.That(reader.GetValue(0), Is.Null);
+            Assert.That(reader.GetCellError(0), Is.EqualTo(CellError.DIV0));
 
-            Assert.IsNull(reader.GetValue(1));
-            Assert.AreEqual(CellError.NA, reader.GetCellError(1));
+            Assert.That(reader.GetValue(1), Is.Null);
+            Assert.That(reader.GetCellError(1), Is.EqualTo(CellError.NA));
 
-            Assert.IsNull(reader.GetValue(2));
-            Assert.AreEqual(CellError.VALUE, reader.GetCellError(2));
+            Assert.That(reader.GetValue(2), Is.Null);
+            Assert.That(reader.GetCellError(2), Is.EqualTo(CellError.VALUE));
 
-            Assert.AreEqual(1, reader.RowCount);
+            Assert.That(reader.RowCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -488,18 +478,18 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test_Issue_4031_NullColumn");
             // DataSet dataSet = excelReader.AsDataSet(true);
             excelReader.Read();
-            Assert.IsNull(excelReader.GetValue(0));
-            Assert.AreEqual("a", excelReader.GetString(1));
-            Assert.AreEqual("b", excelReader.GetString(2));
-            Assert.IsNull(excelReader.GetValue(3));
-            Assert.AreEqual("d", excelReader.GetString(4));
+            Assert.That(excelReader.GetValue(0), Is.Null);
+            Assert.That(excelReader.GetString(1), Is.EqualTo("a"));
+            Assert.That(excelReader.GetString(2), Is.EqualTo("b"));
+            Assert.That(excelReader.GetValue(3), Is.Null);
+            Assert.That(excelReader.GetString(4), Is.EqualTo("d"));
 
             excelReader.Read();
-            Assert.IsNull(excelReader.GetValue(0));
-            Assert.IsNull(excelReader.GetValue(1));
-            Assert.AreEqual("Test", excelReader.GetString(2));
-            Assert.IsNull(excelReader.GetValue(3));
-            Assert.AreEqual(1, excelReader.GetDouble(4));
+            Assert.That(excelReader.GetValue(0), Is.Null);
+            Assert.That(excelReader.GetValue(1), Is.Null);
+            Assert.That(excelReader.GetString(2), Is.EqualTo("Test"));
+            Assert.That(excelReader.GetValue(3), Is.Null);
+            Assert.That(excelReader.GetDouble(4), Is.EqualTo(1));
         }
 
         [Test]
@@ -508,9 +498,9 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test_Issue_7433_IllegalOleAutDate");
             DataSet dataSet = excelReader.AsDataSet();
 
-            Assert.AreEqual(3.10101195608231E+17, dataSet.Tables[0].Rows[0][0]);
-            Assert.AreEqual("B221055625", dataSet.Tables[0].Rows[1][0]);
-            Assert.AreEqual(4.12721197309241E+17, dataSet.Tables[0].Rows[2][0]);
+            Assert.That(dataSet.Tables[0].Rows[0][0], Is.EqualTo(3.10101195608231E+17));
+            Assert.That(dataSet.Tables[0].Rows[1][0], Is.EqualTo("B221055625"));
+            Assert.That(dataSet.Tables[0].Rows[2][0], Is.EqualTo(4.12721197309241E+17));
         }
 
         [Test]
@@ -521,33 +511,33 @@ namespace ExcelDataReader.Tests
 
             // date
             var date1900 = dataSet.Tables[0].Rows[7][1];
-            Assert.AreEqual(typeof(DateTime), date1900.GetType());
-            Assert.AreEqual(new DateTime(1900, 1, 1), date1900);
+            Assert.That(date1900.GetType(), Is.EqualTo(typeof(DateTime)));
+            Assert.That(date1900, Is.EqualTo(new DateTime(1900, 1, 1)));
 
             // xml encoded chars
             var xmlChar1 = dataSet.Tables[0].Rows[6][1];
-            Assert.AreEqual(typeof(string), xmlChar1.GetType());
-            Assert.AreEqual("&#x26; ", xmlChar1);
+            Assert.That(xmlChar1.GetType(), Is.EqualTo(typeof(string)));
+            Assert.That(xmlChar1, Is.EqualTo("&#x26; "));
 
             // number but matches a date serial
             var dateNum1 = dataSet.Tables[0].Rows[5][1];
-            Assert.AreEqual(typeof(double), dateNum1.GetType());
-            Assert.AreEqual(41244, double.Parse(dateNum1.ToString()));
+            Assert.That(dateNum1.GetType(), Is.EqualTo(typeof(double)));
+            Assert.That(double.Parse(dateNum1.ToString()), Is.EqualTo(41244));
 
             // date
             var date1 = dataSet.Tables[0].Rows[4][1];
-            Assert.AreEqual(typeof(DateTime), date1.GetType());
-            Assert.AreEqual(new DateTime(2012, 12, 1), date1);
+            Assert.That(date1.GetType(), Is.EqualTo(typeof(DateTime)));
+            Assert.That(date1, Is.EqualTo(new DateTime(2012, 12, 1)));
 
             // double
             var num1 = dataSet.Tables[0].Rows[3][1];
-            Assert.AreEqual(typeof(double), num1.GetType());
-            Assert.AreEqual(12345, double.Parse(num1.ToString()));
+            Assert.That(num1.GetType(), Is.EqualTo(typeof(double)));
+            Assert.That(double.Parse(num1.ToString()), Is.EqualTo(12345));
 
             // boolean issue
             var val2 = dataSet.Tables[0].Rows[2][1];
-            Assert.AreEqual(typeof(bool), val2.GetType());
-            Assert.IsTrue((bool)val2);
+            Assert.That(val2.GetType(), Is.EqualTo(typeof(bool)));
+            Assert.That((bool)val2, Is.True);
         }
 
         [Test]
@@ -555,11 +545,11 @@ namespace ExcelDataReader.Tests
         {
             using IExcelDataReader excelReader = OpenReader("Test_Issue_10725");
             excelReader.Read();
-            Assert.AreEqual(8.8, excelReader.GetValue(0));
+            Assert.That(excelReader.GetValue(0), Is.EqualTo(8.8));
 
             DataSet result = excelReader.AsDataSet();
 
-            Assert.AreEqual(8.8, result.Tables[0].Rows[0][0]);
+            Assert.That(result.Tables[0].Rows[0][0], Is.EqualTo(8.8));
         }
 
         [Test]
@@ -568,9 +558,9 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test_Issue_11397");
             DataSet dataSet = excelReader.AsDataSet();
 
-            Assert.AreEqual("$44.99", dataSet.Tables[0].Rows[1][0].ToString()); // general in spreadsheet so should be a string including the $
-            Assert.AreEqual(44.99, double.Parse(dataSet.Tables[0].Rows[2][0].ToString())); // currency euros in spreadsheet so should be a currency
-            Assert.AreEqual(44.99, double.Parse(dataSet.Tables[0].Rows[3][0].ToString())); // currency pounds in spreadsheet so should be a currency
+            Assert.That(dataSet.Tables[0].Rows[1][0].ToString(), Is.EqualTo("$44.99")); // general in spreadsheet so should be a string including the $
+            Assert.That(double.Parse(dataSet.Tables[0].Rows[2][0].ToString()), Is.EqualTo(44.99)); // currency euros in spreadsheet so should be a currency
+            Assert.That(double.Parse(dataSet.Tables[0].Rows[3][0].ToString()), Is.EqualTo(44.99)); // currency pounds in spreadsheet so should be a currency
         }
 
         [Test]
@@ -579,15 +569,15 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test_Issue_11435_Colors");
             DataSet dataSet = excelReader.AsDataSet();
 
-            Assert.AreEqual("test1", dataSet.Tables[0].Rows[0][0].ToString());
-            Assert.AreEqual("test2", dataSet.Tables[0].Rows[0][1].ToString());
-            Assert.AreEqual("test3", dataSet.Tables[0].Rows[0][2].ToString());
+            Assert.That(dataSet.Tables[0].Rows[0][0].ToString(), Is.EqualTo("test1"));
+            Assert.That(dataSet.Tables[0].Rows[0][1].ToString(), Is.EqualTo("test2"));
+            Assert.That(dataSet.Tables[0].Rows[0][2].ToString(), Is.EqualTo("test3"));
 
             excelReader.Read();
 
-            Assert.AreEqual("test1", excelReader.GetString(0));
-            Assert.AreEqual("test2", excelReader.GetString(1));
-            Assert.AreEqual("test3", excelReader.GetString(2));
+            Assert.That(excelReader.GetString(0), Is.EqualTo("test1"));
+            Assert.That(excelReader.GetString(1), Is.EqualTo("test2"));
+            Assert.That(excelReader.GetString(2), Is.EqualTo("test3"));
         }
 
         [Test]
@@ -596,14 +586,14 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test_Issue_11479_BlankSheet");
             // DataSet result = excelReader.AsDataSet(true);
             excelReader.Read();
-            Assert.AreEqual(5, excelReader.FieldCount);
+            Assert.That(excelReader.FieldCount, Is.EqualTo(5));
             excelReader.NextResult();
             excelReader.Read();
-            Assert.AreEqual(0, excelReader.FieldCount);
+            Assert.That(excelReader.FieldCount, Is.EqualTo(0));
 
             excelReader.NextResult();
             excelReader.Read();
-            Assert.AreEqual(0, excelReader.FieldCount);
+            Assert.That(excelReader.FieldCount, Is.EqualTo(0));
         }
 
         [Test]
@@ -612,8 +602,8 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test_Issue_11573_BlankValues");
             var dataSet = excelReader.AsDataSet();
 
-            Assert.AreEqual(1D, dataSet.Tables[0].Rows[12][0]);
-            Assert.AreEqual("070202", dataSet.Tables[0].Rows[12][1]);
+            Assert.That(dataSet.Tables[0].Rows[12][0], Is.EqualTo(1D));
+            Assert.That(dataSet.Tables[0].Rows[12][1], Is.EqualTo("070202"));
         }
 
         [Test]
@@ -622,7 +612,7 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test_Issue_BoolFormula");
             DataSet dataSet = excelReader.AsDataSet();
 
-            Assert.AreEqual(true, dataSet.Tables[0].Rows[0][0]);
+            Assert.That(dataSet.Tables[0].Rows[0][0], Is.EqualTo(true));
         }
 
         [Test]
@@ -632,22 +622,22 @@ namespace ExcelDataReader.Tests
             // the output is not a date (it was ending up as datetime.min)
             using IExcelDataReader excelReader = OpenReader("Test_Issue_DateFormatButNotDate");
             excelReader.Read();
-            Assert.AreEqual("columna", excelReader.GetValue(0));
-            Assert.AreEqual("columnb", excelReader.GetValue(1));
-            Assert.AreEqual("columnc", excelReader.GetValue(2));
-            Assert.AreEqual("columnd", excelReader.GetValue(3));
-            Assert.AreEqual("columne", excelReader.GetValue(4));
+            Assert.That(excelReader.GetValue(0), Is.EqualTo("columna"));
+            Assert.That(excelReader.GetValue(1), Is.EqualTo("columnb"));
+            Assert.That(excelReader.GetValue(2), Is.EqualTo("columnc"));
+            Assert.That(excelReader.GetValue(3), Is.EqualTo("columnd"));
+            Assert.That(excelReader.GetValue(4), Is.EqualTo("columne"));
 
             excelReader.Read();
-            Assert.AreEqual(1D, excelReader.GetValue(0));
-            Assert.AreEqual(2D, excelReader.GetValue(1));
-            Assert.AreEqual(3D, excelReader.GetValue(2));
+            Assert.That(excelReader.GetValue(0), Is.EqualTo(1D));
+            Assert.That(excelReader.GetValue(1), Is.EqualTo(2D));
+            Assert.That(excelReader.GetValue(2), Is.EqualTo(3D));
             var value = excelReader.GetValue(3);
-            Assert.AreEqual(new DateTime(2013, 12, 10), value);
-            Assert.AreEqual("red", excelReader.GetValue(4));
+            Assert.That(value, Is.EqualTo(new DateTime(2013, 12, 10)));
+            Assert.That(excelReader.GetValue(4), Is.EqualTo("red"));
 
             excelReader.Read();
-            Assert.AreEqual("yellow", excelReader.GetValue(4));
+            Assert.That(excelReader.GetValue(4), Is.EqualTo("yellow"));
         }
 
         [Test]
@@ -672,21 +662,21 @@ namespace ExcelDataReader.Tests
                     r.IsDBNull(4));
             }
 
-            Assert.AreEqual(6, fieldCount);
+            Assert.That(fieldCount, Is.EqualTo(6));
 
-            Assert.AreEqual(30, table.Rows.Count);
+            Assert.That(table.Rows.Count, Is.EqualTo(30));
 
-            Assert.AreEqual(1, int.Parse(table.Rows[0][0].ToString()));
-            Assert.AreEqual(1346269, int.Parse(table.Rows[29][0].ToString()));
+            Assert.That(int.Parse(table.Rows[0][0].ToString()), Is.EqualTo(1));
+            Assert.That(int.Parse(table.Rows[29][0].ToString()), Is.EqualTo(1346269));
 
             // double + Formula
-            Assert.AreEqual(1.02, double.Parse(table.Rows[0][1].ToString()));
-            Assert.AreEqual(4.08, double.Parse(table.Rows[2][1].ToString()));
-            Assert.AreEqual(547608330.24, double.Parse(table.Rows[29][1].ToString()));
+            Assert.That(double.Parse(table.Rows[0][1].ToString()), Is.EqualTo(1.02));
+            Assert.That(double.Parse(table.Rows[2][1].ToString()), Is.EqualTo(4.08));
+            Assert.That(double.Parse(table.Rows[29][1].ToString()), Is.EqualTo(547608330.24));
 
             // Date + Formula
-            Assert.AreEqual(new DateTime(2009, 5, 11).ToShortDateString(), DateTime.Parse(table.Rows[0][2].ToString()).ToShortDateString());
-            Assert.AreEqual(new DateTime(2009, 11, 30).ToShortDateString(), DateTime.Parse(table.Rows[29][2].ToString()).ToShortDateString());
+            Assert.That(DateTime.Parse(table.Rows[0][2].ToString()).ToShortDateString(), Is.EqualTo(new DateTime(2009, 5, 11).ToShortDateString()));
+            Assert.That(DateTime.Parse(table.Rows[29][2].ToString()).ToShortDateString(), Is.EqualTo(new DateTime(2009, 11, 30).ToShortDateString()));
         }
 
         [Test]
@@ -695,25 +685,25 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("TestMultiSheet");
             DataSet result = excelReader.AsDataSet();
 
-            Assert.AreEqual(3, result.Tables.Count);
+            Assert.That(result.Tables.Count, Is.EqualTo(3));
 
-            Assert.AreEqual(4, result.Tables["Sheet1"].Columns.Count);
-            Assert.AreEqual(12, result.Tables["Sheet1"].Rows.Count);
-            Assert.AreEqual(4, result.Tables["Sheet2"].Columns.Count);
-            Assert.AreEqual(12, result.Tables["Sheet2"].Rows.Count);
-            Assert.AreEqual(2, result.Tables["Sheet3"].Columns.Count);
-            Assert.AreEqual(5, result.Tables["Sheet3"].Rows.Count);
+            Assert.That(result.Tables["Sheet1"].Columns.Count, Is.EqualTo(4));
+            Assert.That(result.Tables["Sheet1"].Rows.Count, Is.EqualTo(12));
+            Assert.That(result.Tables["Sheet2"].Columns.Count, Is.EqualTo(4));
+            Assert.That(result.Tables["Sheet2"].Rows.Count, Is.EqualTo(12));
+            Assert.That(result.Tables["Sheet3"].Columns.Count, Is.EqualTo(2));
+            Assert.That(result.Tables["Sheet3"].Rows.Count, Is.EqualTo(5));
 
-            Assert.AreEqual("1", result.Tables["Sheet2"].Rows[11][0].ToString());
-            Assert.AreEqual("2", result.Tables["Sheet1"].Rows[11][3].ToString());
-            Assert.AreEqual("3", result.Tables["Sheet3"].Rows[4][1].ToString());
+            Assert.That(result.Tables["Sheet2"].Rows[11][0].ToString(), Is.EqualTo("1"));
+            Assert.That(result.Tables["Sheet1"].Rows[11][3].ToString(), Is.EqualTo("2"));
+            Assert.That(result.Tables["Sheet3"].Rows[4][1].ToString(), Is.EqualTo("3"));
         }
 
         [Test]
         public void DataReaderNextResultTest()
         {
             using IExcelDataReader r = OpenReader("TestMultiSheet");
-            Assert.AreEqual(3, r.ResultsCount);
+            Assert.That(r.ResultsCount, Is.EqualTo(3));
 
             var table = new DataTable();
             table.Columns.Add("c1", typeof(int));
@@ -733,10 +723,10 @@ namespace ExcelDataReader.Tests
                     Convert.ToInt32(r.GetValue(3)));
             }
 
-            Assert.AreEqual(12, table.Rows.Count);
-            Assert.AreEqual(12, r.RowCount);
-            Assert.AreEqual(4, fieldCount);
-            Assert.AreEqual(1, table.Rows[11][3]);
+            Assert.That(table.Rows.Count, Is.EqualTo(12));
+            Assert.That(r.RowCount, Is.EqualTo(12));
+            Assert.That(fieldCount, Is.EqualTo(4));
+            Assert.That(table.Rows[11][3], Is.EqualTo(1));
 
             r.NextResult();
             table.Rows.Clear();
@@ -751,10 +741,10 @@ namespace ExcelDataReader.Tests
                     Convert.ToInt32(r.GetValue(3)));
             }
 
-            Assert.AreEqual(12, table.Rows.Count);
-            Assert.AreEqual(12, r.RowCount);
-            Assert.AreEqual(4, fieldCount);
-            Assert.AreEqual(2, table.Rows[11][3]);
+            Assert.That(table.Rows.Count, Is.EqualTo(12));
+            Assert.That(r.RowCount, Is.EqualTo(12));
+            Assert.That(fieldCount, Is.EqualTo(4));
+            Assert.That(table.Rows[11][3], Is.EqualTo(2));
 
             r.NextResult();
             table.Rows.Clear();
@@ -767,12 +757,12 @@ namespace ExcelDataReader.Tests
                     Convert.ToInt32(r.GetValue(1)));
             }
 
-            Assert.AreEqual(5, table.Rows.Count);
-            Assert.AreEqual(5, r.RowCount);
-            Assert.AreEqual(2, fieldCount);
-            Assert.AreEqual(3, table.Rows[4][1]);
+            Assert.That(table.Rows.Count, Is.EqualTo(5));
+            Assert.That(r.RowCount, Is.EqualTo(5));
+            Assert.That(fieldCount, Is.EqualTo(2));
+            Assert.That(table.Rows[4][1], Is.EqualTo(3));
 
-            Assert.AreEqual(false, r.NextResult());
+            Assert.That(r.NextResult(), Is.EqualTo(false));
         }
 
         [Test]
@@ -781,22 +771,22 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("TestUnicodeChars");
             DataTable result = excelReader.AsDataSet().Tables[0];
 
-            Assert.AreEqual(3, result.Rows.Count);
-            Assert.AreEqual(8, result.Columns.Count);
-            Assert.AreEqual("\u00e9\u0417", result.Rows[1][0].ToString());
+            Assert.That(result.Rows.Count, Is.EqualTo(3));
+            Assert.That(result.Columns.Count, Is.EqualTo(8));
+            Assert.That(result.Rows[1][0].ToString(), Is.EqualTo("\u00e9\u0417"));
         }
 
         [Test]
         public void GitIssue29ReadSheetStatesReadsCorrectly()
         {
             using IExcelDataReader excelReader = OpenReader("Test_Excel_Dataset");
-            Assert.AreEqual("hidden", excelReader.VisibleState);
+            Assert.That(excelReader.VisibleState, Is.EqualTo("hidden"));
 
             excelReader.NextResult();
-            Assert.AreEqual("visible", excelReader.VisibleState);
+            Assert.That(excelReader.VisibleState, Is.EqualTo("visible"));
 
             excelReader.NextResult();
-            Assert.AreEqual("veryhidden", excelReader.VisibleState);
+            Assert.That(excelReader.VisibleState, Is.EqualTo("veryhidden"));
         }
 
         [Test]
@@ -805,11 +795,11 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader reader = OpenReader("Test_Excel_Dataset");
             var dataSet = reader.AsDataSet();
 
-            Assert.IsTrue(dataSet != null);
-            Assert.AreEqual(3, dataSet.Tables.Count);
-            Assert.AreEqual("hidden", dataSet.Tables[0].ExtendedProperties["visiblestate"]);
-            Assert.AreEqual("visible", dataSet.Tables[1].ExtendedProperties["visiblestate"]);
-            Assert.AreEqual("veryhidden", dataSet.Tables[2].ExtendedProperties["visiblestate"]);
+            Assert.That(dataSet != null, Is.True);
+            Assert.That(dataSet.Tables.Count, Is.EqualTo(3));
+            Assert.That(dataSet.Tables[0].ExtendedProperties["visiblestate"], Is.EqualTo("hidden"));
+            Assert.That(dataSet.Tables[1].ExtendedProperties["visiblestate"], Is.EqualTo("visible"));
+            Assert.That(dataSet.Tables[2].ExtendedProperties["visiblestate"], Is.EqualTo("veryhidden"));
         }
 
         [Test]
@@ -821,7 +811,7 @@ namespace ExcelDataReader.Tests
                 FilterSheet = (r, index) => r.VisibleState == "visible"
             });
 
-            Assert.AreEqual(1, result.Tables.Count);
+            Assert.That(result.Tables.Count, Is.EqualTo(1));
         }
 
         [Test]
@@ -830,35 +820,36 @@ namespace ExcelDataReader.Tests
             using IExcelDataReader excelReader = OpenReader("Test_num_double_date_bool_string");
             DataSet dataSet = excelReader.AsDataSet();
 
-            Assert.AreEqual(30, dataSet.Tables[0].Rows.Count);
-            Assert.AreEqual(6, dataSet.Tables[0].Columns.Count);
+            Assert.That(dataSet.Tables[0].Rows.Count, Is.EqualTo(30));
+            Assert.That(dataSet.Tables[0].Columns.Count, Is.EqualTo(6));
 
-            Assert.AreEqual(1, int.Parse(dataSet.Tables[0].Rows[0][0].ToString()));
-            Assert.AreEqual(1346269, int.Parse(dataSet.Tables[0].Rows[29][0].ToString()));
+            Assert.That(int.Parse(dataSet.Tables[0].Rows[0][0].ToString()), Is.EqualTo(1));
+            Assert.That(int.Parse(dataSet.Tables[0].Rows[29][0].ToString()), Is.EqualTo(1346269));
 
             // bool
-            Assert.IsNotNull(dataSet.Tables[0].Rows[22][3].ToString());
-            Assert.AreEqual(dataSet.Tables[0].Rows[22][3], true);
+            
+            Assert.That(dataSet.Tables[0].Rows[22][3].ToString(), Is.Not.Null);
+            Assert.That(dataSet.Tables[0].Rows[22][3], Is.EqualTo(true));
 
             // double + Formula
-            Assert.AreEqual(1.02, double.Parse(dataSet.Tables[0].Rows[0][1].ToString()));
-            Assert.AreEqual(4.08, double.Parse(dataSet.Tables[0].Rows[2][1].ToString()));
-            Assert.AreEqual(547608330.24, double.Parse(dataSet.Tables[0].Rows[29][1].ToString()));
+            Assert.That(double.Parse(dataSet.Tables[0].Rows[0][1].ToString()), Is.EqualTo(1.02));
+            Assert.That(double.Parse(dataSet.Tables[0].Rows[2][1].ToString()), Is.EqualTo(4.08));
+            Assert.That(double.Parse(dataSet.Tables[0].Rows[29][1].ToString()), Is.EqualTo(547608330.24));
 
             // Date + Formula
             string s = dataSet.Tables[0].Rows[0][2].ToString();
-            Assert.AreEqual(new DateTime(2009, 5, 11), DateTime.Parse(s));
+            Assert.That(DateTime.Parse(s), Is.EqualTo(new DateTime(2009, 5, 11)));
             s = dataSet.Tables[0].Rows[29][2].ToString();
-            Assert.AreEqual(new DateTime(2009, 11, 30), DateTime.Parse(s));
+            Assert.That(DateTime.Parse(s), Is.EqualTo(new DateTime(2009, 11, 30)));
 
             // Custom Date Time + Formula
             s = dataSet.Tables[0].Rows[0][5].ToString();
-            Assert.AreEqual(new DateTime(2009, 5, 7, 11, 1, 2), DateTime.Parse(s));
+            Assert.That(DateTime.Parse(s), Is.EqualTo(new DateTime(2009, 5, 7, 11, 1, 2)));
             s = dataSet.Tables[0].Rows[1][5].ToString();
-            Assert.AreEqual(new DateTime(2009, 5, 8, 11, 1, 2), DateTime.Parse(s));
+            Assert.That(DateTime.Parse(s), Is.EqualTo(new DateTime(2009, 5, 8, 11, 1, 2)));
 
             // DBNull value
-            Assert.AreEqual(DBNull.Value, dataSet.Tables[0].Rows[1][4]);
+            Assert.That(dataSet.Tables[0].Rows[1][4], Is.EqualTo(DBNull.Value));
         }
 
         [Test]
@@ -869,7 +860,7 @@ namespace ExcelDataReader.Tests
             {
                 var dataSet = reader.AsDataSet();
 
-                Assert.AreEqual(4, dataSet.Tables[0].Rows.Count);
+                Assert.That(dataSet.Tables[0].Rows.Count, Is.EqualTo(4));
             }
 
             // Check there are two rows with content
@@ -883,7 +874,7 @@ namespace ExcelDataReader.Tests
                     }
                 });
 
-                Assert.AreEqual(2, dataSet.Tables[0].Rows.Count);
+                Assert.That(dataSet.Tables[0].Rows.Count, Is.EqualTo(2));
             }
 
             // Check there is one visible row with content
@@ -897,7 +888,7 @@ namespace ExcelDataReader.Tests
                     }
                 });
 
-                Assert.AreEqual(1, dataSet.Tables[0].Rows.Count);
+                Assert.That(dataSet.Tables[0].Rows.Count, Is.EqualTo(1));
             }
 
             static bool IsEmptyOrHiddenRow(IExcelDataReader reader)
@@ -934,7 +925,7 @@ namespace ExcelDataReader.Tests
             {
                 var dataSet = reader.AsDataSet();
 
-                Assert.AreEqual(2, dataSet.Tables[0].Columns.Count);
+                Assert.That(dataSet.Tables[0].Columns.Count, Is.EqualTo(2));
             }
 
             // Check there is one column when skipping the first
@@ -948,7 +939,7 @@ namespace ExcelDataReader.Tests
                     }
                 });
 
-                Assert.AreEqual(1, dataSet.Tables[0].Columns.Count);
+                Assert.That(dataSet.Tables[0].Columns.Count, Is.EqualTo(1));
             }
         }
 
@@ -958,20 +949,20 @@ namespace ExcelDataReader.Tests
             // Check there are four rows with no errors and no NREs
             using var reader = OpenReader("CollapsedHide");
             reader.Read();
-            Assert.AreEqual(null, reader.GetCellError(0));
-            Assert.AreEqual(null, reader.GetCellError(1));
+            Assert.That(reader.GetCellError(0), Is.EqualTo(null));
+            Assert.That(reader.GetCellError(1), Is.EqualTo(null));
 
             reader.Read();
-            Assert.AreEqual(null, reader.GetCellError(0));
-            Assert.AreEqual(null, reader.GetCellError(1));
+            Assert.That(reader.GetCellError(0), Is.EqualTo(null));
+            Assert.That(reader.GetCellError(1), Is.EqualTo(null));
 
             reader.Read();
-            Assert.AreEqual(null, reader.GetCellError(0));
-            Assert.AreEqual(null, reader.GetCellError(1));
+            Assert.That(reader.GetCellError(0), Is.EqualTo(null));
+            Assert.That(reader.GetCellError(1), Is.EqualTo(null));
 
             reader.Read();
-            Assert.AreEqual(null, reader.GetCellError(0));
-            Assert.AreEqual(null, reader.GetCellError(1));
+            Assert.That(reader.GetCellError(0), Is.EqualTo(null));
+            Assert.That(reader.GetCellError(1), Is.EqualTo(null));
         }
 
         [Test]
@@ -980,7 +971,7 @@ namespace ExcelDataReader.Tests
             using var reader = OpenReader("Test_git_issue_532");
             while (reader.Read())
             {
-                Assert.AreEqual(3, reader.FieldCount);
+                Assert.That(reader.FieldCount, Is.EqualTo(3));
             }
         }
     }

@@ -1,6 +1,3 @@
-using System;
-using System.Text;
-
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
