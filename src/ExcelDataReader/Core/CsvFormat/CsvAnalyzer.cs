@@ -21,14 +21,16 @@ namespace ExcelDataReader.Core.CsvFormat
 
             if (separators == null || separators.Length == 0)
             {
-                separators = new char[] { '\0' };
+                separators = ['\0'];
             }
 
             var separatorInfos = new SeparatorInfo[separators.Length];
             for (var i = 0; i < separators.Length; i++)
             {
-                separatorInfos[i] = new SeparatorInfo();
-                separatorInfos[i].Buffer = new CsvParser(separators[i], autodetectEncoding);
+                separatorInfos[i] = new SeparatorInfo
+                {
+                    Buffer = new CsvParser(separators[i], autodetectEncoding)
+                };
             }
 
             AnalyzeCsvRows(stream, buffer, bytesRead, bomLength, analyzeInitialCsvRows, separators, separatorInfos);
@@ -114,6 +116,9 @@ namespace ExcelDataReader.Core.CsvFormat
 
                 foreach (var row in rows)
                 {
+                    // Ignore empty rows
+                    if (row.Count == 1 && row[0].Length == 0)
+                        continue;
                     separatorInfo.MaxFieldCount = Math.Max(separatorInfo.MaxFieldCount, row.Count);
                     separatorInfo.SumFieldCount += row.Count;
                     separatorInfo.RowCount++;

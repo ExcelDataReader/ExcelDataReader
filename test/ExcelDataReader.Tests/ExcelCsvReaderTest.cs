@@ -371,5 +371,57 @@ namespace ExcelDataReader.Tests
                 Assert.That(values3, Is.EqualTo(new object[] { "1", "2", "3", "4" }));
             }
         }
+
+        [Test]
+        public void GitIssue500()
+        {
+            const string data = """
+                Item_Number,Pmt_Amount,Type,Voided,Note
+                200212812,$462.76,Check,06/06/2018,Hash#hash
+
+
+                """;
+
+            using var reader = ExcelReaderFactory.CreateCsvReader(new MemoryStream(Encoding.UTF8.GetBytes(data)));
+            reader.Read();
+            object[] row1 = new object[reader.FieldCount];
+            reader.GetValues(row1);
+            reader.Read();
+            object[] row2 = new object[reader.FieldCount];
+            reader.GetValues(row2);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(row1, Is.EqualTo(new object[] { "Item_Number", "Pmt_Amount", "Type", "Voided", "Note" }));
+                Assert.That(row2, Is.EqualTo(new object[] { "200212812", "$462.76", "Check", "06/06/2018", "Hash#hash" }));
+            });
+        }
+
+        [Test]
+        public void GitIssue500_QuotedValueWithNewLine()
+        {
+            const string data = """
+                Item_Number,Pmt_Amount,"Type
+                
+                2",Voided,Note
+                200212812,$462.76,Check,06/06/2018,Hash#hash
+
+
+                """;
+
+            using var reader = ExcelReaderFactory.CreateCsvReader(new MemoryStream(Encoding.UTF8.GetBytes(data)));
+            reader.Read();
+            object[] row1 = new object[reader.FieldCount];
+            reader.GetValues(row1);
+            reader.Read();
+            object[] row2 = new object[reader.FieldCount];
+            reader.GetValues(row2);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(row1, Is.EqualTo(new object[] { "Item_Number", "Pmt_Amount", "Type\r\n\r\n2", "Voided", "Note" }));
+                Assert.That(row2, Is.EqualTo(new object[] { "200212812", "$462.76", "Check", "06/06/2018", "Hash#hash" }));
+            });
+        }
     }
 }
