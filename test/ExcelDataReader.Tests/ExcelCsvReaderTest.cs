@@ -423,5 +423,39 @@ namespace ExcelDataReader.Tests
                 Assert.That(row2, Is.EqualTo(new object[] { "200212812", "$462.76", "Check", "06/06/2018", "Hash#hash" }));
             });
         }
+
+        [Test]
+        public void GitIssue463()
+        {
+            const string data = """
+                Name	Currency	Type	Cost	"Cost per 1,000 Items"
+                Test1	ABC	XX	"10,143.27"	0.00
+                Test2	EFG	YY	"10,143.27"	0.00
+                Test3	IJK	ZZ	"10,143.27"	0.00
+
+                """;
+
+            using var reader = ExcelReaderFactory.CreateCsvReader(new MemoryStream(Encoding.UTF8.GetBytes(data)));
+            reader.Read();
+            object[] row1 = new object[reader.FieldCount];
+            reader.GetValues(row1);
+            reader.Read();
+            object[] row2 = new object[reader.FieldCount];
+            reader.GetValues(row2);
+            reader.Read();
+            object[] row3 = new object[reader.FieldCount];
+            reader.GetValues(row3);
+            reader.Read();
+            object[] row4 = new object[reader.FieldCount];
+            reader.GetValues(row4);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(row1, Is.EqualTo(new object[] { "Name", "Currency", "Type", "Cost", "Cost per 1,000 Items" }));
+                Assert.That(row2, Is.EqualTo(new object[] { "Test1", "ABC", "XX", "10,143.27", "0.00" }));
+                Assert.That(row3, Is.EqualTo(new object[] { "Test2", "EFG", "YY", "10,143.27", "0.00" }));
+                Assert.That(row4, Is.EqualTo(new object[] { "Test3", "IJK", "ZZ", "10,143.27", "0.00" }));
+            });
+        }
     }
 }
