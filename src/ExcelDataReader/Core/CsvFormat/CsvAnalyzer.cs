@@ -55,7 +55,8 @@ namespace ExcelDataReader.Core.CsvFormat
                 var average = separatorInfo.SumFieldCount / (double)separatorInfo.RowCount;
                 var dist = separatorInfo.MaxFieldCount - average;
 
-                if (dist < bestDistance)
+                // If more than one separator has the same number of fields for all sample rows prefer the one with the most fields
+                if (dist < bestDistance || (dist == bestDistance && dist == 0 && bestSeparatorInfo.MaxFieldCount < separatorInfo.MaxFieldCount))
                 {
                     bestDistance = dist;
                     bestSeparator = separator;
