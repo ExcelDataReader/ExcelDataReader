@@ -3,7 +3,7 @@ skip_tags: true
 image: Visual Studio 2022
 configuration: Release
 build_script:
-  - ps: |-
+- ps: |-
     $ErrorActionPreference = "Stop";
     If ($Env:APPVEYOR_REPO_BRANCH -eq "master") {
       $Env:VERSION_SUFFIX=""
@@ -15,6 +15,6 @@ build_script:
 test:
   assemblies:
     only:
-      - '**\*.Tests.dll'
+    - '**\*.Tests.dll'
 artifacts:
-  - path: '**\*.nupkg'
+- path: '**\*.nupkg'
