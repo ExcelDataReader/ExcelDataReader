@@ -12,8 +12,8 @@ build_script:
     }
     msbuild /t:Restore /p:VersionSuffix=$Env:VERSION_SUFFIX
     msbuild ExcelDataReader.sln /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=$Env:CONFIGURATION /p:VersionSuffix=$Env:VERSION_SUFFIX /p:TreatWarningsAsErrors=true
-test_script:
-- ps: |-
-    dotnet test test\ExcelDataReader.Tests\ExcelDataReader.Tests.csproj --no-build -c $Env:CONFIGURATION
+test:
+  assemblies:
+    - '**\*.Tests.dll'
 artifacts:
 - path: '**\*.nupkg'
