@@ -2,7 +2,7 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   
   <PropertyGroup Condition="$(MSBuildProjectName.StartsWith('ExcelDataReader'))">
-    <VersionPrefix>3.7.0</VersionPrefix>
+    <VersionPrefix>3.8.0</VersionPrefix>
     <TargetFrameworks>net462;netstandard2.0;netstandard2.1</TargetFrameworks>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <AssemblyOriginatorKeyFile>..\ExcelDataReader.snk</AssemblyOriginatorKeyFile>
