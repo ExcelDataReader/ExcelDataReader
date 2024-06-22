@@ -419,7 +419,11 @@ namespace ExcelDataReader.Tests
 
             Assert.Multiple(() =>
             {
-                Assert.That(row1, Is.EqualTo(new object[] { "Item_Number", "Pmt_Amount", "Type\r\n\r\n2", "Voided", "Note" }));
+                Assert.That(row1, Is.EqualTo(new object[] { "Item_Number", "Pmt_Amount", """
+                Type
+                
+                2
+                """, "Voided", "Note" }));
                 Assert.That(row2, Is.EqualTo(new object[] { "200212812", "$462.76", "Check", "06/06/2018", "Hash#hash" }));
             });
         }
