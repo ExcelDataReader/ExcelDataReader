@@ -19,7 +19,9 @@ test_script:
     # upload results to AppVeyor
     $wc = New-Object 'System.Net.WebClient'
     Resolve-Path .\test\ExcelDataReader.Tests\TestResults\*.trx | % { $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", "$_") }
-    Write-Host "dotnet test LastExitCode was $testexitcode"
-    exit $testexitcode
+    if ($testexitcode -ne 0)
+    {
+      exit 1
+    }
 artifacts:
 - path: '**\*.nupkg'
