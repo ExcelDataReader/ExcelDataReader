@@ -3,7 +3,7 @@ skip_tags: true
 image: Visual Studio 2022
 configuration: Release
 build_script:
-- ps: |-
+  - ps: |-
     $ErrorActionPreference = "Stop";
     If ($Env:APPVEYOR_REPO_BRANCH -eq "master") {
       $Env:VERSION_SUFFIX=""
@@ -14,6 +14,7 @@ build_script:
     msbuild ExcelDataReader.sln /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=$Env:CONFIGURATION /p:VersionSuffix=$Env:VERSION_SUFFIX /p:TreatWarningsAsErrors=true
 test:
   assemblies:
-    - '**\*.Tests.dll'
+    only:
+      - '**\*.Tests.dll'
 artifacts:
-- path: '**\*.nupkg'
+  - path: '**\*.nupkg'
