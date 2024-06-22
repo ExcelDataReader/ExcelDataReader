@@ -1,12 +1,11 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
     /// Byte sized string, stored as bytes, with encoding from CodePage record. Used in BIFF2-5 .
     /// </summary>
-    internal class XlsShortByteString : IXlsString
+    internal sealed class XlsShortByteString : IXlsString
     {
         private readonly byte[] _bytes;
         private readonly uint _offset;

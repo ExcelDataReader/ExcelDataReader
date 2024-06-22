@@ -1,62 +1,27 @@
-using System;
-using ExcelDataReader.Tests;
 using NUnit.Framework;
-using TestClass = NUnit.Framework.TestFixtureAttribute;
-using TestCleanup = NUnit.Framework.TearDownAttribute;
-using TestInitialize = NUnit.Framework.SetUpAttribute;
-using TestMethod = NUnit.Framework.TestAttribute;
 
-#if EXCELDATAREADER_NET20
-namespace ExcelDataReader.Net20.Tests
-#elif NET45
-namespace ExcelDataReader.Net45.Tests
-#elif NETCOREAPP1_0
-namespace ExcelDataReader.Netstandard13.Tests
-#elif NETCOREAPP2_0
-namespace ExcelDataReader.Netstandard20.Tests
-#else
-#error "Tests do not support the selected target platform"
-#endif
+namespace ExcelDataReader.Tests
 {
-    [TestClass]
+    [TestFixture]
     public class ExcelReaderFactoryTests
     {
-        [TestMethod]
-        public void ProbeXLS()
+        [TestCase("Test10x10.xls")]
+        [TestCase("TestUnicodeChars.xls")]
+        [TestCase("biff3.xls")]
+        [TestCase("as3xls_BIFF2.xls")]
+        public void ProbeXls(string name)
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("Test10x10")))
-            {
-                Assert.AreEqual(excelReader.GetType().Name, "ExcelBinaryReader");
-            }
-
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("TestUnicodeChars")))
-            {
-                Assert.AreEqual(excelReader.GetType().Name, "ExcelBinaryReader");
-            }
-
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("biff3")))
-            {
-                Assert.AreEqual(excelReader.GetType().Name, "ExcelBinaryReader");
-            }
-
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("as3xls_BIFF2")))
-            {
-                Assert.AreEqual(excelReader.GetType().Name, "ExcelBinaryReader");
-            }
+            using IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook(name));
+            Assert.That(excelReader.GetType().Name, Is.EqualTo("ExcelBinaryReader"));
         }
 
-        [TestMethod]
-        public void ProbeXLSX()
+        [TestCase("Test10x10.xlsx")]
+        [TestCase("TestOpen.xlsx")]
+        [TestCase("TestOpen.xlsb")]
+        public void ProbeOpenXml(string name)
         {
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("xTest10x10")))
-            {
-                Assert.AreEqual(excelReader.GetType().Name, "ExcelOpenXmlReader");
-            }
-
-            using (IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("xTestOpenXml")))
-            {
-                Assert.AreEqual(excelReader.GetType().Name, "ExcelOpenXmlReader");
-            }
+            using IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook(name));
+            Assert.That(excelReader.GetType().Name, Is.EqualTo("ExcelOpenXmlReader"));
         }
     }
 }

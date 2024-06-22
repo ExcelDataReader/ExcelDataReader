@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <Authors>ExcelDataReader developers</Authors>
+    <LangVersion>12.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
+</Project>

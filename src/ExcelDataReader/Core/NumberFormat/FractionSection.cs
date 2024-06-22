@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System.Globalization;
 using System.Text;
 
 namespace ExcelDataReader.Core.NumberFormat
 {
-    internal class FractionSection
+    internal sealed class FractionSection
     {
         public List<string> IntegerPart { get; set; }
 
@@ -195,7 +195,7 @@ namespace ExcelDataReader.Core.NumberFormat
                 denominatorPrefix = null;
 
             if (hasConstant)
-                denominatorConstant = int.Parse(constant.ToString());
+                denominatorConstant = int.Parse(constant.ToString(), CultureInfo.InvariantCulture);
             else
                 denominatorConstant = 0;
 

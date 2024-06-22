@@ -1,11 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <PropertyGroup>
-    <TargetFramework>net45</TargetFramework>
+    <TargetFrameworks>net462;net8.0-windows</TargetFrameworks>
     <AssemblyName>TestApp</AssemblyName>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <PackageId>TestApp</PackageId>
-    <CodeAnalysisRuleSet>..\..\ExcelDataReader.ruleset</CodeAnalysisRuleSet>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +13,7 @@
     <ProjectReference Include="..\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -28,8 +28,4 @@
     </Compile>
   </ItemGroup>
 
-  <ItemGroup>
-    <AdditionalFiles Include="..\..\stylecop.json" Link="stylecop.json" />
-  </ItemGroup>
-  
 </Project>

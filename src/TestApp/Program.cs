@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-namespace TestApp
+﻿namespace TestApp
 {
     public class Program
     {
@@ -15,6 +8,11 @@ namespace TestApp
         [STAThread]
         public static void Main(string[] args)
         {
+#if NET5_0_OR_GREATER
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+#endif
+
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());

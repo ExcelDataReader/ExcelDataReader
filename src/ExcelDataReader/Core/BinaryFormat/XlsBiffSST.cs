@@ -1,58 +1,94 @@
-using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents a Shared String Table in BIFF8 format
+    /// Represents a Shared String Table in BIFF8 format.
     /// </summary>
-    internal class XlsBiffSST : XlsBiffRecord
+    internal sealed class XlsBiffSST : XlsBiffRecord
     {
-        private readonly List<IXlsString> _strings;
+        private readonly List<IXlsString> _strings = new();
+        private readonly XlsSSTReader _reader = new();
 
-        internal XlsBiffSST(byte[] bytes, uint offset)
-            : base(bytes, offset)
+        internal XlsBiffSST(byte[] bytes)
+            : base(bytes)
         {
-            _strings = new List<IXlsString>();
+            ReadSstStrings();
         }
 
         /// <summary>
-        /// Gets the number of strings in SST
+        /// Gets the number of strings in SST.
         /// </summary>
         public uint Count => ReadUInt32(0x0);
 
         /// <summary>
-        /// Gets the count of unique strings in SST
+        /// Gets the count of unique strings in SST.
         /// </summary>
         public uint UniqueCount => ReadUInt32(0x4);
 
         /// <summary>
-        /// Parses strings out of the SST record and subsequent Continue records from the BIFF stream
+        /// Parses strings out of a Continue record.
         /// </summary>
-        public void ReadStrings(XlsBiffStream biffStream)
+        public void ReadContinueStrings(XlsBiffContinue sstContinue)
         {
-            var reader = new XlsSSTReader(this, biffStream);
-
-            for (var i = 0; i < UniqueCount; i++)
+            if (_strings.Count == UniqueCount)
             {
-                var s = reader.ReadString();
-                _strings.Add(s);
+                return;
+            }
+
+            foreach (var str in _reader.ReadStringsFromContinue(sstContinue))
+            {
+                _strings.Add(str);
+
+                if (_strings.Count == UniqueCount)
+                {
+                    break;
+                }
             }
         }
-        
+
+        public void Flush()
+        {
+            var str = _reader.Flush();
+            if (str != null)
+            {
+                _strings.Add(str);
+            }
+        }
+
         /// <summary>
-        /// Returns string at specified index
+        /// Returns string at specified index.
         /// </summary>
-        /// <param name="sstIndex">Index of string to get</param>
-        /// <param name="encoding">Workbook encoding</param>
-        /// <returns>string value if it was found, empty string otherwise</returns>
+        /// <param name="sstIndex">Index of string to get.</param>
+        /// <param name="encoding">Workbook encoding.</param>
+        /// <returns>string value if it was found, empty string otherwise.</returns>
         public string GetString(uint sstIndex, Encoding encoding)
         {
             if (sstIndex < _strings.Count)
                 return _strings[(int)sstIndex].GetValue(encoding);
-            
-            return string.Empty;
+
+            return null; // #VALUE error
+        }
+
+        /// <summary>
+        /// Parses strings out of this SST record.
+        /// </summary>
+        private void ReadSstStrings()
+        {
+            if (_strings.Count == UniqueCount)
+            {
+                return;
+            }
+
+            foreach (var str in _reader.ReadStringsFromSST(this))
+            {
+                _strings.Add(str);
+
+                if (_strings.Count == UniqueCount)
+                {
+                    break;
+                }
+            }
         }
     }
 }

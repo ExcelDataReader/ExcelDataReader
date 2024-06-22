@@ -1,57 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Xml;
 using ExcelDataReader.Core.NumberFormat;
+using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat
 {
-    internal class XlsxWorksheet : IWorksheet
+    internal sealed class XlsxWorksheet : IWorksheet
     {
-        private const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-        private const string NDimension = "dimension";
-        private const string NWorksheet = "worksheet";
-        private const string NRow = "row";
-        private const string NCol = "col";
-        private const string NC = "c"; // cell
-        private const string NV = "v";
-        private const string NIs = "is";
-        private const string NT = "t";
-        private const string ARef = "ref";
-        private const string AR = "r";
-        private const string AT = "t";
-        private const string AS = "s";
-        private const string NSheetData = "sheetData";
-        private const string NMergeCells = "mergeCells";
-        private const string NMergeCell = "mergeCell";
-
-        private const string NInlineStr = "inlineStr";
-        private const string NStr = "str";
-
-        private const string NHeaderFooter = "headerFooter";
-        private const string ADifferentFirst = "differentFirst";
-        private const string ADifferentOddEven = "differentOddEven";
-        private const string NFirstHeader = "firstHeader";
-        private const string NFirstFooter = "firstFooter";
-        private const string NOddHeader = "oddHeader";
-        private const string NOddFooter = "oddFooter";
-        private const string NEvenHeader = "evenHeader";
-        private const string NEvenFooter = "evenFooter";
-
-        private const string NSheetProperties = "sheetPr";
-        private const string NSheetFormatProperties = "sheetFormatPr";
-        private const string ADefaultRowHeight = "defaultRowHeight";
-        private const string AHidden = "hidden";
-        private const string ACustomHeight = "customHeight";
-        private const string AHt = "ht";
-
-        private const string NCols = "cols";
-        private const string AMin = "min";
-        private const string AMax = "max";
-        private const string AWidth = "width";
-        private const string ACustomWidth = "customWidth";
-
-        public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, XlsxBoundSheet refSheet)
+        public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, SheetRecord refSheet)
         {
             Document = document;
             Workbook = workbook;
@@ -61,34 +16,94 @@ namespace ExcelDataReader.Core.OpenXmlFormat
             Rid = refSheet.Rid;
             VisibleState = refSheet.VisibleState;
             Path = refSheet.Path;
-            DefaultRowHeight = 12.75; // 255 twips
+            DefaultRowHeight = 15;
 
-            ReadWorksheetGlobals();
+            if (string.IsNullOrEmpty(Path))
+                return;
+
+            using var sheetStream = Document.GetWorksheetReader(Path);
+            
+            if (sheetStream == null)
+                return;
+
+            int rowIndexMaximum = int.MinValue;
+            int columnIndexMaximum = int.MinValue;
+
+            List<Column> columnWidths = new();
+            List<CellRange> cellRanges = new();
+
+            bool inSheetData = false;
+
+            Record record;
+            while ((record = sheetStream.Read()) != null)
+            {
+                switch (record)
+                {
+                    case SheetDataBeginRecord _:
+                        inSheetData = true;
+                        break;
+                    case SheetDataEndRecord _:
+                        inSheetData = false;
+                        break;
+                    case RowHeaderRecord row when inSheetData:
+                        rowIndexMaximum = Math.Max(rowIndexMaximum, row.RowIndex);
+                        break;
+                    case CellRecord cell when inSheetData:
+                        if (cell.Value != null || cell.Error != null)
+                            columnIndexMaximum = Math.Max(columnIndexMaximum, cell.ColumnIndex);
+                        break;
+                    case ColumnRecord column:
+                        columnWidths.Add(column.Column);
+                        break;
+                    case SheetFormatPrRecord sheetFormatProperties:
+                        if (sheetFormatProperties.DefaultRowHeight != null)
+                            DefaultRowHeight = sheetFormatProperties.DefaultRowHeight.Value;
+                        break;
+                    case SheetPrRecord sheetProperties:
+                        CodeName = sheetProperties.CodeName;
+                        break;
+                    case MergeCellRecord mergeCell:
+                        cellRanges.Add(mergeCell.Range);
+                        break;
+                    case HeaderFooterRecord headerFooter:
+                        HeaderFooter = headerFooter.HeaderFooter;
+                        break;
+                }
+            }
+
+            ColumnWidths = columnWidths.ToArray();
+            MergeCells = cellRanges.ToArray();
+
+            if (rowIndexMaximum != int.MinValue && columnIndexMaximum != int.MinValue)
+            {
+                FieldCount = columnIndexMaximum + 1;
+                RowCount = rowIndexMaximum + 1;
+            }
         }
 
-        public int FieldCount { get; private set; }
+        public int FieldCount { get; }
 
-        public int RowCount { get; private set; }
+        public int RowCount { get; }
 
         public string Name { get; }
 
-        public string CodeName { get; private set; }
+        public string CodeName { get; }
 
         public string VisibleState { get; }
 
-        public HeaderFooter HeaderFooter { get; private set; }
+        public HeaderFooter HeaderFooter { get; }
 
-        public double DefaultRowHeight { get; private set; }
+        public double DefaultRowHeight { get; }
 
-        public int Id { get; }
+        public uint Id { get; }
 
         public string Rid { get; set; }
 
         public string Path { get; set; }
 
-        public CellRange[] MergeCells { get; private set; }
+        public CellRange[] MergeCells { get; }
 
-        public Col[] ColumnWidths { get; private set; }
+        public Column[] ColumnWidths { get; }
 
         private ZipWorker Document { get; }
 
@@ -96,505 +111,103 @@ namespace ExcelDataReader.Core.OpenXmlFormat
 
         public IEnumerable<Row> ReadRows()
         {
+            if (string.IsNullOrEmpty(Path))
+                yield break;
+
+            using RecordReader sheetStream = Document.GetWorksheetReader(Path);
+            if (sheetStream == null)
+                yield break;
+
             var rowIndex = 0;
-            foreach (var sheetObject in ReadWorksheetStream(false))
-            {
-                if (sheetObject.Type == XlsxElementType.Row)
-                {
-                    var rowBlock = ((XlsxRow)sheetObject).Row;
+            List<Cell> cells = null;
+            double height = 0;
 
-                    for (; rowIndex < rowBlock.RowIndex; ++rowIndex)
-                    {
-                        yield return new Row()
+            bool inSheetData = false;
+            Record record;
+            while ((record = sheetStream.Read()) != null)
+            {
+                switch (record)
+                {
+                    case SheetDataBeginRecord _:
+                        inSheetData = true;
+                        break;
+                    case SheetDataEndRecord _:
+                        inSheetData = false;
+                        break;
+                    case RowHeaderRecord row when inSheetData:
+                        int currentRowIndex = row.RowIndex;
+
+                        if (cells != null && rowIndex != currentRowIndex)
                         {
-                            RowIndex = rowIndex,
-                            Height = DefaultRowHeight,
-                            Cells = new List<Cell>()
-                        };
-                    }
-
-                    rowIndex++;
-                    yield return rowBlock;
-                }
-            }
-        }
-
-        public NumberFormatString GetNumberFormatString(int numberFormatIndex)
-        {
-            if (Workbook.Formats.TryGetValue(numberFormatIndex, out var result))
-            {
-                return result;
-            }
-
-            return null;
-        }
-
-        private void ReadWorksheetGlobals()
-        {
-            if (string.IsNullOrEmpty(Path))
-                return;
-
-            int rows = int.MinValue;
-            int cols = int.MinValue;
-            foreach (var sheetObject in ReadWorksheetStream(false))
-            {
-                if (sheetObject.Type == XlsxElementType.Row)
-                {
-                    var rowBlock = ((XlsxRow)sheetObject).Row;
-                    rows = Math.Max(rows, rowBlock.RowIndex);
-                    cols = Math.Max(cols, rowBlock.GetMaxColumnIndex());
-                }
-                else if (sheetObject.Type == XlsxElementType.HeaderFooter)
-                {
-                    XlsxHeaderFooter headerFooter = (XlsxHeaderFooter)sheetObject;
-                    HeaderFooter = headerFooter.Value;
-                }
-                else if (sheetObject.Type == XlsxElementType.MergeCells)
-                {
-                    XlsxMergeCells mergeCells = (XlsxMergeCells)sheetObject;
-                    MergeCells = mergeCells.Value.ToArray();
-                }
-                else if (sheetObject.Type == XlsxElementType.Cols)
-                {
-                    XlsxCols sheetCols = (XlsxCols)sheetObject;
-                    ColumnWidths = sheetCols.Value.ToArray();
-                }
-            }
-
-            if (rows != int.MinValue && cols != int.MinValue)
-            {
-                FieldCount = cols + 1;
-                RowCount = rows + 1;
-            }
-        }
-
-        private IEnumerable<XlsxElement> ReadWorksheetStream(bool skipSheetData)
-        {
-            if (string.IsNullOrEmpty(Path))
-                yield break;
-
-            using (var sheetStream = Document.GetWorksheetStream(Path))
-            {
-                if (sheetStream == null)
-                {
-                    yield break;
-                }
-
-                using (var xmlReader = XmlReader.Create(sheetStream))
-                {
-                    foreach (var sheetObject in ReadWorksheetStream(xmlReader, skipSheetData))
-                    {
-                        yield return sheetObject;
-                    }
-                }
-            }
-        }
-
-        private IEnumerable<XlsxElement> ReadWorksheetStream(XmlReader xmlReader, bool skipSheetData)
-        {
-            if (!xmlReader.IsStartElement(NWorksheet, NsSpreadsheetMl))
-            {
-                yield break;
-            }
-
-            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
-            {
-                yield break;
-            }
-
-            while (!xmlReader.EOF)
-            {
-                if (xmlReader.IsStartElement(NDimension, NsSpreadsheetMl))
-                {
-                    var dimension = ReadDimension(xmlReader);
-                    if (dimension != null)
-                        yield return dimension;
-                }
-                else if (xmlReader.IsStartElement(NSheetData, NsSpreadsheetMl))
-                {
-                    if (skipSheetData)
-                    {
-                        xmlReader.Skip();
-                    }
-                    else
-                    {
-                        foreach (var row in ReadSheetData(xmlReader))
-                        {
-                            yield return row;
+                            yield return new Row(rowIndex++, height, cells);
+                            cells = null;
                         }
-                    }
-                }
-                else if (xmlReader.IsStartElement(NMergeCells, NsSpreadsheetMl))
-                {
-                    var result = ReadMergeCells(xmlReader);
-                    if (result != null)
-                        yield return result;
-                }
-                else if (xmlReader.IsStartElement(NHeaderFooter, NsSpreadsheetMl))
-                {
-                    var result = ReadHeaderFooter(xmlReader);
-                    if (result != null)
-                        yield return result;
-                }
-                else if (xmlReader.IsStartElement(NCols, NsSpreadsheetMl))
-                {
-                    var result = ReadCols(xmlReader);
-                    if (result != null)
-                        yield return result;
-                }
-                else if (xmlReader.IsStartElement(NSheetProperties, NsSpreadsheetMl))
-                {
-                    var codeName = xmlReader.GetAttribute("codeName");
-                    if (!string.IsNullOrEmpty(codeName))
-                        CodeName = codeName;
 
-                    xmlReader.Skip();
-                }
-                else if (xmlReader.IsStartElement(NSheetFormatProperties, NsSpreadsheetMl))
-                {
-                    if (double.TryParse(xmlReader.GetAttribute(ADefaultRowHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out var defaultRowHeight))
-                        DefaultRowHeight = defaultRowHeight;
-
-                    xmlReader.Skip();
-                }
-                else if (!XmlReaderHelper.SkipContent(xmlReader))
-                {
-                    break;
-                }
-            }
-        }
-
-        private XlsxDimension ReadDimension(XmlReader xmlReader)
-        {
-            var dimValue = xmlReader.GetAttribute(ARef);
-            xmlReader.Skip();
-
-            if (!string.IsNullOrEmpty(dimValue))
-            {
-                var dimension = new XlsxDimension(dimValue);
-                if (dimension.IsRange)
-                {
-                    return dimension;
-                }
-            }
-
-            return null;
-        }
-
-        private IEnumerable<XlsxRow> ReadSheetData(XmlReader xmlReader)
-        {
-            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
-            {
-                yield break;
-            }
-
-            Row row = null;
-
-            int nextRowIndex = 0;
-            while (!xmlReader.EOF)
-            {
-                if (xmlReader.IsStartElement(NRow, NsSpreadsheetMl))
-                {
-                    var currentRow = ReadRow(xmlReader, nextRowIndex);
-
-                    if (row == null)
-                    {
-                        row = currentRow;
-                    }
-                    else if (currentRow.RowIndex != row.RowIndex)
-                    {
-                        yield return new XlsxRow { Row = row };
-                        row = currentRow;
-                    }
-                    else
-                    {
-                        row.Cells.AddRange(currentRow.Cells);
-                    }
-
-                    nextRowIndex = currentRow.RowIndex + 1;
-                }
-                else if (!XmlReaderHelper.SkipContent(xmlReader))
-                {
-                    break;
-                }
-            }
-
-            if (row != null)
-            {
-                yield return new XlsxRow { Row = row };
-            }
-        }
-
-        private XlsxCols ReadCols(XmlReader xmlReader)
-        {
-            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
-            {
-                return null;
-            }
-
-            var cols = new List<Col>();
-
-            while (!xmlReader.EOF)
-            {
-                if (xmlReader.IsStartElement(NCol, NsSpreadsheetMl))
-                {
-                    var min = xmlReader.GetAttribute(AMin);
-                    var max = xmlReader.GetAttribute(AMax);
-                    var width = xmlReader.GetAttribute(AWidth);
-                    var customWidth = xmlReader.GetAttribute(ACustomWidth);
-                    var hidden = xmlReader.GetAttribute(AHidden);
-
-                    var maxVal = int.Parse(max);
-                    var minVal = int.Parse(min);
-                    var widthVal = double.Parse(width, CultureInfo.InvariantCulture);
-
-                    // Note: column indexes need to be converted to be zero-indexed
-                    cols.Add(new Col
-                    {
-                        CustomWidth = customWidth == "1",
-                        Hidden = hidden == "1",
-                        Max = maxVal - 1,
-                        Min = minVal - 1,
-                        Width = widthVal
-                    });
-
-                    xmlReader.Skip();
-                }
-                else if (!XmlReaderHelper.SkipContent(xmlReader))
-                {
-                    break;
-                }
-            }
-
-            return new XlsxCols
-            {
-                Value = cols
-            };
-        }
-
-        private XlsxMergeCells ReadMergeCells(XmlReader xmlReader)
-        {
-            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
-            {
-                return null;
-            }
-
-            var ranges = new List<CellRange>();
-
-            while (!xmlReader.EOF)
-            {
-                if (xmlReader.IsStartElement(NMergeCell, NsSpreadsheetMl))
-                {
-                    var cellRefs = xmlReader.GetAttribute(ARef);
-                    string from = string.Empty, to = string.Empty;
-                    var fromTo = cellRefs.Split(':');
-
-                    if (fromTo.Length == 2)
-                    {
-                        from = fromTo[0];
-                        to = fromTo[1];
-                    }
-
-                    ranges.Add(new CellRange(from, to));
-
-                    xmlReader.Skip();
-                }
-                else if (!XmlReaderHelper.SkipContent(xmlReader))
-                {
-                    break;
-                }
-            }
-
-            return new XlsxMergeCells()
-            {
-                Value = ranges
-            };
-        }
-
-        private XlsxHeaderFooter ReadHeaderFooter(XmlReader xmlReader)
-        {
-            var differentFirst = xmlReader.GetAttribute(ADifferentFirst) == "1";
-            var differentOddEven = xmlReader.GetAttribute(ADifferentOddEven) == "1";
-
-            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
-            {
-                return null;
-            }
-
-            var headerFooter = new HeaderFooter(differentFirst, differentOddEven);
-
-            while (!xmlReader.EOF)
-            {
-                if (xmlReader.IsStartElement(NOddHeader, NsSpreadsheetMl))
-                {
-                    headerFooter.OddHeader = xmlReader.ReadElementContentAsString();
-                }
-                else if (xmlReader.IsStartElement(NOddFooter, NsSpreadsheetMl))
-                {
-                    headerFooter.OddFooter = xmlReader.ReadElementContentAsString();
-                }
-                else if (xmlReader.IsStartElement(NEvenHeader, NsSpreadsheetMl))
-                {
-                    headerFooter.EvenHeader = xmlReader.ReadElementContentAsString();
-                }
-                else if (xmlReader.IsStartElement(NEvenFooter, NsSpreadsheetMl))
-                {
-                    headerFooter.EvenFooter = xmlReader.ReadElementContentAsString();
-                }
-                else if (xmlReader.IsStartElement(NFirstHeader, NsSpreadsheetMl))
-                {
-                    headerFooter.FirstHeader = xmlReader.ReadElementContentAsString();
-                }
-                else if (xmlReader.IsStartElement(NFirstFooter, NsSpreadsheetMl))
-                {
-                    headerFooter.FirstFooter = xmlReader.ReadElementContentAsString();
-                }
-                else if (!XmlReaderHelper.SkipContent(xmlReader))
-                {
-                    break;
-                }
-            }
-
-            return new XlsxHeaderFooter(headerFooter);
-        }
-
-        private Row ReadRow(XmlReader xmlReader, int nextRowIndex)
-        {
-            var result = new Row()
-            {
-                Cells = new List<Cell>()
-            };
-
-            if (int.TryParse(xmlReader.GetAttribute(AR), out int rowIndex))
-                result.RowIndex = rowIndex - 1; // The row attribute is 1-based
-            else
-                result.RowIndex = nextRowIndex;
-
-            int.TryParse(xmlReader.GetAttribute(AHidden), out int hidden);
-            int.TryParse(xmlReader.GetAttribute(ACustomHeight), out int customHeight);
-            double.TryParse(xmlReader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var height);
-
-            if (hidden == 0)
-                result.Height = customHeight != 0 ? height : DefaultRowHeight;
-
-            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
-            {
-                return result;
-            }
-
-            int nextColumnIndex = 0;
-            while (!xmlReader.EOF)
-            {
-                if (xmlReader.IsStartElement(NC, NsSpreadsheetMl))
-                {
-                    var cell = ReadCell(xmlReader, nextColumnIndex);
-                    nextColumnIndex = cell.ColumnIndex + 1;
-                    result.Cells.Add(cell);
-                }
-                else if (!XmlReaderHelper.SkipContent(xmlReader))
-                {
-                    break;
-                }
-            }
-
-            return result;
-        }
-
-        private Cell ReadCell(XmlReader xmlReader, int nextColumnIndex)
-        {
-            var result = new Cell();
-
-            var aS = xmlReader.GetAttribute(AS);
-            var aT = xmlReader.GetAttribute(AT);
-            var aR = xmlReader.GetAttribute(AR);
-
-            if (ReferenceHelper.ParseReference(aR, out int referenceColumn, out int referenceRow))
-                result.ColumnIndex = referenceColumn - 1; // ParseReference is 1-based
-            else
-                result.ColumnIndex = nextColumnIndex;
-
-            if (aS != null)
-            {
-                if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
-                {
-                    result.NumberFormatIndex = Workbook.GetNumberFormatFromXF(styleIndex);
-                }
-            }
-
-            if (!XmlReaderHelper.ReadFirstContent(xmlReader))
-            {
-                return result;
-            }
-
-            while (!xmlReader.EOF)
-            {
-                if (xmlReader.IsStartElement(NV, NsSpreadsheetMl))
-                {
-                    var rawValue = xmlReader.ReadElementContentAsString();
-                    if (!string.IsNullOrEmpty(rawValue))
-                        result.Value = ConvertCellValue(rawValue, aT, result.NumberFormatIndex);
-                }
-                else if (xmlReader.IsStartElement(NIs, NsSpreadsheetMl))
-                {
-                    var rawValue = XlsxWorkbook.ReadStringItem(xmlReader);
-                    if (!string.IsNullOrEmpty(rawValue))
-                        result.Value = ConvertCellValue(rawValue, aT, result.NumberFormatIndex);
-                }
-                else if (!XmlReaderHelper.SkipContent(xmlReader))
-                {
-                    break;
-                }
-            }
-
-            return result;
-        }
-
-        private object ConvertCellValue(string rawValue, string aT, int numberFormatIndex)
-        {
-            const NumberStyles style = NumberStyles.Any;
-            var invariantCulture = CultureInfo.InvariantCulture;
-
-            switch (aT)
-            {
-                case AS: //// if string
-                    if (int.TryParse(rawValue, style, invariantCulture, out var sstIndex))
-                    {
-                        if (sstIndex >= 0 && sstIndex < Workbook.SST.Count)
+                        if (cells == null)
                         {
-                            return Helpers.ConvertEscapeChars(Workbook.SST[sstIndex]);
+                            height = row.Hidden ? 0 : row.Height ?? DefaultRowHeight;
+                            cells = new List<Cell>();
                         }
+
+                        for (; rowIndex < currentRowIndex; rowIndex++)
+                        {
+                            yield return new Row(rowIndex, DefaultRowHeight, new List<Cell>());
+                        }
+
+                        break;
+                    case CellRecord cell when inSheetData:
+                        // TODO What if we get a cell without a row?
+                        var extendedFormat = Workbook.GetEffectiveCellStyle(cell.XfIndex, 0);
+                        cells.Add(new Cell(cell.ColumnIndex, ConvertCellValue(cell.Value, extendedFormat.NumberFormatIndex), extendedFormat, cell.Error));
+                        break;
+                }
+            }
+
+            if (cells != null)
+                yield return new Row(rowIndex, height, cells);
+        }
+
+        private object ConvertCellValue(object value, int numberFormatIndex)
+        {
+            switch (value)
+            {
+                case int sstIndex:
+                    if (sstIndex >= 0 && sstIndex < Workbook.SST.Count)
+                    {
+                        return Helpers.ConvertEscapeChars(Workbook.SST[sstIndex]);
                     }
 
-                    return rawValue;
-                case NInlineStr: //// if string inline
-                case NStr: //// if cached formula string
-                    return Helpers.ConvertEscapeChars(rawValue);
-                case "b": //// boolean
-                    return rawValue == "1";
-                case "d": //// ISO 8601 date
-                    if (DateTime.TryParseExact(rawValue, "yyyy-MM-dd", invariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date))
-                        return date;
-
-                    return rawValue;
-                case "e": //// error
                     return null;
-                default:
-                    if (double.TryParse(rawValue, style, invariantCulture, out double number))
-                    {
-                        var format = GetNumberFormatString(numberFormatIndex);
-                        if (format != null)
-                        {
-                            if (format.IsDateTimeFormat)
-                                return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
-                            if (format.IsTimeSpanFormat)
-                                return TimeSpan.FromDays(number);
-                        }
 
-                        return number;
+                case double number:
+                    var format = Workbook.GetNumberFormatString(numberFormatIndex);
+                    if (format != null)
+                    {
+                        if (format.IsDateTimeFormat)
+                            return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
+                        if (format.IsTimeSpanFormat)
+                            return TimeSpan.FromDays(number);
                     }
 
-                    return rawValue;
+                    return number;
+
+                case DateTime date:
+                    return date;
+
+                default:
+                    if (value == null)
+                        return value;
+                    NumberFormatString numberFormat = Workbook.GetNumberFormatString(numberFormatIndex);
+                    if (numberFormat.IsTimeSpanFormat)
+                        return XmlConvert.ToTimeSpan(value.ToString());
+                    if (numberFormat.IsDateTimeFormat)
+                    {
+                        if (DateTimeOffset.TryParse(value.ToString(), out DateTimeOffset dateTimeOffset))
+                            return dateTimeOffset;
+                    }
+
+                    return value;
             }
-        }
+        }        
     }
 }

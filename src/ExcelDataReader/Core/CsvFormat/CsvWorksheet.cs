@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using ExcelDataReader.Core.NumberFormat;
+﻿using System.Text;
 
 namespace ExcelDataReader.Core.CsvFormat
 {
-    internal class CsvWorksheet : IWorksheet
+    internal sealed class CsvWorksheet : IWorksheet
     {
         public CsvWorksheet(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
         {
@@ -69,18 +65,13 @@ namespace ExcelDataReader.Core.CsvFormat
 
         public char Separator { get; }
 
-        public Col[] ColumnWidths => null;
+        public Column[] ColumnWidths => null;
 
         private int BomLength { get; set; }
 
         private bool AnalyzedPartial { get; }
 
         private int AnalyzedRowCount { get; }
-
-        public NumberFormatString GetNumberFormatString(int index)
-        {
-            return null;
-        }
 
         public IEnumerable<Row> ReadRows()
         {
@@ -93,7 +84,7 @@ namespace ExcelDataReader.Core.CsvFormat
             Stream.Seek(0, SeekOrigin.Begin);
             while (Stream.Position < Stream.Length)
             {
-                var bytesRead = Stream.Read(buffer, 0, bufferSize);
+                var bytesRead = Stream.ReadAtLeast(buffer, 0, bufferSize);
                 csv.ParseBuffer(buffer, skipBomBytes, bytesRead - skipBomBytes, out var bufferRows);
 
                 skipBomBytes = 0; // Only skip bom on first iteration
@@ -113,26 +104,18 @@ namespace ExcelDataReader.Core.CsvFormat
             }
         }
 
-        private IEnumerable<Row> GetReaderRows(int rowIndex, List<List<string>> rows)
+        private static IEnumerable<Row> GetReaderRows(int rowIndex, List<List<string>> rows)
         {
             foreach (var row in rows)
             {
                 var cells = new List<Cell>(row.Count);
                 for (var index = 0; index < row.Count; index++)
                 {
-                    cells.Add(new Cell()
-                    {
-                        ColumnIndex = index,
-                        Value = row[index]
-                    });
+                    object value = row[index];
+                    cells.Add(new Cell(index, value, ExtendedFormat.Zero, null));
                 }
 
-                yield return new Row()
-                {
-                    Height = 12.75, // 255 twips
-                    Cells = cells,
-                    RowIndex = rowIndex
-                };
+                yield return new Row(rowIndex, 12.75 /* 255 twips */, cells);
 
                 rowIndex++;
             }

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 
 namespace ExcelDataReader.Core.CsvFormat
 {
     /// <summary>
     /// Low level, reentrant CSV parser. Call ParseBuffer() in a loop, and finally Flush() to empty the internal buffers.
     /// </summary>
-    internal class CsvParser
+    internal sealed class CsvParser
     {
         public CsvParser(char separator, Encoding encoding)
         {
@@ -58,7 +56,7 @@ namespace ExcelDataReader.Core.CsvFormat
         {
             while (count > 0)
             {
-                Decoder.Convert(bytes, offset, count, CharBuffer, 0, CharBuffer.Length, false, out var bytesUsed, out var charsUsed, out var completed);
+                Decoder.Convert(bytes, offset, count, CharBuffer, 0, CharBuffer.Length, false, out var bytesUsed, out var charsUsed, out _);
 
                 offset += bytesUsed;
                 count -= bytesUsed;

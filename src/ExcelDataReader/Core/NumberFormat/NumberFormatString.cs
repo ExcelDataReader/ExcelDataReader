@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ExcelDataReader.Core.NumberFormat
+﻿namespace ExcelDataReader.Core.NumberFormat
 {
     /// <summary>
     /// Parse ECMA-376 number format strings from Excel and other spreadsheet softwares.
@@ -55,20 +53,16 @@ namespace ExcelDataReader.Core.NumberFormat
         public string FormatString { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the format represents a DateTime
+        /// Gets a value indicating whether the format represents a DateTime.
         /// </summary>
         public bool IsDateTimeFormat { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the format represents a TimeSpan
+        /// Gets a value indicating whether the format represents a TimeSpan.
         /// </summary>
         public bool IsTimeSpanFormat { get; }
 
-#if NET20
-        internal IList<Section> Sections { get; }
-#else
         internal IReadOnlyList<Section> Sections { get; }
-#endif
 
         private Section GetFirstSection(SectionType type)
         {

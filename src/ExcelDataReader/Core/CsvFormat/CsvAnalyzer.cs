@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 
 namespace ExcelDataReader.Core.CsvFormat
 {
@@ -16,24 +14,23 @@ namespace ExcelDataReader.Core.CsvFormat
             var bufferSize = 1024;
             var probeSize = 16;
             var buffer = new byte[bufferSize];
-            var bytesRead = stream.Read(buffer, 0, probeSize);
+            var bytesRead = stream.ReadAtLeast(buffer, 0, probeSize);
 
             autodetectEncoding = GetEncodingFromBom(buffer, out bomLength);
-            if (autodetectEncoding == null)
-            {
-                autodetectEncoding = fallbackEncoding;
-            }
+            autodetectEncoding ??= fallbackEncoding;
 
             if (separators == null || separators.Length == 0)
             {
-                separators = new char[] { '\0' };
+                separators = ['\0'];
             }
 
             var separatorInfos = new SeparatorInfo[separators.Length];
             for (var i = 0; i < separators.Length; i++)
             {
-                separatorInfos[i] = new SeparatorInfo();
-                separatorInfos[i].Buffer = new CsvParser(separators[i], autodetectEncoding);
+                separatorInfos[i] = new SeparatorInfo
+                {
+                    Buffer = new CsvParser(separators[i], autodetectEncoding)
+                };
             }
 
             AnalyzeCsvRows(stream, buffer, bytesRead, bomLength, analyzeInitialCsvRows, separators, separatorInfos);
@@ -58,7 +55,8 @@ namespace ExcelDataReader.Core.CsvFormat
                 var average = separatorInfo.SumFieldCount / (double)separatorInfo.RowCount;
                 var dist = separatorInfo.MaxFieldCount - average;
 
-                if (dist < bestDistance)
+                // If more than one separator has the same number of fields for all sample rows prefer the one with the most fields
+                if (dist < bestDistance || (dist == bestDistance && dist == 0 && bestSeparatorInfo.MaxFieldCount < separatorInfo.MaxFieldCount))
                 {
                     bestDistance = dist;
                     bestSeparator = separator;
@@ -82,7 +80,7 @@ namespace ExcelDataReader.Core.CsvFormat
 
             while (inputStream.Position < inputStream.Length)
             {
-                var bytesRead = inputStream.Read(buffer, 0, buffer.Length);
+                var bytesRead = inputStream.ReadAtLeast(buffer, 0, buffer.Length);
                 ParseSeparatorsBuffer(buffer, 0, bytesRead, separators, separatorInfos);
                 if (IsMinNumberOfRowAnalyzed(analyzeInitialCsvRows, separatorInfos))
                 {
@@ -113,13 +111,15 @@ namespace ExcelDataReader.Core.CsvFormat
         {
             for (var i = 0; i < separators.Length; i++)
             {
-                var separator = separators[i];
                 SeparatorInfo separatorInfo = separatorInfos[i];
 
                 separatorInfo.Buffer.ParseBuffer(bytes, offset, count, out var rows);
 
                 foreach (var row in rows)
                 {
+                    // Ignore empty rows
+                    if (row.Count == 1 && row[0].Length == 0)
+                        continue;
                     separatorInfo.MaxFieldCount = Math.Max(separatorInfo.MaxFieldCount, row.Count);
                     separatorInfo.SumFieldCount += row.Count;
                     separatorInfo.RowCount++;
@@ -131,7 +131,6 @@ namespace ExcelDataReader.Core.CsvFormat
         {
             for (var i = 0; i < separators.Length; i++)
             {
-                var separator = separators[i];
                 SeparatorInfo separatorInfo = separatorInfos[i];
 
                 separatorInfo.Buffer.Flush(out var rows);
@@ -182,7 +181,7 @@ namespace ExcelDataReader.Core.CsvFormat
             return true;
         }
 
-        private class SeparatorInfo
+        private sealed class SeparatorInfo
         {
             public int MaxFieldCount { get; set; }
 

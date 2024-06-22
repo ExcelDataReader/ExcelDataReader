@@ -1,6 +1,4 @@
-﻿using System;
-
-using ExcelDataReader.Log;
+﻿using ExcelDataReader.Log;
 
 using NUnit.Framework;
 

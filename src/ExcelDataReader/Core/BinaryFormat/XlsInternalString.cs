@@ -1,12 +1,11 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Plain string without backing storage. Used internally
+    /// Plain string without backing storage. Used internally.
     /// </summary>
-    internal class XlsInternalString : IXlsString
+    internal sealed class XlsInternalString : IXlsString
     {
         private readonly string stringValue;
 

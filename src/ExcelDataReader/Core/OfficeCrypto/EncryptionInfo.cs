@@ -1,11 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 
 namespace ExcelDataReader.Core.OfficeCrypto
 {
     /// <summary>
-    /// Base class for the various encryption schemes used by Excel
+    /// Base class for the various encryption schemes used by Excel.
     /// </summary>
     internal abstract class EncryptionInfo
     {
@@ -28,6 +26,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         public static EncryptionInfo Create(byte[] bytes)
         {
+            // TODO Does this work on a big endian system?
             var versionMajor = BitConverter.ToUInt16(bytes, 0);
             var versionMinor = BitConverter.ToUInt16(bytes, 2);
 

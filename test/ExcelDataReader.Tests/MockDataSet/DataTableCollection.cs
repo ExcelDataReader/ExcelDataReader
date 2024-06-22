@@ -1,11 +1,10 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 
 namespace ExcelDataReader
 {
     public class DataTableCollection : IEnumerable<DataTable>
     {
-        private readonly List<DataTable> tables = new List<DataTable>();
+        private readonly List<DataTable> tables = new();
 
         public int Count => tables.Count;
 

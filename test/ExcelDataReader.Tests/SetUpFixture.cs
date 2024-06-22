@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 
 using NUnit.Framework;
 
@@ -13,6 +11,10 @@ namespace ExcelDataReader.Tests
         public static void SetUp()
         {
             Log.Log.InitializeWith<NunitLogFactory>();
+
+#if NETCOREAPP1_0_OR_GREATER
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
         }
     }
 }

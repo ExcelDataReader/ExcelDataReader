@@ -1,10 +1,7 @@
-﻿using System.Collections.Generic;
-using ExcelDataReader.Core.NumberFormat;
-
-namespace ExcelDataReader.Core
+﻿namespace ExcelDataReader.Core
 {
     /// <summary>
-    /// The common worksheet interface between the binary and OpenXml formats
+    /// The common worksheet interface between the binary and OpenXml formats.
     /// </summary>
     internal interface IWorksheet
     {
@@ -22,10 +19,8 @@ namespace ExcelDataReader.Core
 
         CellRange[] MergeCells { get; }
 
-        Col[] ColumnWidths { get; }
+        Column[] ColumnWidths { get; }
 
         IEnumerable<Row> ReadRows();
-
-        NumberFormatString GetNumberFormatString(int index);
     }
 }

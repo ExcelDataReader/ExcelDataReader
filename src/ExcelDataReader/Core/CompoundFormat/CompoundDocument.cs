@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.CompoundFormat
 {
-    internal class CompoundDocument
+    internal sealed class CompoundDocument
     {
         public CompoundDocument(Stream stream)
         {
@@ -40,35 +37,12 @@ namespace ExcelDataReader.Core.CompoundFormat
 
         internal List<CompoundDirectoryEntry> Entries { get; set; }
 
-        internal static bool IsCompoundDocument(byte[] probe)
-        {
-            return BitConverter.ToUInt64(probe, 0) == 0xE11AB1A1E011CFD0;
-        }
+        // NOTE: DateTime.MaxValue.ToFileTime() fails on Unity in timezones with DST and +~6h offset, like Sidney Australia
+        private static long SafeFileTimeMaxDate { get; } = DateTime.MaxValue.ToFileTimeUtc();
 
-        internal CompoundDirectoryEntry FindEntry(string entryName)
+        internal static List<uint> GetSectorChain(uint sector, List<uint> sectorTable)
         {
-            foreach (var e in Entries)
-            {
-                if (string.Equals(e.EntryName, entryName, StringComparison.CurrentCultureIgnoreCase))
-                    return e;
-            }
-
-            return null;
-        }
-
-        internal long GetMiniSectorOffset(uint sector)
-        {
-            return Header.MiniSectorSize * sector;
-        }
-
-        internal long GetSectorOffset(uint sector)
-        {
-            return 512 + Header.SectorSize * sector;
-        }
-
-        internal List<uint> GetSectorChain(uint sector, List<uint> sectorTable)
-        {
-            List<uint> chain = new List<uint>();
+            List<uint> chain = new();
             while (sector != (uint)FATMARKERS.FAT_EndOfChain)
             {
                 chain.Add(sector);
@@ -84,27 +58,102 @@ namespace ExcelDataReader.Core.CompoundFormat
             return chain;
         }
 
+        internal static bool IsCompoundDocument(byte[] probe)
+        {
+            return BitConverter.ToUInt64(probe, 0) == 0xE11AB1A1E011CFD0;
+        }
+
+        internal CompoundDirectoryEntry FindEntry(params string[] entryNames)
+        {
+            foreach (var e in Entries)
+            {
+                foreach (var entryName in entryNames)
+                {
+                    if (string.Equals(e.EntryName, entryName, StringComparison.OrdinalIgnoreCase))
+                        return e;
+                }
+            }
+
+            return null;
+        }
+
+        internal long GetMiniSectorOffset(uint sector)
+        {
+            return Header.MiniSectorSize * sector;
+        }
+
+        internal long GetSectorOffset(uint sector)
+        {
+            return 512 + Header.SectorSize * sector;
+        }
+
         /// <summary>
         /// Reads bytes from a regular or mini stream.
         /// </summary>
         internal byte[] ReadStream(Stream stream, uint baseSector, int length, bool isMini)
         {
-            using (var cfb = new CompoundStream(this, stream, baseSector, length, isMini, true))
-            {
-                var bytes = new byte[length];
-                cfb.Read(bytes, 0, length);
-                return bytes;
-            }
+            using var cfb = new CompoundStream(this, stream, baseSector, length, isMini, true);
+            var bytes = new byte[length];
+            cfb.ReadAtLeast(bytes, 0, length);
+            return bytes;
         }
 
         internal byte[] ReadStream(Stream stream, List<uint> sectors, int length)
         {
-            using (var cfb = new CompoundStream(this, stream, sectors, length, true))
+            using var cfb = new CompoundStream(this, stream, sectors, length, true);
+            var bytes = new byte[length];
+            cfb.ReadAtLeast(bytes, 0, length);
+            return bytes;
+        }
+
+        private static CompoundHeader ReadHeader(BinaryReader reader)
+        {
+            var result = new CompoundHeader();
+            result.Signature = reader.ReadUInt64();
+            result.ClassId = new Guid(reader.ReadBytes(16));
+            result.Version = reader.ReadUInt16();
+            result.DllVersion = reader.ReadUInt16();
+            result.ByteOrder = reader.ReadUInt16();
+            result.SectorSizeInPot = reader.ReadUInt16();
+            result.MiniSectorSizeInPot = reader.ReadUInt16();
+            reader.ReadBytes(6); // skip 6 unused bytes
+            result.DirectorySectorCount = reader.ReadInt32();
+            result.FatSectorCount = reader.ReadInt32();
+            result.RootDirectoryEntryStart = reader.ReadUInt32();
+            result.TransactionSignature = reader.ReadUInt32();
+            result.MiniStreamCutoff = reader.ReadUInt32();
+            result.MiniFatFirstSector = reader.ReadUInt32();
+            result.MiniFatSectorCount = reader.ReadInt32();
+            result.DifFirstSector = reader.ReadUInt32();
+            result.DifSectorCount = reader.ReadInt32();
+
+            var chain = new List<uint>();
+            for (int i = 0; i < 109; ++i)
             {
-                var bytes = new byte[length];
-                cfb.Read(bytes, 0, length);
-                return bytes;
+                chain.Add(reader.ReadUInt32());
             }
+
+            result.First109DifSectorChain = chain;
+
+            return result;
+        }
+
+        private static void TrimSectorChain(List<uint> chain, FATMARKERS marker)
+        {
+            while (chain.Count > 0 && chain[chain.Count - 1] == (uint)marker)
+            {
+                chain.RemoveAt(chain.Count - 1);
+            }
+        }
+
+        private static uint GetNextSector(uint sector, List<uint> sectorTable)
+        {
+            if (sector < sectorTable.Count)
+            {
+                return sectorTable[(int)sector];
+            }
+
+            return (uint)FATMARKERS.FAT_EndOfChain;
         }
 
         private void ReadDirectoryEntries(byte[] bytes)
@@ -112,19 +161,15 @@ namespace ExcelDataReader.Core.CompoundFormat
             try
             {
                 Entries = new List<CompoundDirectoryEntry>();
-                using (var stream = new MemoryStream(bytes))
-                {
-                    using (var reader = new BinaryReader(stream))
-                    {
-                        RootEntry = ReadDirectoryEntry(reader);
-                        Entries.Add(RootEntry);
+                using var stream = new MemoryStream(bytes);
+                using var reader = new BinaryReader(stream);
+                RootEntry = ReadDirectoryEntry(reader);
+                Entries.Add(RootEntry);
 
-                        while (stream.Position < stream.Length)
-                        {
-                            var entry = ReadDirectoryEntry(reader);
-                            Entries.Add(entry);
-                        }
-                    }
+                while (stream.Position < stream.Length)
+                {
+                    var entry = ReadDirectoryEntry(reader);
+                    Entries.Add(entry);
                 }
             }
             catch (EndOfStreamException ex)
@@ -159,49 +204,17 @@ namespace ExcelDataReader.Core.CompoundFormat
             result.PropType = reader.ReadUInt32();
             result.IsEntryMiniStream = result.StreamSize < Header.MiniStreamCutoff;
             return result;
-        }
 
-        private DateTime ReadFileTime(BinaryReader reader)
-        {
-            var d = reader.ReadInt64();
-            if (d < 0 || d > DateTime.MaxValue.ToFileTime())
+            static DateTime ReadFileTime(BinaryReader reader)
             {
-                d = 0;
+                var d = reader.ReadInt64();
+                if (d < 0 || d > SafeFileTimeMaxDate)
+                {
+                    d = 0;
+                }
+
+                return DateTime.FromFileTime(d);
             }
-
-            return DateTime.FromFileTime(d);
-        }
-
-        private CompoundHeader ReadHeader(BinaryReader reader)
-        {
-            var result = new CompoundHeader();
-            result.Signature = reader.ReadUInt64();
-            result.ClassId = new Guid(reader.ReadBytes(16));
-            result.Version = reader.ReadUInt16();
-            result.DllVersion = reader.ReadUInt16();
-            result.ByteOrder = reader.ReadUInt16();
-            result.SectorSizeInPot = reader.ReadUInt16();
-            result.MiniSectorSizeInPot = reader.ReadUInt16();
-            reader.ReadBytes(6); // skip 6 unused bytes
-            result.DirectorySectorCount = reader.ReadInt32();
-            result.FatSectorCount = reader.ReadInt32();
-            result.RootDirectoryEntryStart = reader.ReadUInt32();
-            result.TransactionSignature = reader.ReadUInt32();
-            result.MiniStreamCutoff = reader.ReadUInt32();
-            result.MiniFatFirstSector = reader.ReadUInt32();
-            result.MiniFatSectorCount = reader.ReadInt32();
-            result.DifFirstSector = reader.ReadUInt32();
-            result.DifSectorCount = reader.ReadInt32();
-
-            var chain = new List<uint>();
-            for (int i = 0; i < 109; ++i)
-            {
-                chain.Add(reader.ReadUInt32());
-            }
-
-            result.First109DifSectorChain = chain;
-
-            return result;
         }
 
         /// <summary>
@@ -272,24 +285,6 @@ namespace ExcelDataReader.Core.CompoundFormat
             }
 
             return result;
-        }
-
-        private void TrimSectorChain(List<uint> chain, FATMARKERS marker)
-        {
-            while (chain.Count > 0 && chain[chain.Count - 1] == (uint)marker)
-            {
-                chain.RemoveAt(chain.Count - 1);
-            }
-        }
-
-        private uint GetNextSector(uint sector, List<uint> sectorTable)
-        {
-            if (sector < sectorTable.Count)
-            {
-                return sectorTable[(int)sector];
-            }
-
-            return (uint)FATMARKERS.FAT_EndOfChain;
         }
     }
 }

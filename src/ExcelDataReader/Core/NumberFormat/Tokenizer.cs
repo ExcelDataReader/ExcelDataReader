@@ -1,11 +1,11 @@
-﻿using System;
+﻿using System.Globalization;
 
 namespace ExcelDataReader.Core.NumberFormat
 {
-    internal class Tokenizer
+    internal sealed class Tokenizer
     {
-        private string formatString;
-        private int formatStringPosition = 0;
+        private readonly string formatString;
+        private int formatStringPosition;
 
         public Tokenizer(string fmt)
         {
@@ -94,7 +94,7 @@ namespace ExcelDataReader.Core.NumberFormat
                 var c2 = (char)Peek(i);
                 if (ignoreCase)
                 {
-                    if (char.ToLower(c1) != char.ToLower(c2))
+                    if (char.ToLower(c1, CultureInfo.InvariantCulture) != char.ToLower(c2, CultureInfo.InvariantCulture))
                         return false;
                 }
                 else

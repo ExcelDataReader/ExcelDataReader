@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
-using ExcelDataReader.Core.NumberFormat;
+﻿using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core
 {
     internal static class BuiltinNumberFormat
     {
-        private static Dictionary<int, NumberFormatString> Formats { get; } = new Dictionary<int, NumberFormatString>()
+        private static Dictionary<int, NumberFormatString> Formats { get; } = new Dictionary<int, NumberFormatString>
         {
             { 0, new NumberFormatString("General") },
             { 1, new NumberFormatString("0") },

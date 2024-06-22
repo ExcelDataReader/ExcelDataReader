@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using ExcelDataReader.Exceptions;
+﻿using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.CompoundFormat
 {
-    internal class CompoundStream : Stream
+    internal sealed class CompoundStream : Stream
     {
         public CompoundStream(CompoundDocument document, Stream baseStream, List<uint> sectorChain, int length, bool leaveOpen)
         {
@@ -28,12 +25,12 @@ namespace ExcelDataReader.Core.CompoundFormat
 
             if (IsMini)
             {
-                SectorChain = Document.GetSectorChain(baseSector, Document.MiniSectorTable);
-                RootSectorChain = Document.GetSectorChain(Document.RootEntry.StreamFirstSector, Document.SectorTable);
+                SectorChain = CompoundDocument.GetSectorChain(baseSector, Document.MiniSectorTable);
+                RootSectorChain = CompoundDocument.GetSectorChain(Document.RootEntry.StreamFirstSector, Document.SectorTable);
             }
             else
             {
-                SectorChain = Document.GetSectorChain(baseSector, Document.SectorTable);
+                SectorChain = CompoundDocument.GetSectorChain(baseSector, Document.SectorTable);
             }
 
             ReadSector();
@@ -165,7 +162,7 @@ namespace ExcelDataReader.Core.CompoundFormat
 
             var chunkSize = (int)Math.Min(Length - Offset, Document.Header.MiniSectorSize);
             SectorBytes = new byte[chunkSize];
-            if (BaseStream.Read(SectorBytes, 0, chunkSize) < chunkSize)
+            if (BaseStream.ReadAtLeast(SectorBytes, 0, chunkSize) < chunkSize)
             {
                 throw new CompoundDocumentException(Errors.ErrorEndOfFile);
             }
@@ -181,7 +178,7 @@ namespace ExcelDataReader.Core.CompoundFormat
 
             var chunkSize = (int)Math.Min(Length - Offset, Document.Header.SectorSize);
             SectorBytes = new byte[chunkSize];
-            if (BaseStream.Read(SectorBytes, 0, chunkSize) < chunkSize)
+            if (BaseStream.ReadAtLeast(SectorBytes, 0, chunkSize) < chunkSize)
             {
                 throw new CompoundDocumentException(Errors.ErrorEndOfFile);
             }

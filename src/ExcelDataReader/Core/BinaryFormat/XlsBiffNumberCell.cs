@@ -1,26 +1,20 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents a floating-point number 
+    /// Represents a floating-point number. 
     /// </summary>
-    internal class XlsBiffNumberCell : XlsBiffBlankCell
+    internal sealed class XlsBiffNumberCell : XlsBiffBlankCell
     {
-        internal XlsBiffNumberCell(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset, biffVersion)
+        internal XlsBiffNumberCell(byte[] bytes)
+            : base(bytes)
         {
-            if (Id == BIFFRECORDTYPE.NUMBER_OLD)
-            {
-                Value = ReadDouble(0x7);
-            }
-            else
-            {
-                Value = ReadDouble(0x6);
-            }
         }
 
+        public override bool IsEmpty => false;
+
         /// <summary>
-        /// Gets the value of this cell
+        /// Gets the value of this cell.
         /// </summary>
-        public double Value { get; }
+        public double Value => Id == BIFFRECORDTYPE.NUMBER_OLD ? ReadDouble(0x7) : ReadDouble(0x6);
     }
 }

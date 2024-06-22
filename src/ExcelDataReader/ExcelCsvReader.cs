@@ -1,10 +1,9 @@
-﻿using System.IO;
-using System.Text;
+﻿using System.Text;
 using ExcelDataReader.Core.CsvFormat;
 
 namespace ExcelDataReader
 {
-    internal class ExcelCsvReader : ExcelDataReader<CsvWorkbook, CsvWorksheet>
+    internal sealed class ExcelCsvReader : ExcelDataReader<CsvWorkbook, CsvWorksheet>
     {
         public ExcelCsvReader(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
         {

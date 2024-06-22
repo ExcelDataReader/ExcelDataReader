@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Windows.Forms;
+﻿using System.Data;
 using ExcelDataReader;
 using System.Diagnostics;
 
@@ -47,6 +43,7 @@ namespace TestApp
             this.firstRowNamesCheckBox = new System.Windows.Forms.CheckBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataSet1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
@@ -55,30 +52,34 @@ namespace TestApp
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
-            this.openFileDialog1.Filter = "xls|*.xls|xlsx|*.xlsx|csv|*.csv|All|*.*";
+            this.openFileDialog1.Filter = "Supported files|*.xls;*.xlsx;*.xlsb;*.csv|xls|*.xls|xlsx|*.xlsx|xlsb|*.xlsb|csv|*" +
+    ".csv|All|*.*";
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(580, 50);
+            this.button1.Location = new System.Drawing.Point(345, 5);
+            this.button1.Margin = new System.Windows.Forms.Padding(2);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.Size = new System.Drawing.Size(70, 21);
             this.button1.TabIndex = 0;
-            this.button1.Text = "select file";
+            this.button1.Text = "Select file";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.Button1Click);
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(140, 50);
+            this.textBox1.Location = new System.Drawing.Point(46, 6);
+            this.textBox1.Margin = new System.Windows.Forms.Padding(2);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(434, 22);
+            this.textBox1.Size = new System.Drawing.Size(295, 20);
             this.textBox1.TabIndex = 1;
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(580, 91);
+            this.button2.Location = new System.Drawing.Point(11, 51);
+            this.button2.Margin = new System.Windows.Forms.Padding(2);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.Size = new System.Drawing.Size(73, 29);
             this.button2.TabIndex = 2;
             this.button2.Text = "Process";
             this.button2.UseVisualStyleBackColor = true;
@@ -92,29 +93,36 @@ namespace TestApp
             // 
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
+            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Location = new System.Drawing.Point(63, 170);
+            this.dataGridView1.Location = new System.Drawing.Point(11, 114);
+            this.dataGridView1.Margin = new System.Windows.Forms.Padding(2);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RowTemplate.Height = 24;
-            this.dataGridView1.Size = new System.Drawing.Size(971, 465);
+            this.dataGridView1.Size = new System.Drawing.Size(865, 426);
             this.dataGridView1.TabIndex = 3;
             // 
             // sheetCombo
             // 
+            this.sheetCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.sheetCombo.FormattingEnabled = true;
-            this.sheetCombo.Location = new System.Drawing.Point(233, 135);
+            this.sheetCombo.Location = new System.Drawing.Point(88, 89);
+            this.sheetCombo.Margin = new System.Windows.Forms.Padding(2);
             this.sheetCombo.Name = "sheetCombo";
-            this.sheetCombo.Size = new System.Drawing.Size(121, 24);
+            this.sheetCombo.Size = new System.Drawing.Size(253, 21);
             this.sheetCombo.TabIndex = 4;
             this.sheetCombo.SelectedIndexChanged += new System.EventHandler(this.SheetComboSelectedIndexChanged);
             // 
             // Sheet
             // 
             this.Sheet.AutoSize = true;
-            this.Sheet.Location = new System.Drawing.Point(360, 138);
+            this.Sheet.Location = new System.Drawing.Point(12, 92);
+            this.Sheet.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.Sheet.Name = "Sheet";
-            this.Sheet.Size = new System.Drawing.Size(95, 17);
+            this.Sheet.Size = new System.Drawing.Size(72, 13);
             this.Sheet.TabIndex = 5;
             this.Sheet.Text = "Choose sheet";
             // 
@@ -123,9 +131,10 @@ namespace TestApp
             this.firstRowNamesCheckBox.AutoSize = true;
             this.firstRowNamesCheckBox.Checked = true;
             this.firstRowNamesCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.firstRowNamesCheckBox.Location = new System.Drawing.Point(343, 93);
+            this.firstRowNamesCheckBox.Location = new System.Drawing.Point(15, 30);
+            this.firstRowNamesCheckBox.Margin = new System.Windows.Forms.Padding(2);
             this.firstRowNamesCheckBox.Name = "firstRowNamesCheckBox";
-            this.firstRowNamesCheckBox.Size = new System.Drawing.Size(231, 21);
+            this.firstRowNamesCheckBox.Size = new System.Drawing.Size(176, 17);
             this.firstRowNamesCheckBox.TabIndex = 6;
             this.firstRowNamesCheckBox.Text = "first row contains column names";
             this.firstRowNamesCheckBox.UseVisualStyleBackColor = true;
@@ -135,23 +144,33 @@ namespace TestApp
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 681);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 552);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1183, 25);
+            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 10, 0);
+            this.statusStrip1.Size = new System.Drawing.Size(887, 22);
             this.statusStrip1.TabIndex = 7;
             this.statusStrip1.Text = "statusStrip1";
             // 
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(151, 20);
-            this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(0, 17);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 9);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(29, 13);
+            this.label1.TabIndex = 8;
+            this.label1.Text = "Path";
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1183, 706);
+            this.ClientSize = new System.Drawing.Size(887, 574);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.firstRowNamesCheckBox);
             this.Controls.Add(this.Sheet);
@@ -160,6 +179,7 @@ namespace TestApp
             this.Controls.Add(this.button2);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.button1);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.dataSet1)).EndInit();
@@ -184,6 +204,7 @@ namespace TestApp
         private System.Windows.Forms.CheckBox firstRowNamesCheckBox;
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel toolStripStatusLabel1;
+        private Label label1;
         private DataSet ds;
 
         public Form1()
@@ -226,41 +247,25 @@ namespace TestApp
 
         private void Button2Click(object sender, EventArgs e)
         {
-            var extension = Path.GetExtension(textBox1.Text).ToLower();
-            using (var stream = new FileStream(textBox1.Text, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            try
             {
+                using var stream = new FileStream(textBox1.Text, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
                 var sw = new Stopwatch();
                 sw.Start();
-                IExcelDataReader reader = null;
-                if (extension == ".xls")
-                {
-                   reader = ExcelReaderFactory.CreateBinaryReader(stream);
-                }
-                else if (extension == ".xlsx")
-                {
-                    reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
-                }
-                else if (extension == ".csv")
-                {
-                    reader = ExcelReaderFactory.CreateCsvReader(stream);
-                }
 
-                if (reader == null)
-                    return;
+                using IExcelDataReader reader = ExcelReaderFactory.CreateReader(stream);
 
                 var openTiming = sw.ElapsedMilliseconds;
                 // reader.IsFirstRowAsColumnNames = firstRowNamesCheckBox.Checked;
-                using (reader)
+                ds = reader.AsDataSet(new ExcelDataSetConfiguration()
                 {
-                    ds = reader.AsDataSet(new ExcelDataSetConfiguration()
+                    UseColumnDataType = false,
+                    ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
                     {
-                        UseColumnDataType = false,
-                        ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
-                        {
-                            UseHeaderRow = firstRowNamesCheckBox.Checked
-                        }
-                    });
-                }
+                        UseHeaderRow = firstRowNamesCheckBox.Checked
+                    }
+                });
 
                 toolStripStatusLabel1.Text = "Elapsed: " + sw.ElapsedMilliseconds.ToString() + " ms (" + openTiming.ToString() + " ms to open)";
 
@@ -269,9 +274,10 @@ namespace TestApp
 
                 if (tablenames.Count > 0)
                     sheetCombo.SelectedIndex = 0;
-
-                // dataGridView1.DataSource = ds;
-                // dataGridView1.DataMember
+            }
+            catch (Exception ex) 
+            {
+                MessageBox.Show(ex.ToString(), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

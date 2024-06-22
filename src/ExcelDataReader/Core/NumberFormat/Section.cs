@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace ExcelDataReader.Core.NumberFormat
+﻿namespace ExcelDataReader.Core.NumberFormat
 {
-    internal class Section
+    internal sealed class Section
     {
         public SectionType Type { get; set; }
 

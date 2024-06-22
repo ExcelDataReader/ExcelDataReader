@@ -1,24 +1,26 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents an RK number cell
+    /// Represents an RK number cell.
     /// </summary>
-    internal class XlsBiffRKCell : XlsBiffBlankCell
+    internal sealed class XlsBiffRKCell : XlsBiffBlankCell
     {
-        internal XlsBiffRKCell(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset, biffVersion)
+        internal XlsBiffRKCell(byte[] bytes)
+            : base(bytes)
         {
         }
 
+        public override bool IsEmpty => false;
+
         /// <summary>
-        /// Gets the value of this cell
+        /// Gets the value of this cell.
         /// </summary>
         public double Value => NumFromRK(ReadUInt32(0x6));
 
         /// <summary>
-        /// Decodes RK-encoded number
+        /// Decodes RK-encoded number.
         /// </summary>
-        /// <param name="rk">Encoded number</param>
+        /// <param name="rk">Encoded number.</param>
         /// <returns>The number.</returns>
         public static double NumFromRK(uint rk)
         {
@@ -30,7 +32,7 @@ namespace ExcelDataReader.Core.BinaryFormat
             else
             {
                 // hi words of IEEE num
-                num = Helpers.Int64BitsToDouble((long)(rk & 0xfffffffc) << 32);
+                num = BitConverter.Int64BitsToDouble((long)(rk & 0xfffffffc) << 32);
             }
 
             if ((rk & 0x1) == 0x1)

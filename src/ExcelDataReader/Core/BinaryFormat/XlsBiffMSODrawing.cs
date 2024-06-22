@@ -1,12 +1,12 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents MSO Drawing record
+    /// Represents MSO Drawing record.
     /// </summary>
-    internal class XlsBiffMSODrawing : XlsBiffRecord
+    internal sealed class XlsBiffMSODrawing : XlsBiffRecord
     {
-        internal XlsBiffMSODrawing(byte[] bytes, uint offset)
-            : base(bytes, offset)
+        internal XlsBiffMSODrawing(byte[] bytes)
+            : base(bytes)
         {
         }
     }

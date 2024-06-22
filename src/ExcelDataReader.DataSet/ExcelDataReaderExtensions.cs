@@ -1,26 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
+using System.Globalization;
 
 namespace ExcelDataReader
 {
     /// <summary>
-    /// ExcelDataReader DataSet extensions
+    /// ExcelDataReader DataSet extensions.
     /// </summary>
     public static class ExcelDataReaderExtensions
     {
         /// <summary>
-        /// Converts all sheets to a DataSet
+        /// Converts all sheets to a DataSet.
         /// </summary>
-        /// <param name="self">The IExcelDataReader instance</param>
-        /// <param name="configuration">An optional configuration object to modify the behavior of the conversion</param>
-        /// <returns>A dataset with all workbook contents</returns>
+        /// <param name="self">The IExcelDataReader instance.</param>
+        /// <param name="configuration">An optional configuration object to modify the behavior of the conversion.</param>
+        /// <returns>A dataset with all workbook contents.</returns>
         public static DataSet AsDataSet(this IExcelDataReader self, ExcelDataSetConfiguration configuration = null)
         {
-            if (configuration == null)
-            {
-                configuration = new ExcelDataSetConfiguration();
-            }
+            configuration ??= new();
 
             self.Reset();
 
@@ -38,10 +34,7 @@ namespace ExcelDataReader
                     ? configuration.ConfigureDataTable(self)
                     : null;
 
-                if (tableConfiguration == null)
-                {
-                    tableConfiguration = new ExcelDataTableConfiguration();
-                }
+                tableConfiguration ??= new();
 
                 var table = AsDataTable(self, tableConfiguration);
                 result.Tables.Add(table);
@@ -66,7 +59,7 @@ namespace ExcelDataReader
             var i = 1;
             while (table.Columns[columnName] != null)
             {
-                columnName = string.Format("{0}_{1}", name, i);
+                columnName = name + "_" + i;
                 i++;
             }
 
@@ -89,27 +82,45 @@ namespace ExcelDataReader
                         configuration.ReadHeaderRow(self);
                     }
 
-                    for (var i = 0; i < self.FieldCount; i++)
+                    if (configuration.ReadHeader != null) 
                     {
-                        if (configuration.FilterColumn != null && !configuration.FilterColumn(self, i))
+                        var dict = configuration.ReadHeader(self);
+                        foreach (var kvp in dict)
                         {
-                            continue;
+                            var columnIndex = kvp.Key;
+                            var name = kvp.Value;
+
+                            // if a column already exists with the name append _i to the duplicates
+                            var columnName = GetUniqueColumnName(result, name);
+                            var column = new DataColumn(columnName, typeof(object)) { Caption = name };
+                            result.Columns.Add(column);
+                            columnIndices.Add(columnIndex);
                         }
-
-                        var name = configuration.UseHeaderRow
-                            ? Convert.ToString(self.GetValue(i))
-                            : null;
-
-                        if (string.IsNullOrEmpty(name))
+                    } 
+                    else 
+                    {
+                        for (var i = 0; i < self.FieldCount; i++)
                         {
-                            name = configuration.EmptyColumnNamePrefix + i;
-                        }
+                            if (configuration.FilterColumn != null && !configuration.FilterColumn(self, i))
+                            {
+                                continue;
+                            }
 
-                        // if a column already exists with the name append _i to the duplicates
-                        var columnName = GetUniqueColumnName(result, name);
-                        var column = new DataColumn(columnName, typeof(object)) { Caption = name };
-                        result.Columns.Add(column);
-                        columnIndices.Add(i);
+                            var name = configuration.UseHeaderRow
+                                ? Convert.ToString(self.GetValue(i), CultureInfo.CurrentCulture)
+                                : null;
+
+                            if (string.IsNullOrEmpty(name))
+                            {
+                                name = configuration.EmptyColumnNamePrefix + i;
+                            }
+
+                            // if a column already exists with the name append _i to the duplicates
+                            var columnName = GetUniqueColumnName(result, name);
+                            var column = new DataColumn(columnName, typeof(object)) { Caption = name };
+                            result.Columns.Add(column);
+                            columnIndices.Add(i);
+                        }
                     }
 
                     result.BeginLoadData();
@@ -126,7 +137,7 @@ namespace ExcelDataReader
                     continue;
                 }
 
-                if (IsEmptyRow(self))
+                if (IsEmptyRow(self, configuration))
                 {
                     emptyRows++;
                     continue;
@@ -144,10 +155,18 @@ namespace ExcelDataReader
                 for (var i = 0; i < columnIndices.Count; i++)
                 {
                     var columnIndex = columnIndices[i];
+
                     var value = self.GetValue(columnIndex);
+                    if (configuration.TransformValue != null)
+                    {
+                        var transformedValue = configuration.TransformValue(self, i, value);
+                        if (transformedValue != null)
+                            value = transformedValue;
+                    }
+
                     row[i] = value;
                 }
-                
+
                 result.Rows.Add(row);
             }
 
@@ -155,11 +174,19 @@ namespace ExcelDataReader
             return result;
         }
 
-        private static bool IsEmptyRow(IExcelDataReader reader)
+        private static bool IsEmptyRow(IExcelDataReader reader, ExcelDataTableConfiguration configuration)
         {
             for (var i = 0; i < reader.FieldCount; i++)
             {
-                if (reader.GetValue(i) != null)
+                var value = reader.GetValue(i);
+                if (configuration.TransformValue != null)
+                {
+                    var transformedValue = configuration.TransformValue(reader, i, value);
+                    if (transformedValue != null)
+                        value = transformedValue;
+                }
+
+                if (value != null)
                     return false;
             }
 
@@ -204,8 +231,7 @@ namespace ExcelDataReader
                     if (type == null)
                         continue;
                     convert = true;
-                    if (newTable == null)
-                        newTable = table.Clone();
+                    newTable ??= table.Clone();
                     newTable.Columns[i].DataType = type;
                 }
 

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using ExcelDataReader.Core;
 
 namespace ExcelDataReader
@@ -8,16 +6,16 @@ namespace ExcelDataReader
     /// <summary>
     /// A generic implementation of the IExcelDataReader interface using IWorkbook/IWorksheet to enumerate data.
     /// </summary>
-    /// <typeparam name="TWorkbook">A type implementing IWorkbook</typeparam>
-    /// <typeparam name="TWorksheet">A type implementing IWorksheet</typeparam>
+    /// <typeparam name="TWorkbook">A type implementing IWorkbook.</typeparam>
+    /// <typeparam name="TWorksheet">A type implementing IWorksheet.</typeparam>
     internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReader
         where TWorkbook : IWorkbook<TWorksheet>
         where TWorksheet : IWorksheet
     {
         private IEnumerator<TWorksheet> _worksheetIterator;
         private IEnumerator<Row> _rowIterator;
-        private IEnumerator<TWorksheet> _cachedWorksheetIterator = null;
-        private List<TWorksheet> _cachedWorksheets = null;
+        private IEnumerator<TWorksheet> _cachedWorksheetIterator;
+        private List<TWorksheet> _cachedWorksheets;
 
         ~ExcelDataReader()
         {
@@ -32,6 +30,7 @@ namespace ExcelDataReader
 
         public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
 
+        // We shouldn't expose the internal array here. 
         public CellRange[] MergeCells => _worksheetIterator?.Current?.MergeCells;
 
         public int Depth { get; private set; }
@@ -103,10 +102,23 @@ namespace ExcelDataReader
         {
             if (RowCells == null)
                 throw new InvalidOperationException("No data exists for the row/column.");
+            
             return RowCells[i]?.Value;
         }
 
-        public int GetValues(object[] values) => throw new NotSupportedException();
+        public int GetValues(object[] values)
+        {
+            if (RowCells == null)
+                throw new InvalidOperationException("No data exists for the row/column.");
+
+            int readingLenth = values.Length > FieldCount ? FieldCount : values.Length;
+            for (int i = 0; i < readingLenth; i++)
+            {
+                values[i] = RowCells[i]?.Value;
+            }
+
+            return readingLenth;
+        }
                
         public bool IsDBNull(int i) => GetValue(i) == null;
 
@@ -116,7 +128,9 @@ namespace ExcelDataReader
                 throw new InvalidOperationException("No data exists for the row/column.");
             if (RowCells[i] == null)
                 return null;
-            return _worksheetIterator?.Current?.GetNumberFormatString(RowCells[i].NumberFormatIndex)?.FormatString;
+            if (RowCells[i].EffectiveStyle == null)
+                return null;
+            return Workbook.GetNumberFormatString(RowCells[i].EffectiveStyle.NumberFormatIndex)?.FormatString;
         }
 
         public int GetNumberFormatIndex(int i)
@@ -125,7 +139,9 @@ namespace ExcelDataReader
                 throw new InvalidOperationException("No data exists for the row/column.");
             if (RowCells[i] == null)
                 return -1;
-            return RowCells[i].NumberFormatIndex;
+            if (RowCells[i].EffectiveStyle == null)
+                return -1;
+            return RowCells[i].EffectiveStyle.NumberFormatIndex;
         }
 
         public double GetColumnWidth(int i)
@@ -139,19 +155,12 @@ namespace ExcelDataReader
             double? retWidth = null;
             if (columnWidths != null)
             {
-                var colWidthIndex = 0;
-                while (colWidthIndex < columnWidths.Length && retWidth == null)
+                foreach (var columnWidth in columnWidths)
                 {
-                    var columnWidth = columnWidths[colWidthIndex];
-                    if (i >= columnWidth.Min && i <= columnWidth.Max)
+                    if (i >= columnWidth.Minimum && i <= columnWidth.Maximum)
                     {
-                        retWidth = columnWidth.Hidden
-                            ? 0
-                            : columnWidth.Width;
-                    }
-                    else
-                    {
-                        colWidthIndex++;
+                        retWidth = columnWidth.Hidden ? 0 : columnWidth.Width;
+                        break;
                     }
                 }
             }
@@ -159,6 +168,40 @@ namespace ExcelDataReader
             const double DefaultColumnWidth = 8.43D;
 
             return retWidth ?? DefaultColumnWidth;
+        }
+
+        public CellStyle GetCellStyle(int i)
+        {
+            if (RowCells == null)
+                throw new InvalidOperationException("No data exists for the row/column.");
+
+            var result = new CellStyle();
+            if (RowCells[i] == null)
+            {
+                return result;
+            }
+
+            var effectiveStyle = RowCells[i].EffectiveStyle;
+            if (effectiveStyle == null)
+            {
+                return result;
+            }
+
+            result.FontIndex = effectiveStyle.FontIndex;
+            result.NumberFormatIndex = effectiveStyle.NumberFormatIndex;
+            result.IndentLevel = effectiveStyle.IndentLevel;
+            result.HorizontalAlignment = effectiveStyle.HorizontalAlignment;
+            result.Hidden = effectiveStyle.Hidden;
+            result.Locked = effectiveStyle.Locked;
+            return result;
+        }
+
+        public CellError? GetCellError(int i)
+        {
+            if (RowCells == null)
+                throw new InvalidOperationException("No data exists for the row/column.");
+            
+            return RowCells[i]?.Error;
         }
 
         /// <inheritdoc />
@@ -277,10 +320,7 @@ namespace ExcelDataReader
                 _cachedWorksheets = new List<TWorksheet>();
             }
 
-            if (_cachedWorksheetIterator == null)
-            {
-                _cachedWorksheetIterator = Workbook.ReadWorksheets().GetEnumerator();
-            }
+            _cachedWorksheetIterator ??= Workbook.ReadWorksheets().GetEnumerator();
 
             while (_cachedWorksheetIterator.MoveNext())
             {
@@ -300,10 +340,7 @@ namespace ExcelDataReader
 
         private void ReadCurrentRow()
         {
-            if (RowCells == null)
-            {
-                RowCells = new Cell[FieldCount];
-            }
+            RowCells ??= new Cell[FieldCount];
 
             Array.Clear(RowCells, 0, RowCells.Length);
 

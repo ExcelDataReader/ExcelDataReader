@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace ExcelDataReader.Core.NumberFormat
+﻿namespace ExcelDataReader.Core.NumberFormat
 {
-    internal class ExponentialSection
+    internal sealed class ExponentialSection
     {
         public List<string> BeforeDecimal { get; set; }
 

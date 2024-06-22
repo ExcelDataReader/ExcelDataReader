@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 
 namespace ExcelDataReader.Core.BinaryFormat
@@ -10,13 +9,13 @@ namespace ExcelDataReader.Core.BinaryFormat
     {
         private readonly IXlsString _xlsString;
 
-        internal XlsBiffHeaderFooterString(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset)
+        internal XlsBiffHeaderFooterString(byte[] bytes, int biffVersion)
+            : base(bytes)
         {
             if (biffVersion < 8)
-                _xlsString = new XlsShortByteString(bytes, offset + 4);
+                _xlsString = new XlsShortByteString(bytes, ContentOffset);
             else if (biffVersion == 8)
-                _xlsString = new XlsUnicodeString(bytes, offset + 4);
+                _xlsString = new XlsUnicodeString(bytes, ContentOffset);
             else
                 throw new ArgumentException("Unexpected BIFF version " + biffVersion, nameof(biffVersion));
         }

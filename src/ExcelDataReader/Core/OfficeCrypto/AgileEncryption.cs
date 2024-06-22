@@ -1,14 +1,12 @@
-﻿using System;
-using System.IO;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Xml;
 
 namespace ExcelDataReader.Core.OfficeCrypto
 {
     /// <summary>
-    /// Represents "Agile Encryption" used in XLSX (Office 2010 and newer)
+    /// Represents "Agile Encryption" used in XLSX (Office 2010 and newer).
     /// </summary>
-    internal class AgileEncryption : EncryptionInfo
+    internal sealed class AgileEncryption : EncryptionInfo
     {
         private const string NEncryption = "encryption";
         private const string NKeyData = "keyData";
@@ -20,13 +18,10 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         public AgileEncryption(byte[] bytes)
         {
-            using (var stream = new MemoryStream(bytes, 8, bytes.Length - 8))
-            {
-                using (var xmlReader = XmlReader.Create(stream))
-                {
-                    ReadXmlEncryptionInfoStream(xmlReader);
-                }
-            }
+            using var stream = new MemoryStream(bytes, 8, bytes.Length - 8);
+            using var xmlReader = XmlReader.Create(stream);
+
+            ReadXmlEncryptionInfoStream(xmlReader);
         }
 
         public CipherIdentifier CipherAlgorithm { get; set; }
@@ -72,10 +67,9 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         public override byte[] GenerateSecretKey(string password)
         {
-            using (var cipher = CryptoHelpers.CreateCipher(PasswordCipherAlgorithm, PasswordKeyBits, PasswordBlockSize * 8, PasswordCipherChaining))
-            {
-                return GenerateSecretKey(password, PasswordSaltValue, PasswordHashAlgorithm, PasswordEncryptedKeyValue, PasswordSpinCount, PasswordKeyBits, cipher);
-            }
+            using var cipher = CryptoHelpers.CreateCipher(PasswordCipherAlgorithm, PasswordKeyBits, PasswordBlockSize * 8, PasswordCipherChaining);
+
+            return GenerateSecretKey(password, PasswordSaltValue, PasswordHashAlgorithm, PasswordEncryptedKeyValue, PasswordSpinCount, PasswordKeyBits, cipher);
         }
 
         public override byte[] GenerateBlockKey(int blockNumber, byte[] secretKey)
@@ -92,7 +86,9 @@ namespace ExcelDataReader.Core.OfficeCrypto
 
         public override bool VerifyPassword(string password)
         {
-            var secretKey = HashPassword(password, PasswordSaltValue, PasswordHashAlgorithm, PasswordSpinCount);
+            byte[] secretKey;
+            using (var hashAlgorithm = CryptoHelpers.Create(PasswordHashAlgorithm))
+                secretKey = HashPassword(password, PasswordSaltValue, hashAlgorithm, PasswordSpinCount);
 
             var inputBlockKey = CryptoHelpers.HashBytes(
                 CryptoHelpers.Combine(secretKey, new byte[] { 0xfe, 0xa7, 0xd2, 0x76, 0x3b, 0x4b, 0x9e, 0x79 }),
@@ -104,62 +100,65 @@ namespace ExcelDataReader.Core.OfficeCrypto
                 PasswordHashAlgorithm);
             Array.Resize(ref valueBlockKey, PasswordKeyBits / 8);
 
-            using (var cipher = CryptoHelpers.CreateCipher(PasswordCipherAlgorithm, PasswordKeyBits, PasswordBlockSize * 8, PasswordCipherChaining))
+            using var cipher = CryptoHelpers.CreateCipher(PasswordCipherAlgorithm, PasswordKeyBits, PasswordBlockSize * 8, PasswordCipherChaining);
+
+            var decryptedVerifier = CryptoHelpers.DecryptBytes(cipher, PasswordEncryptedVerifierHashInput, inputBlockKey, PasswordSaltValue);
+            var decryptedVerifierHash = CryptoHelpers.DecryptBytes(cipher, PasswordEncryptedVerifierHashValue, valueBlockKey, PasswordSaltValue);
+
+            var verifierHash = CryptoHelpers.HashBytes(decryptedVerifier, PasswordHashAlgorithm);
+            for (var i = 0; i < Math.Min(decryptedVerifierHash.Length, verifierHash.Length); ++i)
             {
-                var decryptedVerifier = CryptoHelpers.DecryptBytes(cipher, PasswordEncryptedVerifierHashInput, inputBlockKey, PasswordSaltValue);
-                var decryptedVerifierHash = CryptoHelpers.DecryptBytes(cipher, PasswordEncryptedVerifierHashValue, valueBlockKey, PasswordSaltValue);
-
-                var verifierHash = CryptoHelpers.HashBytes(decryptedVerifier, PasswordHashAlgorithm);
-                for (var i = 0; i < Math.Min(decryptedVerifierHash.Length, verifierHash.Length); ++i)
-                {
-                    if (decryptedVerifierHash[i] != verifierHash[i])
-                        return false;
-                }
-
-                return true;
+                if (decryptedVerifierHash[i] != verifierHash[i])
+                    return false;
             }
+
+            return true;
         }
 
-        private static byte[] GenerateSecretKey(string password, byte[] saltValue, HashIdentifier hashAlgorithm, byte[] encryptedKeyValue, int spinCount, int keyBits, SymmetricAlgorithm cipher)
+        private static byte[] GenerateSecretKey(string password, byte[] saltValue, HashIdentifier hashIdentifier, byte[] encryptedKeyValue, int spinCount, int keyBits, SymmetricAlgorithm cipher)
         {
             var block3 = new byte[] { 0x14, 0x6e, 0x0b, 0xe7, 0xab, 0xac, 0xd0, 0xd6 };
 
-            var h = HashPassword(password, saltValue, hashAlgorithm, spinCount);
+            byte[] hash;
+            using (var hashAlgorithm = CryptoHelpers.Create(hashIdentifier))
+            {
+                hash = HashPassword(password, saltValue, hashAlgorithm, spinCount);
 
-            h = CryptoHelpers.HashBytes(CryptoHelpers.Combine(h, block3), hashAlgorithm);
+                hash = CryptoHelpers.HashBytes(CryptoHelpers.Combine(hash, block3), hashIdentifier);
+            }
 
             // Truncate or pad with 0x36
-            var hashSize = h.Length;
-            Array.Resize(ref h, keyBits / 8);
+            var hashSize = hash.Length;
+            Array.Resize(ref hash, keyBits / 8);
             for (var i = hashSize; i < keyBits / 8; i++)
             {
-                h[i] = 0x36;
+                hash[i] = 0x36;
             }
 
             // NOTE: the stored salt is padded to a multiple of the block size which affects AES-192
-            var decryptedKeyValue = CryptoHelpers.DecryptBytes(cipher, encryptedKeyValue, h, saltValue);
+            var decryptedKeyValue = CryptoHelpers.DecryptBytes(cipher, encryptedKeyValue, hash, saltValue);
             Array.Resize(ref decryptedKeyValue, keyBits / 8);
             return decryptedKeyValue;
         }
 
-        private static byte[] HashPassword(string password, byte[] saltValue, HashIdentifier hashAlgorithm, int spinCount)
+        private static byte[] HashPassword(string password, byte[] saltValue, HashAlgorithm hashAlgorithm, int spinCount)
         {
-            var h = CryptoHelpers.HashBytes(CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password)), hashAlgorithm);
+            var h = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password)));
 
             for (var i = 0; i < spinCount; i++)
             {
-                h = CryptoHelpers.HashBytes(CryptoHelpers.Combine(BitConverter.GetBytes(i), h), hashAlgorithm);
+                h = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(BitConverter.GetBytes(i), h));
             }
 
             return h;
         }
 
-        private HashIdentifier ParseHash(string value)
+        private static HashIdentifier ParseHash(string value)
         {
             return (HashIdentifier)Enum.Parse(typeof(HashIdentifier), value);
         }
 
-        private CipherIdentifier ParseCipher(string value, int blockBits)
+        private static CipherIdentifier ParseCipher(string value/*, int blockBits*/)
         {
             if (value == "AES")
             {
@@ -178,17 +177,15 @@ namespace ExcelDataReader.Core.OfficeCrypto
                 return CipherIdentifier.RC2;
             }
 
-            throw new ArgumentException(nameof(value), "Unknown encryption: " + value);
+            throw new ArgumentException("Unknown encryption: " + value, nameof(value));
         }
 
-        private CipherMode ParseCipherMode(string value)
+        private static CipherMode ParseCipherMode(string value)
         {
             if (value == "ChainingModeCBC")
                 return CipherMode.CBC;
-#if NET20 || NET45 || NETSTANDARD2_0
             else if (value == "ChainingModeCFB")
                 return CipherMode.CFB;
-#endif
             throw new ArgumentException("Invalid CipherMode " + value);
         }
 
@@ -211,22 +208,23 @@ namespace ExcelDataReader.Core.OfficeCrypto
                     // <keyData saltSize="16" blockSize="16" keyBits="256" hashSize="64" cipherAlgorithm="AES" cipherChaining="ChainingModeCBC" hashAlgorithm="SHA512" saltValue="zYmgeIEW4PVmYPiNJItVCQ=="/>
                     // <dataIntegrity encryptedHmacKey="v11xCwbBfQ6Wq03h2M6Nh5Z9fwNnFQwEzu8vmBDps55kd+HfLDzrnuKzuQq4tlpxW0nX99VWh+n2X6ukU6v9FQ==" encryptedHmacValue="SvDwFQR4dNsXOzNstFWHqSHpAUWHQvAr63IhxlxhlQEAczDPIwCWD32aIEFipY7NOlW+LvYPaKC8zO1otxit2g=="/>
                     // <keyEncryptors><keyEncryptor uri="http://schemas.microsoft.com/office/2006/keyEncryptor/password"><p:encryptedKey spinCount="100000" saltSize="16" blockSize="16" keyBits="256" hashSize="64" cipherAlgorithm="AES" cipherChaining="ChainingModeCBC" hashAlgorithm="SHA512" saltValue="n37HW2mNfJuGwVxTeBY1LA==" encryptedVerifierHashInput="2Y2Oo+QDyMdo327gZUcejA==" encryptedVerifierHashValue="PmkCD5y5cHqMQqbgACUgxLRgISYZL6+jj3K0PSrFDWlEG+fjzFevIee1FubgdpY2P22IIM6W7C/bXE0ayAo8yg==" encryptedKeyValue="qzkvVPIBy2Bk/w2/fp+hhpq5sPReA8aUu414/Xh7494="/></keyEncryptor></keyEncryptors>
-                    int saltSize, blockSize, keyBits, hashSize;
                     var cipherAlgorithm = xmlReader.GetAttribute("cipherAlgorithm");
                     var cipherChaining = xmlReader.GetAttribute("cipherChaining");
                     var hashAlgorithm = xmlReader.GetAttribute("hashAlgorithm");
                     var saltValue = xmlReader.GetAttribute("saltValue");
 
-                    int.TryParse(xmlReader.GetAttribute("saltSize"), out saltSize);
-                    int.TryParse(xmlReader.GetAttribute("blockSize"), out blockSize);
-                    int.TryParse(xmlReader.GetAttribute("keyBits"), out keyBits);
-                    int.TryParse(xmlReader.GetAttribute("hashSize"), out hashSize);
+                    // int.TryParse(xmlReader.GetAttribute("saltSize"), out int saltSize);
+#pragma warning disable CA1806 // Do not ignore method results
+                    int.TryParse(xmlReader.GetAttribute("blockSize"), out int blockSize);
+                    int.TryParse(xmlReader.GetAttribute("keyBits"), out int keyBits);
+                    int.TryParse(xmlReader.GetAttribute("hashSize"), out int hashSize);
+#pragma warning restore CA1806 // Do not ignore method results
 
                     SaltValue = Convert.FromBase64String(saltValue);
                     HashSize = hashSize; // given in bytes, also given implicitly by SHA512
                     KeyBits = keyBits;
                     BlockSize = blockSize;
-                    CipherAlgorithm = ParseCipher(cipherAlgorithm, blockSize * 8);
+                    CipherAlgorithm = ParseCipher(cipherAlgorithm/*, blockSize * 8*/);
                     CipherChaining = ParseCipherMode(cipherChaining);
                     HashAlgorithm = ParseHash(hashAlgorithm);
                     xmlReader.Skip();
@@ -275,7 +273,6 @@ namespace ExcelDataReader.Core.OfficeCrypto
                 if (xmlReader.IsStartElement(NEncryptedKey, NsPassword))
                 {
                     // <p:encryptedKey spinCount="100000" saltSize="16" blockSize="16" keyBits="256" hashSize="64" cipherAlgorithm="AES" cipherChaining="ChainingModeCBC" hashAlgorithm="SHA512" saltValue="n37HW2mNfJuGwVxTeBY1LA==" encryptedVerifierHashInput="2Y2Oo+QDyMdo327gZUcejA==" encryptedVerifierHashValue="PmkCD5y5cHqMQqbgACUgxLRgISYZL6+jj3K0PSrFDWlEG+fjzFevIee1FubgdpY2P22IIM6W7C/bXE0ayAo8yg==" encryptedKeyValue="qzkvVPIBy2Bk/w2/fp+hhpq5sPReA8aUu414/Xh7494="/></keyEncryptor></keyEncryptors>
-                    int spinCount, saltSize, blockSize, keyBits, hashSize;
                     var cipherAlgorithm = xmlReader.GetAttribute("cipherAlgorithm");
                     var cipherChaining = xmlReader.GetAttribute("cipherChaining");
                     var hashAlgorithm = xmlReader.GetAttribute("hashAlgorithm");
@@ -284,14 +281,16 @@ namespace ExcelDataReader.Core.OfficeCrypto
                     var encryptedVerifierHashValue = xmlReader.GetAttribute("encryptedVerifierHashValue");
                     var encryptedKeyValue = xmlReader.GetAttribute("encryptedKeyValue");
 
-                    int.TryParse(xmlReader.GetAttribute("spinCount"), out spinCount);
-                    int.TryParse(xmlReader.GetAttribute("saltSize"), out saltSize);
-                    int.TryParse(xmlReader.GetAttribute("blockSize"), out blockSize);
-                    int.TryParse(xmlReader.GetAttribute("keyBits"), out keyBits);
-                    int.TryParse(xmlReader.GetAttribute("hashSize"), out hashSize);
+                    // int.TryParse(xmlReader.GetAttribute("saltSize"), out int saltSize);
+                    // int.TryParse(xmlReader.GetAttribute("hashSize"), out int hashSize);
+#pragma warning disable CA1806 // Do not ignore method results
+                    int.TryParse(xmlReader.GetAttribute("spinCount"), out int spinCount);
+                    int.TryParse(xmlReader.GetAttribute("blockSize"), out int blockSize);
+                    int.TryParse(xmlReader.GetAttribute("keyBits"), out int keyBits);
+#pragma warning restore CA1806 // Do not ignore method results
 
                     PasswordSaltValue = Convert.FromBase64String(saltValue);
-                    PasswordCipherAlgorithm = ParseCipher(cipherAlgorithm, blockSize * 8);
+                    PasswordCipherAlgorithm = ParseCipher(cipherAlgorithm/*, blockSize * 8*/);
                     PasswordCipherChaining = ParseCipherMode(cipherChaining);
                     PasswordHashAlgorithm = ParseHash(hashAlgorithm);
                     PasswordEncryptedKeyValue = Convert.FromBase64String(encryptedKeyValue);

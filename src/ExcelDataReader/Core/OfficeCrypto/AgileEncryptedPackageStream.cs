@@ -1,12 +1,9 @@
-﻿using System;
-using System.IO;
-
-namespace ExcelDataReader.Core.OfficeCrypto
+﻿namespace ExcelDataReader.Core.OfficeCrypto
 {
     /// <summary>
     /// A seekable stream for reading an EncryptedPackage blob using OpenXml Agile Encryption. 
     /// </summary>
-    internal class AgileEncryptedPackageStream : Stream
+    internal sealed class AgileEncryptedPackageStream : Stream
     {
         private const int SegmentLength = 4096;
 
@@ -17,7 +14,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
             IV = iv;
             Encryption = encryption;
 
-            Stream.Read(SegmentBytes, 0, 8);
+            Stream.ReadAtLeast(SegmentBytes, 0, 8);
             DecryptedLength = BitConverter.ToInt32(SegmentBytes, 0);
             ReadSegment();
         }
@@ -128,7 +125,7 @@ namespace ExcelDataReader.Core.OfficeCrypto
             
             // NOTE: +8 skips EncryptedPackage header
             Stream.Seek(8 + Offset, SeekOrigin.Begin);
-            Stream.Read(SegmentBytes, 0, SegmentLength);
+            Stream.ReadAtLeast(SegmentBytes, 0, SegmentLength);
 
             using (var cipher = Encryption.CreateCipher())
             {

@@ -1,12 +1,12 @@
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents BIFF BOF record
+    /// Represents BIFF BOF record.
     /// </summary>
-    internal class XlsBiffBOF : XlsBiffRecord
+    internal sealed class XlsBiffBOF : XlsBiffRecord
     {
-        internal XlsBiffBOF(byte[] bytes, uint offset)
-            : base(bytes, offset)
+        internal XlsBiffBOF(byte[] bytes)
+            : base(bytes)
         {
         }
 
@@ -16,14 +16,14 @@ namespace ExcelDataReader.Core.BinaryFormat
         public ushort Version => ReadUInt16(0x0);
 
         /// <summary>
-        /// Gets the type of the BIFF block
+        /// Gets the type of the BIFF block.
         /// </summary>
         public BIFFTYPE Type => (BIFFTYPE)ReadUInt16(0x2);
 
         /// <summary>
         /// Gets the creation Id.
         /// </summary>
-        /// <remarks>Not used before BIFF5</remarks>
+        /// <remarks>Not used before BIFF5.</remarks>
         public ushort CreationId
         {
             get
@@ -37,7 +37,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Gets the creation year.
         /// </summary>
-        /// <remarks>Not used before BIFF5</remarks>
+        /// <remarks>Not used before BIFF5.</remarks>
         public ushort CreationYear
         {
             get
@@ -51,7 +51,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Gets the file history flag.
         /// </summary>
-        /// <remarks>Not used before BIFF8</remarks>
+        /// <remarks>Not used before BIFF8.</remarks>
         public uint HistoryFlag
         {
             get
@@ -65,7 +65,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         /// <summary>
         /// Gets the minimum Excel version to open this file.
         /// </summary>
-        /// <remarks>Not used before BIFF8</remarks>
+        /// <remarks>Not used before BIFF8.</remarks>
         public uint MinVersionToOpen
         {
             get

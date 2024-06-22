@@ -1,12 +1,10 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 
 namespace ExcelDataReader
 {
     public class DataColumnCollection : IEnumerable<DataColumn>
     {
-        private readonly List<DataColumn> columns = new List<DataColumn>();
+        private readonly List<DataColumn> columns = new();
 
         public int Count => columns.Count;
 

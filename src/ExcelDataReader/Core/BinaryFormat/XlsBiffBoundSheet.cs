@@ -1,17 +1,16 @@
-using System;
 using System.Text;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents Sheet record in Workbook Globals
+    /// Represents Sheet record in Workbook Globals.
     /// </summary>
-    internal class XlsBiffBoundSheet : XlsBiffRecord
+    internal sealed class XlsBiffBoundSheet : XlsBiffRecord
     {
         private readonly IXlsString _sheetName;
 
-        internal XlsBiffBoundSheet(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset)
+        internal XlsBiffBoundSheet(byte[] bytes, int biffVersion)
+            : base(bytes)
         {
             StartOffset = ReadUInt32(0x0);
             Type = (SheetType)ReadByte(0x5);
@@ -19,20 +18,20 @@ namespace ExcelDataReader.Core.BinaryFormat
 
             if (biffVersion == 8)
             {
-                _sheetName = new XlsShortUnicodeString(bytes, offset + 4 + 6);
+                _sheetName = new XlsShortUnicodeString(bytes, ContentOffset + 6);
             }
             else if (biffVersion == 5)
             {
-                _sheetName = new XlsShortByteString(bytes, offset + 4 + 6);
+                _sheetName = new XlsShortByteString(bytes, ContentOffset + 6);
             }
             else 
             {
-                throw new ArgumentException("Unexpected BIFF version " + biffVersion.ToString(), nameof(biffVersion));
+                throw new ArgumentException("Unexpected BIFF version " + biffVersion, nameof(biffVersion));
             }
         }
 
         internal XlsBiffBoundSheet(uint startOffset, SheetType type, SheetVisibility visibleState, string name)
-            : base(new byte[32], 0)
+            : base(new byte[32])
         {
             StartOffset = startOffset;
             Type = type;

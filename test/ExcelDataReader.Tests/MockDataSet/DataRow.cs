@@ -1,10 +1,13 @@
-﻿using System;
-
-namespace ExcelDataReader
+﻿namespace ExcelDataReader
 {
     public class DataRow
     {
         readonly object[] values;
+
+        internal DataRow(int count) 
+        {
+            values = new object[count];
+        }
 
         internal DataRow(object[] itemArray)
         {
@@ -34,7 +37,7 @@ namespace ExcelDataReader
 
         public bool IsNull(int i)
         {
-            return ItemArray[i] == DBNull.Value;
+            return this[i] == DBNull.Value;
         }
     }
 }

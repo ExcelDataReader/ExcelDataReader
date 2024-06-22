@@ -1,9 +1,8 @@
-using System;
 using System.Text;
 
 namespace ExcelDataReader.Core
 {
-    internal class EncodingHelper
+    internal sealed class EncodingHelper
     {
         public static Encoding GetEncoding(ushort codePage)
         {

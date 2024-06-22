@@ -27,18 +27,11 @@
 
         public DataRow NewRow()
         {
-            var itemArray = new object[Columns.Count];
-            return new DataRow(itemArray);
+            return new DataRow(Columns.Count);
         }
 
         public void ImportRow(DataRow row)
         {
-            var result = NewRow();
-            for (int i = 0; i < row.ItemArray.Length; i++)
-            {
-                result.ItemArray[i] = row.ItemArray[i];
-            }
-
             Rows.Add(row);
         }
 

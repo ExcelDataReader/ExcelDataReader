@@ -1,15 +1,14 @@
-using System;
 using ExcelDataReader.Core.OfficeCrypto;
 
 namespace ExcelDataReader.Core.BinaryFormat
 {
     /// <summary>
-    /// Represents FILEPASS record containing XOR obfuscation details or a an EncryptionInfo structure
+    /// Represents FILEPASS record containing XOR obfuscation details or a an EncryptionInfo structure.
     /// </summary>
-    internal class XlsBiffFilePass : XlsBiffRecord
+    internal sealed class XlsBiffFilePass : XlsBiffRecord
     {
-        internal XlsBiffFilePass(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset)
+        internal XlsBiffFilePass(byte[] bytes, int biffVersion)
+            : base(bytes)
         {
             if (biffVersion >= 2 && biffVersion <= 5)
             {

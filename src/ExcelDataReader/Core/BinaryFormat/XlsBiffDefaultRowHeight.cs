@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ExcelDataReader.Core.BinaryFormat
+﻿namespace ExcelDataReader.Core.BinaryFormat
 {
-    internal class XlsBiffDefaultRowHeight : XlsBiffRecord
+    internal sealed class XlsBiffDefaultRowHeight : XlsBiffRecord
     {
-        public XlsBiffDefaultRowHeight(byte[] bytes, uint offset, int biffVersion)
-            : base(bytes, offset)
+        public XlsBiffDefaultRowHeight(byte[] bytes, int biffVersion)
+            : base(bytes)
         {
             if (biffVersion == 2)
             {
@@ -31,7 +27,7 @@ namespace ExcelDataReader.Core.BinaryFormat
         }
 
         /// <summary>
-        /// Gets the row height in twips
+        /// Gets the row height in twips.
         /// </summary>
         public int RowHeight { get; }
     }

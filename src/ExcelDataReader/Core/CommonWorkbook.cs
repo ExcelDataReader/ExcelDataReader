@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using ExcelDataReader.Core.NumberFormat;
+﻿using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core
 {
@@ -9,19 +7,6 @@ namespace ExcelDataReader.Core
     /// </summary>
     internal class CommonWorkbook
     {
-        public CommonWorkbook()
-        {
-            const int maxBuiltInFormats = 163;
-            for (var i = 0; i < maxBuiltInFormats; i++)
-            {
-                var numFmt = BuiltinNumberFormat.GetBuiltinNumberFormat(i);
-                if (numFmt != null)
-                {
-                    Formats.Add(i, numFmt);
-                }
-            }
-        }
-
         /// <summary>
         /// Gets the dictionary of global number format strings. Always includes the built-in formats at their
         /// corresponding indices and any additional formats specified in the workbook file.
@@ -29,95 +14,54 @@ namespace ExcelDataReader.Core
         public Dictionary<int, NumberFormatString> Formats { get; } = new Dictionary<int, NumberFormatString>();
 
         /// <summary>
-        /// Gets the the dictionary of mappings between format index in the file and key in the Formats dictionary.
+        /// Gets the Cell XFs.
         /// </summary>
-        private Dictionary<int, int> FormatMappings { get; } = new Dictionary<int, int>();
-
-        private List<ExtendedFormat> ExtendedFormats { get; } = new List<ExtendedFormat>();
-
-        public int GetExtendedFormatCount() => ExtendedFormats.Count;
+        public List<ExtendedFormat> ExtendedFormats { get; } = new List<ExtendedFormat>();
 
         /// <summary>
-        /// Returns the global number format index from an XF index.
+        /// Gets the Cell Style XFs.
         /// </summary>
-        public int GetNumberFormatFromXF(int xfIndex)
+        public List<ExtendedFormat> CellStyleExtendedFormats { get; } = new List<ExtendedFormat>();
+
+        private NumberFormatString GeneralNumberFormat { get; } = new NumberFormatString("General");
+
+        public ExtendedFormat GetEffectiveCellStyle(int xfIndex, int numberFormatFromCell)
         {
-            if (xfIndex < 0 || xfIndex >= ExtendedFormats.Count)
+            if (xfIndex >= 0 && xfIndex < ExtendedFormats.Count)
             {
-                // Invalid XF index, return built-in "General" format
-                return 0;
+                return ExtendedFormats[xfIndex];
             }
 
-            var extendedFormat = ExtendedFormats[xfIndex];
-            if (!extendedFormat.ApplyNumberFormat)
-            {
-                return 0;
-            }
+            if (numberFormatFromCell == 0)
+                return ExtendedFormat.Zero;
 
-            return GetNumberFormatFromFileIndex(ExtendedFormats[xfIndex].FormatIndex);
+            return new ExtendedFormat(numberFormatFromCell);
         }
 
         /// <summary>
-        /// Returns the global number format index from a file-based format index.
-        /// </summary>
-        public int GetNumberFormatFromFileIndex(int formatIndexInFile)
-        {
-            if (FormatMappings.TryGetValue(formatIndexInFile, out var formatIndex))
-            {
-                return formatIndex;
-            }
-
-            // Format not stored in file, assume built-in format
-            return formatIndexInFile;
-        }
-
-        /// <summary>
-        /// Registers a number format string and its file-based format index in the workbook's Formats dictionary.
-        /// If the format string matches a built-in or previously registered format, it will be mapped to that index.
+        /// Registers a number format string in the workbook's Formats dictionary.
         /// </summary>
         public void AddNumberFormat(int formatIndexInFile, string formatString)
         {
-            var exists = false;
-            int maxIndex = 163;
-            foreach (var format in Formats)
-            {
-                if (!exists && format.Value.FormatString == formatString)
-                {
-                    FormatMappings[formatIndexInFile] = format.Key;
-                    exists = true;
-                }
-
-                maxIndex = Math.Max(maxIndex, format.Key);
-            }
-
-            if (!exists)
-            {
-                maxIndex++;
-                Formats.Add(maxIndex, new NumberFormatString(formatString));
-                FormatMappings[formatIndexInFile] = maxIndex;
-            }
+            if (!Formats.ContainsKey(formatIndexInFile))
+                Formats.Add(formatIndexInFile, new NumberFormatString(formatString));
         }
 
-        /// <summary>
-        /// Registers an extended format and its file based number format index.
-        /// </summary>
-        public void AddExtendedFormat(int xfId, int formatIndexInFile, bool applyNumberFormat)
+        public NumberFormatString GetNumberFormatString(int numberFormatIndex)
         {
-            ExtendedFormats.Add(new ExtendedFormat()
+            if (Formats.TryGetValue(numberFormatIndex, out var numberFormat))
             {
-                XfId = xfId,
-                FormatIndex = formatIndexInFile,
-                ApplyNumberFormat = applyNumberFormat
-            });
-        }
+                return numberFormat;
+            }
 
-        private class ExtendedFormat
-        {
-            public int XfId { get; set; }
+            numberFormat = BuiltinNumberFormat.GetBuiltinNumberFormat(numberFormatIndex);
+            if (numberFormat != null)
+            {
+                return numberFormat;
+            }
 
-            public int FormatIndex { get; set; }
-
-            public bool ApplyNumberFormat { get; set; }
+            // Fall back to "General" if the number format index is invalid
+            return GeneralNumberFormat;
         }
     }
 }

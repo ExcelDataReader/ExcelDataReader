@@ -1,14 +1,12 @@
-using System.IO;
-using ExcelDataReader.Core;
 using ExcelDataReader.Core.OpenXmlFormat;
 
 namespace ExcelDataReader
 {
-    internal class ExcelOpenXmlReader : ExcelDataReader<XlsxWorkbook, XlsxWorksheet>
+    internal sealed class ExcelOpenXmlReader : ExcelDataReader<XlsxWorkbook, XlsxWorksheet>
     {
         public ExcelOpenXmlReader(Stream stream)
         {
-            Document = new ZipWorker(stream);
+            Document = new(stream);
             Workbook = new XlsxWorkbook(Document);
 
             // By default, the data reader is positioned on the first result.
