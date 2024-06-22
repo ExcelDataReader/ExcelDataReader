@@ -4,7 +4,6 @@ image: Visual Studio 2022
 configuration: Release
 build_script:
 - ps: |-
-    $ErrorActionPreference = "Stop";
     If ($Env:APPVEYOR_REPO_BRANCH -eq "master") {
       $Env:VERSION_SUFFIX=""
     } Else {
@@ -14,17 +13,12 @@ build_script:
     msbuild ExcelDataReader.sln /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=$Env:CONFIGURATION /p:VersionSuffix=$Env:VERSION_SUFFIX /p:TreatWarningsAsErrors=true
 test_script:
 - ps: |-
-    $ErrorActionPreference = "Stop"
     # run tests
-    try
-    {
     dotnet test test\ExcelDataReader.Tests\ExcelDataReader.Tests.csproj --no-build --logger "trx" -c $Env:CONFIGURATION
-    }
-    finally
-    {
+    $testexitcode = $lastexitcode
     # upload results to AppVeyor
     $wc = New-Object 'System.Net.WebClient'
     Resolve-Path .\test\ExcelDataReader.Tests\TestResults\*.trx | % { $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", "$_") }
-    }
+    exit $testexitcode
 artifacts:
 - path: '**\*.nupkg'
