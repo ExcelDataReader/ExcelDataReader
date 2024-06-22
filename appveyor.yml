@@ -15,10 +15,11 @@ test_script:
 - ps: |-
     # run tests
     dotnet test test\ExcelDataReader.Tests\ExcelDataReader.Tests.csproj --no-build --logger "trx" -c $Env:CONFIGURATION
-    $testexitcode = $lastexitcode
+    $testexitcode = $LastExitCode
     # upload results to AppVeyor
     $wc = New-Object 'System.Net.WebClient'
     Resolve-Path .\test\ExcelDataReader.Tests\TestResults\*.trx | % { $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", "$_") }
+    Write-Host "dotnet test LastExitCode was $testexitcode"
     exit $testexitcode
 artifacts:
 - path: '**\*.nupkg'
