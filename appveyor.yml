@@ -12,9 +12,14 @@ build_script:
     }
     msbuild /t:Restore /p:VersionSuffix=$Env:VERSION_SUFFIX
     msbuild ExcelDataReader.sln /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=$Env:CONFIGURATION /p:VersionSuffix=$Env:VERSION_SUFFIX /p:TreatWarningsAsErrors=true
-test:
-  assemblies:
-    only:
-    - '**\*.Tests.dll'
+test_script:
+- ps: |-
+    # run tests
+    dotnet test test\ExcelDataReader.Tests\ExcelDataReader.Tests.csproj --no-build --logger "trx" -c $Env:CONFIGURATION
+after_test:
+- ps: |-
+    # upload results to AppVeyor
+    $wc = New-Object 'System.Net.WebClient'
+    Resolve-Path .\test\ExcelDataReader.Tests\TestResults\*.trx | % { $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", "$_") }
 artifacts:
 - path: '**\*.nupkg'
