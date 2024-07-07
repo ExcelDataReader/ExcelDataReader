@@ -14,7 +14,7 @@ build_script:
 test_script:
 - ps: |-
     # run tests
-    dotnet test test\ExcelDataReader.Tests\ExcelDataReader.Tests.csproj --no-build --logger "trx" -c $Env:CONFIGURATION --results-directory artifacts\testresults
+    dotnet test src\ExcelDataReader.Tests\ExcelDataReader.Tests.csproj --no-build --logger "trx" -c $Env:CONFIGURATION --results-directory artifacts\testresults
     $testexitcode = $LastExitCode
     # upload results to AppVeyor
     $wc = New-Object 'System.Net.WebClient'
