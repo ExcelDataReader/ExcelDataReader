@@ -1,23 +1,22 @@
 ﻿#nullable enable
 
-namespace ExcelDataReader.Core
+namespace ExcelDataReader.Core;
+
+internal sealed class Column
 {
-    internal sealed class Column
+    public Column(int minimum, int maximum, bool hidden, double? width)
     {
-        public Column(int minimum, int maximum, bool hidden, double? width)
-        {
-            Minimum = minimum;
-            Maximum = maximum;
-            Hidden = hidden;
-            Width = width;
-        }
-
-        public int Minimum { get; }
-
-        public int Maximum { get; }
-
-        public bool Hidden { get; }
-
-        public double? Width { get; }
+        Minimum = minimum;
+        Maximum = maximum;
+        Hidden = hidden;
+        Width = width;
     }
+
+    public int Minimum { get; }
+
+    public int Maximum { get; }
+
+    public bool Hidden { get; }
+
+    public double? Width { get; }
 }

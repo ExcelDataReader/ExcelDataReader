@@ -1,82 +1,81 @@
 using System.Text;
 
-namespace ExcelDataReader.Core.BinaryFormat
+namespace ExcelDataReader.Core.BinaryFormat;
+
+/// <summary>
+/// Represents Sheet record in Workbook Globals.
+/// </summary>
+internal sealed class XlsBiffBoundSheet : XlsBiffRecord
 {
-    /// <summary>
-    /// Represents Sheet record in Workbook Globals.
-    /// </summary>
-    internal sealed class XlsBiffBoundSheet : XlsBiffRecord
+    private readonly IXlsString _sheetName;
+
+    internal XlsBiffBoundSheet(byte[] bytes, int biffVersion)
+        : base(bytes)
     {
-        private readonly IXlsString _sheetName;
+        StartOffset = ReadUInt32(0x0);
+        Type = (SheetType)ReadByte(0x5);
+        VisibleState = (SheetVisibility)ReadByte(0x4);
 
-        internal XlsBiffBoundSheet(byte[] bytes, int biffVersion)
-            : base(bytes)
+        if (biffVersion == 8)
         {
-            StartOffset = ReadUInt32(0x0);
-            Type = (SheetType)ReadByte(0x5);
-            VisibleState = (SheetVisibility)ReadByte(0x4);
-
-            if (biffVersion == 8)
-            {
-                _sheetName = new XlsShortUnicodeString(bytes, ContentOffset + 6);
-            }
-            else if (biffVersion == 5)
-            {
-                _sheetName = new XlsShortByteString(bytes, ContentOffset + 6);
-            }
-            else 
-            {
-                throw new ArgumentException("Unexpected BIFF version " + biffVersion, nameof(biffVersion));
-            }
+            _sheetName = new XlsShortUnicodeString(bytes, ContentOffset + 6);
         }
-
-        internal XlsBiffBoundSheet(uint startOffset, SheetType type, SheetVisibility visibleState, string name)
-            : base(new byte[32])
+        else if (biffVersion == 5)
         {
-            StartOffset = startOffset;
-            Type = type;
-            VisibleState = visibleState;
-            _sheetName = new XlsInternalString(name);
+            _sheetName = new XlsShortByteString(bytes, ContentOffset + 6);
         }
-
-        public enum SheetType : byte
+        else 
         {
-            Worksheet = 0x0,
-            MacroSheet = 0x1,
-            Chart = 0x2,
-
-            // ReSharper disable once InconsistentNaming
-            VBModule = 0x6
+            throw new ArgumentException("Unexpected BIFF version " + biffVersion, nameof(biffVersion));
         }
+    }
 
-        public enum SheetVisibility : byte
-        {
-            Visible = 0x0,
-            Hidden = 0x1,
-            VeryHidden = 0x2
-        }
+    internal XlsBiffBoundSheet(uint startOffset, SheetType type, SheetVisibility visibleState, string name)
+        : base(new byte[32])
+    {
+        StartOffset = startOffset;
+        Type = type;
+        VisibleState = visibleState;
+        _sheetName = new XlsInternalString(name);
+    }
 
-        /// <summary>
-        /// Gets the worksheet data start offset.
-        /// </summary>
-        public uint StartOffset { get; }
+    public enum SheetType : byte
+    {
+        Worksheet = 0x0,
+        MacroSheet = 0x1,
+        Chart = 0x2,
 
-        /// <summary>
-        /// Gets the worksheet type.
-        /// </summary>
-        public SheetType Type { get; }
+        // ReSharper disable once InconsistentNaming
+        VBModule = 0x6
+    }
 
-        /// <summary>
-        /// Gets the visibility of the worksheet.
-        /// </summary>
-        public SheetVisibility VisibleState { get; }
+    public enum SheetVisibility : byte
+    {
+        Visible = 0x0,
+        Hidden = 0x1,
+        VeryHidden = 0x2
+    }
 
-        /// <summary>
-        /// Gets the name of the worksheet.
-        /// </summary>
-        public string GetSheetName(Encoding encoding)
-        {
-            return _sheetName.GetValue(encoding);
-        }
+    /// <summary>
+    /// Gets the worksheet data start offset.
+    /// </summary>
+    public uint StartOffset { get; }
+
+    /// <summary>
+    /// Gets the worksheet type.
+    /// </summary>
+    public SheetType Type { get; }
+
+    /// <summary>
+    /// Gets the visibility of the worksheet.
+    /// </summary>
+    public SheetVisibility VisibleState { get; }
+
+    /// <summary>
+    /// Gets the name of the worksheet.
+    /// </summary>
+    public string GetSheetName(Encoding encoding)
+    {
+        return _sheetName.GetValue(encoding);
     }
 }

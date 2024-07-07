@@ -9,19 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="TestResults\**" />
-    <EmbeddedResource Remove="TestResults\**" />
-    <None Remove="TestResults\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataReaderExtensions.cs" Link="DataSet\ExcelDataReaderExtensions.cs" />
-    <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataSetConfiguration.cs" Link="DataSet\ExcelDataSetConfiguration.cs" />
-    <Compile Include="..\..\src\ExcelDataReader.DataSet\ExcelDataTableConfiguration.cs" Link="DataSet\ExcelDataTableConfiguration.cs" />
+    <Using Include="NUnit.Framework"/>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ExcelDataReader\ExcelDataReader.csproj" />
+    <ProjectReference Include="..\..\src\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,10 +22,6 @@
     <PackageReference Include="NUnit" Version="4.1.0" />
     <PackageReference Include="NUnit.Analyzers" Version="4.1.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
 
 </Project>

@@ -1,12 +1,11 @@
-﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records
-{
-    internal sealed class MergeCellRecord : Record
-    {
-        public MergeCellRecord(CellRange range) 
-        {
-            Range = range;
-        }
+﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records;
 
-        public CellRange Range { get; }
+internal sealed class MergeCellRecord : Record
+{
+    public MergeCellRecord(CellRange range) 
+    {
+        Range = range;
     }
+
+    public CellRange Range { get; }
 }

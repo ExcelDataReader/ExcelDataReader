@@ -1,21 +1,20 @@
 ﻿using System.Text;
 
-namespace ExcelDataReader.Core.BinaryFormat
+namespace ExcelDataReader.Core.BinaryFormat;
+
+internal sealed class XlsBiffCodeName : XlsBiffRecord
 {
-    internal sealed class XlsBiffCodeName : XlsBiffRecord
+    private readonly XlsUnicodeString _xlsString;
+
+    internal XlsBiffCodeName(byte[] bytes)
+        : base(bytes)
     {
-        private readonly XlsUnicodeString _xlsString;
+        // BIFF8 only
+        _xlsString = new XlsUnicodeString(bytes, ContentOffset);
+    }
 
-        internal XlsBiffCodeName(byte[] bytes)
-            : base(bytes)
-        {
-            // BIFF8 only
-            _xlsString = new XlsUnicodeString(bytes, ContentOffset);
-        }
-
-        public string GetValue(Encoding encoding)
-        {
-            return _xlsString.GetValue(encoding);
-        }
+    public string GetValue(Encoding encoding)
+    {
+        return _xlsString.GetValue(encoding);
     }
 }

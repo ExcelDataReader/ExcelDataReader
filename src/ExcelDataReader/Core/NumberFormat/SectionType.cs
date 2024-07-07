@@ -1,13 +1,12 @@
-﻿namespace ExcelDataReader.Core.NumberFormat
+﻿namespace ExcelDataReader.Core.NumberFormat;
+
+internal enum SectionType
 {
-    internal enum SectionType
-    {
-        General,
-        Number,
-        Fraction,
-        Exponential,
-        Date,
-        Duration,
-        Text,
-    }
+    General,
+    Number,
+    Fraction,
+    Exponential,
+    Date,
+    Duration,
+    Text,
 }

@@ -1,12 +1,11 @@
-﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records
-{
-    internal sealed class SheetPrRecord : Record
-    {
-        public SheetPrRecord(string codeName)
-        {
-            CodeName = codeName;
-        }
+﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records;
 
-        public string CodeName { get; }
+internal sealed class SheetPrRecord : Record
+{
+    public SheetPrRecord(string codeName)
+    {
+        CodeName = codeName;
     }
+
+    public string CodeName { get; }
 }

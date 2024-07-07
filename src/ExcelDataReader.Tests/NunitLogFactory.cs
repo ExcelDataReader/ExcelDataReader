@@ -1,22 +1,19 @@
 ﻿using ExcelDataReader.Log;
 
-using NUnit.Framework;
+namespace ExcelDataReader.Tests;
 
-namespace ExcelDataReader.Tests
+public class NunitLogFactory : ILogFactory
 {
-    public class NunitLogFactory : ILogFactory
+    /// <inheritdoc />
+    public ILog Create(Type loggingType)
     {
-        /// <inheritdoc />
-        public ILog Create(Type loggingType)
-        {
-            return new NunitLog(loggingType);
-        }
+        return new NunitLog(loggingType);
     }
 
     /// <summary>
     /// ILog implementation that outputs to the nunit test context. 
     /// </summary>
-    public class NunitLog : ILog
+    private sealed class NunitLog : ILog
     {
         private readonly Type _loggingType;
 

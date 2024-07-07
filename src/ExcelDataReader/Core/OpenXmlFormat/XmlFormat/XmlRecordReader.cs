@@ -1,38 +1,37 @@
 ﻿using System.Xml;
 using ExcelDataReader.Core.OpenXmlFormat.Records;
 
-namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
+namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
+
+internal abstract class XmlRecordReader : RecordReader
 {
-    internal abstract class XmlRecordReader : RecordReader
+    private IEnumerator<Record> _enumerator;
+
+    public XmlRecordReader(XmlReader reader)
     {
-        private IEnumerator<Record> _enumerator;
+        Reader = reader;
+        ProperNamespaces = new(reader.IsStartElement() && reader.NamespaceURI == XmlNamespaces.StrictNsSpreadsheetMl);
+    }
 
-        public XmlRecordReader(XmlReader reader)
-        {
-            Reader = reader;
-            ProperNamespaces = new(reader.IsStartElement() && reader.NamespaceURI == XmlNamespaces.StrictNsSpreadsheetMl);
-        }
+    public XmlProperNamespaces ProperNamespaces { get; set; }
 
-        public XmlProperNamespaces ProperNamespaces { get; set; }
+    protected XmlReader Reader { get; }
 
-        protected XmlReader Reader { get; }
+    public override Record Read()
+    {
+        _enumerator ??= ReadOverride().GetEnumerator();
+        if (_enumerator.MoveNext())
+            return _enumerator.Current;
+        return null;
+    }
 
-        public override Record Read()
-        {
-            _enumerator ??= ReadOverride().GetEnumerator();
-            if (_enumerator.MoveNext())
-                return _enumerator.Current;
-            return null;
-        }
+    protected abstract IEnumerable<Record> ReadOverride();
 
-        protected abstract IEnumerable<Record> ReadOverride();
-
-        /// <inheritdoc />
-        protected override void Dispose(bool disposing)
-        {
-            _enumerator?.Dispose();
-            if (disposing)
-                Reader.Dispose();
-        }
+    /// <inheritdoc />
+    protected override void Dispose(bool disposing)
+    {
+        _enumerator?.Dispose();
+        if (disposing)
+            Reader.Dispose();
     }
 }

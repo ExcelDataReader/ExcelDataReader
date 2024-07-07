@@ -1,41 +1,40 @@
 ﻿using System.Xml;
 using ExcelDataReader.Core.OpenXmlFormat.Records;
 
-namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
-{
-    internal sealed class XmlSharedStringsReader : XmlRecordReader
-    {
-        private const string ElementSst = "sst";
-        private const string ElementStringItem = "si";
+namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
-        public XmlSharedStringsReader(XmlReader reader)
-            : base(reader)
+internal sealed class XmlSharedStringsReader : XmlRecordReader
+{
+    private const string ElementSst = "sst";
+    private const string ElementStringItem = "si";
+
+    public XmlSharedStringsReader(XmlReader reader)
+        : base(reader)
+    {
+    }
+
+    protected override IEnumerable<Record> ReadOverride()
+    {
+        if (!Reader.IsStartElement(ElementSst, ProperNamespaces.NsSpreadsheetMl))
         {
+            yield break;
         }
 
-        protected override IEnumerable<Record> ReadOverride()
+        if (!XmlReaderHelper.ReadFirstContent(Reader))
         {
-            if (!Reader.IsStartElement(ElementSst, ProperNamespaces.NsSpreadsheetMl))
-            {
-                yield break;
-            }
+            yield break;
+        }
 
-            if (!XmlReaderHelper.ReadFirstContent(Reader))
+        while (!Reader.EOF)
+        {
+            if (Reader.IsStartElement(ElementStringItem, ProperNamespaces.NsSpreadsheetMl))
             {
-                yield break;
+                var value = StringHelper.ReadStringItem(Reader, ProperNamespaces.NsSpreadsheetMl);
+                yield return new SharedStringRecord(value);
             }
-
-            while (!Reader.EOF)
+            else if (!XmlReaderHelper.SkipContent(Reader))
             {
-                if (Reader.IsStartElement(ElementStringItem, ProperNamespaces.NsSpreadsheetMl))
-                {
-                    var value = StringHelper.ReadStringItem(Reader, ProperNamespaces.NsSpreadsheetMl);
-                    yield return new SharedStringRecord(value);
-                }
-                else if (!XmlReaderHelper.SkipContent(Reader))
-                {
-                    break;
-                }
+                break;
             }
         }
     }

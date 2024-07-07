@@ -1,34 +1,33 @@
-﻿namespace ExcelDataReader.Core.BinaryFormat
+﻿namespace ExcelDataReader.Core.BinaryFormat;
+
+internal sealed class XlsBiffDefaultRowHeight : XlsBiffRecord
 {
-    internal sealed class XlsBiffDefaultRowHeight : XlsBiffRecord
+    public XlsBiffDefaultRowHeight(byte[] bytes, int biffVersion)
+        : base(bytes)
     {
-        public XlsBiffDefaultRowHeight(byte[] bytes, int biffVersion)
-            : base(bytes)
+        if (biffVersion == 2)
         {
-            if (biffVersion == 2)
-            {
-                RowHeight = ReadUInt16(0x0) & 0x7FFF;
-            }
-            else
-            {
-                var flags = (DefaultRowHeightFlags)ReadUInt16(0x0);
-                RowHeight = (flags & DefaultRowHeightFlags.DyZero) == 0 ? ReadUInt16(0x2) : 0;
-                
-                // UnhiddenRowHeight => (Flags & DefaultRowHeightFlags.DyZero) != 0 ? ReadInt16(0x2) : 0;
-            }
+            RowHeight = ReadUInt16(0x0) & 0x7FFF;
         }
-
-        internal enum DefaultRowHeightFlags : ushort
+        else
         {
-            Unsynced = 1,
-            DyZero = 2,
-            ExAsc = 4,
-            ExDsc = 8
+            var flags = (DefaultRowHeightFlags)ReadUInt16(0x0);
+            RowHeight = (flags & DefaultRowHeightFlags.DyZero) == 0 ? ReadUInt16(0x2) : 0;
+            
+            // UnhiddenRowHeight => (Flags & DefaultRowHeightFlags.DyZero) != 0 ? ReadInt16(0x2) : 0;
         }
-
-        /// <summary>
-        /// Gets the row height in twips.
-        /// </summary>
-        public int RowHeight { get; }
     }
+
+    internal enum DefaultRowHeightFlags : ushort
+    {
+        Unsynced = 1,
+        DyZero = 2,
+        ExAsc = 4,
+        ExDsc = 8
+    }
+
+    /// <summary>
+    /// Gets the row height in twips.
+    /// </summary>
+    public int RowHeight { get; }
 }

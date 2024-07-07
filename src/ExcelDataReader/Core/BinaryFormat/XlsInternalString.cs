@@ -1,22 +1,21 @@
 ﻿using System.Text;
 
-namespace ExcelDataReader.Core.BinaryFormat
+namespace ExcelDataReader.Core.BinaryFormat;
+
+/// <summary>
+/// Plain string without backing storage. Used internally.
+/// </summary>
+internal sealed class XlsInternalString : IXlsString
 {
-    /// <summary>
-    /// Plain string without backing storage. Used internally.
-    /// </summary>
-    internal sealed class XlsInternalString : IXlsString
+    private readonly string stringValue;
+
+    public XlsInternalString(string value)
     {
-        private readonly string stringValue;
+        stringValue = value;
+    }
 
-        public XlsInternalString(string value)
-        {
-            stringValue = value;
-        }
-
-        public string GetValue(Encoding encoding)
-        {
-            return stringValue;
-        }
+    public string GetValue(Encoding encoding)
+    {
+        return stringValue;
     }
 }
