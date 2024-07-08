@@ -37,7 +37,7 @@ internal static class Parser
                 hasTextPart |= true;
                 tokens.Add(token);
             }
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
             else if (token.StartsWith('['))
 #else
             else if (token.StartsWith("[", StringComparison.Ordinal))
@@ -158,7 +158,7 @@ internal static class Parser
             {
                 remainder.Add(token);
             }
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
             else if (token.StartsWith('['))
 #else
             else if (token.StartsWith("[", StringComparison.Ordinal))

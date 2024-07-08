@@ -5,7 +5,9 @@ namespace ExcelDataReader.Exceptions;
 /// <summary>
 /// Thrown when ExcelDataReader cannot parse the header.
 /// </summary>
+#if !NET8_0_OR_GREATER
 [Serializable]
+#endif
 public class HeaderException : ExcelReaderException
 {
     /// <summary>
@@ -34,6 +36,7 @@ public class HeaderException : ExcelReaderException
     {
     }
 
+#if !NET8_0_OR_GREATER
     /// <summary>
     /// Initializes a new instance of the <see cref="HeaderException"/> class.
     /// </summary>
@@ -43,4 +46,5 @@ public class HeaderException : ExcelReaderException
         : base(info, context)
     {
     }
+#endif
 }

@@ -4,10 +4,15 @@ internal static class StreamExtensions
 {
     public static int ReadAtLeast(this Stream stream, byte[] buffer, int offset, int minimumBytes)
     {
+#if NET8_0_OR_GREATER
+        ArgumentOutOfRangeException.ThrowIfNegative(minimumBytes);
+        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, offset + minimumBytes);
+#else
         if (minimumBytes < 0)
             throw new ArgumentOutOfRangeException(nameof(minimumBytes));
         if (buffer.Length < offset + minimumBytes)
             throw new ArgumentOutOfRangeException(nameof(minimumBytes));
+#endif
         int totalRead = 0;
         while (totalRead < minimumBytes)
         {

@@ -12,7 +12,7 @@ internal static class Token
     public static bool IsLiteral(string token)
     {
         return
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
             token.StartsWith('_') ||
             token.StartsWith('\\') ||
             token.StartsWith('\"') ||

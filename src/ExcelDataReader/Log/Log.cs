@@ -7,10 +7,7 @@ namespace ExcelDataReader.Log;
 /// </summary>
 public static class Log
 {
-    private static readonly object LockObject = new();
-
-    private static Type logType = typeof(NullLogFactory);
-    private static ILogFactory factoryInstance;
+    private static Lazy<ILogFactory> factoryInstance = new(() => default(NullLogFactory));
 
     /// <summary>
     /// Sets up logging to be with a certain type.
@@ -19,11 +16,7 @@ public static class Log
     public static void InitializeWith<T>() 
         where T : ILogFactory, new()
     {
-        lock (LockObject)
-        {
-            logType = typeof(T);
-            factoryInstance = null;
-        }
+        factoryInstance = new Lazy<ILogFactory>(() => new T());
     }
 
     /// <summary>
@@ -32,17 +25,5 @@ public static class Log
     /// </summary>
     /// <param name="loggingType">The type to get a logger for.</param>
     /// <returns>ILog instance for an object if log type has been intialized; otherwise a null logger.</returns>
-    public static ILog GetLoggerFor(Type loggingType)
-    {
-        var factory = factoryInstance;
-        if (factory == null)
-        {
-            lock (LockObject)
-            {
-                factory ??= factoryInstance = (ILogFactory)Activator.CreateInstance(logType);
-            }
-        }
-
-        return factory.Create(loggingType);
-    }
+    public static ILog GetLoggerFor(Type loggingType) => factoryInstance.Value.Create(loggingType);
 }

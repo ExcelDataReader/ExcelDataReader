@@ -68,6 +68,9 @@ internal sealed partial class ZipWorker : IDisposable
             var type = reader.GetAttribute("Type");
             var target = reader.GetAttribute("Target");
 
+            if (id == null || target == null)
+                continue;
+
             switch (type)
             {
                 case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet":
@@ -88,7 +91,7 @@ internal sealed partial class ZipWorker : IDisposable
         static string ResolvePath(string? basePath, string path)
         {
             // Can there be relative paths?
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
             if (path.StartsWith('/'))
 #else
             if (path.StartsWith("/", StringComparison.Ordinal))

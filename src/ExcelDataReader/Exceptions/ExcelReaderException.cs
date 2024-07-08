@@ -5,7 +5,9 @@ namespace ExcelDataReader.Exceptions;
 /// <summary>
 /// Base class for exceptions thrown by ExcelDataReader.
 /// </summary>
+#if !NET8_0_OR_GREATER
 [Serializable]
+#endif
 public class ExcelReaderException : Exception
 {
     /// <summary>
@@ -34,6 +36,7 @@ public class ExcelReaderException : Exception
     {
     }
 
+#if !NET8_0_OR_GREATER
     /// <summary>
     /// Initializes a new instance of the <see cref="ExcelReaderException"/> class.
     /// </summary>
@@ -43,4 +46,5 @@ public class ExcelReaderException : Exception
         : base(info, context)
     {
     }
+#endif
 }
