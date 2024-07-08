@@ -4,28 +4,19 @@ namespace ExcelDataReader.Core.OfficeCrypto;
 
 internal static class CryptoHelpers
 {
-    public static HashAlgorithm Create(HashIdentifier hashAlgorithm) 
+    public static HashAlgorithm Create(HashIdentifier hashAlgorithm) => hashAlgorithm switch
     {
-        switch (hashAlgorithm)
-        {
-            case HashIdentifier.SHA512:
-                return SHA512.Create();
-            case HashIdentifier.SHA384:
-                return SHA384.Create();
-            case HashIdentifier.SHA256:
-                return SHA256.Create();
-            case HashIdentifier.SHA1:
+        HashIdentifier.SHA512 => SHA512.Create(),
+        HashIdentifier.SHA384 => SHA384.Create(),
+        HashIdentifier.SHA256 => SHA256.Create(),
 #pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
-                return SHA1.Create();
+        HashIdentifier.SHA1 => SHA1.Create(),
 #pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
-            case HashIdentifier.MD5:
 #pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
-                return MD5.Create();
+        HashIdentifier.MD5 => MD5.Create(),
 #pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
-            default:
-                throw new InvalidOperationException("Unsupported hash algorithm");
-        }
-    }
+        _ => throw new InvalidOperationException("Unsupported hash algorithm"),
+    };
 
     public static byte[] HashBytes(byte[] bytes, HashIdentifier hashAlgorithm)
     {
@@ -50,28 +41,19 @@ internal static class CryptoHelpers
         return ret;
     }
 
-    public static SymmetricAlgorithm CreateCipher(CipherIdentifier identifier, int keySize, int blockSize, CipherMode mode)
+    public static SymmetricAlgorithm CreateCipher(CipherIdentifier identifier, int keySize, int blockSize, CipherMode mode) => identifier switch 
     {
-        switch (identifier)
-        {
-            case CipherIdentifier.RC4:
-                return new RC4Managed();
-            case CipherIdentifier.DES3:
+        CipherIdentifier.RC4 => new RC4Managed(),
 #pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
-                return InitCipher(TripleDES.Create(), keySize, blockSize, mode);
+        CipherIdentifier.DES3 => InitCipher(TripleDES.Create(), keySize, blockSize, mode),
 #pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
 #pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
-            case CipherIdentifier.RC2:
-                return InitCipher(RC2.Create(), keySize, blockSize, mode);
-            case CipherIdentifier.DES:
-                return InitCipher(DES.Create(), keySize, blockSize, mode);
+        CipherIdentifier.RC2 => InitCipher(RC2.Create(), keySize, blockSize, mode),
+        CipherIdentifier.DES => InitCipher(DES.Create(), keySize, blockSize, mode),
 #pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
-            case CipherIdentifier.AES:
-                return InitCipher(new RijndaelManaged(), keySize, blockSize, mode);
-        }
-
-        throw new InvalidOperationException("Unsupported encryption method: " + identifier.ToString());
-    }
+        CipherIdentifier.AES => InitCipher(Aes.Create(), keySize, blockSize, mode),
+        _ => throw new InvalidOperationException("Unsupported encryption method: " + identifier.ToString()),
+    };
 
     public static SymmetricAlgorithm InitCipher(SymmetricAlgorithm cipher, int keySize, int blockSize, CipherMode mode)
     {
