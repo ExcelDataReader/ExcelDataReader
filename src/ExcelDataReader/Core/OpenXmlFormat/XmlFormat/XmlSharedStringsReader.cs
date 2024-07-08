@@ -3,15 +3,10 @@ using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
-internal sealed class XmlSharedStringsReader : XmlRecordReader
+internal sealed class XmlSharedStringsReader(XmlReader reader) : XmlRecordReader(reader)
 {
     private const string ElementSst = "sst";
     private const string ElementStringItem = "si";
-
-    public XmlSharedStringsReader(XmlReader reader)
-        : base(reader)
-    {
-    }
 
     protected override IEnumerable<Record> ReadOverride()
     {

@@ -26,7 +26,7 @@ public partial class Form1 : Form
 
     private static IList<string> GetTablenames(DataTableCollection tables)
     {
-        var tableList = new List<string>();
+        var tableList = new List<string>(tables.Count);
         foreach (var table in tables)
         {
             tableList.Add(table.ToString());

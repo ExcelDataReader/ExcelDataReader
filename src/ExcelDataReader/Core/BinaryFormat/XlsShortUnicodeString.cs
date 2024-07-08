@@ -6,16 +6,10 @@ namespace ExcelDataReader.Core.BinaryFormat;
 /// [MS-XLS] 2.5.240 ShortXLUnicodeString
 /// Byte-sized string, stored as single or multibyte unicode characters.
 /// </summary>
-internal sealed class XlsShortUnicodeString : IXlsString
+internal sealed class XlsShortUnicodeString(byte[] bytes, uint offset) : IXlsString
 {
-    private readonly byte[] _bytes;
-    private readonly uint _offset;
-
-    public XlsShortUnicodeString(byte[] bytes, uint offset)
-    {
-        _bytes = bytes;
-        _offset = offset;
-    }
+    private readonly byte[] _bytes = bytes;
+    private readonly uint _offset = offset;
 
     public ushort CharacterCount => _bytes[_offset];
 

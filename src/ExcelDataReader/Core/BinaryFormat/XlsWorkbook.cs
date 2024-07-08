@@ -62,9 +62,9 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
 
     public XlsBiffSimpleValueRecord Backup { get; set; }
 
-    public List<XlsBiffFont> Fonts { get; } = new List<XlsBiffFont>();
+    public List<XlsBiffFont> Fonts { get; } = [];
 
-    public List<XlsBiffBoundSheet> Sheets { get; } = new List<XlsBiffBoundSheet>();
+    public List<XlsBiffBoundSheet> Sheets { get; } = [];
 
     /// <summary>
     /// Gets or sets the Shared String Table of workbook.
@@ -148,7 +148,7 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
 
     private void ReadWorkbookGlobals(XlsBiffStream biffStream)
     {
-        var formats = new Dictionary<int, XlsBiffFormatString>();
+        Dictionary<int, XlsBiffFormatString> formats = [];
 
         XlsBiffRecord rec;
         while ((rec = biffStream.Read()) != null && rec is not XlsBiffEof)

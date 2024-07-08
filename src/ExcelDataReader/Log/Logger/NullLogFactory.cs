@@ -3,7 +3,7 @@
 /// <summary>
 /// The default logger until one is set.
 /// </summary>
-public struct NullLogFactory : ILogFactory, ILog
+public readonly struct NullLogFactory : ILogFactory, ILog
 {
     /// <inheritdoc />
     public void Debug(string message, params object[] formatting)
@@ -31,8 +31,5 @@ public struct NullLogFactory : ILogFactory, ILog
     }
 
     /// <inheritdoc />
-    public ILog Create(Type loggingType)
-    {
-        return this;
-    }
+    public ILog Create(Type loggingType) => this;
 }

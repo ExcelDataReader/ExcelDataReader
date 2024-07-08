@@ -5,16 +5,10 @@ namespace ExcelDataReader.Core.BinaryFormat;
 /// <summary>
 /// Byte sized string, stored as bytes, with encoding from CodePage record. Used in BIFF2-5 .
 /// </summary>
-internal sealed class XlsShortByteString : IXlsString
+internal sealed class XlsShortByteString(byte[] bytes, uint offset) : IXlsString
 {
-    private readonly byte[] _bytes;
-    private readonly uint _offset;
-
-    public XlsShortByteString(byte[] bytes, uint offset)
-    {
-        _bytes = bytes;
-        _offset = offset;
-    }
+    private readonly byte[] _bytes = bytes;
+    private readonly uint _offset = offset;
 
     public ushort CharacterCount => _bytes[_offset];
 

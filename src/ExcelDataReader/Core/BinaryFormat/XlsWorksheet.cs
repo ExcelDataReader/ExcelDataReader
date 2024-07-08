@@ -15,7 +15,7 @@ internal sealed class XlsWorksheet : IWorksheet
 
         IsDate1904 = workbook.IsDate1904;
         Encoding = workbook.Encoding;
-        RowOffsetMap = new Dictionary<int, XlsRowOffset>();
+        RowOffsetMap = [];
         DefaultRowHeight = 255; // 12.75 points
 
         Name = refSheet.GetSheetName(workbook.Encoding);
@@ -92,7 +92,7 @@ internal sealed class XlsWorksheet : IWorksheet
         {
             for (; rowIndex < rowBlock.RowIndex; ++rowIndex)
             {
-                yield return new Row(rowIndex, DefaultRowHeight / 20.0, new List<Cell>());
+                yield return new Row(rowIndex, DefaultRowHeight / 20.0, []);
             }
 
             rowIndex++;
@@ -155,7 +155,7 @@ internal sealed class XlsWorksheet : IWorksheet
 
     private XlsRowBlock ReadNextBlock(XlsBiffStream biffStream, int startRow, int rows, int minOffset, int maxOffset)
     {
-        var result = new XlsRowBlock { Rows = new Dictionary<int, Row>() };
+        var result = new XlsRowBlock { Rows = [] };
 
         // Ensure rows with physical records are initialized with height
         for (var i = 0; i < rows; i++)
@@ -216,7 +216,7 @@ internal sealed class XlsWorksheet : IWorksheet
                 height = (rowOffset.Record.UseDefaultRowHeight ? DefaultRowHeight : rowOffset.Record.RowHeight) / 20.0;
             }
 
-            currentRow = new Row(rowIndex, height, new List<Cell>());
+            currentRow = new Row(rowIndex, height, []);
 
             result.Rows.Add(rowIndex, currentRow);
         }
@@ -441,12 +441,12 @@ internal sealed class XlsWorksheet : IWorksheet
         int maxRowCount = 0; // number of rows with cell records
         int maxRowCountFromRowRecord = 0; // number of rows with row records
 
-        var mergeCells = new List<CellRange>();
-        var biffFormats = new Dictionary<ushort, XlsBiffFormatString>();
+        List<CellRange> mergeCells = [];
+        Dictionary<ushort, XlsBiffFormatString> biffFormats = [];
+        List<Column> columnWidths = [];
+        
         var recordOffset = biffStream.Position;
         var rec = biffStream.Read();
-        var columnWidths = new List<Column>();
-
         while (rec != null && rec is not XlsBiffEof)
         {
             switch (rec)

@@ -6,16 +6,11 @@ using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 
-internal abstract class BiffReader : RecordReader
+internal abstract class BiffReader(Stream stream) : RecordReader
 {
     private readonly byte[] _buffer = new byte[128];
 
-    public BiffReader(Stream stream)
-    {
-        Stream = stream ?? throw new ArgumentNullException(nameof(stream));
-    }
-
-    protected Stream Stream { get; }
+    protected Stream Stream { get; } = stream ?? throw new ArgumentNullException(nameof(stream));
 
     public override Record? Read()
     {

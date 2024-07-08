@@ -29,8 +29,8 @@ internal sealed class XlsxWorksheet : IWorksheet
         int rowIndexMaximum = int.MinValue;
         int columnIndexMaximum = int.MinValue;
 
-        List<Column> columnWidths = new();
-        List<CellRange> cellRanges = new();
+        List<Column> columnWidths = [];
+        List<CellRange> cellRanges = [];
 
         bool inSheetData = false;
 
@@ -71,8 +71,8 @@ internal sealed class XlsxWorksheet : IWorksheet
             }
         }
 
-        ColumnWidths = columnWidths.ToArray();
-        MergeCells = cellRanges.ToArray();
+        ColumnWidths = [.. columnWidths];
+        MergeCells = [.. cellRanges];
 
         if (rowIndexMaximum != int.MinValue && columnIndexMaximum != int.MinValue)
         {
@@ -146,12 +146,12 @@ internal sealed class XlsxWorksheet : IWorksheet
                     if (cells == null)
                     {
                         height = row.Hidden ? 0 : row.Height ?? DefaultRowHeight;
-                        cells = new List<Cell>();
+                        cells = [];
                     }
 
                     for (; rowIndex < currentRowIndex; rowIndex++)
                     {
-                        yield return new Row(rowIndex, DefaultRowHeight, new List<Cell>());
+                        yield return new Row(rowIndex, DefaultRowHeight, []);
                     }
 
                     break;

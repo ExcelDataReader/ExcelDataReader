@@ -11,8 +11,8 @@ public class NumberFormatString
     /// <param name="formatString">The number format string.</param>
     public NumberFormatString(string formatString)
     {
-        var tokenizer = new Tokenizer(formatString);
-        var sections = new List<Section>();
+        Tokenizer tokenizer = new(formatString);
+        List<Section> sections = [];
         var isValid = true;
         while (true)
         {
@@ -38,7 +38,7 @@ public class NumberFormatString
         }
         else
         {
-            Sections = new List<Section>();
+            Sections = [];
         }
     }
 

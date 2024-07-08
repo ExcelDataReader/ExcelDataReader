@@ -7,7 +7,7 @@ namespace ExcelDataReader.Core.BinaryFormat;
 /// </summary>
 internal sealed class XlsBiffSST : XlsBiffRecord
 {
-    private readonly List<IXlsString> _strings = new();
+    private readonly List<IXlsString> _strings = [];
     private readonly XlsSSTReader _reader = new();
 
     internal XlsBiffSST(byte[] bytes)

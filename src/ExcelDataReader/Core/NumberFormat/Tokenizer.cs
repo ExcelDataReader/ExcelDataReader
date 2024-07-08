@@ -2,30 +2,25 @@
 
 namespace ExcelDataReader.Core.NumberFormat;
 
-internal sealed class Tokenizer
+internal sealed class Tokenizer(string fmt)
 {
-    private readonly string formatString;
-    private int formatStringPosition;
+    private readonly string _formatString = fmt;
+    private int _formatStringPosition;
 
-    public Tokenizer(string fmt)
-    {
-        formatString = fmt;
-    }
+    public int Position => _formatStringPosition;
 
-    public int Position => formatStringPosition;
-
-    public int Length => formatString.Length;
+    public int Length => _formatString.Length;
 
     public string Substring(int startIndex, int length)
     {
-        return formatString.Substring(startIndex, length);
+        return _formatString.Substring(startIndex, length);
     }
 
     public int Peek(int offset = 0)
     {
-        if (formatStringPosition + offset >= formatString.Length)
+        if (_formatStringPosition + offset >= _formatString.Length)
             return -1;
-        return formatString[formatStringPosition + offset];
+        return _formatString[_formatStringPosition + offset];
     }
 
     public int PeekUntil(int startOffset, int until)
@@ -58,7 +53,7 @@ internal sealed class Tokenizer
 
     public void Advance(int characters = 1)
     {
-        formatStringPosition = Math.Min(formatStringPosition + characters, formatString.Length);
+        _formatStringPosition = Math.Min(_formatStringPosition + characters, _formatString.Length);
     }
 
     public bool ReadOneOrMore(int c)
@@ -85,7 +80,7 @@ internal sealed class Tokenizer
 
     public bool ReadString(string s, bool ignoreCase = false)
     {
-        if (formatStringPosition + s.Length > formatString.Length)
+        if (_formatStringPosition + s.Length > _formatString.Length)
             return false;
 
         for (var i = 0; i < s.Length; i++)

@@ -48,9 +48,9 @@ internal sealed class CsvParser
 
     private StringBuilder ValueResult { get; set; } = new StringBuilder();
 
-    private List<string> RowResult { get; set; } = new List<string>();
+    private List<string> RowResult { get; set; } = [];
 
-    private List<List<string>> RowsResult { get; set; } = new List<List<string>>();
+    private List<List<string>> RowsResult { get; set; } = [];
 
     public void ParseBuffer(byte[] bytes, int offset, int count, out List<List<string>> rows)
     {
@@ -68,7 +68,7 @@ internal sealed class CsvParser
         }
 
         rows = RowsResult;
-        RowsResult = new List<List<string>>();
+        RowsResult = [];
     }
 
     public void Flush(out List<List<string>> rows)
@@ -80,7 +80,7 @@ internal sealed class CsvParser
         }
 
         rows = RowsResult;
-        RowsResult = new List<List<string>>();
+        RowsResult = [];
     }
 
     private void ParseChar(char c, int bytesUsed)
@@ -252,7 +252,7 @@ internal sealed class CsvParser
     private void AddRowToResult()
     {
         RowsResult.Add(RowResult);
-        RowResult = new List<string>();
+        RowResult = [];
     }
 
     private bool IsWhitespace(char c)

@@ -21,7 +21,7 @@ internal sealed partial class ZipWorker : IDisposable
     };
 
     private readonly Dictionary<string, ZipArchiveEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, string> _worksheetRels = new();
+    private readonly Dictionary<string, string> _worksheetRels = [];
 
     private readonly string _fileWorkbook;
     private readonly string? _fileSharedStrings;
@@ -53,7 +53,7 @@ internal sealed partial class ZipWorker : IDisposable
 
         string[] parts = _fileWorkbook.Split('/');
         string? basePath = parts.Length <= 1 ? null : string.Join("/", parts, 0, parts.Length - 1) + "/";
-        string path = basePath + "_rels/" + parts[parts.Length - 1] + ".rels";
+        string path = basePath + "_rels/" + parts[^1] + ".rels";
         var workbookRelsEntry = FindEntry(path);
         if (workbookRelsEntry == null)
             return;
@@ -96,7 +96,7 @@ internal sealed partial class ZipWorker : IDisposable
 #else
             if (path.StartsWith("/", StringComparison.Ordinal))
 #endif
-                return path.Substring(1);
+                return path[1..];
             return basePath + path;
         }
 
@@ -189,7 +189,7 @@ internal sealed partial class ZipWorker : IDisposable
         // its possible sheetPath starts with /xl. in this case trim the /
         // see the test "Issue_11522_OpenXml"
         if (sheetPath.StartsWith("/xl/", StringComparison.OrdinalIgnoreCase))
-            sheetPath = sheetPath.Substring(1);
+            sheetPath = sheetPath[1..];
 
         var zipEntry = FindEntry(sheetPath);
         if (zipEntry != null)

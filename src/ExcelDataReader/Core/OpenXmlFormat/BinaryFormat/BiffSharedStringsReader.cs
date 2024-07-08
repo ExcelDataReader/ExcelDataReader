@@ -2,14 +2,9 @@
 
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 
-internal sealed class BiffSharedStringsReader : BiffReader
+internal sealed class BiffSharedStringsReader(Stream stream) : BiffReader(stream)
 {
     private const int StringItem = 0x13;
-
-    public BiffSharedStringsReader(Stream stream) 
-        : base(stream)
-    {
-    }
 
     protected override Record ReadOverride(byte[] buffer, uint recordId, uint recordLength)
     {

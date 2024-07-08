@@ -5,7 +5,7 @@ using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
-internal sealed class XmlWorkbookReader : XmlRecordReader
+internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, string> worksheetsRels) : XmlRecordReader(reader)
 {
     private const string ElementWorkbook = "workbook";
     private const string ElementWorkbookProperties = "workbookPr";
@@ -17,13 +17,7 @@ internal sealed class XmlWorkbookReader : XmlRecordReader
     private const string AttributeName = "name";
     private const string AttributeRelationshipId = "id";
 
-    private readonly Dictionary<string, string> _worksheetsRels;
-
-    public XmlWorkbookReader(XmlReader reader, Dictionary<string, string> worksheetsRels)
-        : base(reader)
-    {
-        _worksheetsRels = worksheetsRels;
-    }
+    private readonly Dictionary<string, string> _worksheetsRels = worksheetsRels;
 
     protected override IEnumerable<Record> ReadOverride()
     {

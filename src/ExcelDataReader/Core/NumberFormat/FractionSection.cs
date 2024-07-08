@@ -5,19 +5,19 @@ namespace ExcelDataReader.Core.NumberFormat;
 
 internal sealed class FractionSection
 {
-    public List<string> IntegerPart { get; set; }
+    public required List<string> IntegerPart { get; init; }
 
-    public List<string> Numerator { get; set; }
+    public required List<string> Numerator { get; init; }
 
-    public List<string> DenominatorPrefix { get; set; }
+    public required List<string> DenominatorPrefix { get; init; }
 
-    public List<string> Denominator { get; set; }
+    public required List<string> Denominator { get; init; }
 
-    public int DenominatorConstant { get; set; }
+    public required int DenominatorConstant { get; init; }
 
-    public List<string> DenominatorSuffix { get; set; }
+    public required List<string> DenominatorSuffix { get; init; }
 
-    public List<string> FractionSuffix { get; set; }
+    public required List<string> FractionSuffix { get; init; }
 
     public static bool TryParse(List<string> tokens, out FractionSection format)
     {

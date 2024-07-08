@@ -3,19 +3,13 @@ using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
-internal abstract class XmlRecordReader : RecordReader
+internal abstract class XmlRecordReader(XmlReader reader) : RecordReader
 {
     private IEnumerator<Record> _enumerator;
 
-    public XmlRecordReader(XmlReader reader)
-    {
-        Reader = reader;
-        ProperNamespaces = new(reader.IsStartElement() && reader.NamespaceURI == XmlNamespaces.StrictNsSpreadsheetMl);
-    }
+    public XmlProperNamespaces ProperNamespaces { get; set; } = new(reader.IsStartElement() && reader.NamespaceURI == XmlNamespaces.StrictNsSpreadsheetMl);
 
-    public XmlProperNamespaces ProperNamespaces { get; set; }
-
-    protected XmlReader Reader { get; }
+    protected XmlReader Reader { get; } = reader;
 
     public override Record Read()
     {

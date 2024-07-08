@@ -44,10 +44,7 @@ internal static class DateTimeHelper
 
     private const long DoubleDateOffset = DaysTo1899 * TicksPerDay;
 
-    public static DateTime FromOADate(double d)
-    {
-        return new DateTime(DoubleDateToTicks(d), DateTimeKind.Unspecified);
-    }
+    public static DateTime FromOADate(double d) => new(DoubleDateToTicks(d), DateTimeKind.Unspecified);
 
     // duplicated from DateTime
     internal static long DoubleDateToTicks(double value)

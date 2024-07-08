@@ -2,7 +2,7 @@
 
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 
-internal sealed class BiffWorksheetReader : BiffReader
+internal sealed class BiffWorksheetReader(Stream stream) : BiffReader(stream)
 {
     private const uint Row = 0x00; 
     private const uint Blank = 0x01;
@@ -35,11 +35,6 @@ internal sealed class BiffWorksheetReader : BiffReader
     // private const uint MergeCellsBegin = 177;
     // private const uint MergeCellsEnd = 178;
     private const uint MergeCell = 176;
-
-    public BiffWorksheetReader(Stream stream) 
-        : base(stream)
-    {
-    }
 
     protected override Record ReadOverride(byte[] buffer, uint recordId, uint recordLength)
     {

@@ -14,9 +14,9 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
         ReadStyles();
     }
 
-    public List<SheetRecord> Sheets { get; } = new List<SheetRecord>();
+    public List<SheetRecord> Sheets { get; } = [];
 
-    public XlsxSST SST { get; } = new XlsxSST();
+    public XlsxSST SST { get; } = [];
 
     public bool IsDate1904 { get; private set; }
 

@@ -1,13 +1,8 @@
 ﻿namespace ExcelDataReader.Misc;
 
-internal sealed class LeaveOpenStream : Stream
+internal sealed class LeaveOpenStream(Stream baseStream) : Stream
 {
-    public LeaveOpenStream(Stream baseStream)
-    {
-        BaseStream = baseStream;
-    }
-
-    public Stream BaseStream { get; }
+    public Stream BaseStream { get; } = baseStream;
 
     public override bool CanRead => BaseStream.CanRead;
 

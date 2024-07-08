@@ -12,8 +12,5 @@ public static class LogManager
     /// <param name="type">The type to get the logger for.</param>
     /// <returns>Instance of a logger for the object.</returns>
     /// <remarks>This method is thread safe.</remarks>
-    public static ILog Log<T>(T type)
-    {
-        return ExcelDataReader.Log.Log.GetLoggerFor(typeof(T));
-    }
+    public static ILog Log<T>(T type) => ExcelDataReader.Log.Log.GetLoggerFor(typeof(T));
 }

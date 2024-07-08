@@ -13,7 +13,7 @@ internal static class Parser
         Condition condition = null;
         Color color = null;
         string token;
-        List<string> tokens = new();
+        List<string> tokens = [];
 
         syntaxError = false;
         while ((token = ReadToken(reader, out syntaxError)) != null)
@@ -142,7 +142,7 @@ internal static class Parser
         afterDecimal = null;
         decimalSeparator = false;
 
-        List<string> remainder = new();
+        List<string> remainder = [];
         var index = 0;
         for (index = 0; index < tokens.Count; ++index)
         {
@@ -152,7 +152,7 @@ internal static class Parser
                 decimalSeparator = true;
                 beforeDecimal = tokens.GetRange(0, index); // TODO: why not remainder? has only valid tokens...
 
-                remainder = new();
+                remainder = [];
             }
             else if (Token.IsNumberLiteral(token))
             {
@@ -190,7 +190,7 @@ internal static class Parser
     private static void ParseDate(List<string> tokens, out List<string> result)
     {
         // if tokens form .0 through .000.., combine to single subsecond token
-        result = new List<string>();
+        result = [];
         for (var i = 0; i < tokens.Count; i++)
         {
             var token = tokens[i];
@@ -286,11 +286,7 @@ internal static class Parser
             {
                 var valueString = tokenizer.Substring(conditionPosition, tokenizer.Position - conditionPosition);
 
-                result = new Condition()
-                {
-                    Operator = op,
-                    Value = double.Parse(valueString, CultureInfo.InvariantCulture)
-                };
+                result = new Condition(op, double.Parse(valueString, CultureInfo.InvariantCulture));
                 return true;
             }
         }
@@ -345,10 +341,7 @@ internal static class Parser
             tokenizer.ReadString("white", true) ||
             tokenizer.ReadString("yellow", true))
         {
-            color = new Color()
-            {
-                Value = tokenizer.Substring(0, tokenizer.Position)
-            };
+            color = new Color(tokenizer.Substring(0, tokenizer.Position));
             return true;
         }
 

@@ -401,7 +401,7 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
                     UseHeaderRow = true,
                     ReadHeader = self =>
                     {
-                        var headerNames = new List<string>();
+                        List<string> headerNames = [];
 
                         // read first header row
                         for (var i = 0; i < self.FieldCount; i++)
@@ -416,7 +416,7 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
                             throw new Exception();
                         }
 
-                        var result = new Dictionary<int, string>();
+                        var result = new Dictionary<int, string>(self.FieldCount);
                         for (var i = 0; i < self.FieldCount; i++)
                         {
                             var first = headerNames[i];

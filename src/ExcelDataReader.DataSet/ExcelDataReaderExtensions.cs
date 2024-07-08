@@ -72,7 +72,7 @@ public static class ExcelDataReaderExtensions
         result.ExtendedProperties.Add("visiblestate", self.VisibleState);
         var first = true;
         var emptyRows = 0;
-        var columnIndices = new List<int>();
+        List<int> columnIndices = [];
         while (self.Read())
         {
             if (first)

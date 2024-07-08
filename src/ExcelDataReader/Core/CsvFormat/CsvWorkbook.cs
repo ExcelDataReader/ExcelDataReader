@@ -3,25 +3,17 @@ using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core.CsvFormat;
 
-internal sealed class CsvWorkbook : IWorkbook<CsvWorksheet>
+internal sealed class CsvWorkbook(Stream stream, Encoding encoding, char[] autodetectSeparators, int analyzeInitialCsvRows) : IWorkbook<CsvWorksheet>
 {
-    public CsvWorkbook(Stream stream, Encoding encoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
-    {
-        Stream = stream;
-        Encoding = encoding;
-        AutodetectSeparators = autodetectSeparators;
-        AnalyzeInitialCsvRows = analyzeInitialCsvRows;
-    }
-
     public int ResultsCount => 1;
 
-    public Stream Stream { get; }
+    public Stream Stream { get; } = stream;
 
-    public Encoding Encoding { get; }
+    public Encoding Encoding { get; } = encoding;
 
-    public char[] AutodetectSeparators { get; }
+    public char[] AutodetectSeparators { get; } = autodetectSeparators;
 
-    public int AnalyzeInitialCsvRows { get; }
+    public int AnalyzeInitialCsvRows { get; } = analyzeInitialCsvRows;
 
     public IEnumerable<CsvWorksheet> ReadWorksheets()
     {

@@ -8,11 +8,13 @@ namespace ExcelDataReader.Core;
 /// <summary>
 /// Helpers class.
 /// </summary>
-internal static class Helpers
+internal static partial class Helpers
 {
-    private static readonly Regex EscapeRegex = new("_x([0-9A-F]{4,4})_", RegexOptions.Compiled);
+    #if !NET8_0_OR_GREATER
+    private static readonly Regex EscapeRegexInstance = new("_x([0-9A-F]{4,4})_", RegexOptions.Compiled);
+    #endif
 
-    private static readonly char[] SingleByteEncodingHelper = new[] { 'a' };
+    private static readonly char[] SingleByteEncodingHelper = ['a'];
 
     /// <summary>
     /// Determines whether the encoding is single byte or not.
@@ -28,7 +30,7 @@ internal static class Helpers
 
     public static string ConvertEscapeChars(string input)
     {
-        return EscapeRegex.Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString());
+        return EscapeRegex().Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString());
     }
 
     /// <summary>
@@ -73,4 +75,11 @@ internal static class Helpers
             return DateTimeHelper.FromOADate(dateValue);
         return value;
     }
+
+#if NET8_0_OR_GREATER
+    [GeneratedRegex("_x([0-9A-F]{4,4})_")]
+    private static partial Regex EscapeRegex();
+#else
+    private static Regex EscapeRegex() => EscapeRegexInstance;
+#endif
 }

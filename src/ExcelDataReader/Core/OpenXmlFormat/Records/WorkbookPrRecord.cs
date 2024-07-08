@@ -1,11 +1,6 @@
 ﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records;
 
-internal sealed class WorkbookPrRecord : Record
+internal sealed class WorkbookPrRecord(bool date1904) : Record
 {
-    public WorkbookPrRecord(bool date1904)
-    {
-        Date1904 = date1904;
-    }
-
-    public bool Date1904 { get; }
+    public bool Date1904 { get; } = date1904;
 }

@@ -15,14 +15,11 @@ internal abstract class EncryptionInfo
     /// </summary>
     public abstract bool IsXor { get; }
 
-    public static EncryptionInfo Create(ushort xorEncryptionKey, ushort xorHashValue)
+    public static EncryptionInfo Create(ushort xorEncryptionKey, ushort xorHashValue) => new XorEncryption()
     {
-        return new XorEncryption()
-        {
-            EncryptionKey = xorEncryptionKey,
-            HashValue = xorHashValue
-        };
-    }
+        EncryptionKey = xorEncryptionKey,
+        HashValue = xorHashValue
+    };
 
     public static EncryptionInfo Create(byte[] bytes)
     {

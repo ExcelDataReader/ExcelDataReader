@@ -11,7 +11,7 @@ internal sealed class XlsBiffMergeCells : XlsBiffRecord
     {
         var count = ReadUInt16(0);
 
-        MergeCells = new();
+        MergeCells = [];
         for (int i = 0; i < count; i++)
         {
             var fromRow = ReadInt16(2 + i * 8 + 0);

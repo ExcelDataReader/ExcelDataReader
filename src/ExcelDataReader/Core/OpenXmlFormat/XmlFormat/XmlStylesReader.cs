@@ -4,7 +4,7 @@ using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
-internal sealed class XmlStylesReader : XmlRecordReader
+internal sealed class XmlStylesReader(XmlReader reader) : XmlRecordReader(reader)
 {
     private const string ElementStyleSheet = "styleSheet";
 
@@ -29,11 +29,6 @@ internal sealed class XmlStylesReader : XmlRecordReader
     private const string NProtection = "protection";
     private const string AHidden = "hidden";
     private const string ALocked = "locked";
-
-    public XmlStylesReader(XmlReader reader) 
-        : base(reader)
-    {
-    }
 
     protected override IEnumerable<Record> ReadOverride()
     {

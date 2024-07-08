@@ -1,14 +1,8 @@
 ﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records;
 
-internal sealed class NumberFormatRecord : Record
+internal sealed class NumberFormatRecord(int formatIndexInFile, string formatString) : Record
 {
-    public NumberFormatRecord(int formatIndexInFile, string formatString) 
-    {
-        FormatIndexInFile = formatIndexInFile;
-        FormatString = formatString;
-    }
+    public int FormatIndexInFile { get; } = formatIndexInFile;
 
-    public int FormatIndexInFile { get; }
-
-    public string FormatString { get; }
+    public string FormatString { get; } = formatString;
 }

@@ -317,7 +317,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         }
         else
         {
-            _cachedWorksheets = new List<TWorksheet>();
+            _cachedWorksheets = [];
         }
 
         _cachedWorksheetIterator ??= Workbook.ReadWorksheets().GetEnumerator();

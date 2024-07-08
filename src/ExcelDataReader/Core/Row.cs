@@ -2,27 +2,10 @@
 
 namespace ExcelDataReader.Core;
 
-internal sealed class Row
-{
-    public Row(int rowIndex, double height, List<Cell> cells) 
-    {
-        RowIndex = rowIndex;
-        Height = height;
-        Cells = cells;
-    }
-
-    /// <summary>
-    /// Gets the zero-based row index.
-    /// </summary>
-    public int RowIndex { get; }
-
-    /// <summary>
-    /// Gets the height of this row in points. Zero if hidden or collapsed.
-    /// </summary>
-    public double Height { get; }
-
-    /// <summary>
-    /// Gets the cells in this row.
-    /// </summary>
-    public List<Cell> Cells { get; }
-}
+/// <summary>
+/// Represents a row.
+/// </summary>
+/// <param name="RowIndex">The zero-based row index.</param>
+/// <param name="Height">The height of this row in points, zero if hidden or collapsed.</param>
+/// <param name="Cells">The cells.</param>
+internal sealed record Row(int RowIndex, double Height, List<Cell> Cells);

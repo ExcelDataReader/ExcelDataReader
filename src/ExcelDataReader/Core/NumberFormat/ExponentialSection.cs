@@ -2,15 +2,15 @@
 
 internal sealed class ExponentialSection
 {
-    public List<string> BeforeDecimal { get; set; }
+    public required List<string> BeforeDecimal { get; init; }
 
-    public bool DecimalSeparator { get; set; }
+    public required bool DecimalSeparator { get; init; }
 
-    public List<string> AfterDecimal { get; set; }
+    public required List<string> AfterDecimal { get; init; }
 
-    public string ExponentialToken { get; set; }
+    public required string ExponentialToken { get; init; }
 
-    public List<string> Power { get; set; }
+    public required List<string> Power { get; init; }
 
     public static bool TryParse(List<string> tokens, out ExponentialSection format)
     {

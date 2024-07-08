@@ -1,18 +1,18 @@
 ﻿namespace ExcelDataReader.Core.NumberFormat;
 
-internal sealed class DecimalSection
+internal sealed class DecimalSection()
 {
-    public bool ThousandSeparator { get; set; }
+    public required bool ThousandSeparator { get; init; }
 
-    public double ThousandDivisor { get; set; }
+    public required double ThousandDivisor { get; init; }
 
-    public double PercentMultiplier { get; set; }
+    public required double PercentMultiplier { get; init; }
 
-    public List<string> BeforeDecimal { get; set; }
+    public required List<string> BeforeDecimal { get; init; }
 
-    public bool DecimalSeparator { get; set; }
+    public required bool DecimalSeparator { get; init; }
 
-    public List<string> AfterDecimal { get; set; }
+    public required List<string> AfterDecimal { get; init; }
 
     public static bool TryParse(List<string> tokens, out DecimalSection format)
     {

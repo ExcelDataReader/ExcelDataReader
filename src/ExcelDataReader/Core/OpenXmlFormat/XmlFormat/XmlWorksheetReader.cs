@@ -4,7 +4,7 @@ using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
-internal sealed class XmlWorksheetReader : XmlRecordReader
+internal sealed class XmlWorksheetReader(XmlReader reader) : XmlRecordReader(reader)
 {
     private const string NWorksheet = "worksheet";
     private const string NSheetData = "sheetData";
@@ -48,11 +48,6 @@ internal sealed class XmlWorksheetReader : XmlRecordReader
 
     private const string ACustomHeight = "customHeight";
     private const string AHt = "ht";
-
-    public XmlWorksheetReader(XmlReader reader) 
-        : base(reader)
-    {
-    }
 
     protected override IEnumerable<Record> ReadOverride()
     {
@@ -140,7 +135,7 @@ internal sealed class XmlWorksheetReader : XmlRecordReader
                     if (Reader.IsStartElement(NMergeCell, ProperNamespaces.NsSpreadsheetMl))
                     {
                         var cellRefs = Reader.GetAttribute(ARef);
-                        yield return new MergeCellRecord(new CellRange(cellRefs));
+                        yield return new MergeCellRecord(CellRange.Parse(cellRefs));
 
                         Reader.Skip();
                     }

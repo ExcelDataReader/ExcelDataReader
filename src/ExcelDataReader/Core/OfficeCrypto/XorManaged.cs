@@ -8,21 +8,21 @@ namespace ExcelDataReader.Core.OfficeCrypto;
 /// </summary>
 internal sealed class XorManaged : SymmetricAlgorithm
 {
-    private static readonly byte[] PadArray = new byte[]
-    {
+    private static readonly byte[] PadArray =
+    [
         0xBB, 0xFF, 0xFF, 0xBA, 0xFF, 0xFF, 0xB9, 0x80,
         0x00, 0xBE, 0x0F, 0x00, 0xBF, 0x0F, 0x00
-    };
+    ];
 
-    private static readonly ushort[] InitialCode = new ushort[]
-    {
+    private static readonly ushort[] InitialCode =
+    [
         0xE1F0, 0x1D0F, 0xCC9C, 0x84C0, 0x110C,
         0x0E10, 0xF1CE, 0x313E, 0x1872, 0xE139,
         0xD40F, 0x84F9, 0x280C, 0xA96A, 0x4EC3
-    };
+    ];
 
-    private static readonly ushort[] XorMatrix = new ushort[]
-    {
+    private static readonly ushort[] XorMatrix =
+    [
         0xAEFC, 0x4DD9, 0x9BB2, 0x2745, 0x4E8A, 0x9D14, 0x2A09,
         0x7B61, 0xF6C2, 0xFDA5, 0xEB6B, 0xC6F7, 0x9DCF, 0x2BBF,
         0x4563, 0x8AC6, 0x05AD, 0x0B5A, 0x16B4, 0x2D68, 0x5AD0,
@@ -38,7 +38,7 @@ internal sealed class XorManaged : SymmetricAlgorithm
         0x3730, 0x6E60, 0xDCC0, 0xA9A1, 0x4363, 0x86C6, 0x1DAD,
         0x3331, 0x6662, 0xCCC4, 0x89A9, 0x0373, 0x06E6, 0x0DCC,
         0x1021, 0x2042, 0x4084, 0x8108, 0x1231, 0x2462, 0x48C4
-    };
+    ];
 
     public XorManaged()
     {
@@ -130,14 +130,8 @@ internal sealed class XorManaged : SymmetricAlgorithm
         return (byte)(((b << shift) | (b >> (8 - shift))) & 0xFF);
     }
 
-    internal sealed class XorTransform : ICryptoTransform
+    internal sealed class XorTransform(byte[] key, int xorArrayIndex) : ICryptoTransform
     {
-        public XorTransform(byte[] key, int xorArrayIndex)
-        {
-            XorArray = key;
-            XorArrayIndex = xorArrayIndex;
-        }
-
         public int InputBlockSize => 1024;
 
         public int OutputBlockSize => 1024;
@@ -149,9 +143,9 @@ internal sealed class XorManaged : SymmetricAlgorithm
         /// <summary>
         /// Gets or sets the obfuscation array index. BIFF obfuscation uses a different XorArrayIndex per record.
         /// </summary>
-        public int XorArrayIndex { get; set; }
+        public int XorArrayIndex { get; set; } = xorArrayIndex;
 
-        private byte[] XorArray { get; }
+        private byte[] XorArray { get; } = key;
 
         public void Dispose()
         {

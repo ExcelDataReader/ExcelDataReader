@@ -4,18 +4,12 @@
 
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 
-internal sealed class BiffWorkbookReader : BiffReader
+internal sealed class BiffWorkbookReader(Stream stream, Dictionary<string, string> worksheetRels) : BiffReader(stream)
 {
     private const int WorkbookPr = 0x99;
     private const int Sheet = 0x9C;
     
-    private readonly Dictionary<string, string> _worksheetRels;
-
-    public BiffWorkbookReader(Stream stream, Dictionary<string, string> worksheetRels)
-        : base(stream)
-    {
-        _worksheetRels = worksheetRels;
-    }
+    private readonly Dictionary<string, string> _worksheetRels = worksheetRels;
 
     private enum SheetVisibility : byte
     {

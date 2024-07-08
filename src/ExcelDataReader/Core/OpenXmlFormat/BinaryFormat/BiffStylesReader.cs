@@ -2,7 +2,7 @@
 
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 
-internal sealed class BiffStylesReader : BiffReader
+internal sealed class BiffStylesReader(Stream stream) : BiffReader(stream)
 {
     private const int Xf = 0x2f;
 
@@ -19,11 +19,6 @@ internal sealed class BiffStylesReader : BiffReader
     private bool _inCellXf;
     private bool _inCellStyleXf;
     private bool _inNumberFormat;
-
-    public BiffStylesReader(Stream stream)
-        : base(stream)
-    {
-    }
 
     protected override Record ReadOverride(byte[] buffer, uint recordId, uint recordLength)
     {

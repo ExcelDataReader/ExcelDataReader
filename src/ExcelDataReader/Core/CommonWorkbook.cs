@@ -11,19 +11,19 @@ internal class CommonWorkbook
     /// Gets the dictionary of global number format strings. Always includes the built-in formats at their
     /// corresponding indices and any additional formats specified in the workbook file.
     /// </summary>
-    public Dictionary<int, NumberFormatString> Formats { get; } = new Dictionary<int, NumberFormatString>();
+    public Dictionary<int, NumberFormatString> Formats { get; } = [];
 
     /// <summary>
     /// Gets the Cell XFs.
     /// </summary>
-    public List<ExtendedFormat> ExtendedFormats { get; } = new List<ExtendedFormat>();
+    public List<ExtendedFormat> ExtendedFormats { get; } = [];
 
     /// <summary>
     /// Gets the Cell Style XFs.
     /// </summary>
-    public List<ExtendedFormat> CellStyleExtendedFormats { get; } = new List<ExtendedFormat>();
+    public List<ExtendedFormat> CellStyleExtendedFormats { get; } = [];
 
-    private NumberFormatString GeneralNumberFormat { get; } = new NumberFormatString("General");
+    private NumberFormatString GeneralNumberFormat { get; } = new("General");
 
     public ExtendedFormat GetEffectiveCellStyle(int xfIndex, int numberFormatFromCell)
     {

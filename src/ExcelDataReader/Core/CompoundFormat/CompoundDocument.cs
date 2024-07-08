@@ -42,7 +42,7 @@ internal sealed class CompoundDocument
 
     internal static List<uint> GetSectorChain(uint sector, List<uint> sectorTable)
     {
-        List<uint> chain = new();
+        List<uint> chain = [];
         while (sector != (uint)FATMARKERS.FAT_EndOfChain)
         {
             chain.Add(sector);
@@ -127,7 +127,7 @@ internal sealed class CompoundDocument
         result.DifFirstSector = reader.ReadUInt32();
         result.DifSectorCount = reader.ReadInt32();
 
-        var chain = new List<uint>();
+        List<uint> chain = [];
         for (int i = 0; i < 109; ++i)
         {
             chain.Add(reader.ReadUInt32());
@@ -160,7 +160,7 @@ internal sealed class CompoundDocument
     {
         try
         {
-            Entries = new List<CompoundDirectoryEntry>();
+            Entries = [];
             using var stream = new MemoryStream(bytes);
             using var reader = new BinaryReader(stream);
             RootEntry = ReadDirectoryEntry(reader);
