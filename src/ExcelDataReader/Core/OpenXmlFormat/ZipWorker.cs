@@ -205,9 +205,9 @@ internal sealed partial class ZipWorker : IDisposable
         return null;
     }
 
-        // for some reason, reading of zip entry is slow on NET Core.
-        // fix that with usage of BufferedStream
-#if NETSTANDARD2_0_OR_GREATER
+    // for some reason, reading of zip entry is slow on NET Core.
+    // fix that with usage of BufferedStream
+#if NETSTANDARD2_0_OR_GREATER || NET8_0_OR_GREATER
     private static BufferedStream OpenZipEntry(ZipArchiveEntry zipEntry) => new(zipEntry.Open());
 #else
     private static Stream OpenZipEntry(ZipArchiveEntry zipEntry) => zipEntry.Open();
