@@ -213,4 +213,14 @@ public abstract class ExcelOpenXmlReaderBase : ExcelTestBase
         Assert.That(values2, Is.EqualTo(new object[] { 1, 2, 3, 4, 5, null }));
         Assert.That(values3, Is.EqualTo(new object[] { 1, 2, 3, 4 }));
     }
+
+    [Test]
+    public void GitIssue682()
+    {
+        using var reader = OpenReader("Test_git_issue682");
+        reader.Read();
+        var values = new object[reader.FieldCount];
+        reader.GetValues(values);
+        Assert.That(values, Is.EqualTo(new object[] { 100, 10, 1 }));
+    }
 }
