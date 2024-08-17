@@ -61,7 +61,7 @@ internal sealed partial class ZipWorker : IDisposable
         using var reader = XmlReader.Create(workbookRelsEntry.Open(), XmlSettings);
         while (reader.Read())
         {
-            if (reader.NodeType != XmlNodeType.Element || reader.Name != "Relationship")
+            if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "Relationship")
                 continue;
 
             var id = reader.GetAttribute("Id");
@@ -116,7 +116,7 @@ internal sealed partial class ZipWorker : IDisposable
             using var reader = XmlReader.Create(entry.Open(), XmlSettings);
             while (reader.Read())
             {
-                if (reader.NodeType != XmlNodeType.Element || reader.Name != "Relationship")
+                if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "Relationship")
                     continue;
 
                 var type = reader.GetAttribute("Type");
