@@ -17,7 +17,7 @@ internal static class ReferenceHelper
 
         while (position < value.Length)
         {
-            var c = value[position];
+            var c = char.ToUpperInvariant(value[position]);
             if (c >= 'A' && c <= 'Z')
             {
                 position++;
@@ -84,7 +84,7 @@ internal static class ReferenceHelper
         {
             while (position < value.Length)
             {
-                var c = value[position];
+                var c = char.ToUpperInvariant(value[position]);
                 if (c >= 'A' && c <= 'Z')
                 {
                     position++;
