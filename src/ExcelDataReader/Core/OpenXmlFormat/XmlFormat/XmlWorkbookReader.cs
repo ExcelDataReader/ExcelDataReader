@@ -78,9 +78,8 @@ internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, str
                     if (Reader.IsStartElement("workbookView", ProperNamespaces.NsSpreadsheetMl))
                     {
                         string activeTab = Reader.GetAttribute("activeTab");
-                        int result = -1;
-                        int.TryParse(activeTab, out result);
-                        yield return new WorkbookActRecord(result);
+                        int activeTabInt = int.TryParse(activeTab, out var result) ? result : -1;
+                        yield return new WorkbookActRecord(activeTabInt);
                         Reader.Skip();
                     }
                     else if (!XmlReaderHelper.SkipContent(Reader))
