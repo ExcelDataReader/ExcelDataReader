@@ -174,6 +174,14 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
     }
 
     [Test]
+    public void LowerCaseReferenceAttribute()
+    {
+        using IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("LowerCaseReferenceAttribute.xlsx"));
+        DataSet result = excelReader.AsDataSet();
+        Assert.That(result.Tables[0].Rows[2][4], Is.EqualTo("E3"), "Sheet1 Cell E3");
+    }
+
+    [Test]
     public void CellValueIso8601Date()
     {
         using IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_221.xlsx"));
