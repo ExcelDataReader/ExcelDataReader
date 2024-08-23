@@ -211,8 +211,8 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
 
                 // case BIFFRECORDTYPE.PROTECT:
                 // case BIFFRECORDTYPE.PROT4REVPASSWORD:
-                // IsProtected
-                // break;
+                    // IsProtected
+                    // break;
                 // case BIFFRECORDTYPE.PASSWORD:
                 default:
                     break;

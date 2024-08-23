@@ -9,6 +9,7 @@ internal sealed class BiffWorkbookReader(Stream stream, Dictionary<string, strin
     private const int WorkbookPr = 0x99;
     private const int Sheet = 0x9C;
     private const int BrtBookView = 0x9e;
+
     private readonly Dictionary<string, string> _worksheetRels = worksheetRels;
 
     private enum SheetVisibility : byte
