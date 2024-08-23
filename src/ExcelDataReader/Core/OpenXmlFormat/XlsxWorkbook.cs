@@ -35,7 +35,7 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
     private void ReadWorkbook()
     {
         using RecordReader reader = _zipWorker.GetWorkbookReader();            
-
+        
         Record record;
         while ((record = reader.Read()) != null)
         {                
