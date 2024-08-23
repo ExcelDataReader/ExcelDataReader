@@ -42,12 +42,12 @@ internal sealed class XlsWorksheet : IWorksheet
     /// </summary>
     public string VisibleState { get; }
 
-        /// <summary>
-        /// Gets the activity of worksheet.
-        /// </summary>       
-        public bool IsActiveSheet { get; }
+    /// <summary>
+    /// Gets a value indicating whether the sheet is active.
+    /// </summary>       
+    public bool IsActiveSheet { get; }
 
-        public HeaderFooter HeaderFooter { get; private set; }
+    public HeaderFooter HeaderFooter { get; private set; }
 
     public CellRange[] MergeCells { get; private set; }
 

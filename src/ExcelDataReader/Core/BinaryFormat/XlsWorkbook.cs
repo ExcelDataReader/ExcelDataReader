@@ -77,14 +77,14 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
 
     public int ResultsCount => Sheets?.Count ?? -1;
 
-        public int ActiveSheet { get; private set; }
+    public int ActiveSheet { get; private set; }
 
-        public static bool IsRawBiffStream(byte[] bytes)
+    public static bool IsRawBiffStream(byte[] bytes)
+    {
+        if (bytes.Length < 8)
         {
-            if (bytes.Length < 8)
-            {
-                throw new ArgumentException("Needs at least 8 bytes to probe", nameof(bytes));
-            }
+            throw new ArgumentException("Needs at least 8 bytes to probe", nameof(bytes));
+        }
 
         ushort rid = BitConverter.ToUInt16(bytes, 0);
         ushort size = BitConverter.ToUInt16(bytes, 2);
@@ -205,19 +205,19 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
                     ExtSST = rec;
                     break;
 
-                    case XlsBiffRecord _ when rec.Id == BIFFRECORDTYPE.WINDOW1:
-                        ActiveSheet = rec.ReadInt16(10);
-                        break;
+                case XlsBiffRecord _ when rec.Id == BIFFRECORDTYPE.WINDOW1:
+                    ActiveSheet = rec.ReadInt16(10);
+                    break;
 
-                    // case BIFFRECORDTYPE.PROTECT:
-                    // case BIFFRECORDTYPE.PROT4REVPASSWORD:
-                    // IsProtected
-                    // break;
-                    // case BIFFRECORDTYPE.PASSWORD:
-                    default:
-                        break;
-                }
+                // case BIFFRECORDTYPE.PROTECT:
+                // case BIFFRECORDTYPE.PROT4REVPASSWORD:
+                // IsProtected
+                // break;
+                // case BIFFRECORDTYPE.PASSWORD:
+                default:
+                    break;
             }
+        }
 
         SST?.Flush();
 

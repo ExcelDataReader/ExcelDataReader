@@ -22,20 +22,20 @@ public interface IExcelDataReader : IDataReader
     /// </summary>
     string VisibleState { get; }
 
-        /// <summary>
-        /// Gets the active sheet.
-        /// </summary>
-        int ActiveSheet { get; }
+    /// <summary>
+    /// Gets the active sheet.
+    /// </summary>
+    int ActiveSheet { get; }
 
-        /// <summary>
-        /// Gets the activity of worksheet.
-        /// </summary>       
-        bool IsActiveSheet { get; }
+    /// <summary>
+    /// Gets a value indicating whether the worksheet is active.
+    /// </summary>       
+    bool IsActiveSheet { get; }
 
-        /// <summary>
-        /// Gets the sheet header and footer -or- <see langword="null"/> if none set.
-        /// </summary>
-        HeaderFooter HeaderFooter { get; }
+    /// <summary>
+    /// Gets the sheet header and footer -or- <see langword="null"/> if none set.
+    /// </summary>
+    HeaderFooter HeaderFooter { get; }
 
     /// <summary>
     /// Gets the list of merged cell ranges.
