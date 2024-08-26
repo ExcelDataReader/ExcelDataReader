@@ -21,8 +21,7 @@ public class ExcelOpenXmlBinaryReaderTest : ExcelOpenXmlReaderBase
         var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
         {
             FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
-        }
-        );
+        });
         Assert.That(reader.ActiveSheet, Is.EqualTo(5));
         Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List6"));
     }
