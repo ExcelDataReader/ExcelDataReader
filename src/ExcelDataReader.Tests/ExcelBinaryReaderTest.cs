@@ -1069,6 +1069,30 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         Assert.That(values3, Is.EqualTo(new object[] { 1, 2, 3, 4 }));
     }
 
+    [Test]
+    public void GitIssue642_ActiveSheet()
+    {
+        using var reader = OpenReader("Test_git_issue_642");
+        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
+        {
+            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
+        });
+        Assert.That(reader.ActiveSheet, Is.EqualTo(5));
+        Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List6"));
+    }
+
+    [Test]
+    public void GitIssue642_ActiveSheet_SingleWorksheet()
+    {
+        using var reader = OpenReader("Test_git_issue_642onesheet");
+        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
+        {
+            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
+        });
+        Assert.That(reader.ActiveSheet, Is.EqualTo(0));
+        Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List1"));
+    }
+
     protected override IExcelDataReader OpenReader(Stream stream, ExcelReaderConfiguration configuration = null)
     {
         return ExcelReaderFactory.CreateBinaryReader(stream, configuration);
