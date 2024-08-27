@@ -49,7 +49,7 @@ public abstract class ExcelTestBase
     }
 
     /// <summary>
-    /// Makes sure that we can read data from the first row of last sheet
+    /// Makes sure that we can read data from the first row of last sheet.
     /// </summary>
     [Test]
     public void Issue12271NextResultSet()

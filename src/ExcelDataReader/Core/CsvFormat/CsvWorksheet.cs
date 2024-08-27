@@ -34,6 +34,10 @@ internal sealed class CsvWorksheet : IWorksheet
         }
     }
 
+    public static int ActiveSheet => 0;
+
+    public static bool IsActiveSheet => true;
+
     public string Name => string.Empty;
 
     public string CodeName => null;

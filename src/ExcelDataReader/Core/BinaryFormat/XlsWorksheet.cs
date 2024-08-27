@@ -42,6 +42,11 @@ internal sealed class XlsWorksheet : IWorksheet
     /// </summary>
     public string VisibleState { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether the sheet is active.
+    /// </summary>       
+    public bool IsActiveSheet { get; }
+
     public HeaderFooter HeaderFooter { get; private set; }
 
     public CellRange[] MergeCells { get; private set; }

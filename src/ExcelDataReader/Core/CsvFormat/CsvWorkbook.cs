@@ -7,6 +7,8 @@ internal sealed class CsvWorkbook(Stream stream, Encoding encoding, char[] autod
 {
     public int ResultsCount => 1;
 
+    public int ActiveSheet => 0;
+
     public Stream Stream { get; } = stream;
 
     public Encoding Encoding { get; } = encoding;

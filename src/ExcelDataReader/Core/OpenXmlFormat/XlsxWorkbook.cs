@@ -22,6 +22,8 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
 
     public int ResultsCount => Sheets?.Count ?? -1;
 
+    public int ActiveSheet { get; private set; }
+
     public IEnumerable<XlsxWorksheet> ReadWorksheets()
     {
         foreach (var sheet in Sheets)
@@ -44,6 +46,9 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
                     break;
                 case SheetRecord sheet:
                     Sheets.Add(sheet);
+                    break;
+                case WorkbookActRecord activeSheet:
+                    ActiveSheet = activeSheet.ActiveSheet;
                     break;
             }
         }

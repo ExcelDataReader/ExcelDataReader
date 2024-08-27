@@ -77,6 +77,8 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
 
     public int ResultsCount => Sheets?.Count ?? -1;
 
+    public int ActiveSheet { get; private set; }
+
     public static bool IsRawBiffStream(byte[] bytes)
     {
         if (bytes.Length < 8)
@@ -201,6 +203,10 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
                     break;
                 case XlsBiffRecord _ when rec.Id == BIFFRECORDTYPE.EXTSST:
                     ExtSST = rec;
+                    break;
+
+                case XlsBiffRecord _ when rec.Id == BIFFRECORDTYPE.WINDOW1:
+                    ActiveSheet = rec.ReadInt16(10);
                     break;
 
                 // case BIFFRECORDTYPE.PROTECT:

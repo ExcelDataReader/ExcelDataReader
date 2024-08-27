@@ -110,7 +110,7 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     }
 
     /// <summary>
-    /// Issue 11 - OpenOffice files were skipping the first row if IsFirstRowAsColumnNames = false;
+    /// Issue 11 - OpenOffice files were skipping the first row if IsFirstRowAsColumnNames = false.
     /// </summary>
     [Test]
     public void GitIssue11OpenOfficeRowCount()
@@ -170,7 +170,7 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     }
 
     /// <summary>
-    /// Not fixed yet
+    /// Not fixed yet.
     /// </summary>
     [Test]
     public void Issue11545NoIndex()
@@ -211,7 +211,7 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     /// Not fixed yet
     /// The problem occurs with unseekable stream and logic related to minifat that uses seek
     /// It should probably only use seek if it needs to go backwards, I think at the moment it uses seek all the time
-    /// which is probably not good for performance
+    /// which is probably not good for performance.
     /// </summary>
     [Test]
     [Ignore("Not fixed yet")]
@@ -228,7 +228,7 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     /// Not fixed yet
     /// The problem occurs with unseekable stream and logic related to minifat that uses seek
     /// It should probably only use seek if it needs to go backwards, I think at the moment it uses seek all the time
-    /// which is probably not good for performance
+    /// which is probably not good for performance.
     /// </summary>
     [Test]
     public void Issue12556Corrupt()
@@ -243,7 +243,7 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     }
 
     /// <summary>
-    /// Some spreadsheets were crashing with index out of range error (from SSRS)
+    /// Some spreadsheets were crashing with index out of range error (from SSRS).
     /// </summary>
     [Test]
     public void TestIssue11818OutOfRange()
@@ -1067,6 +1067,30 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         Assert.That(values, Is.EqualTo(new object[] { 1, 2, 3, 4, 5 }));
         Assert.That(values2, Is.EqualTo(new object[] { 1, 2, 3, 4, 5, null }));
         Assert.That(values3, Is.EqualTo(new object[] { 1, 2, 3, 4 }));
+    }
+
+    [Test]
+    public void GitIssue642_ActiveSheet()
+    {
+        using var reader = OpenReader("Test_git_issue_642");
+        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
+        {
+            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
+        });
+        Assert.That(reader.ActiveSheet, Is.EqualTo(5));
+        Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List6"));
+    }
+
+    [Test]
+    public void GitIssue642_ActiveSheet_SingleWorksheet()
+    {
+        using var reader = OpenReader("Test_git_issue_642onesheet");
+        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
+        {
+            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
+        });
+        Assert.That(reader.ActiveSheet, Is.EqualTo(0));
+        Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List1"));
     }
 
     protected override IExcelDataReader OpenReader(Stream stream, ExcelReaderConfiguration configuration = null)
