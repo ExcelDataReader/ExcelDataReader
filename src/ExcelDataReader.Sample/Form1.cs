@@ -53,7 +53,8 @@ public partial class Form1 : Form
             var sw = new Stopwatch();
             sw.Start();
 
-            using IExcelDataReader reader = ExcelReaderFactory.CreateReader(stream);
+            using IExcelDataReader reader = string.Equals(Path.GetExtension(textBox1.Text), ".csv", StringComparison.OrdinalIgnoreCase) ? 
+                ExcelReaderFactory.CreateCsvReader(stream) : ExcelReaderFactory.CreateReader(stream);
 
             var openTiming = sw.ElapsedMilliseconds;
             // reader.IsFirstRowAsColumnNames = firstRowNamesCheckBox.Checked;
