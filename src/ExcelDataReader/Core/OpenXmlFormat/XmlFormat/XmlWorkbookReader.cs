@@ -66,6 +66,28 @@ internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, str
                     }
                 }
             }
+            else if (Reader.IsStartElement("bookViews", ProperNamespaces.NsSpreadsheetMl))
+            {
+                if (!XmlReaderHelper.ReadFirstContent(Reader))
+                {
+                    continue;
+                }
+
+                while (!Reader.EOF)
+                {
+                    if (Reader.IsStartElement("workbookView", ProperNamespaces.NsSpreadsheetMl))
+                    {
+                        string activeTab = Reader.GetAttribute("activeTab");
+                        int activeTabInt = int.TryParse(activeTab, out var result) ? result : 0;
+                        yield return new WorkbookActRecord(activeTabInt);
+                        Reader.Skip();
+                    }
+                    else if (!XmlReaderHelper.SkipContent(Reader))
+                    {
+                        break;
+                    }
+                }
+            }
             else if (!XmlReaderHelper.SkipContent(Reader))
             {
                 yield break;

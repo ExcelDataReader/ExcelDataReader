@@ -16,6 +16,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     private IEnumerator<Row> _rowIterator;
     private IEnumerator<TWorksheet> _cachedWorksheetIterator;
     private List<TWorksheet> _cachedWorksheets;
+    private int _idx;
 
     ~ExcelDataReader()
     {
@@ -27,6 +28,10 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     public string CodeName => _worksheetIterator?.Current?.CodeName;
 
     public string VisibleState => _worksheetIterator?.Current?.VisibleState;
+
+    public int ActiveSheet => this.Workbook.ActiveSheet;
+
+    public bool IsActiveSheet => _idx == this.Workbook.ActiveSheet;
 
     public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
 
@@ -213,11 +218,13 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         _worksheetIterator = null;
         _rowIterator = null;
 
+        _idx = 0;
+
         ResetSheetData();
 
         if (Workbook != null)
         {
-            _worksheetIterator = ReadWorksheetsWithCache().GetEnumerator(); // Workbook.ReadWorksheets().GetEnumerator();
+            _worksheetIterator = ReadWorksheetsWithCache().GetEnumerator();
             if (!_worksheetIterator.MoveNext())
             {
                 _worksheetIterator.Dispose();
@@ -263,6 +270,9 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         }
 
         _rowIterator = _worksheetIterator.Current.ReadRows().GetEnumerator();
+
+        _idx++;
+
         return true;
     }
 

@@ -3,7 +3,7 @@
 namespace ExcelDataReader.Tests;
 
 /// <summary>
-/// Most CSV test data came from csv-spectrum: https://github.com/maxogden/csv-spectrum 
+/// Most CSV test data came from csv-spectrum: https://github.com/maxogden/csv-spectrum. 
 /// </summary>
 public class ExcelCsvReaderTest
 {
@@ -466,5 +466,17 @@ public class ExcelCsvReaderTest
             Assert.That(row3, Is.EqualTo(new object[] { "Test2", "EFG", "YY", "10,143.27", "0.00" }));
             Assert.That(row4, Is.EqualTo(new object[] { "Test3", "IJK", "ZZ", "10,143.27", "0.00" }));
         });
+    }
+
+    [Test]
+    public void GitIssue642_ActiveSheet()
+    {
+        using var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("csv\\MOCK_DATA.csv"));
+        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
+        {
+            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
+        });
+        Assert.That(reader.ActiveSheet, Is.EqualTo(0));
+        Assert.That(dataSet.Tables.Count, Is.EqualTo(1));
     }
 }

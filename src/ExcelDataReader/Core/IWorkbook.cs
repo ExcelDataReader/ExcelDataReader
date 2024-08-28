@@ -11,6 +11,8 @@ internal interface IWorkbook<TWorksheet>
 {
     int ResultsCount { get; }
 
+    int ActiveSheet { get; }
+
     IEnumerable<TWorksheet> ReadWorksheets();
 
     NumberFormatString GetNumberFormatString(int index);
