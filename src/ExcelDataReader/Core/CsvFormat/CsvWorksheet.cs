@@ -4,14 +4,15 @@ namespace ExcelDataReader.Core.CsvFormat;
 
 internal sealed class CsvWorksheet : IWorksheet
 {
-    public CsvWorksheet(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
+    public CsvWorksheet(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators, int analyzeInitialCsvRows, char? quoteChar = null)
     {
         Stream = stream;
+        QuoteChar = quoteChar;
         Stream.Seek(0, SeekOrigin.Begin);
         try
         {
             // Try as UTF-8 first, or use BOM if present
-            CsvAnalyzer.Analyze(Stream, autodetectSeparators, Encoding.UTF8, analyzeInitialCsvRows, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
+            CsvAnalyzer.Analyze(Stream, autodetectSeparators, Encoding.UTF8, analyzeInitialCsvRows, quoteChar, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
             FieldCount = fieldCount;
             AnalyzedRowCount = rowCount;
             AnalyzedPartial = analyzeInitialCsvRows > 0;
@@ -24,7 +25,7 @@ internal sealed class CsvWorksheet : IWorksheet
             // If cannot parse as UTF-8, try fallback encoding
             Stream.Seek(0, SeekOrigin.Begin);
 
-            CsvAnalyzer.Analyze(Stream, autodetectSeparators, fallbackEncoding, analyzeInitialCsvRows, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
+            CsvAnalyzer.Analyze(Stream, autodetectSeparators, fallbackEncoding, analyzeInitialCsvRows, quoteChar, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
             FieldCount = fieldCount;
             AnalyzedRowCount = rowCount;
             AnalyzedPartial = analyzeInitialCsvRows > 0;
@@ -67,6 +68,8 @@ internal sealed class CsvWorksheet : IWorksheet
 
     public Encoding Encoding { get; }
 
+    public char? QuoteChar { get; }
+
     public char Separator { get; }
 
     public Column[] ColumnWidths => null;
@@ -82,7 +85,7 @@ internal sealed class CsvWorksheet : IWorksheet
         var bufferSize = 1024;
         var buffer = new byte[bufferSize];
         var rowIndex = 0;
-        var csv = new CsvParser(Separator, Encoding);
+        var csv = new CsvParser(Separator, Encoding, QuoteChar);
         var skipBomBytes = BomLength;
 
         Stream.Seek(0, SeekOrigin.Begin);
