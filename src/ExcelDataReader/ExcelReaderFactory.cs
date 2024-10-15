@@ -165,7 +165,7 @@ public static class ExcelReaderFactory
             fileStream = new LeaveOpenStream(fileStream);
         }
 
-        return new ExcelCsvReader(fileStream, configuration.FallbackEncoding, configuration.AutodetectSeparators, configuration.AnalyzeInitialCsvRows);
+        return new ExcelCsvReader(fileStream, configuration.FallbackEncoding, configuration.AutodetectSeparators, configuration.AnalyzeInitialCsvRows, configuration.QuoteChar);
     }
 
     private static bool TryGetWorkbook(Stream fileStream, CompoundDocument document, out Stream stream)
