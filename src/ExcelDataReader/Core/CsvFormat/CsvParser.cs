@@ -7,7 +7,7 @@ namespace ExcelDataReader.Core.CsvFormat;
 /// </summary>
 internal sealed class CsvParser
 {
-    public CsvParser(char separator, Encoding encoding, char? quoteChar = null)
+    public CsvParser(char separator, Encoding encoding, char? quoteChar = null, bool trimWhiteSpace = true)
     {
         Separator = separator;
         QuoteChar = quoteChar;
@@ -19,6 +19,8 @@ internal sealed class CsvParser
         CharBuffer = new char[bufferSize];
 
         State = CsvState.PreValue;
+
+        TrimWhiteSpace = trimWhiteSpace;
     }
 
     private enum CsvState
@@ -51,6 +53,8 @@ internal sealed class CsvParser
     private List<string> RowResult { get; set; } = [];
 
     private List<List<string>> RowsResult { get; set; } = [];
+
+    private bool TrimWhiteSpace { get; }
 
     public void ParseBuffer(byte[] bytes, int offset, int count, out List<List<string>> rows)
     {
@@ -122,7 +126,7 @@ internal sealed class CsvParser
 
     private bool ReadPreValue(char c, int bytesUsed)
     {
-        if (IsWhitespace(c))
+        if (IsWhitespace(c) && TrimWhiteSpace)
         {
             return true;
         }
@@ -172,7 +176,7 @@ internal sealed class CsvParser
         }
         else
         {
-            if (IsWhitespace(c))
+            if (IsWhitespace(c) && TrimWhiteSpace)
             {
                 TrailingWhitespaceCount++;
             }
