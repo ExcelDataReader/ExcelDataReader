@@ -132,7 +132,11 @@ internal sealed class XmlStylesReader(XmlReader reader) : XmlRecordReader(reader
                     int.TryParse(reader.GetAttribute(AIndent), NumberStyles.Integer, CultureInfo.InvariantCulture, out indentLevel);
                     try
                     {
+                        #if NET8_0
+                        horizontalAlignment = Enum.Parse<HorizontalAlignment>(reader.GetAttribute(AHorizontal), true);
+                        #else
                         horizontalAlignment = (HorizontalAlignment)Enum.Parse(typeof(HorizontalAlignment), reader.GetAttribute(AHorizontal), true);
+                        #endif
                     }
                     catch (ArgumentException)
                     {
