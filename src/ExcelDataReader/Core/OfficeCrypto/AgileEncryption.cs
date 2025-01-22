@@ -155,11 +155,7 @@ internal sealed class AgileEncryption : EncryptionInfo
 
     private static HashIdentifier ParseHash(string value)
     {
-        #if NET8_0
-            return Enum.Parse<HashIdentifier>(value);
-        #else
-            return (HashIdentifier)Enum.Parse(typeof(HashIdentifier), value);
-        #endif
+        return (HashIdentifier)Enum.Parse(typeof(HashIdentifier), value);
     }
 
     private static CipherIdentifier ParseCipher(string value/*, int blockBits*/)
