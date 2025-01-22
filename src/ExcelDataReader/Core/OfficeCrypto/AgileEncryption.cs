@@ -155,7 +155,9 @@ internal sealed class AgileEncryption : EncryptionInfo
 
     private static HashIdentifier ParseHash(string value)
     {
+#pragma warning disable CA2263
         return (HashIdentifier)Enum.Parse(typeof(HashIdentifier), value);
+#pragma warning restore CA2263
     }
 
     private static CipherIdentifier ParseCipher(string value/*, int blockBits*/)
