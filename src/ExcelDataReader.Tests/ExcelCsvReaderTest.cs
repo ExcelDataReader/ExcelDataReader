@@ -553,4 +553,28 @@ public class ExcelCsvReaderTest
             Assert.That(row4, Is.EqualTo(new object[] { "Test3", "IJK", "ZZ", "10,143.27", "0.00" }));
         });
     }
+
+    [Test]
+    public void GitIssue566_ParseCsvWithoutTrimmingWhiteSpace()
+    {
+        var keepSpaceConfig = new ExcelReaderConfiguration
+        {
+            TrimWhiteSpace = false,
+        };
+
+        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("csv\\test_issue_566.csv"), keepSpaceConfig);
+
+        var ds = excelReader.AsDataSet();
+        Assert.That(ds.Tables[0].Rows[0][0], Is.EqualTo("c1"));
+        Assert.That(ds.Tables[0].Rows[0][1], Is.EqualTo("c2 "));
+        Assert.That(ds.Tables[0].Rows[0][2], Is.EqualTo("c3"));
+        Assert.That(ds.Tables[0].Rows[0][3], Is.EqualTo(" c4"));
+        Assert.That(ds.Tables[0].Rows[0][4], Is.EqualTo("c5"));
+
+        Assert.That(ds.Tables[0].Rows[1][0], Is.EqualTo("11 "));
+        Assert.That(ds.Tables[0].Rows[1][1], Is.EqualTo("12"));
+        Assert.That(ds.Tables[0].Rows[1][2], Is.EqualTo("\t"));
+        Assert.That(ds.Tables[0].Rows[1][3], Is.EqualTo(" "));
+        Assert.That(ds.Tables[0].Rows[1][4], Is.EqualTo("15"));
+    }
 }
