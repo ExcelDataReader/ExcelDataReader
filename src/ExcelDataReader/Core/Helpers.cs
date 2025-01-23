@@ -76,6 +76,15 @@ internal static partial class Helpers
         return value;
     }
 
+    public static bool StringStartsWith(string value, char start)
+    {
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        return value.ToString().StartsWith(start);
+#else
+        return value.ToString().StartsWith($"{start}", StringComparison.InvariantCulture);
+#endif
+    }
+
 #if NET8_0_OR_GREATER
     [GeneratedRegex("_x([0-9A-F]{4,4})_")]
     private static partial Regex EscapeRegex();
