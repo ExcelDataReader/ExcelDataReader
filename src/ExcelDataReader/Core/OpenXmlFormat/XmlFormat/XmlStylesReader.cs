@@ -130,15 +130,11 @@ internal sealed class XmlStylesReader(XmlReader reader) : XmlRecordReader(reader
                 if (reader.IsStartElement(NAlignment, nsSpreadsheetMl))
                 {
                     int.TryParse(reader.GetAttribute(AIndent), NumberStyles.Integer, CultureInfo.InvariantCulture, out indentLevel);
-                    try
+
+                    var attrValue = reader.GetAttribute(AHorizontal);
+                    if (attrValue is not null)
                     {
-                        horizontalAlignment = (HorizontalAlignment)Enum.Parse(typeof(HorizontalAlignment), reader.GetAttribute(AHorizontal), true);
-                    }
-                    catch (ArgumentException)
-                    {
-                    }
-                    catch (OverflowException)
-                    {
+                        Enum.TryParse(attrValue, true, out horizontalAlignment);
                     }
 
                     reader.Skip();

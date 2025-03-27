@@ -490,6 +490,23 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
         Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List1"));
     }
 
+    [Test]
+    public void GitIssue700_AlignmentEnumParsing()
+    {
+        using var reader = OpenReader("Test_git_issue_700_CellAlignments");
+        reader.Read();
+
+        var general = reader.GetCellStyle(0);
+        var left = reader.GetCellStyle(1);
+        var center = reader.GetCellStyle(2);
+        var right = reader.GetCellStyle(3);
+
+        Assert.That(general.HorizontalAlignment, Is.EqualTo(HorizontalAlignment.General));
+        Assert.That(left.HorizontalAlignment, Is.EqualTo(HorizontalAlignment.Left));
+        Assert.That(center.HorizontalAlignment, Is.EqualTo(HorizontalAlignment.Center));
+        Assert.That(right.HorizontalAlignment, Is.EqualTo(HorizontalAlignment.Right));
+    }
+
     protected override IExcelDataReader OpenReader(Stream stream, ExcelReaderConfiguration configuration = null) 
     => ExcelReaderFactory.CreateOpenXmlReader(stream, configuration);
 
