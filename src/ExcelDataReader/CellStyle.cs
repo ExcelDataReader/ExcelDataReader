@@ -16,9 +16,9 @@ public enum HorizontalAlignment
     Left,
 
     /// <summary>
-    /// Centered.
+    /// Center.
     /// </summary>
-    Centered,
+    Center,
 
     /// <summary>
     /// Right.
