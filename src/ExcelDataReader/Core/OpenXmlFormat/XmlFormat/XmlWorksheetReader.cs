@@ -4,7 +4,7 @@ using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
-internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : XmlRecordReader(reader)
+internal sealed class XmlWorksheetReader(XmlReader reader) : XmlRecordReader(reader)
 {
     private const string NWorksheet = "worksheet";
     private const string NSheetData = "sheetData";
@@ -256,6 +256,8 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
         int columnIndex;
         int xfIndex = -1;
 
+        var aS = Reader.GetAttribute(AS);
+        var aT = Reader.GetAttribute(AT);
         var aR = Reader.GetAttribute(AR);
 
         if (ReferenceHelper.ParseReference(aR, out int referenceColumn, out _))
@@ -263,26 +265,6 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
         else
             columnIndex = nextColumnIndex;
 
-        if (preparing)
-        {
-            // We only care about columnIndex and if there is any content or not when preparing.
-            if (!XmlReaderHelper.ReadFirstContent(Reader))
-            {
-                return new CellRecord(columnIndex, 0, null, null);
-            }
-
-            while (!Reader.EOF)
-            {
-                if (!XmlReaderHelper.SkipContent(Reader))
-                {
-                    break;
-                }
-            }
-
-            return new CellRecord(columnIndex, 0, string.Empty, null);
-        }
-
-        var aS = Reader.GetAttribute(AS);
         if (aS != null)
         {
             if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
@@ -295,8 +277,6 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
         {
             return new CellRecord(columnIndex, xfIndex, null, null);
         }
-
-        var aT = Reader.GetAttribute(AT);
 
         object value = null;
         CellError? error = null;
@@ -325,12 +305,13 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
         static void ConvertCellValue(string rawValue, string aT, out object value, out CellError? error)
         {
             const NumberStyles style = NumberStyles.Any;
+            var invariantCulture = CultureInfo.InvariantCulture;
 
             error = null;
             switch (aT)
             {
                 case AS: //// if string
-                    if (int.TryParse(rawValue, style, CultureInfo.InvariantCulture, out var sstIndex))
+                    if (int.TryParse(rawValue, style, invariantCulture, out var sstIndex))
                     {
                         // TODO: Can we get here when the sstIndex is not a valid index in the SST list?
                         value = sstIndex;
@@ -347,7 +328,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
                     value = rawValue == "1";
                     return;
                 case "d": //// ISO 8601 date
-                    if (DateTime.TryParseExact(rawValue, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date))
+                    if (DateTime.TryParseExact(rawValue, "yyyy-MM-dd", invariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date))
                     {
                         value = date;
                         return;
@@ -360,7 +341,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
                     value = null;
                     return;
                 default:
-                    if (double.TryParse(rawValue, style, CultureInfo.InvariantCulture, out double number))
+                    if (double.TryParse(rawValue, style, invariantCulture, out double number))
                     {
                         value = number;
                         return;

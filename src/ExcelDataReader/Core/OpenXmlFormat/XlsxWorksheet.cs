@@ -21,7 +21,7 @@ internal sealed class XlsxWorksheet : IWorksheet
         if (string.IsNullOrEmpty(Path))
             return;
 
-        using var sheetStream = Document.GetWorksheetReader(Path, true);
+        using var sheetStream = Document.GetWorksheetReader(Path);
         
         if (sheetStream == null)
             return;
@@ -116,13 +116,12 @@ internal sealed class XlsxWorksheet : IWorksheet
         if (string.IsNullOrEmpty(Path))
             yield break;
 
-        using RecordReader sheetStream = Document.GetWorksheetReader(Path, false);
+        using RecordReader sheetStream = Document.GetWorksheetReader(Path);
         if (sheetStream == null)
             yield break;
 
         var rowIndex = 0;
-        List<Cell> cells = [];
-        bool foundCell = false;
+        List<Cell> cells = null;
         double height = 0;
 
         bool inSheetData = false;
@@ -140,21 +139,21 @@ internal sealed class XlsxWorksheet : IWorksheet
                 case RowHeaderRecord row when inSheetData:
                     int currentRowIndex = row.RowIndex;
 
-                    if (foundCell && rowIndex != currentRowIndex)
+                    if (cells != null && rowIndex != currentRowIndex)
                     {
                         yield return new Row(rowIndex++, height, cells);
-                        cells.Clear();
-                        foundCell = false;
+                        cells = null;
                     }
 
-                    if (!foundCell)
+                    if (cells == null)
                     {
                         height = row.Hidden ? 0 : row.Height ?? DefaultRowHeight;
+                        cells = [];
                     }
 
                     for (; rowIndex < currentRowIndex; rowIndex++)
                     {
-                        yield return new Row(rowIndex, DefaultRowHeight, cells);
+                        yield return new Row(rowIndex, DefaultRowHeight, []);
                     }
 
                     break;
@@ -162,12 +161,11 @@ internal sealed class XlsxWorksheet : IWorksheet
                     // TODO What if we get a cell without a row?
                     var extendedFormat = Workbook.GetEffectiveCellStyle(cell.XfIndex, 0);
                     cells.Add(new Cell(cell.ColumnIndex, ConvertCellValue(cell.Value, extendedFormat.NumberFormatIndex), extendedFormat, cell.Error));
-                    foundCell = true;
                     break;
             }
         }
 
-        if (foundCell)
+        if (cells != null)
             yield return new Row(rowIndex, height, cells);
     }
 

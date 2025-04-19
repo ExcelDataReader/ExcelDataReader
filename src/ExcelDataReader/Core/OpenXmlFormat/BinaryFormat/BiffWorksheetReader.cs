@@ -2,7 +2,7 @@
 
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 
-internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffReader(stream)
+internal sealed class BiffWorksheetReader(Stream stream) : BiffReader(stream)
 {
     private const uint Row = 0x00; 
     private const uint Blank = 0x01;
@@ -129,18 +129,6 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
             case BoolError:
             case FormulaError:
                 return ReadCell(null, (CellError)buffer[8]);
-
-            // Possibly we could do even better if we just read the
-            // length and column index instead but this is a simpler change.
-            case Number when preparing:
-            case FormulaNumber when preparing:
-            case Float when preparing:
-            case String when preparing:
-            case FormulaString when preparing:
-            case BrtCellRString when preparing:
-            case SharedString when preparing:
-                return ReadCell(string.Empty);
-
             case Number:
                 return ReadCell(GetRkNumber(buffer, 8));
             case Bool:
