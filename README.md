@@ -124,6 +124,10 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
     // (CSV only)
     AutodetectSeparators = new char[] { ',', ';', '\t', '|', '#' },
 
+    // Gets or sets a value indicating whether to trim white space values for CSV (Default 'true').
+    // (CSV only)
+    TrimWhiteSpace = true,
+
     // Gets or sets a value indicating whether to leave the stream open after
     // the IExcelDataReader object is disposed. Default: false
     LeaveOpen = false,

@@ -29,6 +29,11 @@ public class ExcelReaderConfiguration
     public char? QuoteChar { get; set; } = '"';
 
     /// <summary>
+    /// Gets or sets a value indicating whether to trim white space values for CSV (Default 'true').
+    /// </summary>
+    public bool TrimWhiteSpace { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets a value indicating whether to leave the stream open after the IExcelDataReader object is disposed. Default: false.
     /// </summary>
     public bool LeaveOpen { get; set; }
