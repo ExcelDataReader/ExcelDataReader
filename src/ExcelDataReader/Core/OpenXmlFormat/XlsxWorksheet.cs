@@ -147,12 +147,12 @@ internal sealed class XlsxWorksheet : IWorksheet
                         cells.Clear();
                     }
 
-                    height = row.Hidden ? 0 : row.Height ?? DefaultRowHeight;
-
                     for (; rowIndex < currentRowIndex; rowIndex++)
                     {
                         yield return new Row(rowIndex, DefaultRowHeight, cells);
                     }
+
+                    height = row.Hidden ? 0 : row.Height ?? DefaultRowHeight;
 
                     break;
                 case CellRecord cell when inSheetData:
