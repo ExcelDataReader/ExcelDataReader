@@ -155,7 +155,11 @@ internal sealed class AgileEncryption : EncryptionInfo
 
     private static HashIdentifier ParseHash(string value)
     {
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        return Enum.Parse<HashIdentifier>(value);
+#else
         return (HashIdentifier)Enum.Parse(typeof(HashIdentifier), value);
+#endif
     }
 
     private static CipherIdentifier ParseCipher(string value/*, int blockBits*/)
