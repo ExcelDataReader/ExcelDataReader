@@ -404,7 +404,7 @@ public abstract class ExcelTestBase
     }
     
     [Test]
-    public void GitIssue283TimeSpan()
+    public void GitIssue283IsoFormatTimeSpan()
     {
         using var reader = OpenReader("Test_git_issue_283_TimeSpan");
         reader.Read();
@@ -965,6 +965,19 @@ public abstract class ExcelTestBase
         {
             Assert.That(reader.FieldCount, Is.EqualTo(3));
         }
+    }
+
+    [Test]
+    public void GitIssue694ExcelTimeFormatTimeSpan()
+    {
+        using var reader = OpenReader("Test_git_issue_694_TimeSpan");
+        reader.Read();
+        reader.Read();
+        Assert.That(TimeSpan.Parse(reader[1].ToString()), Is.EqualTo(TimeSpan.Parse("-13:57")));
+        reader.Read();
+        Assert.That(TimeSpan.Parse(reader[1].ToString()), Is.EqualTo(TimeSpan.Parse("-00:11")));
+        reader.Read();
+        Assert.That(TimeSpan.Parse(reader[1].ToString()), Is.EqualTo(TimeSpan.Parse("00:11")));
     }
 
     protected IExcelDataReader OpenReader(string name)

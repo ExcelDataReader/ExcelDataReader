@@ -201,7 +201,15 @@ internal sealed class XlsxWorksheet : IWorksheet
                     return value;
                 NumberFormatString numberFormat = Workbook.GetNumberFormatString(numberFormatIndex);
                 if (numberFormat.IsTimeSpanFormat)
-                    return XmlConvert.ToTimeSpan(value.ToString());
+                {
+                    var isIsoFormat = Helpers.StringStartsWith(value.ToString(), 'P');
+
+                    if (isIsoFormat)
+                        return XmlConvert.ToTimeSpan(value.ToString());
+                    else if (TimeSpan.TryParse(value.ToString(), out var parsed))
+                        return parsed;
+                }
+
                 if (numberFormat.IsDateTimeFormat)
                 {
                     if (DateTimeOffset.TryParse(value.ToString(), out DateTimeOffset dateTimeOffset))
