@@ -162,36 +162,21 @@ internal sealed class AgileEncryption : EncryptionInfo
 #endif
     }
 
-    private static CipherIdentifier ParseCipher(string value/*, int blockBits*/)
+    private static CipherIdentifier ParseCipher(string value/*, int blockBits*/) => value switch
     {
-        if (value == "AES")
-        {
-            return CipherIdentifier.AES;
-        }
-        else if (value == "DES")
-        {
-            return CipherIdentifier.DES;
-        }
-        else if (value == "3DES")
-        {
-            return CipherIdentifier.DES3;
-        }
-        else if (value == "RC2")
-        {
-            return CipherIdentifier.RC2;
-        }
+        "AES" => CipherIdentifier.AES,
+        "DES" => CipherIdentifier.DES,
+        "3DES" => CipherIdentifier.DES3,
+        "RC2" => CipherIdentifier.RC2,
+        _ => throw new ArgumentException("Unknown encryption: " + value, nameof(value)),
+    };
 
-        throw new ArgumentException("Unknown encryption: " + value, nameof(value));
-    }
-
-    private static CipherMode ParseCipherMode(string value)
+    private static CipherMode ParseCipherMode(string value) => value switch
     {
-        if (value == "ChainingModeCBC")
-            return CipherMode.CBC;
-        else if (value == "ChainingModeCFB")
-            return CipherMode.CFB;
-        throw new ArgumentException("Invalid CipherMode " + value);
-    }
+        "ChainingModeCBC" => CipherMode.CBC,
+        "ChainingModeCFB" => CipherMode.CFB,
+        _ => throw new ArgumentException("Invalid CipherMode " + value),
+    };
 
     private void ReadXmlEncryptionInfoStream(XmlReader xmlReader)
     {
