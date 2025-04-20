@@ -177,3 +177,4 @@ UpgradeLog*.htm
 FakesAssemblies/
 
 BenchmarkDotNet.Artifacts/
+.idea/
