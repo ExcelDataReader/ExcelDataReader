@@ -18,6 +18,7 @@ internal sealed class XlsBiffDefaultRowHeight : XlsBiffRecord
         }
     }
 
+    [Flags]
     internal enum DefaultRowHeightFlags : ushort
     {
         Unsynced = 1,

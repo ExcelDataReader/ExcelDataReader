@@ -102,7 +102,7 @@ internal sealed class XlsSSTReader
             CurrentHeader = new XlsSSTStringHeader(CurrentRecord.Bytes, CurrentRecordOffset);
             CurrentIsMultiByte = CurrentHeader.IsMultiByte;
             CurrentHeaderBytes = (int)CurrentHeader.HeadSize;
-            CurrentRemainingCharacters = (int)CurrentHeader.CharacterCount;
+            CurrentRemainingCharacters = CurrentHeader.CharacterCount;
 
             const int XlsUnicodeStringHeaderSize = 3;
 

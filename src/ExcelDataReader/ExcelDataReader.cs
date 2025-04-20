@@ -50,11 +50,11 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     public int RecordsAffected => throw new NotSupportedException();
 
-    public double RowHeight => _rowIterator?.Current.Height ?? 0;
+    public double RowHeight => _rowIterator?.Current?.Height ?? 0;
 
     protected TWorkbook Workbook { get; set; }
 
-    protected Cell[] RowCells { get; set; }
+    private Cell[] RowCells { get; set; }
 
     public object this[int i] => GetValue(i);
 
@@ -151,28 +151,26 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     public double GetColumnWidth(int i)
     {
+        const double DefaultColumnWidth = 8.43D;
+
         if (i >= FieldCount)
         {
             throw new ArgumentException($"Column at index {i} does not exist.", nameof(i));
         }
 
-        var columnWidths = _worksheetIterator?.Current?.ColumnWidths ?? null;
-        double? retWidth = null;
+        var columnWidths = _worksheetIterator?.Current?.ColumnWidths;
         if (columnWidths != null)
         {
             foreach (var columnWidth in columnWidths)
             {
                 if (i >= columnWidth.Minimum && i <= columnWidth.Maximum)
                 {
-                    retWidth = columnWidth.Hidden ? 0 : columnWidth.Width;
-                    break;
+                    return columnWidth.Hidden ? 0 : columnWidth.Width ?? DefaultColumnWidth;
                 }
             }
         }
 
-        const double DefaultColumnWidth = 8.43D;
-
-        return retWidth ?? DefaultColumnWidth;
+        return DefaultColumnWidth;
     }
 
     public CellStyle GetCellStyle(int i)

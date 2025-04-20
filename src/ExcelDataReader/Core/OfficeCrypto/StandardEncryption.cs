@@ -122,6 +122,7 @@ internal sealed class StandardEncryption : EncryptionInfo
         SHA1 = 0x00008004,
     }
 
+    [Flags]
     private enum EncryptionHeaderFlags : uint
     {
         CryptoAPI = 0x00000004,

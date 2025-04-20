@@ -45,12 +45,12 @@ internal sealed class XlsSSTStringHeader(byte[] bytes, int offset)
     /// <summary>
     /// Gets the number of formats used for formatting (0 if string has no formatting).
     /// </summary>
-    public ushort FormatCount => HasFormatting ? BitConverter.ToUInt16(_bytes, (int)_offset + 3) : (ushort)0;
+    public ushort FormatCount => HasFormatting ? BitConverter.ToUInt16(_bytes, _offset + 3) : (ushort)0;
 
     /// <summary>
     /// Gets the size of extended string in bytes, 0 if there is no one.
     /// </summary>
-    public uint ExtendedStringSize => HasExtString ? (uint)BitConverter.ToUInt32(_bytes, (int)_offset + (HasFormatting ? 5 : 3)) : 0;
+    public uint ExtendedStringSize => HasExtString ? BitConverter.ToUInt32(_bytes, (int)_offset + (HasFormatting ? 5 : 3)) : 0;
 
     /// <summary>
     /// Gets the head (before string data) size in bytes.

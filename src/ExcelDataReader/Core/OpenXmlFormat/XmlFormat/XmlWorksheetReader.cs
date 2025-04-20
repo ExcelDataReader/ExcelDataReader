@@ -173,7 +173,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
                         double.TryParse(width, NumberStyles.Float, CultureInfo.InvariantCulture, out double widthVal);
 
                         // Note: column indexes need to be converted to be zero-indexed
-                        yield return new ColumnRecord(new Column(minVal - 1, maxVal - 1, hidden == "1", customWidth == "1" ? (double?)widthVal : null));
+                        yield return new ColumnRecord(new Column(minVal - 1, maxVal - 1, hidden == "1", customWidth == "1" ? widthVal : null));
 
                         Reader.Skip();
                     }

@@ -47,7 +47,7 @@ internal static class DateTimeHelper
     public static DateTime FromOADate(double d) => new(DoubleDateToTicks(d), DateTimeKind.Unspecified);
 
     // duplicated from DateTime
-    internal static long DoubleDateToTicks(double value)
+    private static long DoubleDateToTicks(double value)
     {
         if (value >= OADateMaxAsDouble || value <= OADateMinAsDouble)
             throw new ArgumentException("Invalid OA Date", nameof(value));
@@ -63,7 +63,7 @@ internal static class DateTimeHelper
 
         millis += DoubleDateOffset / TicksPerMillisecond;
 
-        if (millis < 0 || millis >= MaxMillis)
+        if (millis is < 0 or >= MaxMillis)
             throw new ArgumentException("OA Date out of range");
         return millis * TicksPerMillisecond;
     }

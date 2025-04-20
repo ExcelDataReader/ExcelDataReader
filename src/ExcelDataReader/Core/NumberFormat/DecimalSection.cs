@@ -1,6 +1,6 @@
 ﻿namespace ExcelDataReader.Core.NumberFormat;
 
-internal sealed class DecimalSection()
+internal sealed class DecimalSection
 {
     public required bool ThousandSeparator { get; init; }
 

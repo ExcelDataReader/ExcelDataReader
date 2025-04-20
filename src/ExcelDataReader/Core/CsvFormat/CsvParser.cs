@@ -92,35 +92,16 @@ internal sealed class CsvParser
         var parsed = false;
         while (!parsed)
         {
-            switch (State)
+            parsed = State switch
             {
-                case CsvState.PreValue:
-                    parsed = ReadPreValue(c, bytesUsed);
-                    break;
-
-                case CsvState.Value:
-                    parsed = ReadValue(c, bytesUsed);
-                    break;
-
-                case CsvState.QuotedValue:
-                    parsed = ReadQuotedValue(c, bytesUsed);
-                    break;
-
-                case CsvState.QuotedValueQuote:
-                    parsed = ReadQuotedValueQuote(c, bytesUsed);
-                    break;
-
-                case CsvState.Separator:
-                    parsed = ReadSeparator(c, bytesUsed);
-                    break;
-
-                case CsvState.Linebreak:
-                    parsed = ReadLinebreak(c, bytesUsed);
-                    break;
-
-                default:
-                    throw new InvalidOperationException("Unhandled parser state: " + State);
-            }
+                CsvState.PreValue => ReadPreValue(c, bytesUsed),
+                CsvState.Value => ReadValue(c, bytesUsed),
+                CsvState.QuotedValue => ReadQuotedValue(c),
+                CsvState.QuotedValueQuote => ReadQuotedValueQuote(c),
+                CsvState.Separator => ReadSeparator(),
+                CsvState.Linebreak => ReadLinebreak(c),
+                _ => throw new InvalidOperationException("Unhandled parser state: " + State)
+            };
         }
     }
 
@@ -190,23 +171,23 @@ internal sealed class CsvParser
         }
     }
 
-    private bool ReadQuotedValue(char c, int bytesUsed)
+    private bool ReadQuotedValue(char c)
     {
-        if (QuoteChar.HasValue && c == QuoteChar.Value)
+        if (c == QuoteChar)
         {
             State = CsvState.QuotedValueQuote;
-            return true;
         }
         else
         {
             ValueResult.Append(c);
-            return true;
         }
+
+        return true;
     }
 
-    private bool ReadQuotedValueQuote(char c, int bytesUsed)
+    private bool ReadQuotedValueQuote(char c)
     {
-        if (QuoteChar.HasValue && c == QuoteChar.Value)
+        if (c == QuoteChar)
         {
             // Is escaped quote
             ValueResult.Append(c);
@@ -221,14 +202,14 @@ internal sealed class CsvParser
         }
     }
 
-    private bool ReadSeparator(char c, int bytesUsed)
+    private bool ReadSeparator()
     {
         AddValueToRow();
         State = CsvState.PreValue;
         return true;
     }
 
-    private bool ReadLinebreak(char c, int bytesUsed)
+    private bool ReadLinebreak(char c)
     {
         if (HasCarriageReturn)
         {

@@ -18,7 +18,7 @@ internal static class ReferenceHelper
         while (position < value.Length)
         {
             var c = char.ToUpperInvariant(value[position]);
-            if (c >= 'A' && c <= 'Z')
+            if (c is >= 'A' and <= 'Z')
             {
                 position++;
                 column *= 26;
@@ -40,7 +40,7 @@ internal static class ReferenceHelper
             return false;
         }
 
-        if (!TryParseDecInt(value.Slice(position), out row))
+        if (!TryParseDecInt(value[position..], out row))
         {
             return false;
         }

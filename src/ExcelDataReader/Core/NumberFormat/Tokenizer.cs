@@ -5,9 +5,8 @@ namespace ExcelDataReader.Core.NumberFormat;
 internal sealed class Tokenizer(string fmt)
 {
     private readonly string _formatString = fmt;
-    private int _formatStringPosition;
 
-    public int Position => _formatStringPosition;
+    public int Position { get; private set; }
 
     public int Length => _formatString.Length;
 
@@ -18,42 +17,14 @@ internal sealed class Tokenizer(string fmt)
 
     public int Peek(int offset = 0)
     {
-        if (_formatStringPosition + offset >= _formatString.Length)
+        if (Position + offset >= _formatString.Length)
             return -1;
-        return _formatString[_formatStringPosition + offset];
-    }
-
-    public int PeekUntil(int startOffset, int until)
-    {
-        int offset = startOffset;
-        while (true)
-        {
-            var c = Peek(offset++);
-            if (c == -1)
-                break;
-            if (c == until)
-                return offset - startOffset;
-        }
-
-        return 0;
-    }
-
-    public bool PeekOneOf(int offset, string s)
-    {
-        foreach (var c in s)
-        {
-            if (Peek(offset) == c)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return _formatString[Position + offset];
     }
 
     public void Advance(int characters = 1)
     {
-        _formatStringPosition = Math.Min(_formatStringPosition + characters, _formatString.Length);
+        Position = Math.Min(Position + characters, _formatString.Length);
     }
 
     public bool ReadOneOrMore(int c)
@@ -80,7 +51,7 @@ internal sealed class Tokenizer(string fmt)
 
     public bool ReadString(string s, bool ignoreCase = false)
     {
-        if (_formatStringPosition + s.Length > _formatString.Length)
+        if (Position + s.Length > _formatString.Length)
             return false;
 
         for (var i = 0; i < s.Length; i++)
@@ -117,4 +88,21 @@ internal sealed class Tokenizer(string fmt)
 
         return false;
     }
+    
+    private int PeekUntil(int startOffset, int until)
+    {
+        int offset = startOffset;
+        while (true)
+        {
+            var c = Peek(offset++);
+            if (c == -1)
+                break;
+            if (c == until)
+                return offset - startOffset;
+        }
+
+        return 0;
+    }
+
+    private bool PeekOneOf(int offset, string s) => s.Any(c => Peek(offset) == c);
 }

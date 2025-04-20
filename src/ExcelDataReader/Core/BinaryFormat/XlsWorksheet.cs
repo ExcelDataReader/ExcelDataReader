@@ -42,16 +42,11 @@ internal sealed class XlsWorksheet : IWorksheet
     /// </summary>
     public string VisibleState { get; }
 
-    /// <summary>
-    /// Gets a value indicating whether the sheet is active.
-    /// </summary>       
-    public bool IsActiveSheet { get; }
-
     public HeaderFooter HeaderFooter { get; private set; }
 
     public CellRange[] MergeCells { get; private set; }
 
-    public Column[] ColumnWidths { get; private set; }
+    public List<Column> ColumnWidths { get; private set; }
 
     /// <summary>
     /// Gets the worksheet data offset.
@@ -160,7 +155,7 @@ internal sealed class XlsWorksheet : IWorksheet
 
     private XlsRowBlock ReadNextBlock(XlsBiffStream biffStream, int startRow, int rows, int minOffset, int maxOffset)
     {
-        var result = new XlsRowBlock { Rows = [] };
+        var result = new XlsRowBlock();
 
         // Ensure rows with physical records are initialized with height
         for (var i = 0; i < rows; i++)
@@ -178,9 +173,8 @@ internal sealed class XlsWorksheet : IWorksheet
 
         biffStream.Position = minOffset;
 
-        XlsBiffRecord rec;
         XlsBiffRecord ixfe = null;
-        while (biffStream.Position <= maxOffset && (rec = biffStream.Read()) != null)
+        while (biffStream.Position <= maxOffset && biffStream.Read() is { } rec)
         {
             if (rec.Id == BIFFRECORDTYPE.IXFE)
             {
@@ -340,10 +334,11 @@ internal sealed class XlsWorksheet : IWorksheet
         {
             case XlsBiffFormulaCell.FormulaValueType.Boolean: return formulaCell.BooleanValue;
             case XlsBiffFormulaCell.FormulaValueType.Error:
-                error = (CellError)formulaCell.ErrorValue;
+                error = formulaCell.ErrorValue;
                 return null;
             case XlsBiffFormulaCell.FormulaValueType.EmptyString: return string.Empty;
-            case XlsBiffFormulaCell.FormulaValueType.Number: return TryConvertOADateTime(formulaCell.XNumValue, effectiveStyle.NumberFormatIndex);
+            case XlsBiffFormulaCell.FormulaValueType.Number:
+                return TryConvertOADateTime(formulaCell.XNumValue, effectiveStyle.NumberFormatIndex);
             case XlsBiffFormulaCell.FormulaValueType.String: return TryGetFormulaString(biffStream, effectiveStyle);
 
             // Bad data or new formula value type
@@ -354,15 +349,17 @@ internal sealed class XlsWorksheet : IWorksheet
     private string TryGetFormulaString(XlsBiffStream biffStream, ExtendedFormat effectiveStyle)
     {
         var rec = biffStream.Read();
-        if (rec != null && rec.Id == BIFFRECORDTYPE.SHAREDFMLA)
+        if (rec is { Id: BIFFRECORDTYPE.SHAREDFMLA })
         {
             rec = biffStream.Read();
         }
 
-        if (rec != null && rec.Id == BIFFRECORDTYPE.STRING)
+        if (rec is { Id: BIFFRECORDTYPE.STRING })
         {
             var stringRecord = (XlsBiffFormulaString)rec;
-            var formulaEncoding = GetFont(effectiveStyle.FontIndex)?.ByteStringEncoding ?? Encoding; // Workbook.GetFontEncodingFromXF(xFormat) ?? Encoding;
+            var formulaEncoding =
+                GetFont(effectiveStyle.FontIndex)?.ByteStringEncoding ??
+                Encoding; // Workbook.GetFontEncodingFromXF(xFormat) ?? Encoding;
             return stringRecord.GetValue(formulaEncoding);
         }
 
@@ -405,25 +402,13 @@ internal sealed class XlsWorksheet : IWorksheet
     {
         if (Workbook.BiffVersion == 2)
         {
-            if (cell.XFormat == 63 && ixfe != null)
+            return cell.XFormat switch
             {
-                var xFormat = ixfe.ReadUInt16(0);
-                return xFormat;
-            }
-            else if (cell.XFormat > 63)
-            {
-                // Invalid XF ref on cell in BIFF2 stream
-                return -1;
-            }
-            else if (cell.XFormat < Workbook.ExtendedFormats.Count)
-            {
-                return cell.XFormat;
-            }
-            else
-            {
-                // Either the file has no XFs, or XF was out of range
-                return -1;
-            }
+                63 when ixfe != null => ixfe.ReadUInt16(0),
+                > 63 => -1, // Invalid XF ref on cell in BIFF2 stream
+                { } when cell.XFormat < Workbook.ExtendedFormats.Count => cell.XFormat,
+                _ => -1
+            };
         }
 
         return cell.XFormat;
@@ -432,7 +417,7 @@ internal sealed class XlsWorksheet : IWorksheet
     private void ReadWorksheetGlobals()
     {
         using var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, BIFFTYPE.Worksheet, secretKey: Workbook.SecretKey, encryption: Workbook.Encryption);
-        
+
         // Check the expected BOF record was found in the BIFF stream
         if (biffStream.BiffVersion == 0 || biffStream.BiffType != BIFFTYPE.Worksheet)
             return;
@@ -449,7 +434,7 @@ internal sealed class XlsWorksheet : IWorksheet
         List<CellRange> mergeCells = [];
         Dictionary<ushort, XlsBiffFormatString> biffFormats = [];
         List<Column> columnWidths = [];
-        
+
         var recordOffset = biffStream.Position;
         var rec = biffStream.Read();
         while (rec != null && rec is not XlsBiffEof)
@@ -466,7 +451,7 @@ internal sealed class XlsWorksheet : IWorksheet
                 case XlsBiffSimpleValueRecord is1904 when rec.Id == BIFFRECORDTYPE.RECORD1904:
                     IsDate1904 = is1904.Value == 1;
                     break;
-                case XlsBiffXF xf when rec.Id == BIFFRECORDTYPE.XF_V2 || rec.Id == BIFFRECORDTYPE.XF_V3 || rec.Id == BIFFRECORDTYPE.XF_V4:
+                case XlsBiffXF xf when rec.Id is BIFFRECORDTYPE.XF_V2 or BIFFRECORDTYPE.XF_V3 or BIFFRECORDTYPE.XF_V4:
                     // NOTE: XF records should only occur in raw BIFF2-4 single worksheet documents without the workbook stream, or globally in the workbook stream.
                     // It is undefined behavior if multiple worksheets in a workbook declare XF records.
                     Workbook.AddXf(xf);
@@ -529,7 +514,7 @@ internal sealed class XlsWorksheet : IWorksheet
 
                     SetMinMaxRowOffset(cell.RowIndex, recordOffset, maxRowCount - 1);
                     break;
-                case XlsBiffRecord when rec.Id == BIFFRECORDTYPE.IXFE:
+                case { Id: BIFFRECORDTYPE.IXFE }:
                     ixfeOffset = recordOffset;
                     break;
             }
@@ -563,7 +548,7 @@ internal sealed class XlsWorksheet : IWorksheet
 
         if (columnWidths.Count > 0)
         {
-            ColumnWidths = columnWidths.ToArray();
+            ColumnWidths = columnWidths;
         }
     }
 
@@ -573,9 +558,7 @@ internal sealed class XlsWorksheet : IWorksheet
         {
             rowOffset = new()
             {
-                MinCellOffset = int.MaxValue,
-                MaxCellOffset = int.MinValue,
-                MaxOverlapRowIndex = int.MinValue
+                MinCellOffset = int.MaxValue, MaxCellOffset = int.MinValue, MaxOverlapRowIndex = int.MinValue
             };
 
             RowOffsetMap.Add(rowIndex, rowOffset);
@@ -590,9 +573,7 @@ internal sealed class XlsWorksheet : IWorksheet
         {
             rowOffset = new()
             {
-                MinCellOffset = int.MaxValue,
-                MaxCellOffset = int.MinValue,
-                MaxOverlapRowIndex = int.MinValue
+                MinCellOffset = int.MaxValue, MaxCellOffset = int.MinValue, MaxOverlapRowIndex = int.MinValue
             };
 
             RowOffsetMap.Add(rowIndex, rowOffset);
@@ -601,11 +582,6 @@ internal sealed class XlsWorksheet : IWorksheet
         rowOffset.MinCellOffset = Math.Min(recordOffset, rowOffset.MinCellOffset);
         rowOffset.MaxCellOffset = Math.Max(recordOffset, rowOffset.MaxCellOffset);
         rowOffset.MaxOverlapRowIndex = Math.Max(maxOverlapRow, rowOffset.MaxOverlapRowIndex);
-    }
-
-    internal sealed class XlsRowBlock
-    {
-        public Dictionary<int, Row> Rows { get; set; }
     }
 
     internal sealed class XlsRowOffset
@@ -617,5 +593,10 @@ internal sealed class XlsWorksheet : IWorksheet
         public int MaxCellOffset { get; set; }
 
         public int MaxOverlapRowIndex { get; set; }
+    }
+    
+    private sealed class XlsRowBlock
+    {
+        public Dictionary<int, Row> Rows { get; } = [];
     }
 }

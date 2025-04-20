@@ -12,8 +12,6 @@ internal sealed class XlsxWorksheet : IWorksheet
         Workbook = workbook;
 
         Name = refSheet.Name;
-        Id = refSheet.Id;
-        Rid = refSheet.Rid;
         VisibleState = refSheet.VisibleState;
         Path = refSheet.Path;
         DefaultRowHeight = 15;
@@ -34,8 +32,7 @@ internal sealed class XlsxWorksheet : IWorksheet
 
         bool inSheetData = false;
 
-        Record record;
-        while ((record = sheetStream.Read()) != null)
+        while (sheetStream.Read() is { } record)
         {
             switch (record)
             {
@@ -71,7 +68,7 @@ internal sealed class XlsxWorksheet : IWorksheet
             }
         }
 
-        ColumnWidths = [.. columnWidths];
+        ColumnWidths = columnWidths;
         MergeCells = [.. cellRanges];
 
         if (rowIndexMaximum != int.MinValue && columnIndexMaximum != int.MinValue)
@@ -91,21 +88,15 @@ internal sealed class XlsxWorksheet : IWorksheet
 
     public string VisibleState { get; }
 
-    public bool IsActiveSheet { get; }
-
     public HeaderFooter HeaderFooter { get; }
-
-    public double DefaultRowHeight { get; }
-
-    public uint Id { get; }
-
-    public string Rid { get; set; }
-
-    public string Path { get; set; }
 
     public CellRange[] MergeCells { get; }
 
-    public Column[] ColumnWidths { get; }
+    public List<Column> ColumnWidths { get; }
+
+    private string Path { get; set; }
+
+    private double DefaultRowHeight { get; }
 
     private ZipWorker Document { get; }
 
@@ -195,26 +186,26 @@ internal sealed class XlsxWorksheet : IWorksheet
             case DateTime date:
                 return date;
 
-            default:
-                if (value == null)
-                    return value;
+            case string s:
                 NumberFormatString numberFormat = Workbook.GetNumberFormatString(numberFormatIndex);
                 if (numberFormat.IsTimeSpanFormat)
                 {
-                    var isIsoFormat = Helpers.StringStartsWith(value.ToString(), 'P');
+                    var isIsoFormat = Helpers.StringStartsWith(s, 'P');
 
                     if (isIsoFormat)
-                        return XmlConvert.ToTimeSpan(value.ToString());
-                    else if (TimeSpan.TryParse(value.ToString(), out var parsed))
+                        return XmlConvert.ToTimeSpan(s);
+                    if (TimeSpan.TryParse(s, out var parsed))
                         return parsed;
                 }
-
-                if (numberFormat.IsDateTimeFormat)
+                else if (numberFormat.IsDateTimeFormat)
                 {
-                    if (DateTimeOffset.TryParse(value.ToString(), out DateTimeOffset dateTimeOffset))
+                    if (DateTimeOffset.TryParse(s, out DateTimeOffset dateTimeOffset))
                         return dateTimeOffset;
                 }
 
+                return s;
+
+            default:
                 return value;
         }
     }        

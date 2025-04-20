@@ -14,8 +14,6 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
         ReadStyles();
     }
 
-    public List<SheetRecord> Sheets { get; } = [];
-
     public XlsxSST SST { get; } = [];
 
     public bool IsDate1904 { get; private set; }
@@ -24,20 +22,15 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
 
     public int ActiveSheet { get; private set; }
 
-    public IEnumerable<XlsxWorksheet> ReadWorksheets()
-    {
-        foreach (var sheet in Sheets)
-        {
-            yield return new XlsxWorksheet(_zipWorker, this, sheet);
-        }
-    }
+    private List<SheetRecord> Sheets { get; } = [];
+
+    public IEnumerable<XlsxWorksheet> ReadWorksheets() => Sheets.Select(sheet => new XlsxWorksheet(_zipWorker, this, sheet));
 
     private void ReadWorkbook()
     {
-        using RecordReader reader = _zipWorker.GetWorkbookReader();            
-        
-        Record record;
-        while ((record = reader.Read()) != null)
+        using RecordReader reader = _zipWorker.GetWorkbookReader();
+
+        while (reader?.Read() is { } record)
         {                
             switch (record)
             {
@@ -78,8 +71,7 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
         if (reader == null)
             return;
 
-        Record record;
-        while ((record = reader.Read()) != null)
+        while (reader.Read() is { } record)
         {
             switch (record)
             {
@@ -92,10 +84,6 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
                 case NumberFormatRecord nf:
                     AddNumberFormat(nf.FormatIndexInFile, nf.FormatString);
                     break;
-                default:
-                    {
-                        break;
-                    }
             }
         }
     }

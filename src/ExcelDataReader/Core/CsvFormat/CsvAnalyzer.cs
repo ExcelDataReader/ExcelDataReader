@@ -146,7 +146,7 @@ internal static class CsvAnalyzer
 
     private static Encoding GetEncodingFromBom(byte[] bom, out int bomLength)
     {
-        var encodings = new Encoding[]
+        var encodings = new[]
         {
             Encoding.Unicode, Encoding.BigEndianUnicode, Encoding.UTF8
         };

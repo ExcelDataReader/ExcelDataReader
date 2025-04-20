@@ -360,7 +360,7 @@ internal sealed class XlsBiffStream : IDisposable
             }
 
             // Decrypt at most up to the next 1024 byte boundary
-            var chunkSize = (int)Math.Min(recordSize - position, 1024 - blockOffset);
+            var chunkSize = Math.Min(recordSize - position, 1024 - blockOffset);
             var block = new byte[chunkSize];
 
             Array.Copy(bytes, position, block, 0, chunkSize);

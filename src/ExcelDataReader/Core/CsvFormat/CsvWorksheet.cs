@@ -73,7 +73,7 @@ internal sealed class CsvWorksheet : IWorksheet
 
     public char Separator { get; }
 
-    public Column[] ColumnWidths => null;
+    public List<Column> ColumnWidths => null;
 
     public bool TrimWhiteSpace { get; }
 

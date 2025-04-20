@@ -62,18 +62,7 @@ public class NumberFormatString
     /// </summary>
     public bool IsTimeSpanFormat { get; }
 
-    internal IReadOnlyList<Section> Sections { get; }
+    private IReadOnlyList<Section> Sections { get; }
 
-    private Section GetFirstSection(SectionType type)
-    {
-        foreach (var section in Sections)
-        {
-            if (section.Type == type)
-            {
-                return section;
-            }
-        }
-
-        return null;
-    }
+    private Section GetFirstSection(SectionType type) => Sections.FirstOrDefault(section => section.Type == type);
 }

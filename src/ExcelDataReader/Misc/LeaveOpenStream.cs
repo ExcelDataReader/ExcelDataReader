@@ -2,8 +2,6 @@
 
 internal sealed class LeaveOpenStream(Stream baseStream) : Stream
 {
-    public Stream BaseStream { get; } = baseStream;
-
     public override bool CanRead => BaseStream.CanRead;
 
     public override bool CanSeek => BaseStream.CanSeek;
@@ -13,6 +11,8 @@ internal sealed class LeaveOpenStream(Stream baseStream) : Stream
     public override long Length => BaseStream.Length;
 
     public override long Position { get => BaseStream.Position; set => BaseStream.Position = value; }
+
+    private Stream BaseStream { get; } = baseStream;
 
     public override void Flush() => BaseStream.Flush();
 

@@ -10,7 +10,7 @@ internal abstract class BiffReader(Stream stream) : RecordReader
 {
     private readonly byte[] _buffer = new byte[128];
 
-    protected Stream Stream { get; } = stream ?? throw new ArgumentNullException(nameof(stream));
+    private Stream Stream { get; } = stream ?? throw new ArgumentNullException(nameof(stream));
 
     public override Record? Read()
     {

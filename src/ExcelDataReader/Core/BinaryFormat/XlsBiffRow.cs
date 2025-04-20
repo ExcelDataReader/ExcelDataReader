@@ -40,6 +40,7 @@ internal sealed class XlsBiffRow : XlsBiffRecord
         }
     }
 
+    [Flags]
     internal enum RowHeightFlags : ushort
     {
         OutlineLevelMask = 3,

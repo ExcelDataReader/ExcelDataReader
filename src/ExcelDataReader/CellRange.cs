@@ -21,8 +21,8 @@ public sealed record CellRange(int FromColumn, int FromRow, int ToColumn, int To
         if (index >= 0 && range.IndexOf(':', index + 1) < 0)
         {
             ReadOnlySpan<char> span = range;
-            ReferenceHelper.ParseReference(span.Slice(0, index), out int fromColumn, out int fromRow);
-            ReferenceHelper.ParseReference(span.Slice(index + 1), out int toColumn, out int toRow);
+            ReferenceHelper.ParseReference(span[..index], out int fromColumn, out int fromRow);
+            ReferenceHelper.ParseReference(span[(index + 1)..], out int toColumn, out int toRow);
 
             // 0 indexed vs 1 indexed
             return new(fromColumn - 1, fromRow - 1, toColumn - 1, toRow - 1);

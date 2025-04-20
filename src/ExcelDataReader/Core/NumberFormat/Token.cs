@@ -9,45 +9,6 @@ internal static class Token
             string.Equals(token, "e-", StringComparison.OrdinalIgnoreCase);
     }
 
-    public static bool IsLiteral(string token)
-    {
-        return
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-            token.StartsWith('_') ||
-            token.StartsWith('\\') ||
-            token.StartsWith('\"') ||
-            token.StartsWith('*') ||
-#else
-            token.StartsWith("_", StringComparison.Ordinal) ||
-            token.StartsWith("\\", StringComparison.Ordinal) ||
-            token.StartsWith("\"", StringComparison.Ordinal) ||
-            token.StartsWith("*", StringComparison.Ordinal) ||
-#endif
-            token == "," ||
-            token == "!" ||
-            token == "&" ||
-            token == "%" ||
-            token == "+" ||
-            token == "-" ||
-            token == "$" ||
-            token == "€" ||
-            token == "£" ||
-            token == "1" ||
-            token == "2" ||
-            token == "3" ||
-            token == "4" ||
-            token == "5" ||
-            token == "6" ||
-            token == "7" ||
-            token == "8" ||
-            token == "9" ||
-            token == "{" ||
-            token == "}" ||
-            token == "(" ||
-            token == ")" ||
-            token == " ";
-    }
-
     public static bool IsNumberLiteral(string token)
     {
         return
@@ -98,4 +59,43 @@ internal static class Token
         "1" or "2" or "3" or "4" or "5" or "6" or "7" or "8" or "9" => true,
         _ => false,
     };
+    
+    private static bool IsLiteral(string token)
+    {
+        return
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            token.StartsWith('_') ||
+            token.StartsWith('\\') ||
+            token.StartsWith('\"') ||
+            token.StartsWith('*') ||
+#else
+            token.StartsWith("_", StringComparison.Ordinal) ||
+            token.StartsWith("\\", StringComparison.Ordinal) ||
+            token.StartsWith("\"", StringComparison.Ordinal) ||
+            token.StartsWith("*", StringComparison.Ordinal) ||
+#endif
+            token == "," ||
+            token == "!" ||
+            token == "&" ||
+            token == "%" ||
+            token == "+" ||
+            token == "-" ||
+            token == "$" ||
+            token == "€" ||
+            token == "£" ||
+            token == "1" ||
+            token == "2" ||
+            token == "3" ||
+            token == "4" ||
+            token == "5" ||
+            token == "6" ||
+            token == "7" ||
+            token == "8" ||
+            token == "9" ||
+            token == "{" ||
+            token == "}" ||
+            token == "(" ||
+            token == ")" ||
+            token == " ";
+    }
 }

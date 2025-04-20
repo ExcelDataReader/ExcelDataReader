@@ -19,7 +19,7 @@ internal interface IWorksheet
 
     CellRange[] MergeCells { get; }
 
-    Column[] ColumnWidths { get; }
+    List<Column> ColumnWidths { get; }
 
     IEnumerable<Row> ReadRows();
 }
