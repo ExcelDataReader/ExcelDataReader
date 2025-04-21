@@ -117,8 +117,7 @@ internal sealed class XlsxWorksheet : IWorksheet
         double height = 0;
 
         bool inSheetData = false;
-        Record record;
-        while ((record = sheetStream.Read()) != null)
+        while (sheetStream.Read() is { } record)
         {
             switch (record)
             {

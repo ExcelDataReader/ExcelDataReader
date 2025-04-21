@@ -53,8 +53,7 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
         if (reader == null)
             return;
 
-        Record record;
-        while ((record = reader.Read()) != null)
+        while (reader.Read() is { } record)
         {
             switch (record)
             {

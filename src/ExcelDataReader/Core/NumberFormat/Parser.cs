@@ -12,11 +12,10 @@ internal static class Parser
         bool hasTextPart = false;
         Condition condition = null;
         Color color = null;
-        string token;
         List<string> tokens = [];
 
         syntaxError = false;
-        while ((token = ReadToken(reader, out syntaxError)) != null)
+        while (ReadToken(reader, out syntaxError) is { } token)
         {
             if (token == ";")
                 break;

@@ -152,8 +152,7 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
     {
         Dictionary<int, XlsBiffFormatString> formats = [];
 
-        XlsBiffRecord rec;
-        while ((rec = biffStream.Read()) != null && rec is not XlsBiffEof)
+        while (biffStream.Read() is { } rec && rec is not XlsBiffEof)
         {
             switch (rec)
             {
