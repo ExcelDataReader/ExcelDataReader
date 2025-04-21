@@ -173,13 +173,13 @@ internal sealed class XlsWorksheet : IWorksheet
 
         biffStream.Position = minOffset;
 
-        XlsBiffRecord ixfe = null;
+        ushort? ixfe = null;
         while (biffStream.Position <= maxOffset && biffStream.Read() is { } rec)
         {
             if (rec.Id == BIFFRECORDTYPE.IXFE)
             {
                 // BIFF2: If cell.xformat == 63, this contains the actual XF index >= 63
-                ixfe = rec;
+                ixfe = rec.ReadUInt16(0);
             }
 
             if (rec is XlsBiffBlankCell cell)
@@ -200,6 +200,11 @@ internal sealed class XlsWorksheet : IWorksheet
 
                 ixfe = null;
             }
+
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            rec.Return();
+#endif
+
         }
 
         return result;
@@ -210,9 +215,9 @@ internal sealed class XlsWorksheet : IWorksheet
         if (!result.Rows.TryGetValue(rowIndex, out var currentRow))
         {
             var height = DefaultRowHeight / 20.0;
-            if (RowOffsetMap.TryGetValue(rowIndex, out var rowOffset) && rowOffset.Record != null)
+            if (RowOffsetMap.TryGetValue(rowIndex, out var rowOffset) && rowOffset.RowHeight != null)
             {
-                height = (rowOffset.Record.UseDefaultRowHeight ? DefaultRowHeight : rowOffset.Record.RowHeight) / 20.0;
+                height = (rowOffset.UseDefaultRowHeight ? DefaultRowHeight : rowOffset.RowHeight.Value) / 20.0;
             }
 
             currentRow = new Row(rowIndex, height, []);
@@ -351,6 +356,10 @@ internal sealed class XlsWorksheet : IWorksheet
         var rec = biffStream.Read();
         if (rec is { Id: BIFFRECORDTYPE.SHAREDFMLA })
         {
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            rec.Return();
+#endif
+
             rec = biffStream.Read();
         }
 
@@ -360,7 +369,13 @@ internal sealed class XlsWorksheet : IWorksheet
             var formulaEncoding =
                 GetFont(effectiveStyle.FontIndex)?.ByteStringEncoding ??
                 Encoding; // Workbook.GetFontEncodingFromXF(xFormat) ?? Encoding;
-            return stringRecord.GetValue(formulaEncoding);
+            var result = stringRecord.GetValue(formulaEncoding);
+
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            rec.Return();
+#endif
+
+            return result;
         }
 
         // Bad data - could not find a string following the formula
@@ -398,13 +413,13 @@ internal sealed class XlsWorksheet : IWorksheet
     /// <summary>
     /// Returns an index into Workbook.ExtendedFormats for the given cell and preceding ixfe record.
     /// </summary>
-    private int GetXfIndexForCell(XlsBiffBlankCell cell, XlsBiffRecord ixfe)
+    private int GetXfIndexForCell(XlsBiffBlankCell cell, ushort? ixfe)
     {
         if (Workbook.BiffVersion == 2)
         {
             return cell.XFormat switch
             {
-                63 when ixfe != null => ixfe.ReadUInt16(0),
+                63 when ixfe != null => ixfe.Value,
                 > 63 => -1, // Invalid XF ref on cell in BIFF2 stream
                 { } when cell.XFormat < Workbook.ExtendedFormats.Count => cell.XFormat,
                 _ => -1
@@ -519,6 +534,10 @@ internal sealed class XlsWorksheet : IWorksheet
                     break;
             }
 
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            rec.Return();
+#endif
+
             recordOffset = biffStream.Position;
             rec = biffStream.Read();
 
@@ -564,7 +583,8 @@ internal sealed class XlsWorksheet : IWorksheet
             RowOffsetMap.Add(rowIndex, rowOffset);
         }
 
-        rowOffset.Record = row;
+        rowOffset.UseDefaultRowHeight = row.UseDefaultRowHeight;
+        rowOffset.RowHeight = row.RowHeight;
     }
 
     private void SetMinMaxRowOffset(int rowIndex, int recordOffset, int maxOverlapRow)
@@ -586,7 +606,9 @@ internal sealed class XlsWorksheet : IWorksheet
 
     internal sealed class XlsRowOffset
     {
-        public XlsBiffRow Record { get; set; }
+        public bool UseDefaultRowHeight { get; set; }
+
+        public double? RowHeight { get; set; }
 
         public int MinCellOffset { get; set; }
 

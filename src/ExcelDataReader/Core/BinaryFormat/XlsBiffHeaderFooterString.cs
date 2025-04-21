@@ -27,4 +27,10 @@ internal sealed class XlsBiffHeaderFooterString : XlsBiffRecord
     {
         return _xlsString.GetValue(encoding);
     }
+
+    #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+    public override void Return()
+    {        
+    }
+    #endif
 }

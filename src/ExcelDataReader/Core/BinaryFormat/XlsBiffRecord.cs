@@ -14,7 +14,7 @@ internal class XlsBiffRecord
             throw new ArgumentException(Errors.ErrorBiffRecordSize);
         Bytes = bytes;
     }
-    
+
     /// <summary>
     /// Gets the type Id of this entry.
     /// </summary>
@@ -31,6 +31,13 @@ internal class XlsBiffRecord
     public int Size => ContentOffset + RecordSize;
     
     internal byte[] Bytes { get; }
+
+    #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+    public virtual void Return()
+    {        
+        System.Buffers.ArrayPool<byte>.Shared.Return(Bytes);
+    }
+    #endif
 
     public byte ReadByte(int offset)
     {

@@ -10,6 +10,8 @@ namespace ExcelDataReader.Core.BinaryFormat;
 /// </summary>
 internal sealed class XlsBiffStream : IDisposable
 {
+    private byte[] _headerBuffer = new byte[4];
+
     public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, BIFFTYPE? defaultType = null, string password = null, byte[] secretKey = null, EncryptionInfo encryption = null)
     {
         BaseStream = baseStream;
@@ -145,19 +147,22 @@ internal sealed class XlsBiffStream : IDisposable
     public XlsBiffRecord GetRecord(Stream stream)
     {
         var recordOffset = (int)stream.Position;
-        var header = new byte[4];
-        stream.ReadAtLeast(header, 0, 4);
+        stream.ReadAtLeast(_headerBuffer, 0, 4);
 
         // Does this work on a big endian system?
-        var id = (BIFFRECORDTYPE)BitConverter.ToUInt16(header, 0);
-        int recordSize = BitConverter.ToUInt16(header, 2);
+        var id = (BIFFRECORDTYPE)BitConverter.ToUInt16(_headerBuffer, 0);
+        ushort recordSize = BitConverter.ToUInt16(_headerBuffer, 2);
 
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        var bytes = System.Buffers.ArrayPool<byte>.Shared.Rent(4 + recordSize);
+#else
         var bytes = new byte[4 + recordSize];
-        Array.Copy(header, bytes, 4);
+#endif
+        Array.Copy(_headerBuffer, bytes, 4);
         stream.ReadAtLeast(bytes, 4, recordSize);
         
         if (SecretKey != null)
-            DecryptRecord(recordOffset, id, bytes);
+            DecryptRecord(recordOffset, id, bytes, 4 + recordSize);
 
         int biffVersion = BiffVersion;
 
@@ -322,11 +327,10 @@ internal sealed class XlsBiffStream : IDisposable
         CryptoHelpers.DecryptBytes(CipherTransform, bytes);
     }
 
-    private void DecryptRecord(int startPosition, BIFFRECORDTYPE id, byte[] bytes)
+    private void DecryptRecord(int startPosition, BIFFRECORDTYPE id, byte[] bytes, int recordSize)
     {
         // Decrypt the last read record, find it's start offset relative to the current stream position
         int startDecrypt = 4;
-        int recordSize = bytes.Length;
         switch (id)
         {
             case BIFFRECORDTYPE.BOF:
@@ -361,7 +365,12 @@ internal sealed class XlsBiffStream : IDisposable
 
             // Decrypt at most up to the next 1024 byte boundary
             var chunkSize = Math.Min(recordSize - position, 1024 - blockOffset);
+
+#if NETSTANDARD2_1_OR_GREATER
+            var block = System.Buffers.ArrayPool<byte>.Shared.Rent(chunkSize);
+#else
             var block = new byte[chunkSize];
+#endif
 
             Array.Copy(bytes, position, block, 0, chunkSize);
 
