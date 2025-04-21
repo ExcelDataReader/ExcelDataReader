@@ -1,4 +1,6 @@
-﻿namespace ExcelDataReader.Core;
+﻿#nullable enable
+
+namespace ExcelDataReader.Core;
 
 internal sealed class ExtendedFormat
 {

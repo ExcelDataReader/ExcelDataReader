@@ -24,6 +24,6 @@ public static class Log
     /// This should be done only once per object name.
     /// </summary>
     /// <param name="loggingType">The type to get a logger for.</param>
-    /// <returns>ILog instance for an object if log type has been intialized; otherwise a null logger.</returns>
+    /// <returns>ILog instance for an object if log type has been initialized; otherwise a null logger.</returns>
     public static ILog GetLoggerFor(Type loggingType) => factoryInstance.Value.Create(loggingType);
 }

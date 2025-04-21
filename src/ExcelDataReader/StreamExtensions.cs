@@ -1,4 +1,6 @@
-﻿namespace ExcelDataReader;
+﻿#nullable enable
+
+namespace ExcelDataReader;
 
 internal static class StreamExtensions
 {
@@ -8,9 +10,7 @@ internal static class StreamExtensions
         ArgumentOutOfRangeException.ThrowIfNegative(minimumBytes);
         ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, offset + minimumBytes);
 #else
-        if (minimumBytes < 0)
-            throw new ArgumentOutOfRangeException(nameof(minimumBytes));
-        if (buffer.Length < offset + minimumBytes)
+        if (minimumBytes < 0 || buffer.Length < offset + minimumBytes)
             throw new ArgumentOutOfRangeException(nameof(minimumBytes));
 #endif
         int totalRead = 0;

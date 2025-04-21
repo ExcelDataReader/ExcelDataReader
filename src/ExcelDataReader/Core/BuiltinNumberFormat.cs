@@ -1,4 +1,6 @@
-﻿using ExcelDataReader.Core.NumberFormat;
+﻿#nullable enable
+
+using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core;
 
@@ -46,7 +48,7 @@ internal static class BuiltinNumberFormat
         { 49, new NumberFormatString("@") },
     };
 
-    public static NumberFormatString GetBuiltinNumberFormat(int numFmtId)
+    public static NumberFormatString? GetBuiltinNumberFormat(int numFmtId)
     {
         if (Formats.TryGetValue(numFmtId, out var result))
             return result;

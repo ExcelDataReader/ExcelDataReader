@@ -1,4 +1,6 @@
-﻿namespace ExcelDataReader.Core;
+﻿#nullable enable
+
+namespace ExcelDataReader.Core;
 
 internal static class ReferenceHelper
 {
@@ -108,7 +110,7 @@ internal static class ReferenceHelper
             return false;
         }
 
-        if (!TryParseDecInt(value, position, out row))
+        if (!TryParseDecInt(value!, position, out row))
         {
             return false;
         }

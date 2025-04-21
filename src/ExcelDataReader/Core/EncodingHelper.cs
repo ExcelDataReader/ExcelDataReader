@@ -1,10 +1,12 @@
+#nullable enable
+
 using System.Text;
 
 namespace ExcelDataReader.Core;
 
 internal sealed class EncodingHelper
 {
-    public static Encoding GetEncoding(ushort codePage)
+    public static Encoding? GetEncoding(ushort codePage)
     {
         return codePage switch
         {

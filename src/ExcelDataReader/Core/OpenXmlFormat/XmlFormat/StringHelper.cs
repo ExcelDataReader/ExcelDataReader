@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿#nullable enable
+
+using System.Text;
 using System.Xml;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
@@ -14,7 +16,7 @@ internal static class StringHelper
         {
             return string.Empty;
         }
-
+        
         StringBuilder sb = new();
         while (!reader.EOF)
         {

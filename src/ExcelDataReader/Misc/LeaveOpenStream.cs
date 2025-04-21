@@ -1,4 +1,6 @@
-﻿namespace ExcelDataReader.Misc;
+﻿#nullable enable
+
+namespace ExcelDataReader.Misc;
 
 internal sealed class LeaveOpenStream(Stream baseStream) : Stream
 {
