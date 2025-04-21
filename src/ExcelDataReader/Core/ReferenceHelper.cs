@@ -8,7 +8,7 @@ internal static class ReferenceHelper
     /// <param name="value">The value.</param>
     /// <param name="column">The column, 1-based.</param>
     /// <param name="row">The row, 1-based.</param>
-#if NET8_0_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
     public static bool ParseReference(ReadOnlySpan<char> value, out int column, out int row)
     {
         column = 0;

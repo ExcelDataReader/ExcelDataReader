@@ -14,7 +14,7 @@ public sealed record CellRange(int FromColumn, int FromRow, int ToColumn, int To
     /// <inheritsdoc/>
     public override string ToString() => $"{FromRow}, {ToRow}, {FromColumn}, {ToColumn}";
 
-#if NET8_0_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
     internal static CellRange Parse(string range)
     {
         int index = range.IndexOf(':');
