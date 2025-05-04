@@ -981,6 +981,17 @@ public abstract class ExcelTestBase
     }
 
     [Test]
+    public void GitIssue694ExcelTimeFormatTimeSpanFormulaInvalidResult()
+    {
+        using var reader = OpenReader("Test_git_issue_694_TimeSpan_Formula");
+        reader.Read();
+        Assert.Multiple(() =>
+        {
+            Assert.That(reader[0].ToString(), Is.EqualTo("A"));
+            Assert.That(reader[1].ToString(), Is.EqualTo("P"));
+        });
+
+    [Test]
     public void GitIssue574VerticalAlignment()
     {        
         using var reader = OpenReader("Test_git_issue_574");
