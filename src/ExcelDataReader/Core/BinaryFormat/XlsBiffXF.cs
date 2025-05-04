@@ -31,7 +31,8 @@ internal sealed class XlsBiffXF : XlsBiffRecord
                 IsHidden = (ReadByte(2) & 2) != 0;
                 IsCellStyleXf = (ReadByte(2) & 4) != 0;
                 ParentCellStyleXf = ReadUInt16(2) >> 4;
-                HorizontalAlignment = (HorizontalAlignment)(ReadByte(4) & 0x07);
+                HorizontalAlignment = (HorizontalAlignment)(ReadByte(4) & 0b111);
+                VerticalAlignment = (VerticalAlignment)(ReadByte(4) >> 4 & 0b111);
                 break;
             default:
                 Font = ReadUInt16(0);
@@ -40,7 +41,8 @@ internal sealed class XlsBiffXF : XlsBiffRecord
                 IsHidden = (ReadByte(4) & 2) != 0;
                 IsCellStyleXf = (ReadByte(4) & 4) != 0;
                 ParentCellStyleXf = ReadUInt16(4) >> 4;
-                HorizontalAlignment = (HorizontalAlignment)(ReadByte(6) & 0x07);
+                HorizontalAlignment = (HorizontalAlignment)(ReadByte(6) & 0b111);
+                VerticalAlignment = (VerticalAlignment)(ReadByte(6) >> 4 & 0b111);
                 if (biffVersion == 8)
                 {
                     IndentLevel = ReadByte(8) & 0x0F;
@@ -79,4 +81,6 @@ internal sealed class XlsBiffXF : XlsBiffRecord
     public int IndentLevel { get; }
 
     public HorizontalAlignment HorizontalAlignment { get; }
+
+    public VerticalAlignment VerticalAlignment { get; }
 }

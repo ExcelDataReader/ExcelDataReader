@@ -9,7 +9,7 @@ internal sealed class ExtendedFormat
         NumberFormatIndex = numberFormatIndex;
     }
 
-    public ExtendedFormat(int parentCellStyleXf, int fontIndex, int numberFormatIndex, bool locked, bool hidden, int indentLevel, HorizontalAlignment horizontalAlignment)
+    public ExtendedFormat(int parentCellStyleXf, int fontIndex, int numberFormatIndex, bool locked, bool hidden, int indentLevel, HorizontalAlignment horizontalAlignment, VerticalAlignment verticalAlignment)
     {
         ParentCellStyleXf = parentCellStyleXf;
         FontIndex = fontIndex;
@@ -18,6 +18,7 @@ internal sealed class ExtendedFormat
         Hidden = hidden;
         IndentLevel = indentLevel;
         HorizontalAlignment = horizontalAlignment;
+        VerticalAlignment = verticalAlignment;
     }
 
     private ExtendedFormat()
@@ -43,4 +44,6 @@ internal sealed class ExtendedFormat
     public int IndentLevel { get; }
 
     public HorizontalAlignment HorizontalAlignment { get; }
+
+    public VerticalAlignment VerticalAlignment { get; }
 }

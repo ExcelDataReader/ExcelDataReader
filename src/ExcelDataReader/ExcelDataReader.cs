@@ -194,6 +194,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         result.NumberFormatIndex = effectiveStyle.NumberFormatIndex;
         result.IndentLevel = effectiveStyle.IndentLevel;
         result.HorizontalAlignment = effectiveStyle.HorizontalAlignment;
+        result.VerticalAlignment = effectiveStyle.VerticalAlignment;
         result.Hidden = effectiveStyle.Hidden;
         result.Locked = effectiveStyle.Locked;
         return result;

@@ -990,6 +990,16 @@ public abstract class ExcelTestBase
             Assert.That(reader[0].ToString(), Is.EqualTo("A"));
             Assert.That(reader[1].ToString(), Is.EqualTo("P"));
         });
+
+    [Test]
+    public void GitIssue574VerticalAlignment()
+    {        
+        using var reader = OpenReader("Test_git_issue_574");
+        reader.Read();
+
+        Assert.That(reader.GetCellStyle(0).VerticalAlignment, Is.EqualTo(VerticalAlignment.Top));
+        Assert.That(reader.GetCellStyle(1).VerticalAlignment, Is.EqualTo(VerticalAlignment.Center));
+        Assert.That(reader.GetCellStyle(2).VerticalAlignment, Is.EqualTo(VerticalAlignment.Bottom));
     }
 
     protected IExcelDataReader OpenReader(string name)
