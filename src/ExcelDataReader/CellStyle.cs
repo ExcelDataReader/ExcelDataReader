@@ -47,6 +47,37 @@ public enum HorizontalAlignment
 }
 
 /// <summary>
+/// Vertical alignment.
+/// </summary>
+public enum VerticalAlignment
+{
+    /// <summary>
+    /// Top.
+    /// </summary>
+    Top,
+
+    /// <summary>
+    /// Center.
+    /// </summary>
+    Center,
+
+    /// <summary>
+    /// Bottom.
+    /// </summary>
+    Bottom,
+
+    /// <summary>
+    /// Justify.
+    /// </summary>
+    Justify,
+
+    /// <summary>
+    /// Distributed.
+    /// </summary>
+    Distributed,
+}
+
+/// <summary>
 /// Holds style information for a cell.
 /// </summary>
 public class CellStyle
@@ -70,6 +101,11 @@ public class CellStyle
     /// Gets the horizontal alignment.
     /// </summary>
     public HorizontalAlignment HorizontalAlignment { get; internal set; }
+
+    /// <summary>
+    /// Gets the vertical alignment.
+    /// </summary>
+    public VerticalAlignment VerticalAlignment { get; internal set; }
 
     /// <summary>
     /// Gets a value indicating whether the cell is hidden.

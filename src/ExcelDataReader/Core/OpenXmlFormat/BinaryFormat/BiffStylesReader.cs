@@ -54,7 +54,8 @@ internal sealed class BiffStylesReader(Stream stream) : BiffReader(stream)
                         (buffer[13] & 0x10000) != 0,
                         (buffer[13] & 0x100000) != 0,
                         (int)(uint)buffer[11],
-                        (HorizontalAlignment)(buffer[12] & 0b111));
+                        (HorizontalAlignment)(buffer[12] & 0b111),
+                        (VerticalAlignment)(buffer[12] >> 3 & 0b111));
 
                     if (_inCellXf)
                         return new ExtendedFormatRecord(extendedFormat);

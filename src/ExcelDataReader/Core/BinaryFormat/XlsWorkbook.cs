@@ -137,7 +137,7 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
 
     internal void AddXf(XlsBiffXF xf)
     {
-        var extendedFormat = new ExtendedFormat(xf.ParentCellStyleXf, xf.Font, xf.Format, xf.IsLocked, xf.IsHidden, xf.IndentLevel, xf.HorizontalAlignment);
+        var extendedFormat = new ExtendedFormat(xf.ParentCellStyleXf, xf.Font, xf.Format, xf.IsLocked, xf.IsHidden, xf.IndentLevel, xf.HorizontalAlignment, xf.VerticalAlignment);
 
         // The workbook holds two kinds of XF records: Cell XFs, and Cell Style XFs.
         // In the binary XLS format, both kinds of XF records are saved in a single list,

@@ -26,6 +26,8 @@ internal sealed class XmlStylesReader(XmlReader reader) : XmlRecordReader(reader
     private const string AIndent = "indent";
     private const string AHorizontal = "horizontal";
 
+    private const string AVertical = "vertical";
+
     private const string NProtection = "protection";
     private const string AHidden = "hidden";
     private const string ALocked = "locked";
@@ -101,9 +103,9 @@ internal sealed class XmlStylesReader(XmlReader reader) : XmlRecordReader(reader
                 // var applyNumberFormat = Reader.GetAttribute(AApplyNumberFormat) == "1";
                 // var applyAlignment = Reader.GetAttribute(AApplyAlignment) == "1";
                 // var applyProtection = Reader.GetAttribute(AApplyProtection) == "1";
-                ReadAlignment(Reader, nsSpreadsheetMl, out int indentLevel, out HorizontalAlignment horizontalAlignment, out var hidden, out var locked);
+                ReadAlignment(Reader, nsSpreadsheetMl, out int indentLevel, out HorizontalAlignment horizontalAlignment, out var verticalAlignment, out var hidden, out var locked);
 
-                yield return new ExtendedFormat(xfId, -1, numFmtId, locked, hidden, indentLevel, horizontalAlignment);
+                yield return new ExtendedFormat(xfId, -1, numFmtId, locked, hidden, indentLevel, horizontalAlignment, verticalAlignment);
 
                 // reader.Skip();
             }
@@ -113,10 +115,11 @@ internal sealed class XmlStylesReader(XmlReader reader) : XmlRecordReader(reader
             }
         }
 
-        static void ReadAlignment(XmlReader reader, string nsSpreadsheetMl, out int indentLevel, out HorizontalAlignment horizontalAlignment, out bool hidden, out bool locked)
+        static void ReadAlignment(XmlReader reader, string nsSpreadsheetMl, out int indentLevel, out HorizontalAlignment horizontalAlignment, out VerticalAlignment verticalAlignment, out bool hidden, out bool locked)
         {
             indentLevel = 0;
             horizontalAlignment = HorizontalAlignment.General;
+            verticalAlignment = VerticalAlignment.Bottom;
             hidden = false;
             locked = false;
 
@@ -135,6 +138,12 @@ internal sealed class XmlStylesReader(XmlReader reader) : XmlRecordReader(reader
                     if (attrValue is not null)
                     {
                         Enum.TryParse(attrValue, true, out horizontalAlignment);
+                    }
+
+                    attrValue = reader.GetAttribute(AVertical);
+                    if (attrValue is not null)
+                    {
+                        Enum.TryParse(attrValue, true, out verticalAlignment);
                     }
 
                     reader.Skip();
