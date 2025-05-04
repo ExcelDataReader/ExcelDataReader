@@ -158,6 +158,27 @@ internal sealed class XlsxWorksheet : IWorksheet
             yield return new Row(rowIndex, height, cells);
     }
 
+    private static bool TryParseToTimeSpan(string s, out TimeSpan result)
+    {
+        var isIsoFormat = Helpers.StringStartsWith(s, 'P');
+
+        if (!isIsoFormat)
+        {
+            return TimeSpan.TryParse(s, out result);
+        }
+
+        try
+        {
+            result = XmlConvert.ToTimeSpan(s);
+            return true;
+        }
+        catch (FormatException)
+        {
+            result = TimeSpan.Zero;
+            return false;
+        }
+    }
+
     private object ConvertCellValue(object value, int numberFormatIndex)
     {
         switch (value)
@@ -187,19 +208,14 @@ internal sealed class XlsxWorksheet : IWorksheet
 
             case string s:
                 NumberFormatString numberFormat = Workbook.GetNumberFormatString(numberFormatIndex);
-                if (numberFormat.IsTimeSpanFormat)
+                if (numberFormat.IsTimeSpanFormat && TryParseToTimeSpan(s, out var timeSpan))
                 {
-                    var isIsoFormat = Helpers.StringStartsWith(s, 'P');
-
-                    if (isIsoFormat)
-                        return XmlConvert.ToTimeSpan(s);
-                    if (TimeSpan.TryParse(s, out var parsed))
-                        return parsed;
+                    return timeSpan;
                 }
-                else if (numberFormat.IsDateTimeFormat)
+
+                if (numberFormat.IsDateTimeFormat && DateTimeOffset.TryParse(s, out DateTimeOffset dateTimeOffset))
                 {
-                    if (DateTimeOffset.TryParse(s, out DateTimeOffset dateTimeOffset))
-                        return dateTimeOffset;
+                    return dateTimeOffset;
                 }
 
                 return s;
@@ -207,5 +223,5 @@ internal sealed class XlsxWorksheet : IWorksheet
             default:
                 return value;
         }
-    }        
+    }
 }
