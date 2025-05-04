@@ -990,6 +990,7 @@ public abstract class ExcelTestBase
             Assert.That(reader[0].ToString(), Is.EqualTo("A"));
             Assert.That(reader[1].ToString(), Is.EqualTo("P"));
         });
+    }
 
     [Test]
     public void GitIssue574VerticalAlignment()
