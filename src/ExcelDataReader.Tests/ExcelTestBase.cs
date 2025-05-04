@@ -980,6 +980,18 @@ public abstract class ExcelTestBase
         Assert.That(TimeSpan.Parse(reader[1].ToString()), Is.EqualTo(TimeSpan.Parse("00:11")));
     }
 
+    [Test]
+    public void GitIssue694ExcelTimeFormatTimeSpanFormulaInvalidResult()
+    {
+        using var reader = OpenReader("Test_git_issue_694_TimeSpan_Formula");
+        reader.Read();
+        Assert.Multiple(() =>
+        {
+            Assert.That(reader[0].ToString(), Is.EqualTo("A"));
+            Assert.That(reader[1].ToString(), Is.EqualTo("P"));
+        });
+    }
+
     protected IExcelDataReader OpenReader(string name)
     {
         return OpenReader(OpenStream(name));
