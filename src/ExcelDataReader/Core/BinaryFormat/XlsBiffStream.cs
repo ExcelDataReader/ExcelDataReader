@@ -324,7 +324,7 @@ internal sealed class XlsBiffStream : IDisposable
     private void AlignBlockDecryptor(int blockOffset)
     {
         var bytes = new byte[blockOffset];
-        CryptoHelpers.DecryptBytes(CipherTransform, bytes);
+        CryptoHelpers.DecryptBytes(CipherTransform, bytes, bytes.Length);
     }
 
     private void DecryptRecord(int startPosition, BIFFRECORDTYPE id, byte[] bytes, int recordSize)
@@ -366,7 +366,7 @@ internal sealed class XlsBiffStream : IDisposable
             // Decrypt at most up to the next 1024 byte boundary
             var chunkSize = Math.Min(recordSize - position, 1024 - blockOffset);
 
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
             var block = System.Buffers.ArrayPool<byte>.Shared.Rent(chunkSize);
 #else
             var block = new byte[chunkSize];
@@ -374,7 +374,7 @@ internal sealed class XlsBiffStream : IDisposable
 
             Array.Copy(bytes, position, block, 0, chunkSize);
 
-            var decryptedblock = CryptoHelpers.DecryptBytes(CipherTransform, block);
+            var decryptedblock = CryptoHelpers.DecryptBytes(CipherTransform, block, chunkSize);
             for (var i = 0; i < decryptedblock.Length; i++)
             {
                 if (position >= startDecrypt)

@@ -67,12 +67,12 @@ internal static class CryptoHelpers
     public static byte[] DecryptBytes(SymmetricAlgorithm algo, byte[] bytes, byte[] key, byte[] iv)
     {
         using var decryptor = algo.CreateDecryptor(key, iv);
-        return DecryptBytes(decryptor, bytes);
+        return DecryptBytes(decryptor, bytes, bytes.Length);
     }
 
-    public static byte[] DecryptBytes(ICryptoTransform transform, byte[] bytes)
+    public static byte[] DecryptBytes(ICryptoTransform transform, byte[] bytes, int chunkSize)
     {
-        var length = bytes.Length;
+        var length = chunkSize;
         using MemoryStream msDecrypt = new(bytes, 0, length);
         using CryptoStream csDecrypt = new(msDecrypt, transform, CryptoStreamMode.Read);
         var result = new byte[length];

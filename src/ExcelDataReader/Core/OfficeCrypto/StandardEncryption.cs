@@ -222,8 +222,8 @@ internal sealed class StandardEncryption : EncryptionInfo
 
         using var cipher = CryptoHelpers.CreateCipher(CipherAlgorithm, KeySize, BlockSize, CipherMode.ECB);
         using var transform = cipher.CreateDecryptor(blockKey, SaltValue);
-        var decryptedVerifier = CryptoHelpers.DecryptBytes(transform, Verifier);
-        var decryptedVerifierHash = CryptoHelpers.DecryptBytes(transform, VerifierHash);
+        var decryptedVerifier = CryptoHelpers.DecryptBytes(transform, Verifier, Verifier.Length);
+        var decryptedVerifierHash = CryptoHelpers.DecryptBytes(transform, VerifierHash, VerifierHash.Length);
 
         var verifierHash = CryptoHelpers.HashBytes(decryptedVerifier, HashAlgorithm);
         for (var i = 0; i < 16; ++i)

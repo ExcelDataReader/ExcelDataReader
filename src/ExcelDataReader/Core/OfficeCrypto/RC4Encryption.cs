@@ -68,8 +68,8 @@ internal sealed class RC4Encryption : EncryptionInfo
 
         using var cipher = CryptoHelpers.CreateCipher(CipherIdentifier.RC4, 0, 0, 0);
         using var transform = cipher.CreateDecryptor(blockKey, null);
-        var decryptedVerifier = CryptoHelpers.DecryptBytes(transform, EncryptedVerifier);
-        var decryptedVerifierHash = CryptoHelpers.DecryptBytes(transform, EncryptedVerifierHash);
+        var decryptedVerifier = CryptoHelpers.DecryptBytes(transform, EncryptedVerifier, EncryptedVerifier.Length);
+        var decryptedVerifierHash = CryptoHelpers.DecryptBytes(transform, EncryptedVerifierHash, EncryptedVerifierHash.Length);
 
         var verifierHash = CryptoHelpers.HashBytes(decryptedVerifier, HashIdentifier.MD5);
         for (var i = 0; i < 16; ++i)
