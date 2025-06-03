@@ -66,7 +66,7 @@ internal sealed class XorManaged : SymmetricAlgorithm
 
     internal static ushort CreatePasswordVerifier_Method1(byte[] passwordBytes)
     {
-        var passwordArray = CryptoHelpers.Combine(new byte[] { (byte)passwordBytes.Length }, passwordBytes);
+        byte[] passwordArray = [(byte)passwordBytes.Length, .. passwordBytes];
         ushort verifier = 0x0000;
         for (var i = 0; i < passwordArray.Length; ++i)
         {

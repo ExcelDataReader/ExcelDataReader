@@ -16,6 +16,9 @@ internal sealed class AgileEncryption : EncryptionInfo
     private const string NsEncryption = "http://schemas.microsoft.com/office/2006/encryption";
     private const string NsPassword = "http://schemas.microsoft.com/office/2006/keyEncryptor/password";
 
+    private static readonly byte[] _inputSuffix = [0xfe, 0xa7, 0xd2, 0x76, 0x3b, 0x4b, 0x9e, 0x79];
+    private static readonly byte[] _valueSuffix = [0xd7, 0xaa, 0x0f, 0x6d, 0x30, 0x61, 0x34, 0x4e];
+    
     public AgileEncryption(byte[] bytes)
     {
         using var stream = new MemoryStream(bytes, 8, bytes.Length - 8);
@@ -91,12 +94,11 @@ internal sealed class AgileEncryption : EncryptionInfo
             secretKey = HashPassword(password, PasswordSaltValue, hashAlgorithm, PasswordSpinCount);
 
         var inputBlockKey = CryptoHelpers.HashBytes(
-            CryptoHelpers.Combine(secretKey, new byte[] { 0xfe, 0xa7, 0xd2, 0x76, 0x3b, 0x4b, 0x9e, 0x79 }),
-            PasswordHashAlgorithm);
+            CryptoHelpers.Combine(secretKey, _inputSuffix), PasswordHashAlgorithm);
         Array.Resize(ref inputBlockKey, PasswordKeyBits / 8);
 
         var valueBlockKey = CryptoHelpers.HashBytes(
-            CryptoHelpers.Combine(secretKey, new byte[] { 0xd7, 0xaa, 0x0f, 0x6d, 0x30, 0x61, 0x34, 0x4e }),
+            CryptoHelpers.Combine(secretKey, _valueSuffix),
             PasswordHashAlgorithm);
         Array.Resize(ref valueBlockKey, PasswordKeyBits / 8);
 

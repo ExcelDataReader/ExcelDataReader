@@ -11,6 +11,8 @@ internal sealed class StandardEncryption : EncryptionInfo
     private const int AesBlockSize = 128;
     private const int RC4BlockSize = 8;
 
+    private static readonly byte[] _zeroes = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    
     public StandardEncryption(byte[] bytes)
     {
         Flags = (EncryptionHeaderFlags)BitConverter.ToUInt32(bytes, 4);
@@ -177,13 +179,13 @@ internal sealed class StandardEncryption : EncryptionInfo
         }
         else if ((Flags & EncryptionHeaderFlags.CryptoAPI) != 0)
         {
-            var salt = CryptoHelpers.Combine(secretKey, BitConverter.GetBytes(blockNumber));
+            byte[] salt = CryptoHelpers.Combine(secretKey, BitConverter.GetBytes(blockNumber));
             salt = CryptoHelpers.HashBytes(salt, HashAlgorithm);
             Array.Resize(ref salt, (int)KeySize / 8);
             if (KeySize == 40)
             {
                 // 2.3.5.2: If keyLength is exactly 40 bits, the encryption key MUST be composed of the first 40 bits of Hfinal and 88 bits set to zero, creating a 128-bit key.
-                salt = CryptoHelpers.Combine(salt, new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+                salt = CryptoHelpers.Combine(salt, _zeroes);
             }
 
             return salt;

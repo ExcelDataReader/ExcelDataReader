@@ -24,6 +24,8 @@ internal static class CryptoHelpers
         return hash.ComputeHash(bytes);
     }
 
+    public static byte[] Combine(byte[] first, byte[] second) => [.. first, .. second];
+
     public static byte[] Combine(params byte[][] arrays)
     {
         var length = 0;
