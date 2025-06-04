@@ -143,17 +143,45 @@ internal sealed class AgileEncryption : EncryptionInfo
         return decryptedKeyValue;
     }
 
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
     private static byte[] HashPassword(string password, byte[] saltValue, HashAlgorithm hashAlgorithm, int spinCount)
     {
-        var h = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password)));
+        var saltAndPassword = CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password));
+        var hash = hashAlgorithm.ComputeHash(saltAndPassword);
+
+        var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(4 + hash.Length);
+        var iterationData = rented.AsSpan(0, 4 + hash.Length);
 
         for (var i = 0; i < spinCount; i++)
         {
-            h = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(BitConverter.GetBytes(i), h));
+            BitConverter.TryWriteBytes(iterationData[..4], i);
+            hash.CopyTo(iterationData[4..]);
+            hashAlgorithm.TryComputeHash(iterationData, hash, out _);
         }
 
-        return h;
+        System.Buffers.ArrayPool<byte>.Shared.Return(rented);
+
+        return hash;
     }
+#else
+    private static byte[] HashPassword(string password, byte[] saltValue, HashAlgorithm hashAlgorithm, int spinCount)
+    {
+        var saltAndPassword = CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password));
+        var hash = hashAlgorithm.ComputeHash(saltAndPassword);
+
+        var iterationData = new byte[4 + hash.Length];
+
+        for (var i = 0; i < spinCount; i++)
+        {
+            var buffer = BitConverter.GetBytes(i);
+            Buffer.BlockCopy(buffer, 0, iterationData, 0, 4);
+            Buffer.BlockCopy(hash, 0, iterationData, 4, hash.Length);
+            hash = hashAlgorithm.ComputeHash(iterationData, 0, iterationData.Length);
+        }
+
+        return hash;
+    }
+#endif
 
     private static HashIdentifier ParseHash(string value)
     {
