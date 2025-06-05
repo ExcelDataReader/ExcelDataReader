@@ -48,7 +48,7 @@ internal sealed class CsvParser
 
     private char[] CharBuffer { get; set; }
 
-    private StringBuilder ValueResult { get; set; } = new StringBuilder();
+    private StringBuilder ValueResult { get; set; } = new();
 
     private List<string> RowResult { get; set; } = [];
 
