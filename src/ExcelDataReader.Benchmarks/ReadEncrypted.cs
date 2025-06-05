@@ -4,7 +4,7 @@ using BenchmarkDotNet.Attributes;
 namespace ExcelDataReader.Benchmarks;
 
 [MemoryDiagnoser]
-public class ReadEncypted
+public class ReadEncrypted
 {
     [GlobalSetup]
     public void Setup()
