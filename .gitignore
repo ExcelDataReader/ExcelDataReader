@@ -178,3 +178,4 @@ FakesAssemblies/
 
 BenchmarkDotNet.Artifacts/
 .idea/
+.vscode/
