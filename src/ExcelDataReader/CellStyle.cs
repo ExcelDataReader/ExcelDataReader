@@ -18,7 +18,7 @@ public enum HorizontalAlignment
     /// <summary>
     /// Center.
     /// </summary>
-    Center,
+    Center = 2,
 
     /// <summary>
     /// Right.
@@ -44,6 +44,15 @@ public enum HorizontalAlignment
     /// Distributed.
     /// </summary>
     Distributed,
+
+    /// <summary>
+    /// Same as <see cref="Center"/>.
+    /// </summary>
+    /// <remarks>
+    /// This is an alias for <see cref="Center"/> to maintain compatibility with older versions of the library.
+    /// It is recommended to use <see cref="Center"/> for clarity in new code.
+    /// </remarks>
+    Centered = Center,
 }
 
 /// <summary>
