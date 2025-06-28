@@ -11,6 +11,7 @@
     <Optimize>true</Optimize>
     <Configuration>Release</Configuration>
     <IsPackable>false</IsPackable>
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.2" />
