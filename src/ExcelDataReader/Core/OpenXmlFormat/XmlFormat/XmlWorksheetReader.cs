@@ -87,11 +87,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
                         int.TryParse(Reader.GetAttribute(ACustomHeight), out int _);
 #pragma warning restore CA1806 // Do not ignore method results
 
-                        double? height;
-                        if (double.TryParse(Reader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var ahtValue))
-                            height = Math.Abs(ahtValue);
-                        else
-                            height = null;
+                        double? height = double.TryParse(Reader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var ahtValue) ? Math.Abs(ahtValue) : null;
 
                         yield return new RowHeaderRecord(rowIndex, hidden != 0, height);
 

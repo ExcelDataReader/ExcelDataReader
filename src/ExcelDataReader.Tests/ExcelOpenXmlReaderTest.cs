@@ -517,8 +517,8 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
         Assert.That(right.HorizontalAlignment, Is.EqualTo(HorizontalAlignment.Right));
     }
 
-    [TestCase("Test_git_issue_711_OpenXml_Row_height_parsing")]
-    [TestCase("Test_git_issue_711_OpenXml_Row_height_parsing_negative_default_height")]
+    [TestCase("Test_git_issue_711_OpenXml_Row_height_parsing")] // defaultHeight="15"
+    [TestCase("Test_git_issue_711_OpenXml_Row_height_parsing_negative_default_height")] // defaultHeight="-15"
     public void GitIssue711_RowHeightParsing(string filename)
     {
         using var reader = OpenReader(filename);
