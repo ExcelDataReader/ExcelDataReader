@@ -84,11 +84,11 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
 
 #pragma warning disable CA1806 // Do not ignore method results
                         int.TryParse(Reader.GetAttribute(AHidden), out int hidden);
-                        int.TryParse(Reader.GetAttribute(ACustomHeight), out int customHeight);
+                        int.TryParse(Reader.GetAttribute(ACustomHeight), out int _);
 #pragma warning restore CA1806 // Do not ignore method results
 
                         double? height;
-                        if (customHeight != 0 && double.TryParse(Reader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var ahtValue))
+                        if (double.TryParse(Reader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var ahtValue))
                             height = ahtValue;
                         else
                             height = null;
