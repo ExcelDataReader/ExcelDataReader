@@ -89,7 +89,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
 
                         double? height;
                         if (double.TryParse(Reader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var ahtValue))
-                            height = ahtValue;
+                            height = Math.Abs(ahtValue);
                         else
                             height = null;
 
@@ -193,7 +193,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
             else if (Reader.IsStartElement(NSheetFormatProperties, ProperNamespaces.NsSpreadsheetMl))
             {
                 if (double.TryParse(Reader.GetAttribute(ADefaultRowHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out var defaultRowHeight))
-                    yield return new SheetFormatPrRecord(defaultRowHeight);
+                    yield return new SheetFormatPrRecord(Math.Abs(defaultRowHeight));
 
                 Reader.Skip();
             }
