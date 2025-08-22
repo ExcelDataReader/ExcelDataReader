@@ -20,6 +20,10 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
     private const string NInlineStr = "inlineStr";
     private const string NStr = "str";
 
+    private const string NHyperlinks = "hyperlinks";
+    private const string NHyperlink = "hyperlink";
+    private const string ARId = "r:id";
+
     private const string NMergeCells = "mergeCells";
 
     private const string NSheetProperties = "sheetPr";
@@ -183,6 +187,30 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
                     }
                 }
             }
+            else if (Reader.IsStartElement(NHyperlinks, ProperNamespaces.NsSpreadsheetMl))
+            {
+                if (!XmlReaderHelper.ReadFirstContent(Reader))
+                {
+                    continue;
+                }
+
+                while (!Reader.EOF)
+                {
+                    if (Reader.IsStartElement(NHyperlink, ProperNamespaces.NsSpreadsheetMl))
+                    {
+                        var refAttr = Reader.GetAttribute(ARef);
+                        var rId = Reader.GetAttribute(ARId);
+
+                        yield return new HyperlinkRefRecord(rId, refAttr);
+
+                        Reader.Skip();
+                    }
+                    else if (!XmlReaderHelper.SkipContent(Reader))
+                    {
+                        break;
+                    }
+                }
+            }
             else if (Reader.IsStartElement(NSheetProperties, ProperNamespaces.NsSpreadsheetMl))
             {
                 var codeName = Reader.GetAttribute("codeName");
@@ -268,7 +296,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
             // We only care about columnIndex and if there is any content or not when preparing.
             if (!XmlReaderHelper.ReadFirstContent(Reader))
             {
-                return new CellRecord(columnIndex, 0, null, null);
+                return new CellRecord(columnIndex, 0, aR, null, null);
             }
 
             while (!Reader.EOF)
@@ -279,7 +307,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
                 }
             }
 
-            return new CellRecord(columnIndex, 0, string.Empty, null);
+            return new CellRecord(columnIndex, 0, aR, string.Empty, null);
         }
 
         var aS = Reader.GetAttribute(AS);
@@ -295,7 +323,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
 
         if (!XmlReaderHelper.ReadFirstContent(Reader))
         {
-            return new CellRecord(columnIndex, xfIndex, null, null);
+            return new CellRecord(columnIndex, xfIndex, aR, null, null);
         }
 
         object value = null;
@@ -320,7 +348,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
             }
         }
 
-        return new CellRecord(columnIndex, xfIndex, value, error);
+        return new CellRecord(columnIndex, xfIndex, aR, value, error);
 
         static void ConvertCellValue(string rawValue, string aT, out object value, out CellError? error)
         {

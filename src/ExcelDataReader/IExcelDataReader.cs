@@ -96,4 +96,11 @@ public interface IExcelDataReader : IDataReader
     /// <param name="i">The index of the column to find.</param>
     /// <returns>The cell error, or null if no error.</returns>
     CellError? GetCellError(int i);
+
+    /// <summary>
+    /// Get the cell hyperlink.
+    /// </summary>
+    /// <param name="i">The index of the column to find.</param>
+    /// <returns>The cell error, or null if no error.</returns>
+    object GetHyperlink(int i);
 }

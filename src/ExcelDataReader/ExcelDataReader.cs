@@ -111,6 +111,14 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         return RowCells[i]?.Value;
     }
 
+    public object GetHyperlink(int i)
+    {
+        if (RowCells == null)
+            throw new InvalidOperationException("No data exists for the row/column.");
+        
+        return RowCells[i]?.Hyperlink;
+    }
+
     public int GetValues(object[] values)
     {
         if (RowCells == null)

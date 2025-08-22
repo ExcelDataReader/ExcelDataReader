@@ -122,7 +122,7 @@ internal sealed class CsvWorksheet : IWorksheet
             for (var index = 0; index < row.Count; index++)
             {
                 object value = row[index];
-                cells.Add(new Cell(index, value, ExtendedFormat.Zero, null));
+                cells.Add(new Cell(index, value, null, ExtendedFormat.Zero, null));
             }
 
             yield return new Row(rowIndex, 12.75 /* 255 twips */, cells);

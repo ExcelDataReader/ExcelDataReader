@@ -43,4 +43,9 @@ public class ExcelDataTableConfiguration
     /// Gets or sets a callback to determine whether to transform the cell value.
     /// </summary>
     public Func<IExcelDataReader, int, object, object> TransformValue { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to parse the URL for hyperlink cells.
+    /// </summary>
+    public bool OverrideValueWithHyperlinkURL { get; set; }
 }

@@ -156,7 +156,9 @@ public static class ExcelDataReaderExtensions
             {
                 var columnIndex = columnIndices[i];
 
-                var value = self.GetValue(columnIndex);
+                var value = configuration.OverrideValueWithHyperlinkURL
+                                ? self.GetHyperlink(columnIndex) ?? self.GetValue(columnIndex)
+                                : self.GetValue(columnIndex);
                 if (configuration.TransformValue != null)
                 {
                     var transformedValue = configuration.TransformValue(self, i, value);

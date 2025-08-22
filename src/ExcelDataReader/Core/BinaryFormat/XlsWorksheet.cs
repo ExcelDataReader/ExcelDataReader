@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.Text;
 using ExcelDataReader.Log;
 
@@ -20,6 +22,7 @@ internal sealed class XlsWorksheet : IWorksheet
 
         Name = refSheet.GetSheetName(workbook.Encoding);
         DataOffset = refSheet.StartOffset;
+        HyperlinksByRowCol = [];
 
         VisibleState = refSheet.VisibleState switch
         {
@@ -36,6 +39,8 @@ internal sealed class XlsWorksheet : IWorksheet
     public string Name { get; }
 
     public string CodeName { get; private set; }
+
+    public Dictionary<(int Row, int Col), string> HyperlinksByRowCol { get; private set; }
 
     /// <summary>
     /// Gets the visibility of worksheet.
@@ -245,7 +250,7 @@ internal sealed class XlsWorksheet : IWorksheet
 
                     var value = TryConvertOADateTime(rkCell.GetValue(j), effectiveStyle.NumberFormatIndex);
                     LogManager.Log(this).Debug("CELL[{0}] = {1}", j, value);
-                    yield return new Cell(j, value, effectiveStyle, null);
+                    yield return new Cell(j, value, null, effectiveStyle, null);
                 }
 
                 break;
@@ -263,6 +268,7 @@ internal sealed class XlsWorksheet : IWorksheet
         var numberFormatIndex = effectiveStyle.NumberFormatIndex;
 
         object value = null;
+        string? hyperlink = null;
         CellError? error = null;
         switch (cell.Id)
         {
@@ -292,7 +298,9 @@ internal sealed class XlsWorksheet : IWorksheet
                 value = GetLabelString((XlsBiffLabelCell)cell, effectiveStyle);
                 break;
             case BIFFRECORDTYPE.LABELSST:
-                value = Workbook.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex, Encoding);
+                var c = (XlsBiffLabelSSTCell)cell;
+                value = Workbook.SST.GetString(c.SSTIndex, Encoding);
+                HyperlinksByRowCol.TryGetValue((c.RowIndex, c.ColumnIndex), out hyperlink);
                 break;
             case BIFFRECORDTYPE.RK:
                 value = TryConvertOADateTime(((XlsBiffRKCell)cell).Value, numberFormatIndex);
@@ -309,7 +317,7 @@ internal sealed class XlsWorksheet : IWorksheet
                 break;
         }
 
-        return new Cell(cell.ColumnIndex, value, effectiveStyle, error);
+        return new Cell(cell.ColumnIndex, value, hyperlink, effectiveStyle, error); // TODO: Need to support hyperlink extraction
     }
 
     private string GetLabelString(XlsBiffLabelCell cell, ExtendedFormat effectiveStyle)
@@ -510,6 +518,9 @@ internal sealed class XlsWorksheet : IWorksheet
 
                     // Count rows by row records without affecting the overlap in OffsetMap
                     maxRowCountFromRowRecord = Math.Max(maxRowCountFromRowRecord, row.RowIndex + 1);
+                    break;
+                case XlsBiffHyperlinkCell cell when rec.Id == BIFFRECORDTYPE.HLINK:
+                    HyperlinksByRowCol[(cell.Row, cell.Col)] = cell.GetUrl();
                     break;
                 case XlsBiffBlankCell cell:
                     if (!cell.IsEmpty)

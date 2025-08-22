@@ -21,7 +21,8 @@ internal sealed partial class ZipWorker : IDisposable
     };
 
     private readonly Dictionary<string, ZipArchiveEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, string> _worksheetRels = [];
+    private readonly Dictionary<string, string> _worksheetPaths = [];
+    private readonly Dictionary<string, string?> _worksheetRelPaths = [];
 
     private readonly string _fileWorkbook;
     private readonly string? _fileSharedStrings;
@@ -75,7 +76,8 @@ internal sealed partial class ZipWorker : IDisposable
             {
                 case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet":
                 case "http://purl.oclc.org/ooxml/officeDocument/relationships/worksheet":
-                    _worksheetRels[id] = ResolvePath(basePath, target);
+                    _worksheetPaths[id] = ResolvePath(basePath, target);
+                    _worksheetRelPaths[id] = GetSheetRelPath(_worksheetPaths[id]);
                     break;
                 case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles":
                 case "http://purl.oclc.org/ooxml/officeDocument/relationships/styles":
@@ -132,6 +134,12 @@ internal sealed partial class ZipWorker : IDisposable
 
             return null;
         }
+
+        string? GetSheetRelPath(string sheetPath)
+        {
+            var sheetName = sheetPath.Split('/')[^1];
+            return _entries.Keys.FirstOrDefault(entryPath => entryPath.Contains($"{sheetName}.rel"));
+        }
     }
 
     /// <summary>
@@ -176,9 +184,9 @@ internal sealed partial class ZipWorker : IDisposable
         if (FindEntry(_fileWorkbook) is { } entry)
         { 
             if (entry.FullName.EndsWith(".xml", StringComparison.Ordinal))
-                return new XmlWorkbookReader(XmlReader.Create(entry.Open(), XmlSettings), _worksheetRels);
+                return new XmlWorkbookReader(XmlReader.Create(entry.Open(), XmlSettings), _worksheetPaths, _worksheetRelPaths);
             else if (entry.FullName.EndsWith(".bin", StringComparison.Ordinal))
-                return new BiffWorkbookReader(entry.Open(), _worksheetRels);
+                return new BiffWorkbookReader(entry.Open(), _worksheetPaths);
         }
 
         throw new Exceptions.HeaderException(Errors.ErrorZipNoOpenXml);
@@ -200,6 +208,23 @@ internal sealed partial class ZipWorker : IDisposable
                 ".bin" => new BiffWorksheetReader(OpenZipEntry(zipEntry), preparing),
                 _ => null,
             };
+        }
+
+        return null;
+    }
+
+    // TODO: Create a proper reader class for this
+    public XmlReader? GetRelReader(string relPath)
+    {
+        // its possible sheetPath starts with /xl. in this case trim the /
+        // see the test "Issue_11522_OpenXml"
+        if (relPath.StartsWith("/xl/", StringComparison.OrdinalIgnoreCase))
+            relPath = relPath[1..];
+
+        var zipEntry = FindEntry(relPath);
+        if (zipEntry != null)
+        {
+            return XmlReader.Create(zipEntry.Open());
         }
 
         return null;
