@@ -501,6 +501,25 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
     }
 
     [Test]
+    public void GitIssue663ParseHyperLinks()
+    {
+        using var reader = OpenReader("Test_Issue_663_Hyperlink");
+        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
+        {
+            ConfigureDataTable = _ => new ExcelDataTableConfiguration
+            {
+                UseHeaderRow = true,
+                OverrideValueWithHyperlinkURL = true,
+            }
+        });
+        var rows = dataSet.Tables[0].Rows;
+
+        Assert.That(rows[0]["HyperLink"], Is.EqualTo("https://www.google.com"));
+        Assert.That(rows[1]["HyperLink"], Is.EqualTo("https://www.youtube.com"));
+        Assert.That(rows[2]["HyperLink"], Is.EqualTo("https://www.facebook.com"));
+    }
+
+    [Test]
     public void GitIssue700_AlignmentEnumParsing()
     {
         using var reader = OpenReader("Test_git_issue_700_CellAlignments");
