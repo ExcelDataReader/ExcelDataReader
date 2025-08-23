@@ -213,8 +213,7 @@ internal sealed partial class ZipWorker : IDisposable
         return null;
     }
 
-    // TODO: Create a proper reader class for this
-    public XmlReader? GetRelReader(string relPath)
+    public RecordReader? GetRelReader(string relPath)
     {
         // its possible sheetPath starts with /xl. in this case trim the /
         // see the test "Issue_11522_OpenXml"
@@ -224,7 +223,7 @@ internal sealed partial class ZipWorker : IDisposable
         var zipEntry = FindEntry(relPath);
         if (zipEntry != null)
         {
-            return XmlReader.Create(zipEntry.Open());
+            return new XmlRelReader(XmlReader.Create(zipEntry.Open(), XmlSettings));
         }
 
         return null;

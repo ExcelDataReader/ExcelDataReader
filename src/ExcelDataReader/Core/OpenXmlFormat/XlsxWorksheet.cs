@@ -126,14 +126,11 @@ internal sealed class XlsxWorksheet : IWorksheet
             if (reader is null)
                 return;
 
-            while (reader.Read())
+            while (reader.Read() is { } record)
             {
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "Relationship")
+                if (record is RelRecord rel && !string.IsNullOrEmpty(rel.Id) && !string.IsNullOrEmpty(rel.Target))
                 {
-                    var id = reader.GetAttribute("Id");
-                    var target = reader.GetAttribute("Target");
-                    if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(target))
-                        HyperlinkByRId[id] = target;
+                    HyperlinkByRId[rel.Id] = rel.Target;
                 }
             }
         }
