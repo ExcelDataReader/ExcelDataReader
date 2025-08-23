@@ -1093,25 +1093,6 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List1"));
     }
 
-    [Test]
-    public void GitIssue663ParseHyperLinks()
-    {
-        using var reader = OpenReader("Test_Issue_663_Hyperlink");
-        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
-        {
-            ConfigureDataTable = _ => new ExcelDataTableConfiguration
-            {
-                UseHeaderRow = true,
-                OverrideValueWithHyperlinkURL = true,
-            }
-        });
-        var rows = dataSet.Tables[0].Rows;
-
-        Assert.That(rows[0]["HyperLink"], Is.EqualTo("https://www.google.com"));
-        Assert.That(rows[1]["HyperLink"], Is.EqualTo("https://www.youtube.com"));
-        Assert.That(rows[2]["HyperLink"], Is.EqualTo("https://www.facebook.com"));
-    }
-
     protected override IExcelDataReader OpenReader(Stream stream, ExcelReaderConfiguration configuration = null)
     {
         return ExcelReaderFactory.CreateBinaryReader(stream, configuration);

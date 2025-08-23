@@ -195,8 +195,6 @@ internal sealed class XlsBiffStream : IDisposable
                 return new XlsBiffBlankCell(bytes);
             case BIFFRECORDTYPE.MULBLANK:
                 return new XlsBiffMulBlankCell(bytes);
-            case BIFFRECORDTYPE.HLINK:
-                return new XlsBiffHyperlinkCell(bytes);
             case BIFFRECORDTYPE.LABEL_OLD:
             case BIFFRECORDTYPE.LABEL:
             case BIFFRECORDTYPE.RSTRING:
