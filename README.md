@@ -184,7 +184,10 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
         // headers.
         FilterColumn = (rowReader, columnIndex) => {
             return true;
-        }
+        },
+
+        // Gets or sets a value indicating whether to show the URL for the cells with Hyperlinks
+        OverrideValueWithHyperlinkURL = true,
     }
 });
 ```
