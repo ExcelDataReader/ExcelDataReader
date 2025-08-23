@@ -119,23 +119,6 @@ internal sealed class XlsxWorksheet : IWorksheet
 
     private Dictionary<string, string> HyperlinkByRId { get; }
 
-    private void ReadHyperlinks()
-    {
-        using (var reader = Document.GetRelReader(RelPath))
-        {
-            if (reader is null)
-                return;
-
-            while (reader.Read() is { } record)
-            {
-                if (record is RelRecord rel && !string.IsNullOrEmpty(rel.Id) && !string.IsNullOrEmpty(rel.Target))
-                {
-                    HyperlinkByRId[rel.Id] = rel.Target;
-                }
-            }
-        }
-    }
-
     public IEnumerable<Row> ReadRows()
     {
         if (string.IsNullOrEmpty(Path))
@@ -218,6 +201,23 @@ internal sealed class XlsxWorksheet : IWorksheet
         {
             result = TimeSpan.Zero;
             return false;
+        }
+    }
+
+    private void ReadHyperlinks()
+    {
+        using (var reader = Document.GetRelReader(RelPath))
+        {
+            if (reader is null)
+                return;
+
+            while (reader.Read() is { } record)
+            {
+                if (record is RelRecord rel && !string.IsNullOrEmpty(rel.Id) && !string.IsNullOrEmpty(rel.Target))
+                {
+                    HyperlinkByRId[rel.Id] = rel.Target;
+                }
+            }
         }
     }
 
