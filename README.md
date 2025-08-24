@@ -185,9 +185,6 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
         FilterColumn = (rowReader, columnIndex) => {
             return true;
         },
-
-        // Gets or sets a value indicating whether to show the URL for the cells with Hyperlinks
-        OverrideValueWithHyperlinkURL = true,
     }
 });
 ```
@@ -206,6 +203,44 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
     }
 });
 ```
+
+#### Parsing hyperlinks with AsDataSet()
+
+Hyperlink cells can be read as either display text, URL, or both.  
+When using `HyperlinkParsingOption.Tuple`, each hyperlink cell is returned as a `Tuple<object, object>` containing `(DisplayText, URL)`.  
+You can then transform the tuple into whichever representation you need.
+
+Example code:
+
+```csharp
+// Example: transform hyperlink cells to return only the URL.
+var transformHyperlinkValue = (IExcelDataReader reader, int index, object value) =>
+    value is Tuple<object, object> hyperlink
+        ? hyperlink.Item2  // Extract URL
+        : value;
+
+var ds = reader.AsDataSet(new ExcelDataSetConfiguration
+{
+    UseColumnDataType = false,
+    ConfigureDataTable = _ => new ExcelDataTableConfiguration
+    {
+        UseHeaderRow = firstRowNamesCheckBox.Checked,
+        HyperlinkParsingOption = HyperlinkParsingOption.Tuple,
+        TransformValue = transformHyperlinkValue
+    }
+});
+```
+
+**Example Output:**
+
+For a cell containing a hyperlink with display text **"Click here"** and URL **"https://example.com"**:
+
+| `HyperlinkParsingOption` | Result                                  |
+|--------------------------|-----------------------------------------|
+| `DisplayText`            | `"Click here"`                          |
+| `URL`                    | `"https://example.com"`                 |
+| `Tuple`                  | `("Click here", "https://example.com")` |
+
 
 ## Formatting
 
