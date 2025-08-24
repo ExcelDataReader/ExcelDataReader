@@ -509,7 +509,7 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
             ConfigureDataTable = _ => new ExcelDataTableConfiguration
             {
                 UseHeaderRow = true,
-                OverrideValueWithHyperlinkURL = true,
+                HyperlinkParsingOption = HyperlinkParsingOption.URL,
             }
         });
         var rows = dataSet.Tables[0].Rows;

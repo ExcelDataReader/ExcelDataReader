@@ -156,9 +156,26 @@ public static class ExcelDataReaderExtensions
             {
                 var columnIndex = columnIndices[i];
 
-                var value = configuration.OverrideValueWithHyperlinkURL
-                                ? self.GetHyperlink(columnIndex) ?? self.GetValue(columnIndex)
-                                : self.GetValue(columnIndex);
+                var displayText = self.GetValue(columnIndex);
+                var hyperLink = self.GetHyperlink(columnIndex);
+
+                var value = displayText;
+
+                switch (configuration.HyperlinkParsingOption)
+                {
+                    case HyperlinkParsingOption.URL:
+                        value = hyperLink ?? displayText;
+                        break;
+
+                    case HyperlinkParsingOption.Tuple when hyperLink != null:
+                        value = Tuple.Create(displayText, hyperLink);
+                        break;
+
+                    case HyperlinkParsingOption.DisplayText:
+                    default:
+                        break;
+                }
+
                 if (configuration.TransformValue != null)
                 {
                     var transformedValue = configuration.TransformValue(self, i, value);
