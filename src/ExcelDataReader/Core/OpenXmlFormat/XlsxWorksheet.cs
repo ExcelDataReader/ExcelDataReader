@@ -73,7 +73,7 @@ internal sealed class XlsxWorksheet : IWorksheet
                 case HeaderFooterRecord headerFooter:
                     HeaderFooter = headerFooter.HeaderFooter;
                     break;
-                case HyperlinkRefRecord hyperlinkRef:
+                case HyperlinkRefRecord hyperlinkRef when hyperlinkRef.RId != null:
                     HyperlinkRIdByRefAttr[hyperlinkRef.RefAttr] = hyperlinkRef.RId;
                     break;
             }
