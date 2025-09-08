@@ -84,14 +84,10 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
 
 #pragma warning disable CA1806 // Do not ignore method results
                         int.TryParse(Reader.GetAttribute(AHidden), out int hidden);
-                        int.TryParse(Reader.GetAttribute(ACustomHeight), out int customHeight);
+                        int.TryParse(Reader.GetAttribute(ACustomHeight), out int _);
 #pragma warning restore CA1806 // Do not ignore method results
 
-                        double? height;
-                        if (customHeight != 0 && double.TryParse(Reader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var ahtValue))
-                            height = ahtValue;
-                        else
-                            height = null;
+                        double? height = double.TryParse(Reader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var ahtValue) ? Math.Abs(ahtValue) : null;
 
                         yield return new RowHeaderRecord(rowIndex, hidden != 0, height);
 
@@ -193,7 +189,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
             else if (Reader.IsStartElement(NSheetFormatProperties, ProperNamespaces.NsSpreadsheetMl))
             {
                 if (double.TryParse(Reader.GetAttribute(ADefaultRowHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out var defaultRowHeight))
-                    yield return new SheetFormatPrRecord(defaultRowHeight);
+                    yield return new SheetFormatPrRecord(Math.Abs(defaultRowHeight));
 
                 Reader.Skip();
             }

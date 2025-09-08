@@ -517,6 +517,41 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
         Assert.That(right.HorizontalAlignment, Is.EqualTo(HorizontalAlignment.Right));
     }
 
+    [TestCase("Test_git_issue_711_OpenXml_Row_height_parsing")] // defaultHeight="15"
+    [TestCase("Test_git_issue_711_OpenXml_Row_height_parsing_negative_default_height")] // defaultHeight="-15"
+    public void GitIssue711_RowHeightParsing(string filename)
+    {
+        using var reader = OpenReader(filename);
+        var expectedRowHeights = new List<double>
+        {
+            15, // 0.  -
+            15, // 1.  hidden="0"
+            0,  // 2.  hidden="1"
+            0,  // 3.  ht="0"
+            0,  // 4.  ht="-0"
+            0,  // 5.  ht="0" hidden="0"
+            0,  // 6.  ht="-0" hidden="0"
+            0,  // 7.  ht="0" hidden="1"
+            0,  // 8.  ht="-0" hidden="1"
+            20, // 9.  ht="20"
+            20, // 10. ht="-20"
+            20, // 11. ht="20" hidden="0"
+            20, // 12. ht="-20" hidden="0"
+            0,  // 13. ht="20" hidden="1"
+            0,  // 14. ht="-20" hidden="1"
+            15, // 15. ht="string"
+            15, // 16. ht="string" hidden="0"
+            0,  // 17. ht="string" hidden="1"
+        };
+        var actualRowsHeights = new List<double>();
+        while (reader.Read())
+        {
+            actualRowsHeights.Add(reader.RowHeight);
+        }
+
+        Assert.That(actualRowsHeights, Is.EqualTo(expectedRowHeights));
+    }
+
     protected override IExcelDataReader OpenReader(Stream stream, ExcelReaderConfiguration configuration = null) 
     => ExcelReaderFactory.CreateOpenXmlReader(stream, configuration);
 
