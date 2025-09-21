@@ -1,80 +1,68 @@
-﻿namespace ExcelDataReader.Core.NumberFormat
+﻿namespace ExcelDataReader.Core.NumberFormat;
+
+/// <summary>
+/// Parse ECMA-376 number format strings from Excel and other spreadsheet softwares.
+/// </summary>
+public class NumberFormatString
 {
     /// <summary>
-    /// Parse ECMA-376 number format strings from Excel and other spreadsheet softwares.
+    /// Initializes a new instance of the <see cref="NumberFormatString"/> class.
     /// </summary>
-    public class NumberFormatString
+    /// <param name="formatString">The number format string.</param>
+    public NumberFormatString(string formatString)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NumberFormatString"/> class.
-        /// </summary>
-        /// <param name="formatString">The number format string.</param>
-        public NumberFormatString(string formatString)
+        Tokenizer tokenizer = new(formatString);
+        List<Section> sections = [];
+        var isValid = true;
+        while (true)
         {
-            var tokenizer = new Tokenizer(formatString);
-            var sections = new List<Section>();
-            var isValid = true;
-            while (true)
-            {
-                var section = Parser.ParseSection(tokenizer, out var syntaxError);
+            var section = Parser.ParseSection(tokenizer, out var syntaxError);
 
-                if (syntaxError)
-                    isValid = false;
+            if (syntaxError)
+                isValid = false;
 
-                if (section == null)
-                    break;
+            if (section == null)
+                break;
 
-                sections.Add(section);
-            }
-
-            IsValid = isValid;
-            FormatString = formatString;
-
-            if (isValid)
-            {
-                Sections = sections;
-                IsDateTimeFormat = GetFirstSection(SectionType.Date) != null;
-                IsTimeSpanFormat = GetFirstSection(SectionType.Duration) != null;
-            }
-            else
-            {
-                Sections = new List<Section>();
-            }
+            sections.Add(section);
         }
 
-        /// <summary>
-        /// Gets a value indicating whether the number format string is valid.
-        /// </summary>
-        public bool IsValid { get; }
+        IsValid = isValid;
+        FormatString = formatString;
 
-        /// <summary>
-        /// Gets the number format string.
-        /// </summary>
-        public string FormatString { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether the format represents a DateTime.
-        /// </summary>
-        public bool IsDateTimeFormat { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether the format represents a TimeSpan.
-        /// </summary>
-        public bool IsTimeSpanFormat { get; }
-
-        internal IReadOnlyList<Section> Sections { get; }
-
-        private Section GetFirstSection(SectionType type)
+        if (isValid)
         {
-            foreach (var section in Sections)
-            {
-                if (section.Type == type)
-                {
-                    return section;
-                }
-            }
-
-            return null;
+            Sections = sections;
+            IsDateTimeFormat = GetFirstSection(SectionType.Date) != null;
+            IsTimeSpanFormat = GetFirstSection(SectionType.Duration) != null;
+        }
+        else
+        {
+            Sections = [];
         }
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the number format string is valid.
+    /// </summary>
+    public bool IsValid { get; }
+
+    /// <summary>
+    /// Gets the number format string.
+    /// </summary>
+    public string FormatString { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the format represents a DateTime.
+    /// </summary>
+    public bool IsDateTimeFormat { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the format represents a TimeSpan.
+    /// </summary>
+    public bool IsTimeSpanFormat { get; }
+
+    private IReadOnlyList<Section> Sections { get; }
+
+    private Section GetFirstSection(SectionType type) => Sections.FirstOrDefault(section => section.Type == type);
 }

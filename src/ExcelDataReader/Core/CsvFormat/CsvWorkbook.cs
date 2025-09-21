@@ -1,36 +1,33 @@
 ﻿using System.Text;
 using ExcelDataReader.Core.NumberFormat;
 
-namespace ExcelDataReader.Core.CsvFormat
+namespace ExcelDataReader.Core.CsvFormat;
+
+internal sealed class CsvWorkbook(Stream stream, Encoding encoding, char[] autodetectSeparators, int analyzeInitialCsvRows, char? quoteChar = null, bool trimWhiteSpace = true) : IWorkbook<CsvWorksheet>
 {
-    internal sealed class CsvWorkbook : IWorkbook<CsvWorksheet>
+    public int ResultsCount => 1;
+
+    public int ActiveSheet => 0;
+
+    public Stream Stream { get; } = stream;
+
+    public Encoding Encoding { get; } = encoding;
+
+    public char? QuoteChar { get; } = quoteChar;
+
+    public char[] AutodetectSeparators { get; } = autodetectSeparators;
+
+    public int AnalyzeInitialCsvRows { get; } = analyzeInitialCsvRows;
+
+    public bool TrimWhiteSpace { get; } = trimWhiteSpace;
+
+    public IEnumerable<CsvWorksheet> ReadWorksheets()
     {
-        public CsvWorkbook(Stream stream, Encoding encoding, char[] autodetectSeparators, int analyzeInitialCsvRows)
-        {
-            Stream = stream;
-            Encoding = encoding;
-            AutodetectSeparators = autodetectSeparators;
-            AnalyzeInitialCsvRows = analyzeInitialCsvRows;
-        }
+        yield return new CsvWorksheet(Stream, Encoding, AutodetectSeparators, AnalyzeInitialCsvRows, QuoteChar, TrimWhiteSpace);
+    }
 
-        public int ResultsCount => 1;
-
-        public Stream Stream { get; }
-
-        public Encoding Encoding { get; }
-
-        public char[] AutodetectSeparators { get; }
-
-        public int AnalyzeInitialCsvRows { get; }
-
-        public IEnumerable<CsvWorksheet> ReadWorksheets()
-        {
-            yield return new CsvWorksheet(Stream, Encoding, AutodetectSeparators, AnalyzeInitialCsvRows);
-        }
-
-        public NumberFormatString GetNumberFormatString(int index)
-        {
-            return null;
-        }
+    public NumberFormatString GetNumberFormatString(int index)
+    {
+        return null;
     }
 }

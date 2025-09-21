@@ -2,27 +2,17 @@
 
 #nullable enable
 
-namespace ExcelDataReader.Core.OpenXmlFormat.Records
+namespace ExcelDataReader.Core.OpenXmlFormat.Records;
+
+internal sealed class SheetRecord(string name, uint id, string? rid, string visibleState, string? path) : Record
 {
-    internal sealed class SheetRecord : Record
-    {
-        public SheetRecord(string name, uint id, string? rid, string visibleState, string? path)
-        {
-            Name = name;
-            Id = id;
-            Rid = rid;
-            VisibleState = string.IsNullOrEmpty(visibleState) ? "visible" : visibleState.ToLower(CultureInfo.InvariantCulture);
-            Path = path;
-        }
+    public string Name { get; } = name;
 
-        public string Name { get; }
+    public string VisibleState { get; } = string.IsNullOrEmpty(visibleState) ? "visible" : visibleState.ToLower(CultureInfo.InvariantCulture);
 
-        public string VisibleState { get; }
+    public uint Id { get; } = id;
 
-        public uint Id { get; }
+    public string? Rid { get; } = rid;
 
-        public string? Rid { get; }
-
-        public string? Path { get; }
-    }
+    public string? Path { get; } = path;
 }

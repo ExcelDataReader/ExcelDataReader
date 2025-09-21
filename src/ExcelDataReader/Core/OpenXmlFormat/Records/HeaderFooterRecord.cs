@@ -1,12 +1,6 @@
-﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records
-{
-    internal sealed class HeaderFooterRecord : Record
-    {
-        public HeaderFooterRecord(HeaderFooter headerFooter) 
-        {
-            HeaderFooter = headerFooter;
-        }
+﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records;
 
-        public HeaderFooter HeaderFooter { get; }
-    }
+internal sealed class HeaderFooterRecord(HeaderFooter headerFooter) : Record
+{
+    public HeaderFooter HeaderFooter { get; } = headerFooter;
 }

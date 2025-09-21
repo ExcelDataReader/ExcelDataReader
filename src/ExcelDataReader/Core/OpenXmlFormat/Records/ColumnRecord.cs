@@ -1,12 +1,6 @@
-﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records
-{
-    internal sealed class ColumnRecord : Record
-    {
-        public ColumnRecord(Column column)
-        {
-            Column = column;
-        }
+﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records;
 
-        public Column Column { get; }
-    }
+internal sealed class ColumnRecord(Column column) : Record
+{
+    public Column Column { get; } = column;
 }

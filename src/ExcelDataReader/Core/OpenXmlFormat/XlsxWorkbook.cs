@@ -1,97 +1,88 @@
 using ExcelDataReader.Core.OpenXmlFormat.Records;
 
-namespace ExcelDataReader.Core.OpenXmlFormat
+namespace ExcelDataReader.Core.OpenXmlFormat;
+
+internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
 {
-    internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
+    private readonly ZipWorker _zipWorker;
+           
+    public XlsxWorkbook(ZipWorker zipWorker)
     {
-        private readonly ZipWorker _zipWorker;
-               
-        public XlsxWorkbook(ZipWorker zipWorker)
-        {
-            _zipWorker = zipWorker;
-            ReadWorkbook();
-            ReadSharedStrings();
-            ReadStyles();
-        }
+        _zipWorker = zipWorker;
+        ReadWorkbook();
+        ReadSharedStrings();
+        ReadStyles();
+    }
 
-        public List<SheetRecord> Sheets { get; } = new List<SheetRecord>();
+    public XlsxSST SST { get; } = [];
 
-        public XlsxSST SST { get; } = new XlsxSST();
+    public bool IsDate1904 { get; private set; }
 
-        public bool IsDate1904 { get; private set; }
+    public int ResultsCount => Sheets?.Count ?? -1;
 
-        public int ResultsCount => Sheets?.Count ?? -1;
+    public int ActiveSheet { get; private set; }
 
-        public IEnumerable<XlsxWorksheet> ReadWorksheets()
-        {
-            foreach (var sheet in Sheets)
+    private List<SheetRecord> Sheets { get; } = [];
+
+    public IEnumerable<XlsxWorksheet> ReadWorksheets() => Sheets.Select(sheet => new XlsxWorksheet(_zipWorker, this, sheet));
+
+    private void ReadWorkbook()
+    {
+        using RecordReader reader = _zipWorker.GetWorkbookReader();
+
+        while (reader?.Read() is { } record)
+        {                
+            switch (record)
             {
-                yield return new XlsxWorksheet(_zipWorker, this, sheet);
+                case WorkbookPrRecord pr:
+                    IsDate1904 = pr.Date1904;
+                    break;
+                case SheetRecord sheet:
+                    Sheets.Add(sheet);
+                    break;
+                case WorkbookActRecord activeSheet:
+                    ActiveSheet = activeSheet.ActiveSheet;
+                    break;
             }
         }
+    }
 
-        private void ReadWorkbook()
+    private void ReadSharedStrings()
+    {
+        using var reader = _zipWorker.GetSharedStringsReader();
+        if (reader == null)
+            return;
+
+        while (reader.Read() is { } record)
         {
-            using RecordReader reader = _zipWorker.GetWorkbookReader();            
-            
-            Record record;
-            while ((record = reader.Read()) != null)
-            {                
-                switch (record)
-                {
-                    case WorkbookPrRecord pr:
-                        IsDate1904 = pr.Date1904;
-                        break;
-                    case SheetRecord sheet:
-                        Sheets.Add(sheet);
-                        break;
-                }
+            switch (record)
+            {
+                case SharedStringRecord pr:
+                    SST.Add(pr.Value);
+                    break;
             }
         }
+    }
 
-        private void ReadSharedStrings()
+    private void ReadStyles()
+    {
+        using var reader = _zipWorker.GetStylesReader();
+        if (reader == null)
+            return;
+
+        while (reader.Read() is { } record)
         {
-            using var reader = _zipWorker.GetSharedStringsReader();
-            if (reader == null)
-                return;
-
-            Record record;
-            while ((record = reader.Read()) != null)
+            switch (record)
             {
-                switch (record)
-                {
-                    case SharedStringRecord pr:
-                        SST.Add(pr.Value);
-                        break;
-                }
-            }
-        }
-
-        private void ReadStyles()
-        {
-            using var reader = _zipWorker.GetStylesReader();
-            if (reader == null)
-                return;
-
-            Record record;
-            while ((record = reader.Read()) != null)
-            {
-                switch (record)
-                {
-                    case ExtendedFormatRecord xf:
-                        ExtendedFormats.Add(xf.ExtendedFormat);
-                        break;
-                    case CellStyleExtendedFormatRecord csxf:
-                        CellStyleExtendedFormats.Add(csxf.ExtendedFormat);
-                        break;
-                    case NumberFormatRecord nf:
-                        AddNumberFormat(nf.FormatIndexInFile, nf.FormatString);
-                        break;
-                    default:
-                        {
-                            break;
-                        }
-                }
+                case ExtendedFormatRecord xf:
+                    ExtendedFormats.Add(xf.ExtendedFormat);
+                    break;
+                case CellStyleExtendedFormatRecord csxf:
+                    CellStyleExtendedFormats.Add(csxf.ExtendedFormat);
+                    break;
+                case NumberFormatRecord nf:
+                    AddNumberFormat(nf.FormatIndexInFile, nf.FormatString);
+                    break;
             }
         }
     }

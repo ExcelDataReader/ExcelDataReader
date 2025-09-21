@@ -1,24 +1,28 @@
-﻿namespace ExcelDataReader
+﻿#nullable enable
+
+namespace ExcelDataReader;
+
+internal static class StreamExtensions
 {
-    internal static class StreamExtensions
+    public static int ReadAtLeast(this Stream stream, byte[] buffer, int offset, int minimumBytes)
     {
-        public static int ReadAtLeast(this Stream stream, byte[] buffer, int offset, int minimumBytes)
+#if NET8_0_OR_GREATER
+        ArgumentOutOfRangeException.ThrowIfNegative(minimumBytes);
+        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, offset + minimumBytes);
+#else
+        if (minimumBytes < 0 || buffer.Length < offset + minimumBytes)
+            throw new ArgumentOutOfRangeException(nameof(minimumBytes));
+#endif
+        int totalRead = 0;
+        while (totalRead < minimumBytes)
         {
-            if (minimumBytes < 0)
-                throw new ArgumentOutOfRangeException(nameof(minimumBytes));
-            if (buffer.Length < offset + minimumBytes)
-                throw new ArgumentOutOfRangeException(nameof(minimumBytes));
-            int totalRead = 0;
-            while (totalRead < minimumBytes)
-            {
-                int read = stream.Read(buffer, offset + totalRead, minimumBytes - totalRead);
-                if (read == 0)
-                    return totalRead;
+            int read = stream.Read(buffer, offset + totalRead, minimumBytes - totalRead);
+            if (read == 0)
+                return totalRead;
 
-                totalRead += read;
-            }
-
-            return totalRead;
+            totalRead += read;
         }
+
+        return totalRead;
     }
 }

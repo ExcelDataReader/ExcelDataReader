@@ -1,67 +1,71 @@
-﻿using System.Text;
+﻿#nullable enable
+
+using System.Text;
 using System.Xml;
 
-namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat
-{
-    internal static class StringHelper
-    {       
-        private const string ElementT = "t";
-        private const string ElementR = "r";
+namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
-        public static string ReadStringItem(XmlReader reader, string nsSpreadsheetMl)
+internal static class StringHelper
+{       
+    private const string ElementT = "t";
+    private const string ElementR = "r";
+
+    // https://www.w3.org/TR/REC-xml#NT-S
+    private static readonly char[] WhitespaceChars = [' ', '\t', '\n', '\r'];
+
+    public static string ReadStringItem(XmlReader reader, string nsSpreadsheetMl)
+    {
+        if (!XmlReaderHelper.ReadFirstContent(reader))
         {
-            if (!XmlReaderHelper.ReadFirstContent(reader))
-            {
-                return string.Empty;
-            }
-
-            StringBuilder sb = new();
-            while (!reader.EOF)
-            {
-                if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
-                {
-                    // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
-                    sb.Append(ReadElementContent(reader));
-                }
-                else if (reader.IsStartElement(ElementR, nsSpreadsheetMl))
-                {
-                    ReadRichTextRun(reader, sb, nsSpreadsheetMl);
-                }
-                else if (!XmlReaderHelper.SkipContent(reader))
-                {
-                    break;
-                }
-            }
-
-            return sb.ToString();
+            return string.Empty;
         }
-
-        private static void ReadRichTextRun(XmlReader reader, StringBuilder sb, string nsSpreadsheetMl)
+        
+        StringBuilder sb = new();
+        while (!reader.EOF)
         {
-            if (!XmlReaderHelper.ReadFirstContent(reader))
+            if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
             {
-                return;
+                // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
+                sb.Append(ReadElementContent(reader));
             }
-
-            while (!reader.EOF)
+            else if (reader.IsStartElement(ElementR, nsSpreadsheetMl))
             {
-                if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
-                {
-                    sb.Append(ReadElementContent(reader));
-                }
-                else if (!XmlReaderHelper.SkipContent(reader))
-                {
-                    break;
-                }
+                ReadRichTextRun(reader, sb, nsSpreadsheetMl);
+            }
+            else if (!XmlReaderHelper.SkipContent(reader))
+            {
+                break;
             }
         }
 
-        private static string ReadElementContent(XmlReader reader)
+        return sb.ToString();
+    }
+
+    private static void ReadRichTextRun(XmlReader reader, StringBuilder sb, string nsSpreadsheetMl)
+    {
+        if (!XmlReaderHelper.ReadFirstContent(reader))
         {
-            if (reader.GetAttribute("xml:space") == "preserve")
-                return reader.ReadElementContentAsString();
-            else
-                return reader.ReadElementContentAsString().Trim();
+            return;
         }
+
+        while (!reader.EOF)
+        {
+            if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
+            {
+                sb.Append(ReadElementContent(reader));
+            }
+            else if (!XmlReaderHelper.SkipContent(reader))
+            {
+                break;
+            }
+        }
+    }
+
+    private static string ReadElementContent(XmlReader reader)
+    {
+        if (reader.GetAttribute("xml:space") == "preserve")
+            return reader.ReadElementContentAsString();
+        else
+            return reader.ReadElementContentAsString().Trim(WhitespaceChars);
     }
 }

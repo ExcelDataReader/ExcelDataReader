@@ -1,19 +1,18 @@
-﻿namespace ExcelDataReader.Core.NumberFormat
+﻿namespace ExcelDataReader.Core.NumberFormat;
+
+internal sealed class Section
 {
-    internal sealed class Section
-    {
-        public SectionType Type { get; set; }
+    public required SectionType Type { get; init; }
 
-        public Color Color { get; set; }
+    public required Color Color { get; init; }
 
-        public Condition Condition { get; set; }
+    public required Condition Condition { get; init; }
 
-        public ExponentialSection Exponential { get; set; }
+    public required ExponentialSection Exponential { get; init; }
 
-        public FractionSection Fraction { get; set; }
+    public required FractionSection Fraction { get; init; }
 
-        public DecimalSection Number { get; set; }
+    public required DecimalSection Number { get; init; }
 
-        public List<string> GeneralTextDateDurationParts { get; set; }
-    }
+    public required List<string> GeneralTextDateDurationParts { get; init; }
 }
