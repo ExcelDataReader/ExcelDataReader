@@ -131,22 +131,18 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     {
         if (RowCells == null)
             throw new InvalidOperationException("No data exists for the row/column.");
-        if (RowCells[i] == null)
+        if (RowCells[i]?.EffectiveStyle is not { } effectiveStyle)
             return null;
-        if (RowCells[i].EffectiveStyle == null)
-            return null;
-        return Workbook.GetNumberFormatString(RowCells[i].EffectiveStyle.NumberFormatIndex)?.FormatString;
+        return Workbook.GetNumberFormatString(effectiveStyle.NumberFormatIndex)?.FormatString;
     }
 
     public int GetNumberFormatIndex(int i)
     {
         if (RowCells == null)
             throw new InvalidOperationException("No data exists for the row/column.");
-        if (RowCells[i] == null)
+        if (RowCells[i]?.EffectiveStyle is not { } effectiveStyle)
             return -1;
-        if (RowCells[i].EffectiveStyle == null)
-            return -1;
-        return RowCells[i].EffectiveStyle.NumberFormatIndex;
+        return effectiveStyle.NumberFormatIndex;
     }
 
     public double GetColumnWidth(int i)
@@ -179,13 +175,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
             throw new InvalidOperationException("No data exists for the row/column.");
 
         var result = new CellStyle();
-        if (RowCells[i] == null)
-        {
-            return result;
-        }
-
-        var effectiveStyle = RowCells[i].EffectiveStyle;
-        if (effectiveStyle == null)
+        if (RowCells[i]?.EffectiveStyle is not { } effectiveStyle)
         {
             return result;
         }
