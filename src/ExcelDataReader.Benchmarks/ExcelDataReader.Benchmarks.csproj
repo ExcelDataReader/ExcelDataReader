@@ -14,7 +14,7 @@
     <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.15.2" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\ExcelDataReader\ExcelDataReader.csproj" />
