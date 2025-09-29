@@ -589,9 +589,7 @@ internal sealed class XlsWorksheet : IWorksheet
         {
             rowOffset = new()
             {
-                MinCellOffset = int.MaxValue,
-                MaxCellOffset = int.MinValue,
-                MaxOverlapRowIndex = int.MinValue
+                MinCellOffset = int.MaxValue, MaxCellOffset = int.MinValue, MaxOverlapRowIndex = int.MinValue
             };
 
             RowOffsetMap.Add(rowIndex, rowOffset);
@@ -607,9 +605,7 @@ internal sealed class XlsWorksheet : IWorksheet
         {
             rowOffset = new()
             {
-                MinCellOffset = int.MaxValue,
-                MaxCellOffset = int.MinValue,
-                MaxOverlapRowIndex = int.MinValue
+                MinCellOffset = int.MaxValue, MaxCellOffset = int.MinValue, MaxOverlapRowIndex = int.MinValue
             };
 
             RowOffsetMap.Add(rowIndex, rowOffset);
