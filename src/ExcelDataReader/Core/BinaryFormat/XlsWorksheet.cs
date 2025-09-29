@@ -80,15 +80,15 @@ internal sealed class XlsWorksheet : IWorksheet
 
     public int RowCount { get; private set; }
 
-        public int FirstRow { get; private set; }
+    public int FirstRow { get; private set; }
 
-        public int LastRow { get; private set; }
+    public int LastRow { get; private set; }
 
-        public int FirstColumn { get; private set; }
+    public int FirstColumn { get; private set; }
 
-        public int LastColumn { get; private set; }
+    public int LastColumn { get; private set; }
 
-        public bool IsDate1904 { get; private set; }
+    public bool IsDate1904 { get; private set; }
 
     public XlsWorkbook Workbook { get; }
 
@@ -589,7 +589,9 @@ internal sealed class XlsWorksheet : IWorksheet
         {
             rowOffset = new()
             {
-                MinCellOffset = int.MaxValue, MaxCellOffset = int.MinValue, MaxOverlapRowIndex = int.MinValue
+                MinCellOffset = int.MaxValue,
+                MaxCellOffset = int.MinValue,
+                MaxOverlapRowIndex = int.MinValue
             };
 
             RowOffsetMap.Add(rowIndex, rowOffset);
@@ -605,7 +607,9 @@ internal sealed class XlsWorksheet : IWorksheet
         {
             rowOffset = new()
             {
-                MinCellOffset = int.MaxValue, MaxCellOffset = int.MinValue, MaxOverlapRowIndex = int.MinValue
+                MinCellOffset = int.MaxValue,
+                MaxCellOffset = int.MinValue,
+                MaxOverlapRowIndex = int.MinValue
             };
 
             RowOffsetMap.Add(rowIndex, rowOffset);
@@ -628,7 +632,7 @@ internal sealed class XlsWorksheet : IWorksheet
 
         public int MaxOverlapRowIndex { get; set; }
     }
-    
+
     private sealed class XlsRowBlock
     {
         public Dictionary<int, Row> Rows { get; } = [];

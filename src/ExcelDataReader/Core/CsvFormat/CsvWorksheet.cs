@@ -65,15 +65,15 @@ internal sealed class CsvWorksheet : IWorksheet
         }
     }
 
-        public int FirstRow { get; private set; }
+    public int FirstRow { get; private set; }
 
-        public int LastRow { get; private set; }
+    public int LastRow { get; private set; }
 
-        public int FirstColumn { get; private set; }
+    public int FirstColumn { get; private set; }
 
-        public int LastColumn { get; private set; }
+    public int LastColumn { get; private set; }
 
-        public Stream Stream { get; }
+    public Stream Stream { get; }
 
     public Encoding Encoding { get; }
 

@@ -4,11 +4,11 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 
 internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffReader(stream)
 {
-    private const uint Row = 0x00; 
+    private const uint Row = 0x00;
     private const uint Blank = 0x01;
     private const uint Number = 0x02;
-    private const uint BoolError = 0x03; 
-    private const uint Bool = 0x04; 
+    private const uint BoolError = 0x03;
+    private const uint Bool = 0x04;
     private const uint Float = 0x05;
     private const uint String = 0x06;
     private const uint SharedString = 0x07;
@@ -19,13 +19,13 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
 
     private const uint BrtCellRString = 0x3E;
 
-        // private const uint WorksheetBegin = 0x81;
-        // private const uint WorksheetEnd = 0x82;
-        private const uint SheetDataBegin = 0x91;
-        private const uint SheetDataEnd = 0x92;
-        private const uint SheetPr = 0x93;
-        private const uint SheetDim = 0x94;
-        private const uint SheetFormatPr = 0x1E5;
+    // private const uint WorksheetBegin = 0x81;
+    // private const uint WorksheetEnd = 0x82;
+    private const uint SheetDataBegin = 0x91;
+    private const uint SheetDataEnd = 0x92;
+    private const uint SheetPr = 0x93;
+    private const uint SheetDim = 0x94;
+    private const uint SheetFormatPr = 0x1E5;
 
     // private const uint ColumnsBegin = 0x186;
     private const uint Column = 0x3C; // column info
@@ -39,7 +39,7 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
 
     protected override Record ReadOverride(byte[] buffer, uint recordId, uint recordLength)
     {
-        switch (recordId) 
+        switch (recordId)
         {
             case SheetDataBegin:
                 return new SheetDataBeginRecord();
@@ -102,7 +102,7 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
                     var footerEven = GetNullableString(buffer, ref offset);
                     var headerFirst = GetNullableString(buffer, ref offset);
                     var footerFirst = GetNullableString(buffer, ref offset);
-                    return new HeaderFooterRecord(new HeaderFooter(differentFirst, differentOddEven) 
+                    return new HeaderFooterRecord(new HeaderFooter(differentFirst, differentOddEven)
                     {
                         FirstHeader = headerFirst,
                         FirstFooter = footerFirst,
@@ -180,7 +180,7 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
                 return Record.Default;
         }
 
-        CellRecord ReadCell(object value, CellError? errorValue = null) 
+        CellRecord ReadCell(object value, CellError? errorValue = null)
         {
             int column = (int)GetDWord(buffer, 0);
             uint xfIndex = GetDWord(buffer, 4) & 0xffffff;
