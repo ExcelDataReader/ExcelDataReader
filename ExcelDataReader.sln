@@ -10,13 +10,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDataReader", "src\ExcelDataReader\ExcelDataReader.csproj", "{627CD303-4CE5-4300-8BD1-0FCF143D4874}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDataReader.Tests", "test\ExcelDataReader.Tests\ExcelDataReader.Tests.csproj", "{A90F5580-605E-4DA6-8997-877EB8F7D024}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDataReader.Tests", "src\ExcelDataReader.Tests\ExcelDataReader.Tests.csproj", "{A90F5580-605E-4DA6-8997-877EB8F7D024}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDataReader.DataSet", "src\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj", "{061F5E1D-23A7-4744-BF2A-54AAFC5EFE70}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestApp", "src\TestApp\TestApp.csproj", "{BCE486DF-3DA2-42A2-BF38-376B17CEF434}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDataReader.Sample", "src\ExcelDataReader.Sample\ExcelDataReader.Sample.csproj", "{BCE486DF-3DA2-42A2-BF38-376B17CEF434}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDataReader.Benchmarks", "test\ExcelDataReader.Benchmarks\ExcelDataReader.Benchmarks.csproj", "{A40BE62A-B8AE-44D1-8E97-DCB4DA8B8F17}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelDataReader.Benchmarks", "src\ExcelDataReader.Benchmarks\ExcelDataReader.Benchmarks.csproj", "{A40BE62A-B8AE-44D1-8E97-DCB4DA8B8F17}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

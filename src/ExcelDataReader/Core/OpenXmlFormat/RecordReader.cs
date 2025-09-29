@@ -2,24 +2,23 @@
 
 #nullable enable
 
-namespace ExcelDataReader.Core.OpenXmlFormat
+namespace ExcelDataReader.Core.OpenXmlFormat;
+
+internal abstract class RecordReader : IDisposable
 {
-    internal abstract class RecordReader : IDisposable
+    ~RecordReader()
     {
-        ~RecordReader()
-        {
-            Dispose(false);
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }       
-
-        public abstract Record? Read();
-
-        protected abstract void Dispose(bool disposing);
+        Dispose(false);
     }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }       
+
+    public abstract Record? Read();
+
+    protected abstract void Dispose(bool disposing);
 }

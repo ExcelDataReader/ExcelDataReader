@@ -1,21 +1,21 @@
-﻿namespace ExcelDataReader.Core
+﻿namespace ExcelDataReader.Core;
+
+/// <summary>
+/// The common worksheet interface between the binary and OpenXml formats.
+/// </summary>
+internal interface IWorksheet
 {
-    /// <summary>
-    /// The common worksheet interface between the binary and OpenXml formats.
-    /// </summary>
-    internal interface IWorksheet
-    {
-        string Name { get; }
+    string Name { get; }
 
-        string CodeName { get; }
+    string CodeName { get; }
 
-        string VisibleState { get; }
+    string VisibleState { get; }
 
-        HeaderFooter HeaderFooter { get; }
+    HeaderFooter HeaderFooter { get; }
 
-        int FieldCount { get; }
+    int FieldCount { get; }
 
-        int RowCount { get; }
+    int RowCount { get; }
 
         /// <summary>
         /// Gets the index of first row.
@@ -39,8 +39,7 @@
 
         CellRange[] MergeCells { get; }
 
-        Column[] ColumnWidths { get; }
+    List<Column> ColumnWidths { get; }
 
-        IEnumerable<Row> ReadRows();
-    }
+    IEnumerable<Row> ReadRows();
 }

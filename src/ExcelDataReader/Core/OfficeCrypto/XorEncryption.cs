@@ -1,44 +1,43 @@
 ﻿using System.Security.Cryptography;
 
-namespace ExcelDataReader.Core.OfficeCrypto
+namespace ExcelDataReader.Core.OfficeCrypto;
+
+/// <summary>
+/// Represents "XOR Deobfucation Method 1" used in XLS.
+/// </summary>
+internal sealed class XorEncryption : EncryptionInfo
 {
-    /// <summary>
-    /// Represents "XOR Deobfucation Method 1" used in XLS.
-    /// </summary>
-    internal sealed class XorEncryption : EncryptionInfo
+    public ushort EncryptionKey { get; set; }
+
+    public ushort HashValue { get; set; }
+
+    public override bool IsXor => true;
+
+    public override SymmetricAlgorithm CreateCipher()
     {
-        public ushort EncryptionKey { get; set; }
+        return new XorManaged();
+    }
 
-        public ushort HashValue { get; set; }
+    public override Stream CreateEncryptedPackageStream(Stream stream, byte[] secretKey)
+    {
+        throw new NotImplementedException();
+    }
 
-        public override bool IsXor => true;
+    public override byte[] GenerateBlockKey(int blockNumber, byte[] secretKey)
+    {
+        return secretKey;
+    }
 
-        public override SymmetricAlgorithm CreateCipher()
-        {
-            return new XorManaged();
-        }
+    public override byte[] GenerateSecretKey(string password)
+    {
+        var passwordBytes = System.Text.Encoding.ASCII.GetBytes(password.Substring(0, Math.Min(password.Length, 15)));
+        return XorManaged.CreateXorArray_Method1(passwordBytes);
+    }
 
-        public override Stream CreateEncryptedPackageStream(Stream stream, byte[] secretKey)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override byte[] GenerateBlockKey(int blockNumber, byte[] secretKey)
-        {
-            return secretKey;
-        }
-
-        public override byte[] GenerateSecretKey(string password)
-        {
-            var passwordBytes = System.Text.Encoding.ASCII.GetBytes(password.Substring(0, Math.Min(password.Length, 15)));
-            return XorManaged.CreateXorArray_Method1(passwordBytes);
-        }
-
-        public override bool VerifyPassword(string password)
-        {
-            var passwordBytes = System.Text.Encoding.ASCII.GetBytes(password.Substring(0, Math.Min(password.Length, 15)));
-            var verifier = XorManaged.CreatePasswordVerifier_Method1(passwordBytes);
-            return verifier == HashValue;
-        }
+    public override bool VerifyPassword(string password)
+    {
+        var passwordBytes = System.Text.Encoding.ASCII.GetBytes(password.Substring(0, Math.Min(password.Length, 15)));
+        var verifier = XorManaged.CreatePasswordVerifier_Method1(passwordBytes);
+        return verifier == HashValue;
     }
 }

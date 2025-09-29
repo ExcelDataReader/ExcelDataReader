@@ -107,6 +107,9 @@ csharp_style_unused_value_expression_statement_preference = discard_variable:sil
 # 'using' directive preferences
 csharp_using_directive_placement = outside_namespace:silent
 
+# Namespace preferences
+csharp_style_namespace_declarations = file_scoped:warning
+
 #### C# Formatting Rules ####
 
 # New line preferences
