@@ -24,6 +24,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
         private const uint SheetDataBegin = 0x91;
         private const uint SheetDataEnd = 0x92;
         private const uint SheetPr = 0x93;
+        private const uint SheetDim = 0x94;
         private const uint SheetFormatPr = 0x1E5;
 
         // private const uint ColumnsBegin = 0x186;
@@ -59,6 +60,15 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat
                         // or if it is empty.
                         string codeName = length == 0 ? null : GetString(buffer, 19 + 4, length);
                         return new SheetPrRecord(codeName);
+                    }
+
+                case SheetDim: // BrtWsDim
+                    {
+                        int dimFromRow = GetInt32(buffer, 0);
+                        int dimToRow = GetInt32(buffer, 4);
+                        int dimFromColumn = GetInt32(buffer, 8);
+                        int dimToColumn = GetInt32(buffer, 12);
+                        return new SheetDimRecord(new CellRange(dimFromColumn, dimFromRow, dimToColumn, dimToRow));
                     }
 
                 case SheetFormatPr: // BrtWsFmtInfo 

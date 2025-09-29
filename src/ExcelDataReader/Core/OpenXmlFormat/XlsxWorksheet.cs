@@ -68,6 +68,12 @@ namespace ExcelDataReader.Core.OpenXmlFormat
                     case HeaderFooterRecord headerFooter:
                         HeaderFooter = headerFooter.HeaderFooter;
                         break;
+                    case SheetDimRecord dimRecord:
+                        FirstRow = dimRecord.Range.FromRow;
+                        LastRow = dimRecord.Range.ToRow + 1;
+                        FirstColumn = dimRecord.Range.FromColumn;
+                        LastColumn = dimRecord.Range.ToColumn + 1;
+                        break;
                 }
             }
 
@@ -84,6 +90,14 @@ namespace ExcelDataReader.Core.OpenXmlFormat
         public int FieldCount { get; }
 
         public int RowCount { get; }
+
+        public int FirstRow { get; private set; }
+
+        public int LastRow { get; private set; }
+
+        public int FirstColumn { get; private set; }
+
+        public int LastColumn { get; private set; }
 
         public string Name { get; }
 

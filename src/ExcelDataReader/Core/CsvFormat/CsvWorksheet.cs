@@ -59,6 +59,14 @@ namespace ExcelDataReader.Core.CsvFormat
             }
         }
 
+        public int FirstRow { get; private set; }
+
+        public int LastRow { get; private set; }
+
+        public int FirstColumn { get; private set; }
+
+        public int LastColumn { get; private set; }
+
         public Stream Stream { get; }
 
         public Encoding Encoding { get; }
