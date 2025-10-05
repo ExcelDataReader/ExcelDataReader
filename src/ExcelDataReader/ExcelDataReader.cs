@@ -1,4 +1,7 @@
 ﻿using System.Data;
+#if NET8_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using ExcelDataReader.Core;
 
 namespace ExcelDataReader;
@@ -82,6 +85,9 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     public double GetDouble(int i) => (double)GetValue(i);
 
+#if NET8_0_OR_GREATER
+    [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)]
+#endif
     public Type GetFieldType(int i) => GetValue(i)?.GetType();
 
     public float GetFloat(int i) => (float)GetValue(i);
