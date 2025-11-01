@@ -15,82 +15,17 @@ internal enum BIFFTYPE : ushort
 
 internal enum BIFFRECORDTYPE : ushort
 {
-    EXTERNCOUNT = 0x0016,
-    EXTERNSHEET = 0x0017,
-    DEFINEDNAME_V2 = 0x0018, // BIFF2. Defined name record.
-    BUILTINFMTCOUNT_V2 = 0x001F, // BIFF2. Number of number of following FORMAT records that contain built-in number format.
-    WINDOW2_V2 = 0x003E, // BIFF2. Window 2 record.
-    CRN = 0x005A,
-    FILESHARING = 0x005B,
-    WRITEPROTECT = 0x0086,
-    UNKNOWN191 = 0x00BF, // Not documented.
-    UNKNOWN192 = 0x00C0, // Not documented.
-    MMS = 0x00C1,
-    OBPROJ = 0x00D3,
-    INTERFACEHDR = 0x00E1,
-    MERGECELLS = 0x00E5, // Record containing list of merged cell ranges
-    INTERFACEEND = 0x00E2,
-    WRITEACCESS = 0x005C,
-    CODEPAGE = 0x0042,
-    DSF = 0x0161,
-    TABID = 0x013D,
-    FNGROUPCOUNT = 0x009C,
-    COLWIDTH = 0x0024,
-    LEFTMARGIN = 0x0026,
-    RIGHTMARGIN = 0x0027,
-    TOPMARGIN = 0x0028,
-    BOTTOMMARGIN = 0x0029,
-    FILEPASS = 0x002F,
-    WINDOWPROTECT = 0x0019,
-    PROTECT = 0x0012,
-    PASSWORD = 0x0013,
-    PROT4REV = 0x01AF,
-    PROT4REVPASSWORD = 0x01BC,
-    WINDOW1 = 0x003D,
-    BACKUP = 0x0040,
-    HIDEOBJ = 0x008D,
-    PALETTE = 0x0092,
-    DATE1904 = 0x0022,
-    REFRESHALL = 0x01B7,
-    BOOKBOOL = 0x00DA,
-
-    FONT = 0x0031, // Font record, BIFF2, 5 and later
-
-    FONT2 = 0x0032, // Font record, BIFF2, unknown usage.
-
-    FONT_V34 = 0x0231, // Font record, BIFF3, 4
-
-    FORMAT = 0x041E, // Format record, BIFF4 and later
-
-    FORMAT_V23 = 0x001E, // Format record, BIFF2, 3
-
-    XF = 0x00E0, // Extended format record, BIFF5 and later
-
-    XF_V4 = 0x0443, // Extended format record, BIFF4
-
-    XF_V3 = 0x0243, // Extended format record, BIFF3
-
-    XF_V2 = 0x0043, // Extended format record, BIFF2
-
-    IXFE = 0x0044, // Index to XF, BIFF2
-
-    BUILTINFMTCOUNT = 0x0056, // BIFF3+. Number of number of following FORMAT records that contain built-in number format.
-
-    STYLE = 0x0293,
-    BOUNDSHEET = 0x0085,
-    COUNTRY = 0x008C,
-    SST = 0x00FC, // Global string storage (for BIFF8)
-
-    CONTINUE = 0x003C,
-    EXTSST = 0x00FF,
-    BOF = 0x0809, // BOF Id for BIFF5 and later
-
+    DIMENSIONS_V2 = 0x0000, // BIFF2
+    BLANK_V2 = 0x0001, // BIFF2. Empty cell.
+    INTEGER_V2 = 0x0002, // BIFF2. Integer cell (0..65535).
+    NUMBER_V2 = 0x0003, // BIFF2. Numeric cell.
+    LABEL_V2 = 0x0004, // BIFF2. String cell (up to 255 symbols).
+    BOOLERR_V2 = 0x0005, // BIFF2. Boolean or error cell.
     BOF_V2 = 0x0009, // BOF Id for BIFF2
-
-    BOF_V3 = 0x0209, // BOF Id for BIFF3
-
-    BOF_V4 = 0x0409, // BOF Id for BIFF4
-
+    LABELSST = 0x00FD, // String cell with value from SST (for BIFF8)
+    FORMULA = 0x0006, // Formula cell, BIFF2, BIFF5-8
+    STRING_V2 = 0x0007, // Old string formula results
+    ROW_V2 = 0x0008, // BIFF2. Row record    SELECTION = 0x001D,
     EOF = 0x000A, // End of block started with BOF
     INDEX_V2 = 0x000B, // Index record for BIFF2
     CALCCOUNT = 0x000C,
@@ -99,96 +34,155 @@ internal enum BIFFRECORDTYPE : ushort
     REFMODE = 0x000F,
     DELTA = 0x0010,
     ITERATION = 0x0011,
-    SAVERECALC = 0x005F,
+    PROTECT = 0x0012,
+    PASSWORD = 0x0013,
+    SCL = 0x00A0,
+    HEADER = 0x0014,
+    FOOTER = 0x0015,
+    EXTERNCOUNT = 0x0016,
+    EXTERNSHEET = 0x0017,
+    DEFINEDNAME_V2 = 0x0018, // BIFF2. Defined name record.
+    WINDOWPROTECT = 0x0019,
+    VERTICALPAGEBREAKS = 0x001A,
+    HORIZONTALPAGEBREAKS = 0x001B,
+    NOTE = 0x001C,
+    SELECTION = 0x001D,
+    FORMAT_V23 = 0x001E, // BIFF2-3. Format record.
+    BUILTINFMTCOUNT_V2 = 0x001F, // BIFF2. Number of number of following FORMAT records that contain built-in number format.
+    COLUMNDEFAULT = 0x0020, // BIFF2.
+    ARRAY_V2 = 0x0021, // BIFF2. Array record.
+    DATE1904 = 0x0022,
+    EXTERNALNAME_V2 = 0x0023,
+    COLWIDTH = 0x0024, // BIFF2 only
+    DEFAULTROWHEIGHT_V2 = 0x0025,
+    LEFTMARGIN = 0x0026,
+    RIGHTMARGIN = 0x0027,
+    TOPMARGIN = 0x0028,
+    BOTTOMMARGIN = 0x0029,
     PRINTHEADERS = 0x002A,
     PRINTGRIDLINES = 0x002B,
+    FILEPASS = 0x002F,
+    UNKNOWN48 = 0x0030,
+    FONT = 0x0031, // BIFF2, 5+. Font record.
+    FONT2 = 0x0032, // BIFF2. Font record, unknown usage.
+    CHBEGIN = 0x0033,
+    DATATABLE_V2 = 0x0036, // BIFF2. One input operation table. Biff3+ - Data table.
+    DATATABLE2 = 0x0037, // BIFF2. Multiple input operation table. Biff3+ - not used.
+    UNKNOWN56 = 0x0038, // BIFF4W. Not documented.
+    UNKNOWN57 = 0x0039, // BIFF42. Not documented.
+    CONTINUE = 0x003C,
+    WINDOW1 = 0x003D,
+    WINDOW2_V2 = 0x003E, // BIFF2. Window 2 record.
+    BACKUP = 0x0040,
+    PANE = 0x0041,
+    CODEPAGE = 0x0042,
+    XF_V2 = 0x0043, // Extended format record, BIFF2
+    IXFE = 0x0044,
+    FONTCOLOR = 0x0045,
+    UNKNOWN70 = 0x0046, // BIFF42. Not documented.
+    UNKNOWN71 = 0x0047, // BIFF4W. Not documented.
+    UNKNOWN72 = 0x0048, // BIFF4W. Not documented.
+    UNKNOWN73 = 0x0049, // BIFF4W. Not documented.
+    UNKNOWN74 = 0x004A, // BIFF4W. Not documented.
+    UNKNOWN75 = 0x004B, // BIFF4W. Not documented.
+    UNKNOWN76 = 0x004C, // BIFF4W. Not documented.
+    PLS = 0x004D,
+    UNKNOWN78 = 0x004E, // BIFF4W. Not documented.
+    UNKNOWN79 = 0x004F, // BIFF4W. Not documented.
+    DCON = 0x0050,
+    DCONREF = 0x0051,
+    DCONNAME = 0x0052,
+    DEFAULTCOLWIDTH = 0x0055,
+    BUILTINFMTCOUNT = 0x0056, // BIFF3+. Number of number of following FORMAT records that contain built-in number format.
+    XCT = 0x0059,
+    CRN = 0x005A,
+    FILESHARING = 0x005B,
+    WRITEACCESS = 0x005C,
+    OBJ = 0x005D,
+
+    /// <summary>
+    /// If present the Calculate Message was in the status bar when Excel saved the file.
+    /// This occurs if the sheet changed, the Manual calculation option was on, and the Recalculate Before Save option was off.
+    /// </summary>
+    UNCALCED = 0x005E,
+    SAVERECALC = 0x005F,
+    UNKNOWN191 = 0x00BF, // Not documented.
+    OBJPROTECT = 0x0063,
+    COLINFO = 0x007D, // BIFF3+.
+    UNKNOWN127 = 0x007F, // Not documented.
     GUTS = 0x0080,
     WSBOOL = 0x0081,
     GRIDSET = 0x0082,
-    DEFAULTROWHEIGHT_V2 = 0x0025,
-    DEFAULTROWHEIGHT = 0x0225,
-    HEADER = 0x0014,
-    FOOTER = 0x0015,
     HCENTER = 0x0083,
     VCENTER = 0x0084,
+    BOUNDSHEET = 0x0085,
+    WRITEPROTECT = 0x0086,
+    UNKNOWN138 = 0x008A, // BIFF4W. Not documented.
+    UNKNOWN139 = 0x008B, // BIFF4W. Not documented.
+    COUNTRY = 0x008C,
+    HIDEOBJ = 0x008D,
+    SHEETSOFFSET = 0x008E,
+    UNKNOWN143 = 0x008F, // BIFF4W. Not documented.
+    SORT = 0x0090,
+    PALETTE = 0x0092,
+    UNKNOWN148 = 0x0094, // Not documented.
+    DXGCOL = 0x0099,
+    FNGROUPNAME = 0x009A,
+    FILTERMODE = 0x009B,
+    BUILTINFNGROUPCOUNT = 0x009C,
+    AUTOFILTERINFO = 0x009D,
     PRINTSETUP = 0x00A1,
-    DEFAULTCOLWIDTH = 0x0055,
-    DIMENSIONS = 0x0200, // Size of area used for data
-    DIMENSIONS_V2 = 0x0000, // BIFF2
-
-    ROW_V2 = 0x0008, // Row record
-    ROW = 0x0208, // Row record
-
-    SELECTION = 0x001D,
-    OBNOMACROS = 0x1BD,
-    EXCEL9FILE = 0x01C0,
-    RECALCID = 0x01C1,
-    INDEX = 0x020B, // Index record, unsure about signature
-
-    DBCELL = 0x00D7, // DBCell record, unsure about signature
-
-    BLANK = 0x0201, // Empty cell
-
-    BLANK_OLD = 0x0001, // Empty cell, old format
-
-    MULBLANK = 0x00BE, // Equivalent of up to 256 blank cells
-
-    INTEGER = 0x0202, // Integer cell (0..65535)
-
-    INTEGER_OLD = 0x0002, // Integer cell (0..65535), old format
-
-    NUMBER = 0x0203, // Numeric cell
-
-    NUMBER_OLD = 0x0003, // Numeric cell, old format
-
-    LABEL = 0x0204, // String cell (up to 255 symbols)
-
-    LABEL_V2 = 0x0004, // String cell (up to 255 symbols), old format
-
-    LABELSST = 0x00FD, // String cell with value from SST (for BIFF8)
-
-    FORMULA = 0x0006, // Formula cell, BIFF2, BIFF5-8
-
-    FORMULA_V3 = 0x0206, // Formula cell, BIFF3
-
-    FORMULA_V4 = 0x0406, // Formula cell, BIFF4
-
-    BOOLERR = 0x0205, // Boolean or error cell
-
-    BOOLERR_OLD = 0x0005, // Boolean or error cell, old format
-
-    ARRAY = 0x0221, // Range of cells for multi-cell formula
-
-    RK = 0x027E, // RK-format numeric cell
-
+    UNKNOWN164 = 0x00A4, // BIFF5+. Not documented.
+    UNKNOWN168 = 0x00A8, // BIFF4W. Not documented.
+    UNKNOWN169 = 0x00A9, // BIFF5. Not documented.
+    GCW = 0x00AB,
+    SCENMAN = 0x00AE, // BIFF5+.
+    SCENARIO = 0x00AF, // BIFF5+.
+    SXVIEW = 0x00B0, // BIFF5+.
+    SXVD = 0x00B1, // BIFF5+.
+    SXVI = 0x00B2, // BIFF5+.
+    SXLVD = 0x00B4, // BIFF5+.
+    SXLI = 0x00B5, // BIFF5+.
+    SXPI = 0x00B6, // BIFF5+.
+    SHAREDFMLA_V2 = 0x00BC, // BIFF2-4. One more formula optimization element.
     MULRK = 0x00BD, // Equivalent of up to 256 RK cells
-
+    UNKNOWN192 = 0x00C0, // Not documented.
+    MMS = 0x00C1,
+    SXDI = 0x00C5, // BIFF5+.
+    SXDB = 0x00C6, // BIFF5+.
+    SXFDB = 0x00C7, // BIFF5+.
+    SXDBB = 0x00C8, // BIFF5+.
+    SXNUM = 0x00C9, // BIFF5+.
+    SXBOOL = 0x00CA, // BIFF5+.
+    SXERR = 0x00CB, // BIFF5+.
+    SXINT = 0x00CC, // BIFF5+.
+    SXSTRING = 0x00CD, // BIFF5+.
+    SXDTR = 0x00CE, // BIFF5+.
+    SXNIL = 0x00CF, // BIFF5+.
+    SXTBL = 0x00D0, // BIFF5+.
+    SXTBRGIITM = 0x00D1, // BIFF5+.
+    SXTBPG = 0x00D2, // BIFF5+
+    OBPROJ = 0x00D3,
+    SXSTREAMID = 0x00D5,
     RSTRING = 0x00D6, // Rich-formatted string cell
-
-    SHAREDFMLA = 0x04BC, // One more formula optimization element
-
-    SHAREDFMLA_OLD = 0x00BC, // One more formula optimization element, old format
-
-    STRING = 0x0207, // And one more, for string formula results
-
-    STRING_OLD = 0x0007, // Old string formula results
-
-    CF = 0x01B1,
-    CODENAME = 0x01BA,
-    CONDFMT = 0x01B0,
-    DCONBIN = 0x01B5,
-    DV = 0x01BE,
-    DVAL = 0x01B2,
-    HLINK = 0x01B8,
+    DBCELL = 0x00D7, // DBCell record, unsure about signature
+    SXRNG = 0x00D8,
+    SXLSXOPER = 0x00D9,
+    BOOKBOOL = 0x00DA,
+    DBORPARAMQRY = 0x00DC,
+    SCENARIOPROTECT = 0x00DD,
+    OLEOBJECTSIZE = 0x00DE,
+    XF = 0x00E0, // Extended format record, BIFF5 and later
+    INTERFACEHDR = 0x00E1,
+    INTERFACEEND = 0x00E2,
+    SXVS = 0x00E3,
+    MERGECELLS = 0x00E5, // Record containing list of merged cell ranges
+    BITMAP = 0x00E9,
+    UNKNOWN234 = 0x00EA, // BIFF5. Not documented.
     MSODRAWINGGROUP = 0x00EB,
     MSODRAWING = 0x00EC,
     MSODRAWINGSELECTION = 0x00ED,
-    PARAMQRY = 0x00DC,
-    QSI = 0x01AD,
-    SUPBOOK = 0x01AE,
-    SXDB = 0x00C6,
-    SXDBEX = 0x0122,
-    SXFDBTYPE = 0x01BB,
+    PHONETICPR = 0x00EF,
     SXRULE = 0x00F0,
     SXEX = 0x00F1,
     SXFILT = 0x00F2,
@@ -197,43 +191,148 @@ internal enum BIFFRECORDTYPE : ushort
     SXPAIR = 0x00F8,
     SXFMLA = 0x00F9,
     SXFORMAT = 0x00FB,
+    SST = 0x00FC, // Global string storage (for BIFF8)
+    EXTSST = 0x00FF,
+    DSF = 0x0161,
+    TABID = 0x013D,
+    PROT4REV = 0x01AF,
+    PROT4REVPASSWORD = 0x01BC,
+    REFRESHALL = 0x01B7,
+
+    FONT_V34 = 0x0231, // BIFF3-4. Font record.
+    BOF_V4 = 0x0409, // BIFF4. BOF Id.
+
+    FORMAT = 0x041E, // BIFF4+. Format record.
+
+    XF_V4 = 0x0443, // BIFF4. Extended format record.
+
+    XF_V3 = 0x0243, // BIFF3. Extended format record
+
+    STYLE = 0x0293,
+    QSISXTAG = 0x0802, // BIFF8+.
+    BOF = 0x0809, // BIFF5+. BOF Id.
+    SXVIEWEX9 = 0x0810, // BIFF8+.
+    REALTIMEDATA = 0x0813, // BIFF8+.
+
+    BOF_V3 = 0x0209, // BIFF3. BOF Id.
+
+    EXTERNALNAME = 0x0223, // BIFF3+
+    DEFAULTROWHEIGHT = 0x0225,
+    DIMENSIONS = 0x0200, // Size of area used for data
+
+    ROW = 0x0208, // Row record
+
+    QSI = 0x01AD,
+    SUPBOOK = 0x01AE,
+    CONDFMT = 0x01B0,
+    CF = 0x01B1,
+    DVAL = 0x01B2,
+    DCONBIN = 0x01B5,
+    HLINK = 0x01B8,
+    DV = 0x01BE,
+    TXO = 0x01B6,
+    LEL = 0x1B9,
+    CODENAME = 0x1BA,
+    SXFDBTYPE = 0x01BB,
+    OBNOMACROS = 0x1BD,
+    EXCEL9FILE = 0x01C0,
+    RECALCID = 0x01C1,
+    ENTEXU2 = 0x01C2,
+    INDEX = 0x020B, // Index record, unsure about signature
+    BLANK = 0x0201, // Empty cell
+
+    MULBLANK = 0x00BE, // Equivalent of up to 256 blank cells
+
+    INTEGER = 0x0202, // Integer cell (0..65535)
+
+    NUMBER = 0x0203, // Numeric cell
+
+    LABEL = 0x0204, // String cell (up to 255 symbols)
+    BOOLERR = 0x0205, // Boolean or error cell
+    FORMULA_V3 = 0x0206, // Formula cell, BIFF3
+    FORMULA_V4 = 0x0406, // Formula cell, BIFF4
+    ARRAY = 0x0221, // Range of cells for multi-cell formula
+    UNKNOWN637 = 0x027D, // Not documented.
+    RK = 0x027E, // RK-format numeric cell
+    SHAREDFMLA = 0x04BC, // One more formula optimization element
+    STRING = 0x0207, // And one more, for string formula results
+    SXDBEX = 0x0122,
     SXFORMULA = 0x0103,
     SXVDEX = 0x0100,
-    TXO = 0x01B6,
     USERBVIEW = 0x01A9,
     USERSVIEWBEGIN = 0x01AA,
     USERSVIEWEND = 0x01AB,
     USESELFS = 0x0160,
     XL5MODIFY = 0x0162,
-    OBJ = 0x005D,
-    NOTE = 0x001C,
 
-    // SXEXT = 0x00DC,
-    VERTICALPAGEBREAKS = 0x001A,
-    XCT = 0x0059,
-
-    /// <summary>
-    /// If present the Calculate Message was in the status bar when Excel saved the file.
-    /// This occurs if the sheet changed, the Manual calculation option was on, and the Recalculate Before Save option was off.
-    /// </summary>
-    UNCALCED = 0x005E,
-    QUICKTIP = 0x0800,
-    COLINFO = 0x007D,
+    DATATABLE = 0x0236, // BIFF2 - One input operation table. Biff3+ - not used.
     DEFINEDNAME = 0x0218, // Defined name record.
-    WINDOW2 = 0x023E, // BIFF3+. Window 2 record.
+    WINFDOW2 = 0x023E, // BIFF3+. Window 2 record.
+    QUICKTIP = 0x0800,
+    SHEETEXT = 0x0862,
     BOOKEXT = 0x0863,
+    SXADLL = 0x0864, // BIFF8+.
     HFPICTURE = 0x0866,
+    FEATHDR = 0x0867,
+    DROPDOWNOBJIDS = 0x0874,
+    CONTINUEFRT11 = 0x0875,
+    DCONN = 0x0876,
+    LIST12 = 0x0877,
+    FEATURE12 = 0x0878,
+    CONDFMT12 = 0x0879,
+    CF12 = 0x087A,
+    CFEX = 0x087B,
     XFCRC = 0x087C,
     XFEXT = 0x087D,
-    COMPAT12 = 0x088C,
     STYLEEXT = 0x892,
     THEME = 0x0896,
     GUIDTYPELIB = 0x0897,
+    PLV = 0x088B,
+    COMPAT1V = 0x088C,
     DXF = 0x088D,
     TABLESTYLES = 0x88E,
     MTRSETTINGS = 0x089A,
     COMPRESSPICTURES = 0x089B,
+    HEADERFOOTER = 0x089C,
     FORCEFULLCALCULATION = 0x08A3,
-    UNKNOWN2262 = 0x08D6, // Not documented.
-    CRTCLIENT = 0x105C
+    UNKNOWN226V = 0x08D6, // Not documented.
+    UNITS = 0x1001,
+    CHART = 0x1002,
+    SERIES = 0x1003,
+    UNKNOWN4100 = 0x1004, // Not documented.
+    DATAFORMAT = 0x1006,
+    LINEFORMAT = 0x1007,
+    MARKERFORMAT = 0x1009,
+    AREAFORMAT = 0x100A,
+    PIEFORMAT = 0x100B,
+    ATTACHEDLABEL = 0x100C,
+    SERIESTEXT = 0x100D,
+    CHARTFORMAT = 0x1014,
+    LEGEND = 0x1015,
+    SERIESLIST = 0x1016,
+    BAR = 0x1017,
+    LINE = 0x1018,
+    PIE = 0x1019,
+    AREA = 0x101A,
+    SCATTER = 0x101B,
+    CRTLINE = 0x101C,
+    AXIS = 0x101D,
+    TICK = 0x101E,
+    VALUERANGE = 0x101F,
+    CATSERRANGE = 0x1020,
+    AXISLINE = 0x1021,
+    CRTLINK = 0x1022,
+    DEFAULTTEXT = 0x1024,
+    TEXT = 0x1025,
+    FONTX = 0x1026,
+    OBJECTLINK = 0x1027,
+    FRAME = 0x1032,
+    BEGIN = 0x1033,
+    CHEND = 0x1034,
+    UNKNOWN4141 = 0x102D, // Not documented. Found in charts.
+    UNKNOWN4150 = 0x1036, // Not documented. Found in charts.
+    UNKNOWN4151 = 0x1037, // Not documented. Found in charts.
+    UNKNOWN4152 = 0x1038, // Not documented. Found in charts.
+    CRTCLIENT = 0x105C,
+    UNKNOWN4352 = 0x1100 // Not documented.
 }

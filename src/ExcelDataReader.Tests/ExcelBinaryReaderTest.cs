@@ -1129,6 +1129,17 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         Assert.That(reader.GetValue(3), Is.EqualTo(4));
     }
 
+    [Test]
+    public void GetColumnWidth_BIFF2()
+    {
+        using var reader = OpenReader(Path.Combine("xls", "BIFF2_DIMENSIONS"));
+        reader.Read();
+        Assert.That(reader.GetColumnWidth(0), Is.EqualTo(8.43));
+        Assert.That(reader.GetColumnWidth(1), Is.EqualTo(25.00));
+        Assert.That(reader.GetColumnWidth(2), Is.EqualTo(25.00));
+        Assert.That(reader.GetColumnWidth(3), Is.EqualTo(8.43));
+    }
+
     protected override IExcelDataReader OpenReader(Stream stream, ExcelReaderConfiguration configuration = null)
     {
         return ExcelReaderFactory.CreateBinaryReader(stream, configuration);

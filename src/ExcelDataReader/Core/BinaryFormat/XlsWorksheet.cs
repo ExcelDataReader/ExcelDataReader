@@ -272,18 +272,18 @@ internal sealed class XlsWorksheet : IWorksheet
                 else
                     error = (CellError)cell.ReadByte(6);
                 break;
-            case BIFFRECORDTYPE.BOOLERR_OLD:
+            case BIFFRECORDTYPE.BOOLERR_V2:
                 if (cell.ReadByte(8) == 0)
                     value = cell.ReadByte(7) != 0;
                 else
                     error = (CellError)cell.ReadByte(7);
                 break;
             case BIFFRECORDTYPE.INTEGER:
-            case BIFFRECORDTYPE.INTEGER_OLD:
+            case BIFFRECORDTYPE.INTEGER_V2:
                 value = TryConvertOADateTime(((XlsBiffIntegerCell)cell).Value, numberFormatIndex);
                 break;
             case BIFFRECORDTYPE.NUMBER:
-            case BIFFRECORDTYPE.NUMBER_OLD:
+            case BIFFRECORDTYPE.NUMBER_V2:
                 value = TryConvertOADateTime(((XlsBiffNumberCell)cell).Value, numberFormatIndex);
                 break;
             case BIFFRECORDTYPE.LABEL:
@@ -298,7 +298,7 @@ internal sealed class XlsWorksheet : IWorksheet
                 value = TryConvertOADateTime(((XlsBiffRKCell)cell).Value, numberFormatIndex);
                 break;
             case BIFFRECORDTYPE.BLANK:
-            case BIFFRECORDTYPE.BLANK_OLD:
+            case BIFFRECORDTYPE.BLANK_V2:
             case BIFFRECORDTYPE.MULBLANK:
                 // Skip blank cells
                 break;
@@ -474,8 +474,11 @@ internal sealed class XlsWorksheet : IWorksheet
                 case XlsBiffMergeCells mc:
                     mergeCells.AddRange(mc.MergeCells);
                     break;
-                case XlsBiffColInfo colInfo:
+                case XlsBiffColInfo colInfo: // BIFF3 and later.
                     columnWidths.Add(colInfo.Value);
+                    break;
+                case XlsBiffColWidth colWidth: // BIFF2 only.
+                    columnWidths.Add(colWidth.Value);
                     break;
                 case XlsBiffFormatString fmt when rec.Id == BIFFRECORDTYPE.FORMAT:
                     if (Workbook.BiffVersion >= 5)
