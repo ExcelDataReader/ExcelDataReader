@@ -175,7 +175,7 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
             int column = (int)GetDWord(buffer, 0);
             uint xfIndex = GetDWord(buffer, 4) & 0xffffff;
 
-            return new CellRecord(column, (int)xfIndex, value, errorValue);
+            return new CellRecord(column, (int)xfIndex, null, value, errorValue);
         }
     }
 }

@@ -4,13 +4,13 @@
 
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 
-internal sealed class BiffWorkbookReader(Stream stream, Dictionary<string, string> worksheetRels) : BiffReader(stream)
+internal sealed class BiffWorkbookReader(Stream stream, Dictionary<string, string> worksheetPaths) : BiffReader(stream)
 {
     private const int WorkbookPr = 0x99;
     private const int Sheet = 0x9C;
     private const int BrtBookView = 0x9e;
 
-    private readonly Dictionary<string, string> _worksheetRels = worksheetRels;
+    private readonly Dictionary<string, string> _worksheetPaths = worksheetPaths;
 
     private enum SheetVisibility : byte
     {
@@ -42,7 +42,7 @@ internal sealed class BiffWorkbookReader(Stream stream, Dictionary<string, strin
                 uint nameLength = GetDWord(buffer, offset);
                 string name = GetString(buffer, offset + 4, nameLength);
 
-                return new SheetRecord(name, id, rid, state, rid != null && _worksheetRels.TryGetValue(rid, out var path) ? path : null);
+                return new SheetRecord(name, id, rid, state, rid != null && _worksheetPaths.TryGetValue(rid, out var path) ? path : null, null);
 
             case BrtBookView:                 
                 int activeSheet = (int)GetDWord(buffer, 24);

@@ -14,7 +14,15 @@ internal sealed class XlsxWorksheet : IWorksheet
         Name = refSheet.Name;
         VisibleState = refSheet.VisibleState;
         Path = refSheet.Path;
+        RelPath = refSheet.RelPath;
         DefaultRowHeight = 15;
+        HyperlinkRIdByRefAttr = [];
+        HyperlinkByRId = [];
+
+        if (!string.IsNullOrEmpty(RelPath))
+        {
+            ReadHyperlinks();
+        }
 
         if (string.IsNullOrEmpty(Path))
             return;
@@ -65,6 +73,9 @@ internal sealed class XlsxWorksheet : IWorksheet
                 case HeaderFooterRecord headerFooter:
                     HeaderFooter = headerFooter.HeaderFooter;
                     break;
+                case HyperlinkRefRecord hyperlinkRef when hyperlinkRef.RId != null:
+                    HyperlinkRIdByRefAttr[hyperlinkRef.RefAttr] = hyperlinkRef.RId;
+                    break;
             }
         }
 
@@ -96,11 +107,17 @@ internal sealed class XlsxWorksheet : IWorksheet
 
     private string Path { get; set; }
 
+    private string RelPath { get; set; }
+
     private double DefaultRowHeight { get; }
 
     private ZipWorker Document { get; }
 
     private XlsxWorkbook Workbook { get; }
+
+    private Dictionary<string, string> HyperlinkRIdByRefAttr { get; }
+
+    private Dictionary<string, string> HyperlinkByRId { get; }
 
     public IEnumerable<Row> ReadRows()
     {
@@ -148,7 +165,15 @@ internal sealed class XlsxWorksheet : IWorksheet
                 case CellRecord cell when inSheetData:
                     // TODO What if we get a cell without a row?
                     var extendedFormat = Workbook.GetEffectiveCellStyle(cell.XfIndex, 0);
-                    cells.Add(new Cell(cell.ColumnIndex, ConvertCellValue(cell.Value, extendedFormat.NumberFormatIndex), extendedFormat, cell.Error));
+                    var hyperlink = null as string;
+                    if (cell.RefAttr is string refAttr &&
+                        HyperlinkRIdByRefAttr.TryGetValue(refAttr, out var rId)
+                        && HyperlinkByRId.TryGetValue(rId, out var link))
+                    {
+                        hyperlink = link;
+                    }
+
+                    cells.Add(new Cell(cell.ColumnIndex, ConvertCellValue(cell.Value, extendedFormat.NumberFormatIndex), hyperlink, extendedFormat, cell.Error));
                     foundRowOrCell = true;
                     break;
             }
@@ -176,6 +201,23 @@ internal sealed class XlsxWorksheet : IWorksheet
         {
             result = TimeSpan.Zero;
             return false;
+        }
+    }
+
+    private void ReadHyperlinks()
+    {
+        using (var reader = Document.GetRelReader(RelPath))
+        {
+            if (reader is null)
+                return;
+
+            while (reader.Read() is { } record)
+            {
+                if (record is RelRecord rel && !string.IsNullOrEmpty(rel.Id) && !string.IsNullOrEmpty(rel.Target))
+                {
+                    HyperlinkByRId[rel.Id] = rel.Target;
+                }
+            }
         }
     }
 

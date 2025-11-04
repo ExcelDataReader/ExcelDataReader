@@ -5,7 +5,7 @@ using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
-internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, string> worksheetsRels) : XmlRecordReader(reader)
+internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, string> worksheetPaths, Dictionary<string, string> worksheetRelPaths) : XmlRecordReader(reader)
 {
     private const string ElementWorkbook = "workbook";
     private const string ElementWorkbookProperties = "workbookPr";
@@ -17,7 +17,8 @@ internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, str
     private const string AttributeName = "name";
     private const string AttributeRelationshipId = "id";
 
-    private readonly Dictionary<string, string> _worksheetsRels = worksheetsRels;
+    private readonly Dictionary<string, string> _worksheetPaths = worksheetPaths;
+    private readonly Dictionary<string, string> _worksheetsRelPaths = worksheetRelPaths;
 
     protected override IEnumerable<Record> ReadOverride()
     {
@@ -57,7 +58,8 @@ internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, str
                             uint.Parse(Reader.GetAttribute(AttributeSheetId), CultureInfo.InvariantCulture),
                             rid,
                             Reader.GetAttribute(AttributeVisibleState),
-                            rid != null && _worksheetsRels.TryGetValue(rid, out var path) ? path : null);
+                            rid != null && _worksheetPaths.TryGetValue(rid, out var path) ? path : null,
+                            rid != null && _worksheetsRelPaths.TryGetValue(rid, out var relPath) ? relPath : null);
                         Reader.Skip();
                     }
                     else if (!XmlReaderHelper.SkipContent(Reader))

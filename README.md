@@ -1,4 +1,4 @@
-# ExcelDataReader
+﻿# ExcelDataReader
 
 [![NuGet](https://img.shields.io/nuget/v/ExcelDataReader.svg)](https://www.nuget.org/packages/ExcelDataReader)
 
@@ -184,7 +184,7 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
         // headers.
         FilterColumn = (rowReader, columnIndex) => {
             return true;
-        }
+        },
     }
 });
 ```
@@ -203,6 +203,50 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
     }
 });
 ```
+
+#### Parsing hyperlinks with AsDataSet()
+
+Hyperlink cells can be read as either display text, URL, or both.  
+When using `HyperlinkParsingOption.Tuple`, each hyperlink cell is returned as a `Tuple<object, object>` containing `(DisplayText, URL)`.  
+You can then transform the tuple into whichever representation you need.
+
+Example code:
+
+```csharp
+// Example: transform hyperlink cells to return only the URL.
+var transformHyperlinkValue = (IExcelDataReader reader, int index, object value) =>
+    value is Tuple<object, object> hyperlink
+        ? hyperlink.Item2  // Extract URL
+        : value;
+
+var ds = reader.AsDataSet(new ExcelDataSetConfiguration
+{
+    UseColumnDataType = false,
+    ConfigureDataTable = _ => new ExcelDataTableConfiguration
+    {
+        UseHeaderRow = firstRowNamesCheckBox.Checked,
+        HyperlinkParsingOption = HyperlinkParsingOption.Tuple,
+        TransformValue = transformHyperlinkValue
+    }
+});
+```
+
+**Example Output:**
+
+For a cell containing a hyperlink with display text **"Click here"** and URL **"https://example.com"**:
+
+| `HyperlinkParsingOption` | Result                                  |
+|--------------------------|-----------------------------------------|
+| `DisplayText`            | `"Click here"`                          |
+| `URL`                    | `"https://example.com"`                 |
+| `Tuple`                  | `("Click here", "https://example.com")` |
+
+**Notes:**
+- ✅ Hyperlink parsing is supported for `XLSX` files only.
+
+- ✅ Only External (Absolute) Hyperlinks parsing are supported. (i.e.-- http://example.com, mailto:user@example.com, file:///C:/docs/file.pdf.)
+
+- ❌ Internal Document Links are not supported. (i.e. -- #Sheet2!A1, #MyNamedRange)
 
 ## Formatting
 
