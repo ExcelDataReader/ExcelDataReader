@@ -189,6 +189,7 @@ public static class ExcelDataReaderExtensions
                         }
                     }
                 }
+
                 if (configuration.TransformValue != null)
                 {
                     var transformedValue = configuration.TransformValue(self, i, value);
