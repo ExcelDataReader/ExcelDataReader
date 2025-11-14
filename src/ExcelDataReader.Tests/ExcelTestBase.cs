@@ -159,7 +159,7 @@ public abstract class ExcelTestBase
         using var excelReader = OpenReader("Test_MergedCell");
         excelReader.Read();
 
-        Assert.That(excelReader.MergeCells, Is.EquivalentTo(new[] 
+        Assert.That(excelReader.MergeCells, Is.EquivalentTo(new[]
         {
             new[] { 1, 2, 0, 1 },
             new[] { 1, 5, 2, 2 },
@@ -192,7 +192,7 @@ public abstract class ExcelTestBase
     public void RowHeight()
     {
         using var reader = OpenReader("CollapsedHide");
-        
+
         // Verify the row heights are set when expected, and converted to points from twips
         reader.Read();
         Assert.That(reader.RowHeight, Is.EqualTo(15));
@@ -298,7 +298,7 @@ public abstract class ExcelTestBase
         // 15/06/2009
         // 4/19/2013 (=TODAY() when file was saved)
         using var excelReader = OpenReader("roo_1900_base");
-        
+
         DataSet result = excelReader.AsDataSet();
         Assert.That((DateTime)result.Tables[0].Rows[0][0], Is.EqualTo(new DateTime(2009, 6, 15)));
         Assert.That((DateTime)result.Tables[0].Rows[1][0], Is.EqualTo(GitIssue82TodayDate));
@@ -337,7 +337,7 @@ public abstract class ExcelTestBase
         double val2 = (double)dataSet.Tables[0].Rows[0][1];
         Assert.That(val2, Is.EqualTo(val1));
     }
-    
+
     [Test]
     public void IssueEncoding1520Test()
     {
@@ -402,7 +402,7 @@ public abstract class ExcelTestBase
             Assert.That(rowCount, Is.EqualTo(65536));
         }
     }
-    
+
     [Test]
     public void GitIssue283IsoFormatTimeSpan()
     {
@@ -467,7 +467,7 @@ public abstract class ExcelTestBase
     public void Issue4031NullColumn()
     {
         using IExcelDataReader excelReader = OpenReader("Test_Issue_4031_NullColumn");
-        
+
         // DataSet dataSet = excelReader.AsDataSet(true);
         excelReader.Read();
         Assert.That(excelReader.GetValue(0), Is.Null);
@@ -576,7 +576,7 @@ public abstract class ExcelTestBase
     public void Issue11479BlankSheet()
     {
         using IExcelDataReader excelReader = OpenReader("Test_Issue_11479_BlankSheet");
-        
+
         // DataSet result = excelReader.AsDataSet(true);
         excelReader.Read();
         Assert.That(excelReader.FieldCount, Is.EqualTo(5));
@@ -994,7 +994,7 @@ public abstract class ExcelTestBase
 
     [Test]
     public void GitIssue574VerticalAlignment()
-    {        
+    {
         using var reader = OpenReader("Test_git_issue_574");
         reader.Read();
 
@@ -1003,6 +1003,61 @@ public abstract class ExcelTestBase
         Assert.That(reader.GetCellStyle(2).VerticalAlignment, Is.EqualTo(VerticalAlignment.Bottom));
     }
 
+    [Test]
+    public void AsDataSetTestFillEmptyCellsInMergedRangeNotUseHeaderRow()
+    {
+        using IExcelDataReader excelReader = OpenReader("Test_MergedCell");
+        DataSet result = excelReader.AsDataSet(new ExcelDataSetConfiguration
+        {
+            ConfigureDataTable = _ => new ExcelDataTableConfiguration
+            {
+                FillMergedCellsValue = true
+            }
+        });
+
+        Assert.That(result != null, Is.True);
+        Assert.That(result.Tables.Count, Is.EqualTo(1));
+        Assert.That(result.Tables[0].Rows.Count, Is.EqualTo(7));
+        Assert.That(result.Tables[0].Columns.Count, Is.EqualTo(3));
+
+        Assert.That(result.Tables[0].Rows[1][0], Is.EqualTo("Merge Cell 1"));
+        Assert.That(result.Tables[0].Rows[2][0], Is.EqualTo("Merge Cell 1"));
+        Assert.That(result.Tables[0].Rows[1][1], Is.EqualTo("Merge Cell 1"));
+        Assert.That(result.Tables[0].Rows[2][1], Is.EqualTo("Merge Cell 1"));
+        Assert.That(result.Tables[0].Rows[5][2], Is.EqualTo("Merge Cell 2"));
+        Assert.That(result.Tables[0].Rows[4][0], Is.EqualTo("Merge Cell 3"));
+        Assert.That(result.Tables[0].Rows[6][1], Is.EqualTo("Merge Cell 4"));
+        Assert.That(result.Tables[0].Rows[6][2], Is.EqualTo("Merge Cell 4"));
+    }
+
+    [Test]
+    public void AsDataSetTestFillEmptyCellsInMergedRangeUseHeaderRow()
+    {
+        using IExcelDataReader excelReader = OpenReader("Test_MergedCell");
+        DataSet result = excelReader.AsDataSet(new ExcelDataSetConfiguration
+        {
+            ConfigureDataTable = _ => new ExcelDataTableConfiguration
+            {
+                UseHeaderRow = true,
+                FillMergedCellsValue = true
+            }
+        });
+
+        Assert.That(result != null, Is.True);
+        Assert.That(result.Tables.Count, Is.EqualTo(1));
+        Assert.That(result.Tables[0].Rows.Count, Is.EqualTo(6));
+        Assert.That(result.Tables[0].Columns.Count, Is.EqualTo(3));
+
+        Assert.That(result.Tables[0].Rows[0][0], Is.EqualTo("Merge Cell 1"));
+        Assert.That(result.Tables[0].Rows[1][0], Is.EqualTo("Merge Cell 1"));
+        Assert.That(result.Tables[0].Rows[0][1], Is.EqualTo("Merge Cell 1"));
+        Assert.That(result.Tables[0].Rows[1][1], Is.EqualTo("Merge Cell 1"));
+        Assert.That(result.Tables[0].Rows[4][2], Is.EqualTo("Merge Cell 2"));
+        Assert.That(result.Tables[0].Rows[3][0], Is.EqualTo("Merge Cell 3"));
+        Assert.That(result.Tables[0].Rows[5][1], Is.EqualTo("Merge Cell 4"));
+        Assert.That(result.Tables[0].Rows[5][2], Is.EqualTo("Merge Cell 4"));
+    }
+    
     protected IExcelDataReader OpenReader(string name)
     {
         return OpenReader(OpenStream(name));

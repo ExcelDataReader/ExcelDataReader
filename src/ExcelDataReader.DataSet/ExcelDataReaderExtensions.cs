@@ -74,6 +74,9 @@ public static class ExcelDataReaderExtensions
         var emptyRows = 0;
         List<CellRange> mergedCellsList = [];
         Dictionary<(int Row, int Column), object> mergeCellValue = [];
+
+        // If need to fill merged cells, check the next row have merged cells
+        var nextRowHaveMergedCell = false;
         if (configuration.FillMergedCellsValue)
         {
             mergedCellsList = self.MergeCells.OrderBy(c => c.FromRow).ThenBy(c => c.FromColumn).ToList();
@@ -146,7 +149,8 @@ public static class ExcelDataReaderExtensions
                 continue;
             }
 
-            if (IsEmptyRow(self, configuration))
+            // if next row is containing merged cells, skip the empty row check
+            if (!nextRowHaveMergedCell && IsEmptyRow(self, configuration))
             {
                 emptyRows++;
                 continue;
@@ -183,9 +187,15 @@ public static class ExcelDataReaderExtensions
                             mergeCellValue[(range.FromRow, range.FromColumn)] = value;
                         }
 
-                        if (rowIndex == range.ToRow && columnIndex == range.ToColumn)
+                        // mark next row is in merged range, skip empty row check and to fill row
+                        if (rowIndex < range.ToRow)
+                        {
+                            nextRowHaveMergedCell = true;
+                        }
+                        else if (rowIndex == range.ToRow && columnIndex == range.ToColumn)
                         {
                             mergedCellsList.Remove(range);
+                            nextRowHaveMergedCell = false;
                         }
                     }
                 }
