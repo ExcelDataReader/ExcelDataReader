@@ -38,7 +38,6 @@ public class ExcelOpenXmlBinaryReaderTest : ExcelOpenXmlReaderBase
         Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List1"));
     }
 
-
     [Test]
     public void ClipboardDimension()
     {
