@@ -1,6 +1,6 @@
 ﻿namespace ExcelDataReader.Core.OpenXmlFormat.Records
 {
-    internal class SheetDimRecord : Record
+    internal sealed class SheetDimRecord : Record
     {
         public SheetDimRecord(CellRange range)
         {
