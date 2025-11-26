@@ -195,7 +195,7 @@ internal sealed class XlsBiffStream : IDisposable
                 return new XlsBiffBlankCell(bytes);
             case BIFFRECORDTYPE.MULBLANK:
                 return new XlsBiffMulBlankCell(bytes);
-            case BIFFRECORDTYPE.LABEL_OLD:
+            case BIFFRECORDTYPE.LABEL_V2:
             case BIFFRECORDTYPE.LABEL:
             case BIFFRECORDTYPE.RSTRING:
                 return new XlsBiffLabelCell(bytes, biffVersion);
@@ -234,7 +234,7 @@ internal sealed class XlsBiffStream : IDisposable
                 return new XlsBiffSimpleValueRecord(bytes);
             case BIFFRECORDTYPE.FNGROUPCOUNT:
                 return new XlsBiffSimpleValueRecord(bytes);
-            case BIFFRECORDTYPE.RECORD1904:
+            case BIFFRECORDTYPE.DATE1904:
                 return new XlsBiffSimpleValueRecord(bytes);
             case BIFFRECORDTYPE.BOOKBOOL:
                 return new XlsBiffSimpleValueRecord(bytes);

@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <AssemblyTitle>ExcelDataReader.Tests</AssemblyTitle>
-    <TargetFrameworks>net462;net8.0</TargetFrameworks>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462</TargetFrameworks>
     <AssemblyName>ExcelDataReader.Tests</AssemblyName>
     <PackageId>ExcelDataReader.Tests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>

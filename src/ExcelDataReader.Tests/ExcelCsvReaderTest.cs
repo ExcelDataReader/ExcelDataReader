@@ -10,7 +10,7 @@ public class ExcelCsvReaderTest
     [Test]
     public void CsvCommaInQuotes()
     {
-        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("csv\\comma_in_quotes.csv"));
+        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "comma_in_quotes.csv")));
         var ds = excelReader.AsDataSet();
         Assert.That(ds.Tables[0].Rows[0][0], Is.EqualTo("first"));
         Assert.That(ds.Tables[0].Rows[0][1], Is.EqualTo("last"));
@@ -28,7 +28,7 @@ public class ExcelCsvReaderTest
     [Test]
     public void CsvEscapedQuotes()
     {
-        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("csv\\escaped_quotes.csv"));
+        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "escaped_quotes.csv")));
         var ds = excelReader.AsDataSet();
         Assert.That(ds.Tables[0].Rows[0][0], Is.EqualTo("a"));
         Assert.That(ds.Tables[0].Rows[0][1], Is.EqualTo("b"));
@@ -140,7 +140,7 @@ public class ExcelCsvReaderTest
     [Test]
     public void CsvWhitespaceNull()
     {
-        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("csv\\simple_whitespace_null.csv"));
+        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "simple_whitespace_null.csv")));
         var ds = excelReader.AsDataSet();
         Assert.That(ds.Tables[0].Rows[0][0], Is.EqualTo("a")); // ignore spaces
         Assert.That(ds.Tables[0].Rows[0][1], Is.EqualTo("\0b\0"));
@@ -154,11 +154,11 @@ public class ExcelCsvReaderTest
     [Test]
     public void CsvEncoding()
     {
-        TestEncoding("csv\\utf8.csv", "ʤ");
-        TestEncoding("csv\\utf8_bom.csv", "ʤ");
-        TestEncoding("csv\\utf16le_bom.csv", "ʤ");
-        TestEncoding("csv\\utf16be_bom.csv", "ʤ");
-        TestEncoding("csv\\cp1252.csv", "æøå");
+        TestEncoding(Path.Combine("csv", "utf8.csv"), "ʤ");
+        TestEncoding(Path.Combine("csv", "utf8_bom.csv"), "ʤ");
+        TestEncoding(Path.Combine("csv", "utf16le_bom.csv"), "ʤ");
+        TestEncoding(Path.Combine("csv", "utf16be_bom.csv"), "ʤ");
+        TestEncoding(Path.Combine("csv", "cp1252.csv"), "æøå");
 
         static void TestEncoding(string workbook, string specialString)
         {
@@ -186,7 +186,7 @@ public class ExcelCsvReaderTest
                 FallbackEncoding = Encoding.UTF8
             };
 
-            using (ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("csv\\cp1252.csv"), configuration))
+            using (ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "cp1252.csv")), configuration))
             {
             }
         });
@@ -195,7 +195,7 @@ public class ExcelCsvReaderTest
     [Test]
     public void CsvBigSheet()
     {
-        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("csv\\MOCK_DATA.csv"));
+        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "MOCK_DATA.csv")));
         var ds = excelReader.AsDataSet();
         Assert.That(ds.Tables[0].Rows[0][0], Is.EqualTo("id"));
         Assert.That(ds.Tables[0].Rows[1000][5], Is.EqualTo("111.4.88.155"));
@@ -249,7 +249,7 @@ public class ExcelCsvReaderTest
     [Test]
     public void GitIssue323DoubleClose()
     {
-        using var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("csv\\MOCK_DATA.csv"));
+        using var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "MOCK_DATA.csv")));
         reader.Read();
         reader.Close();
     }
@@ -257,7 +257,7 @@ public class ExcelCsvReaderTest
     [Test]
     public void GitIssue333EanQuotes()
     {
-        using var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("csv\\ean.txt"));
+        using var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "ean.txt")));
         reader.Read();
         Assert.That(reader.RowCount, Is.EqualTo(2));
         Assert.That(reader.FieldCount, Is.EqualTo(24));
@@ -281,7 +281,7 @@ public class ExcelCsvReaderTest
     [Test]
     public void ColumnWidthsTest()
     {
-        using var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("csv\\column_widths_test.csv"));
+        using var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "column_widths_test.csv")));
         reader.Read();
         Assert.That(reader.GetColumnWidth(0), Is.EqualTo(8.43));
         Assert.That(reader.GetColumnWidth(1), Is.EqualTo(8.43));
@@ -304,7 +304,7 @@ public class ExcelCsvReaderTest
     {
         // Verify the file stream is closed and disposed by the reader
         {
-            var stream = Configuration.GetTestWorkbook("csv\\MOCK_DATA.csv");
+            var stream = Configuration.GetTestWorkbook(Path.Combine("csv", "MOCK_DATA.csv"));
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateCsvReader(stream))
             {
                 _ = excelReader.AsDataSet();
@@ -319,7 +319,7 @@ public class ExcelCsvReaderTest
     {
         // Verify the file stream is not disposed by the reader
         {
-            var stream = Configuration.GetTestWorkbook("csv\\MOCK_DATA.csv");
+            var stream = Configuration.GetTestWorkbook(Path.Combine("csv", "MOCK_DATA.csv"));
             using (IExcelDataReader excelReader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
             {
                 LeaveOpen = true
@@ -338,7 +338,7 @@ public class ExcelCsvReaderTest
     public void CsvRowCountAnalyzeRowsThrows()
     {
         {
-            var stream = Configuration.GetTestWorkbook("csv\\MOCK_DATA.csv");
+            var stream = Configuration.GetTestWorkbook(Path.Combine("csv", "MOCK_DATA.csv"));
             using IExcelDataReader reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
             {
                 AnalyzeInitialCsvRows = 100
@@ -353,7 +353,7 @@ public class ExcelCsvReaderTest
     [Test]
     public void GitIssue578()
     {
-        var stream = Configuration.GetTestWorkbook(@"csv\Test_git_issue578.csv");
+        var stream = Configuration.GetTestWorkbook(Path.Combine("csv", "Test_git_issue578.csv"));
         using IExcelDataReader excelReader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration());
         excelReader.Read();
         var values = new object[excelReader.FieldCount];
@@ -467,7 +467,7 @@ public class ExcelCsvReaderTest
     [Test]
     public void GitIssue642_ActiveSheet()
     {
-        using var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("csv\\MOCK_DATA.csv"));
+        using var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "MOCK_DATA.csv")));
         var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
         {
             FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
@@ -562,7 +562,7 @@ public class ExcelCsvReaderTest
             TrimWhiteSpace = false,
         };
 
-        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook("csv\\test_issue_566.csv"), keepSpaceConfig);
+        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "test_issue_566.csv")), keepSpaceConfig);
 
         var ds = excelReader.AsDataSet();
         Assert.That(ds.Tables[0].Rows[0][0], Is.EqualTo("c1"));

@@ -13,7 +13,7 @@ internal sealed class XlsBiffLabelCell : XlsBiffBlankCell
     internal XlsBiffLabelCell(byte[] bytes, int biffVersion)
         : base(bytes)
     {
-        if (Id == BIFFRECORDTYPE.LABEL_OLD)
+        if (Id == BIFFRECORDTYPE.LABEL_V2)
         {
             // BIFF2
             _xlsString = new XlsShortByteString(bytes, ContentOffset + 7);

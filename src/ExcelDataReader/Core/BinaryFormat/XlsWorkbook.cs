@@ -23,18 +23,21 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
         Encryption = biffStream.Encryption;
         Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
 
-        if (biffStream.BiffType == BIFFTYPE.WorkbookGlobals)
+        switch (biffStream.BiffType)
         {
-            ReadWorkbookGlobals(biffStream);
-        }
-        else if (biffStream.BiffType == BIFFTYPE.Worksheet)
-        {
-            // set up 'virtual' bound sheet pointing at this
-            Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
-        }
-        else
-        {
-            throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+            case BIFFTYPE.WorkbookGlobals:
+                ReadWorkbookGlobals(biffStream);
+                break;
+            case BIFFTYPE.Worksheet:
+                // set up 'virtual' bound sheet pointing at this
+                Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
+                break;
+            case BIFFTYPE.MacroSheet:
+                // set up 'virtual' bound sheet pointing at this
+                Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.MacroSheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
+                break;
+            default:
+                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
         }
     }
 
@@ -171,7 +174,7 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
                     CodePage = codePage;
                     Encoding = EncodingHelper.GetEncoding(CodePage.Value);
                     break;
-                case XlsBiffSimpleValueRecord is1904 when rec.Id == BIFFRECORDTYPE.RECORD1904:
+                case XlsBiffSimpleValueRecord is1904 when rec.Id == BIFFRECORDTYPE.DATE1904:
                     IsDate1904 = is1904.Value == 1;
                     break;
                 case XlsBiffFont font:

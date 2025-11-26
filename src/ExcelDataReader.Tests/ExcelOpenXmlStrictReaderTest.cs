@@ -29,6 +29,6 @@ public class ExcelOpenXmlStrictReaderTest : ExcelOpenXmlReaderBase
 
     protected override Stream OpenStream(string name)
     {
-        return Configuration.GetTestWorkbook("strict\\" + name + ".xlsx");
+        return Configuration.GetTestWorkbook(Path.Combine("strict", name + ".xlsx"));
     }
 }

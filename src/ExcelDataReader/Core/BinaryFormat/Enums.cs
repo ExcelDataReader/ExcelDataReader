@@ -8,15 +8,26 @@ internal enum BIFFTYPE : ushort
     Worksheet = 0x0010,
     Chart = 0x0020,
 #pragma warning disable SA1300 // Element must begin with upper-case letter
-    v4MacroSheet = 0x0040,
+    MacroSheet = 0x0040,
     v4WorkbookGlobals = 0x0100
 #pragma warning restore SA1300 // Element must begin with upper-case letter
 }
 
 internal enum BIFFRECORDTYPE : ushort
 {
-    INTERFACEHDR = 0x00E1,
+    EXTERNCOUNT = 0x0016,
+    EXTERNSHEET = 0x0017,
+    DEFINEDNAME_V2 = 0x0018, // BIFF2. Defined name record.
+    BUILTINFMTCOUNT_V2 = 0x001F, // BIFF2. Number of number of following FORMAT records that contain built-in number format.
+    WINDOW2_V2 = 0x003E, // BIFF2. Window 2 record.
+    CRN = 0x005A,
+    FILESHARING = 0x005B,
+    WRITEPROTECT = 0x0086,
+    UNKNOWN191 = 0x00BF, // Not documented.
+    UNKNOWN192 = 0x00C0, // Not documented.
     MMS = 0x00C1,
+    OBPROJ = 0x00D3,
+    INTERFACEHDR = 0x00E1,
     MERGECELLS = 0x00E5, // Record containing list of merged cell ranges
     INTERFACEEND = 0x00E2,
     WRITEACCESS = 0x005C,
@@ -24,6 +35,11 @@ internal enum BIFFRECORDTYPE : ushort
     DSF = 0x0161,
     TABID = 0x013D,
     FNGROUPCOUNT = 0x009C,
+    COLWIDTH = 0x0024,
+    LEFTMARGIN = 0x0026,
+    RIGHTMARGIN = 0x0027,
+    TOPMARGIN = 0x0028,
+    BOTTOMMARGIN = 0x0029,
     FILEPASS = 0x002F,
     WINDOWPROTECT = 0x0019,
     PROTECT = 0x0012,
@@ -33,11 +49,14 @@ internal enum BIFFRECORDTYPE : ushort
     WINDOW1 = 0x003D,
     BACKUP = 0x0040,
     HIDEOBJ = 0x008D,
-    RECORD1904 = 0x0022,
+    PALETTE = 0x0092,
+    DATE1904 = 0x0022,
     REFRESHALL = 0x01B7,
     BOOKBOOL = 0x00DA,
 
     FONT = 0x0031, // Font record, BIFF2, 5 and later
+
+    FONT2 = 0x0032, // Font record, BIFF2, unknown usage.
 
     FONT_V34 = 0x0231, // Font record, BIFF3, 4
 
@@ -55,6 +74,8 @@ internal enum BIFFRECORDTYPE : ushort
 
     IXFE = 0x0044, // Index to XF, BIFF2
 
+    BUILTINFMTCOUNT = 0x0056, // BIFF3+. Number of number of following FORMAT records that contain built-in number format.
+
     STYLE = 0x0293,
     BOUNDSHEET = 0x0085,
     COUNTRY = 0x008C,
@@ -71,7 +92,7 @@ internal enum BIFFRECORDTYPE : ushort
     BOF_V4 = 0x0409, // BOF Id for BIFF4
 
     EOF = 0x000A, // End of block started with BOF
-
+    INDEX_V2 = 0x000B, // Index record for BIFF2
     CALCCOUNT = 0x000C,
     CALCMODE = 0x000D,
     PRECISION = 0x000E,
@@ -91,15 +112,17 @@ internal enum BIFFRECORDTYPE : ushort
     HCENTER = 0x0083,
     VCENTER = 0x0084,
     PRINTSETUP = 0x00A1,
-    DFAULTCOLWIDTH = 0x0055,
+    DEFAULTCOLWIDTH = 0x0055,
     DIMENSIONS = 0x0200, // Size of area used for data
     DIMENSIONS_V2 = 0x0000, // BIFF2
 
     ROW_V2 = 0x0008, // Row record
     ROW = 0x0208, // Row record
 
-    WINDOW2 = 0x023E,
     SELECTION = 0x001D,
+    OBNOMACROS = 0x1BD,
+    EXCEL9FILE = 0x01C0,
+    RECALCID = 0x01C1,
     INDEX = 0x020B, // Index record, unsure about signature
 
     DBCELL = 0x00D7, // DBCell record, unsure about signature
@@ -120,7 +143,7 @@ internal enum BIFFRECORDTYPE : ushort
 
     LABEL = 0x0204, // String cell (up to 255 symbols)
 
-    LABEL_OLD = 0x0004, // String cell (up to 255 symbols), old format
+    LABEL_V2 = 0x0004, // String cell (up to 255 symbols), old format
 
     LABELSST = 0x00FD, // String cell with value from SST (for BIFF8)
 
@@ -184,7 +207,7 @@ internal enum BIFFRECORDTYPE : ushort
     XL5MODIFY = 0x0162,
     OBJ = 0x005D,
     NOTE = 0x001C,
-    
+
     // SXEXT = 0x00DC,
     VERTICALPAGEBREAKS = 0x001A,
     XCT = 0x0059,
@@ -195,5 +218,22 @@ internal enum BIFFRECORDTYPE : ushort
     /// </summary>
     UNCALCED = 0x005E,
     QUICKTIP = 0x0800,
-    COLINFO = 0x007D
+    COLINFO = 0x007D,
+    DEFINEDNAME = 0x0218, // Defined name record.
+    WINDOW2 = 0x023E, // BIFF3+. Window 2 record.
+    BOOKEXT = 0x0863,
+    HFPICTURE = 0x0866,
+    XFCRC = 0x087C,
+    XFEXT = 0x087D,
+    COMPAT12 = 0x088C,
+    STYLEEXT = 0x892,
+    THEME = 0x0896,
+    GUIDTYPELIB = 0x0897,
+    DXF = 0x088D,
+    TABLESTYLES = 0x88E,
+    MTRSETTINGS = 0x089A,
+    COMPRESSPICTURES = 0x089B,
+    FORCEFULLCALCULATION = 0x08A3,
+    UNKNOWN2262 = 0x08D6, // Not documented.
+    CRTCLIENT = 0x105C
 }

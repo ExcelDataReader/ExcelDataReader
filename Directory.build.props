@@ -24,7 +24,9 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <IsAotCompatible Condition=" '$(TargetFramework}' == 'net8.0' ">true</IsAotCompatible>
+    <IsAotCompatible Condition=" '$(TargetFramework)' == 'net8.0' ">true</IsAotCompatible>
+    <ContinuousIntegrationBuild Condition=" '$(CI)' == 'true' ">true</ContinuousIntegrationBuild>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
   
   <ItemGroup Condition="'$(MSBuildProjectName)' == 'ExcelDataReader' OR '$(MSBuildProjectName)' == 'ExcelDataReader.DataSet'">
@@ -49,7 +51,6 @@
 
   <ItemGroup>
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

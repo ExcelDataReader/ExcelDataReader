@@ -289,7 +289,7 @@ internal sealed class XlsWorksheet : IWorksheet
                 value = TryConvertOADateTime(((XlsBiffNumberCell)cell).Value, numberFormatIndex);
                 break;
             case BIFFRECORDTYPE.LABEL:
-            case BIFFRECORDTYPE.LABEL_OLD:
+            case BIFFRECORDTYPE.LABEL_V2:
             case BIFFRECORDTYPE.RSTRING:
                 value = GetLabelString((XlsBiffLabelCell)cell, effectiveStyle);
                 break;
@@ -436,7 +436,7 @@ internal sealed class XlsWorksheet : IWorksheet
         using var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, BIFFTYPE.Worksheet, secretKey: Workbook.SecretKey, encryption: Workbook.Encryption);
 
         // Check the expected BOF record was found in the BIFF stream
-        if (biffStream.BiffVersion == 0 || biffStream.BiffType != BIFFTYPE.Worksheet)
+        if (biffStream.BiffVersion == 0 || (biffStream.BiffType != BIFFTYPE.Worksheet && biffStream.BiffType != BIFFTYPE.MacroSheet))
             return;
 
         XlsBiffHeaderFooterString header = null;
@@ -466,7 +466,7 @@ internal sealed class XlsWorksheet : IWorksheet
                 case XlsBiffDefaultRowHeight defaultRowHeightRecord:
                     DefaultRowHeight = defaultRowHeightRecord.RowHeight;
                     break;
-                case XlsBiffSimpleValueRecord is1904 when rec.Id == BIFFRECORDTYPE.RECORD1904:
+                case XlsBiffSimpleValueRecord is1904 when rec.Id == BIFFRECORDTYPE.DATE1904:
                     IsDate1904 = is1904.Value == 1;
                     break;
                 case XlsBiffXF xf when rec.Id is BIFFRECORDTYPE.XF_V2 or BIFFRECORDTYPE.XF_V3 or BIFFRECORDTYPE.XF_V4:
