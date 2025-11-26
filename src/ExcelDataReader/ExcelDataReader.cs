@@ -48,15 +48,9 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     public int RowCount => _worksheetIterator?.Current?.RowCount ?? 0;
 
-        public int FirstRow => _worksheetIterator?.Current?.FirstRow ?? 0;
+    public CellRange Dimension => _worksheetIterator?.Current?.Dimension;
 
-        public int LastRow => _worksheetIterator?.Current?.LastRow ?? 0;
-
-        public int FirstColumn => _worksheetIterator?.Current?.FirstColumn ?? 0;
-
-        public int LastColumn => _worksheetIterator?.Current?.LastColumn ?? 0;
-
-        public int RecordsAffected => throw new NotSupportedException();
+    public int RecordsAffected => throw new NotSupportedException();
 
     public double RowHeight => _rowIterator?.Current?.Height ?? 0;
 

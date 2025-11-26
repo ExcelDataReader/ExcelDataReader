@@ -65,13 +65,7 @@ internal sealed class CsvWorksheet : IWorksheet
         }
     }
 
-    public int FirstRow { get; private set; }
-
-    public int LastRow { get; private set; }
-
-    public int FirstColumn { get; private set; }
-
-    public int LastColumn { get; private set; }
+    public CellRange Dimension => null;
 
     public Stream Stream { get; }
 

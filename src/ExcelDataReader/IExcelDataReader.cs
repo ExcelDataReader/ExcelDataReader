@@ -52,30 +52,16 @@ public interface IExcelDataReader : IDataReader
     /// </summary>
     int RowCount { get; }
 
-        /// <summary>
-        /// Gets the index of first row.
-        /// </summary>
-        int FirstRow { get; }
+    /// <summary>
+    /// Gets the dimension of the current result.
+    /// </summary>
+    /// <remarks>Main use case is analysis of clipboard data. Potentially unreliable in other use cases.</remarks>
+    CellRange Dimension { get; }
 
-        /// <summary>
-        /// Gets the index of last row + 1.
-        /// </summary>
-        int LastRow { get; }
-
-        /// <summary>
-        /// Gets the index of first column.
-        /// </summary>
-        int FirstColumn { get; }
-
-        /// <summary>
-        /// Gets the index of last column + 1.
-        /// </summary>
-        int LastColumn { get; }
-
-        /// <summary>
-        /// Gets the height of the current row in points.
-        /// </summary>
-        double RowHeight { get; }
+    /// <summary>
+    /// Gets the height of the current row in points.
+    /// </summary>
+    double RowHeight { get; }
 
     /// <summary>
     /// Seeks to the first result.

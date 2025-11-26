@@ -80,13 +80,7 @@ internal sealed class XlsWorksheet : IWorksheet
 
     public int RowCount { get; private set; }
 
-    public int FirstRow { get; private set; }
-
-    public int LastRow { get; private set; }
-
-    public int FirstColumn { get; private set; }
-
-    public int LastColumn { get; private set; }
+    public CellRange Dimension { get; private set; }
 
     public bool IsDate1904 { get; private set; }
 
@@ -467,10 +461,7 @@ internal sealed class XlsWorksheet : IWorksheet
                 case XlsBiffDimensions dims:
                     // FieldCount = dims.LastColumn;
                     RowCount = (int)dims.LastRow;
-                    FirstRow = (int)dims.FirstRow;
-                    LastRow = (int)dims.LastRow;
-                    FirstColumn = dims.FirstColumn;
-                    LastColumn = dims.LastColumn;
+                    Dimension = new CellRange(dims.FirstColumn, (int)dims.FirstRow, dims.LastColumn, (int)dims.LastRow);
                     break;
                 case XlsBiffDefaultRowHeight defaultRowHeightRecord:
                     DefaultRowHeight = defaultRowHeightRecord.RowHeight;
