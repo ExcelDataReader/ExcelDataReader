@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(MSBuildProjectName)' == 'ExcelDataReader' OR '$(MSBuildProjectName)' == 'ExcelDataReader.DataSet'">
-    <VersionPrefix>3.8.0</VersionPrefix>
+    <VersionPrefix>3.9.0</VersionPrefix>
     <TargetFrameworks>net462;netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <AssemblyOriginatorKeyFile>..\ExcelDataReader.snk</AssemblyOriginatorKeyFile>
