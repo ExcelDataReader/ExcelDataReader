@@ -6,6 +6,11 @@ namespace ExcelDataReader;
 public class ExcelDataTableConfiguration
 {
     /// <summary>
+    /// Gets or sets a value indicating whether the DataTable should be case sensitive. Useful when setting a primary key after loading from Excel.
+    /// </summary>
+    public bool CaseSentitive { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating the prefix of generated column names.
     /// </summary>
     public string EmptyColumnNamePrefix { get; set; } = "Column";

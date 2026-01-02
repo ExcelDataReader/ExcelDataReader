@@ -68,7 +68,7 @@ public static class ExcelDataReaderExtensions
 
     private static DataTable AsDataTable(IExcelDataReader self, ExcelDataTableConfiguration configuration)
     {
-        var result = new DataTable { TableName = self.Name };
+        var result = new DataTable { TableName = self.Name, CaseSensitive = configuration.CaseSentitive };
         result.ExtendedProperties.Add("visiblestate", self.VisibleState);
         var first = true;
         var emptyRows = 0;
