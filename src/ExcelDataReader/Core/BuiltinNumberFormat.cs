@@ -46,6 +46,53 @@ internal static class BuiltinNumberFormat
         { 47, new NumberFormatString("mm:ss.0") },
         { 48, new NumberFormatString("##0.0E+0") },
         { 49, new NumberFormatString("@") },
+
+        // Locale-specific built-in formats.
+        // Indices 27–36 and 50–58 vary by locale (ja-jp, ko-kr, zh-tw, zh-cn) but are
+        // always date/time formats. The ja-jp strings are stored as a representative
+        // fallback; files from other locales may display differently via GetNumberFormatString()
+        // but will still be correctly identified as date/time values.
+        { 27, new NumberFormatString(@"[$-411]ge.m.d") },
+        { 28, new NumberFormatString("[$-411]ggge\"年\"m\"月\"d\"日\"") },
+        { 29, new NumberFormatString("[$-411]ggge\"年\"m\"月\"d\"日\"") },
+        { 30, new NumberFormatString("m/d/yy") },
+        { 31, new NumberFormatString("yyyy\"年\"m\"月\"d\"日\"") },
+        { 32, new NumberFormatString("h\"時\"mm\"分\"") },
+        { 33, new NumberFormatString("h\"時\"mm\"分\"ss\"秒\"") },
+        { 34, new NumberFormatString("yyyy\"年\"m\"月\"") },
+        { 35, new NumberFormatString("m\"月\"d\"日\"") },
+        { 36, new NumberFormatString(@"[$-411]ge.m.d") },
+        { 50, new NumberFormatString(@"[$-411]ge.m.d") },
+        { 51, new NumberFormatString("[$-411]ggge\"年\"m\"月\"d\"日\"") },
+        { 52, new NumberFormatString("yyyy\"年\"m\"月\"") },
+        { 53, new NumberFormatString("m\"月\"d\"日\"") },
+        { 54, new NumberFormatString("[$-411]ggge\"年\"m\"月\"d\"日\"") },
+        { 55, new NumberFormatString("yyyy\"年\"m\"月\"") },
+        { 56, new NumberFormatString("m\"月\"d\"日\"") },
+        { 57, new NumberFormatString(@"[$-411]ge.m.d") },
+        { 58, new NumberFormatString("[$-411]ggge\"年\"m\"月\"d\"日\"") },
+
+        // 59–62 and 67–70 are Thai-digit number formats; 71–81 are Thai date/time formats.
+        // ASCII equivalents are used so the format strings parse correctly.
+        { 59, new NumberFormatString("0") },
+        { 60, new NumberFormatString("0.00") },
+        { 61, new NumberFormatString("#,##0") },
+        { 62, new NumberFormatString("#,##0.00") },
+        { 67, new NumberFormatString("0%") },
+        { 68, new NumberFormatString("0.00%") },
+        { 69, new NumberFormatString("# ?/?") },
+        { 70, new NumberFormatString("# ??/??") },
+        { 71, new NumberFormatString("d/m/yyyy") },
+        { 72, new NumberFormatString("d-mmm-yy") },
+        { 73, new NumberFormatString("d-mmm") },
+        { 74, new NumberFormatString("mmm-yy") },
+        { 75, new NumberFormatString("h:mm") },
+        { 76, new NumberFormatString("h:mm:ss") },
+        { 77, new NumberFormatString("d/m/yyyy h:mm") },
+        { 78, new NumberFormatString("mm:ss") },
+        { 79, new NumberFormatString("[h]:mm:ss") },
+        { 80, new NumberFormatString("mm:ss.0") },
+        { 81, new NumberFormatString("d/m/yyyy") },
     };
 
     public static NumberFormatString? GetBuiltinNumberFormat(int numFmtId)

@@ -487,4 +487,74 @@ public class FormatReaderTest
             Assert.That(to.IsValid, Is.True, $"Invalid format: {format}");
         }
     }
+
+    [Test]
+    public void GitIssue541LocaleFormatStringsDetectedAsDate()
+    {
+        // Locale-specific format strings containing unquoted CJK / Thai characters
+        // should be detected as date/time after the implicit-literal parser fix.
+
+        // ja-jp formats (unquoted characters)
+        Assert.That(IsDate("[$-411]ge.m.d"), Is.True);
+        Assert.That(IsDate("[$-411]ggge年m月d日"), Is.True);
+        Assert.That(IsDate("[$-0411]YYYY 年 M 月"), Is.True);
+
+        // zh-tw / zh-cn time formats (AM/PM equivalent followed by hour/minute)
+        Assert.That(IsDate("上午/下午hh\"時\"mm\"分\""), Is.True);
+        Assert.That(IsDate("上午/下午h\"时\"mm\"分\""), Is.True);
+
+        static bool IsDate(string formatString)
+        {
+            var format = new NumberFormatString(formatString);
+            return format.IsDateTimeFormat;
+        }
+    }
+
+    [Test]
+    public void GitIssue541BuiltinFormatIndicesDetectedAsDate()
+    {
+        // Verify that the representative format strings stored for locale-specific built-in
+        // indices are each detected as date/time (i.e. IsDateTimeFormat = true).
+        // These are the ja-jp format strings used as fallbacks for indices 27-36 and 50-58,
+        // and the ASCII equivalents used for Thai date indices 71-81.
+        string[] expectedDateFormatStrings =
+        [
+            @"[$-411]ge.m.d",                       // 27, 36, 50, 57
+            "[$-411]ggge\"年\"m\"月\"d\"日\"",      // 28, 29, 51, 54, 58
+            "m/d/yy",                                // 30
+            "yyyy\"年\"m\"月\"d\"日\"",              // 31
+            "h\"時\"mm\"分\"",                       // 32
+            "h\"時\"mm\"分\"ss\"秒\"",               // 33
+            "yyyy\"年\"m\"月\"",                     // 34, 52, 55
+            "m\"月\"d\"日\"",                        // 35, 53, 56
+            "d/m/yyyy",    // 71
+            "d-mmm-yy",    // 72
+            "d-mmm",       // 73
+            "mmm-yy",      // 74
+            "h:mm",        // 75
+            "h:mm:ss",     // 76
+            "d/m/yyyy h:mm", // 77
+            "mm:ss",       // 78
+            "mm:ss.0",     // 80
+            "d/m/yyyy",    // 81
+        ];
+
+        foreach (var formatString in expectedDateFormatStrings)
+        {
+            var format = new NumberFormatString(formatString);
+            Assert.That(format.IsDateTimeFormat, Is.True, $"Format string '{formatString}' not detected as date/time");
+        }
+
+        // Thai format 79 uses [h]:mm:ss (elapsed time) → IsTimeSpanFormat, not IsDateTimeFormat
+        var format79 = new NumberFormatString("[h]:mm:ss");
+        Assert.That(format79.IsTimeSpanFormat, Is.True, "Format '[h]:mm:ss' not detected as TimeSpan");
+
+        // Thai number formats (indices 59-62, 67-70) are NOT date formats.
+        string[] expectedNumberFormatStrings = ["0", "0.00", "#,##0", "#,##0.00", "0%", "0.00%", "# ?/?", "# ??/??"];
+        foreach (var formatString in expectedNumberFormatStrings)
+        {
+            var format = new NumberFormatString(formatString);
+            Assert.That(format.IsDateTimeFormat, Is.False, $"Format string '{formatString}' incorrectly detected as date/time");
+        }
+    }
 }

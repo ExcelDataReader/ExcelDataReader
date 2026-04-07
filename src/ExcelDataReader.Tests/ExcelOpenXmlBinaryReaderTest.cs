@@ -38,6 +38,14 @@ public class ExcelOpenXmlBinaryReaderTest : ExcelOpenXmlReaderBase
         Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List1"));
     }
 
+    [Test]
+    public void GitIssue541BuiltinFormat55IsDate()
+    {
+        using var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_541.xlsb"));
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetValue(0), Is.EqualTo(new DateTime(2021, 1, 15)));
+    }
+
     /// <inheritdoc />
     protected override Stream OpenStream(string name)
     {

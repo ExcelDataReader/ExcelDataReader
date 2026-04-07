@@ -248,7 +248,19 @@ internal static class Parser
             return reader.Substring(offset, length);
         }
 
-        syntaxError = reader.Position < reader.Length;
+        // Treat any unrecognised character as an implicit literal (single-char token).
+        // This matches Excel behaviour: characters that are not format metacharacters
+        // are passed through as literals (e.g. unquoted CJK/Thai characters in
+        // locale-specific built-in format strings such as [$-411]yyyy"年"m"月").
+        if (reader.Position < reader.Length)
+        {
+            reader.Advance(1);
+            syntaxError = false;
+            var length = reader.Position - offset;
+            return reader.Substring(offset, length);
+        }
+
+        syntaxError = false;
         return null;
     }
 
