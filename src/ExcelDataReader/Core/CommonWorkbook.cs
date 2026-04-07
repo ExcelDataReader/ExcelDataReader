@@ -1,4 +1,7 @@
-﻿using ExcelDataReader.Core.NumberFormat;
+﻿#nullable enable
+
+using System.Globalization;
+using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core;
 
@@ -22,6 +25,12 @@ internal class CommonWorkbook
     /// Gets the Cell Style XFs.
     /// </summary>
     public List<ExtendedFormat> CellStyleExtendedFormats { get; } = [];
+
+    /// <summary>
+    /// Gets or sets the culture to use for locale-dependent built-in number format indices.
+    /// When null (the default), hardcoded format strings are used.
+    /// </summary>
+    public CultureInfo? Culture { get; set; }
 
     private NumberFormatString GeneralNumberFormat { get; } = new("General");
 
@@ -54,7 +63,11 @@ internal class CommonWorkbook
             return numberFormat;
         }
 
-        numberFormat = BuiltinNumberFormat.GetBuiltinNumberFormat(numberFormatIndex);
+        numberFormat = Culture != null
+            ? BuiltinNumberFormat.GetBuiltinNumberFormat(numberFormatIndex, Culture)
+#pragma warning disable CA1304 // Intentional: null Culture means use hardcoded formats for backward compatibility
+            : BuiltinNumberFormat.GetBuiltinNumberFormat(numberFormatIndex);
+#pragma warning restore CA1304
         if (numberFormat != null)
         {
             return numberFormat;

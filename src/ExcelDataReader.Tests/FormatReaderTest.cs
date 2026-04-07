@@ -1,4 +1,4 @@
-﻿using ExcelDataReader.Core.NumberFormat;
+using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Tests;
 
@@ -486,5 +486,29 @@ public class FormatReaderTest
             var to = new NumberFormatString(format);
             Assert.That(to.IsValid, Is.True, $"Invalid format: {format}");
         }
+    }
+
+    /// <summary>
+    /// Verifies that the format strings produced by the culture-specific conversion (for locales such
+    /// as en-US and en-GB) are themselves valid date/time format strings that ExcelDataReader will
+    /// recognise as date values rather than raw doubles.
+    /// </summary>
+    [Test]
+    public void GitIssue461_CultureDerivedFormatStringsAreValidDateFormats()
+    {
+        // Expected outputs of DatePatternToExcel / TimePatternToExcel for common locales
+        Assert.That(IsDateFormatString("m/d/yyyy"), Is.True, "en-US short date (format 14)");
+        Assert.That(IsDateFormatString("dd/mm/yyyy"), Is.True, "en-GB short date (format 14)");
+        Assert.That(IsDateFormatString("dd.mm.yyyy"), Is.True, "de-DE short date (format 14)");
+        Assert.That(IsDateFormatString("d/mmm/yy"), Is.True, "en-US format 15");
+        Assert.That(IsDateFormatString("d.mmm.yy"), Is.True, "de-DE format 15");
+        Assert.That(IsDateFormatString("d/mmm"), Is.True, "en-US format 16");
+        Assert.That(IsDateFormatString("mmm/yy"), Is.True, "en-US format 17");
+        Assert.That(IsDateFormatString("m/d/yyyy h:mm AM/PM"), Is.True, "en-US short date+time (format 22)");
+        Assert.That(IsDateFormatString("dd/mm/yyyy hh:mm"), Is.True, "en-GB short date+time (format 22)");
+        Assert.That(IsDateFormatString("dd.mm.yyyy hh:mm"), Is.True, "de-DE short date+time (format 22)");
+
+        static bool IsDateFormatString(string formatString) =>
+            new NumberFormatString(formatString).IsDateTimeFormat;
     }
 }
