@@ -24,6 +24,7 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
     private const uint SheetDataBegin = 0x91;
     private const uint SheetDataEnd = 0x92;
     private const uint SheetPr = 0x93;
+    private const uint WsDim = 0x94; // BrtWsDim - worksheet dimensions
     private const uint SheetFormatPr = 0x1E5;
 
     // private const uint ColumnsBegin = 0x186;
@@ -36,14 +37,68 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
     // private const uint MergeCellsEnd = 178;
     private const uint MergeCell = 176;
 
+    // State for pre-scan mode: track max indices while suppressing per-cell record allocations
+    private int _scanMaxRowIndex = int.MinValue;
+    private int _scanMaxColumnIndex = int.MinValue;
+    private bool _inPreparingScan;
+
     protected override Record ReadOverride(byte[] buffer, uint recordId, uint recordLength)
     {
         switch (recordId) 
         {
             case SheetDataBegin:
+                if (preparing)
+                {
+                    _inPreparingScan = true;
+                    return Record.Default; // suppress SheetDataBeginRecord; ScanResultRecord comes at SheetDataEnd
+                }
+
                 return new SheetDataBeginRecord();
             case SheetDataEnd:
+                if (_inPreparingScan)
+                {
+                    _inPreparingScan = false;
+                    return new ScanResultRecord(_scanMaxRowIndex, _scanMaxColumnIndex);
+                }
+
                 return new SheetDataEndRecord();
+            case Row when _inPreparingScan:
+                {
+                    int rowIndex = GetInt32(buffer, 0);
+                    if (rowIndex > _scanMaxRowIndex)
+                    {
+                        _scanMaxRowIndex = rowIndex;
+                    }
+
+                    return Record.Default;
+                }
+
+            // Blank cells have null value and null error — not counted toward column maximum
+            case Blank when _inPreparingScan:
+                return Record.Default;
+
+            // All other cell types have a non-null value or non-null error — counted toward column maximum
+            case Number when _inPreparingScan:
+            case Float when _inPreparingScan:
+            case String when _inPreparingScan:
+            case SharedString when _inPreparingScan:
+            case FormulaNumber when _inPreparingScan:
+            case FormulaString when _inPreparingScan:
+            case FormulaBool when _inPreparingScan:
+            case BrtCellRString when _inPreparingScan:
+            case Bool when _inPreparingScan:
+            case BoolError when _inPreparingScan:
+            case FormulaError when _inPreparingScan:
+                {
+                    int column = (int)GetDWord(buffer, 0);
+                    if (column > _scanMaxColumnIndex)
+                    {
+                        _scanMaxColumnIndex = column;
+                    }
+
+                    return Record.Default;
+                }
+
             case SheetPr: // BrtWsProp
                 {
                     // Must be between 0 and 31 characters
@@ -64,6 +119,12 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
                     if (unsynced)
                         defaultHeight = GetWord(buffer, 6);
                     return new SheetFormatPrRecord(defaultHeight);
+                }
+
+            case WsDim: // BrtWsDim - worksheet dimensions (rwFirst, rwLast, colFirst, colLast)
+                {
+                    int colLast = GetInt32(buffer, 12);
+                    return new DimensionRecord(colLast + 1);
                 }
 
             case Column: // BrtColInfo 

@@ -24,7 +24,7 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
 
     private List<SheetRecord> Sheets { get; } = [];
 
-    public IEnumerable<XlsxWorksheet> ReadWorksheets() => Sheets.Select(sheet => new XlsxWorksheet(_zipWorker, this, sheet));
+    public IEnumerable<XlsxWorksheet> ReadWorksheets() => Sheets.Select(sheet => new XlsxWorksheet(_zipWorker, this, sheet, SinglePassMode));
 
     private void ReadWorkbook()
     {

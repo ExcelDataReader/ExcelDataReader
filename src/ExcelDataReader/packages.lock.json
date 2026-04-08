@@ -104,9 +104,9 @@
     "net8.0": {
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[8.0.20, )",
-        "resolved": "8.0.20",
-        "contentHash": "Rhcto2AjGvTO62+/VTmBpumBOmqIGp7nYEbTbmEXkCq4yPGxV8whju3/HsIA/bKyo2+DggaYk5+/8sxb1AbPTw=="
+        "requested": "[8.0.25, )",
+        "resolved": "8.0.25",
+        "contentHash": "sqX4nmBft05ivqKvUT4nxaN8rT3apCLt9SWFkfRrQPwra1zPwFknQAw1lleuMCKOCLvVmOWwrC2iPSm9RiXZUg=="
       },
       "PolySharp": {
         "type": "Direct",

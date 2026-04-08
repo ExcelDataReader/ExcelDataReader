@@ -20,6 +20,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     private IEnumerator<TWorksheet> _cachedWorksheetIterator;
     private List<TWorksheet> _cachedWorksheets;
     private int _idx;
+    private bool _singlePassMode;
 
     ~ExcelDataReader()
     {
@@ -47,17 +48,23 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     public bool IsClosed { get; private set; }
 
-    public int FieldCount => _worksheetIterator?.Current?.FieldCount ?? 0;
+    public int FieldCount => _singlePassMode
+        ? Math.Max(_worksheetIterator?.Current?.FieldCount ?? 0, RowCells?.Length ?? 0)
+        : (_worksheetIterator?.Current?.FieldCount ?? 0);
 
-    public int RowCount => _worksheetIterator?.Current?.RowCount ?? 0;
+    public int RowCount => _singlePassMode
+        ? throw new InvalidOperationException("RowCount is not available in SinglePassMode.")
+        : (_worksheetIterator?.Current?.RowCount ?? 0);
 
     public int RecordsAffected => throw new NotSupportedException();
 
-    public double RowHeight => _rowIterator?.Current?.Height ?? 0;
+    public double RowHeight => _rowIterator?.Current.Height ?? 0;
+
+    protected bool SinglePassMode { set => _singlePassMode = value; }
 
     protected TWorkbook Workbook { get; set; }
 
-    private Cell[] RowCells { get; set; }
+    private Cell?[] RowCells { get; set; }
 
     public object this[int i] => GetValue(i);
 
@@ -345,16 +352,27 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     private void ReadCurrentRow()
     {
-        RowCells ??= new Cell[FieldCount];
+        RowCells ??= new Cell?[FieldCount];
 
         Array.Clear(RowCells, 0, RowCells.Length);
 
         foreach (var cell in _rowIterator.Current.Cells)
         {
-            if (cell.ColumnIndex < RowCells.Length)
+            if (cell.ColumnIndex >= RowCells.Length)
             {
-                RowCells[cell.ColumnIndex] = cell;
+                if (_singlePassMode)
+                {
+                    var resized = RowCells;
+                    Array.Resize(ref resized, cell.ColumnIndex + 1);
+                    RowCells = resized;
+                }
+                else
+                {
+                    continue;
+                }
             }
+
+            RowCells[cell.ColumnIndex] = cell;
         }
     }
 }

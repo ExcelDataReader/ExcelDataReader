@@ -8,7 +8,7 @@ namespace ExcelDataReader.Core.BinaryFormat;
 /// </summary>
 internal sealed class XlsWorksheet : IWorksheet
 {
-    public XlsWorksheet(XlsWorkbook workbook, XlsBiffBoundSheet refSheet, Stream stream)
+    public XlsWorksheet(XlsWorkbook workbook, XlsBiffBoundSheet refSheet, Stream stream, bool singlePassMode = false)
     {
         Workbook = workbook;
         Stream = stream;
@@ -27,6 +27,7 @@ internal sealed class XlsWorksheet : IWorksheet
             XlsBiffBoundSheet.SheetVisibility.VeryHidden => "veryhidden",
             _ => "visible",
         };
+        SinglePassMode = singlePassMode;
         ReadWorksheetGlobals();
     }
 
@@ -82,21 +83,40 @@ internal sealed class XlsWorksheet : IWorksheet
 
     public bool IsDate1904 { get; private set; }
 
+    public bool SinglePassMode { get; }
+
     public XlsWorkbook Workbook { get; }
 
     public IEnumerable<Row> ReadRows()
     {
         var rowIndex = 0;
         using var biffStream = new XlsBiffStream(Stream, (int)DataOffset, Workbook.BiffVersion, BIFFTYPE.Worksheet, secretKey: Workbook.SecretKey, encryption: Workbook.Encryption);
-        foreach (var rowBlock in ReadWorksheetRows(biffStream))
-        {
-            for (; rowIndex < rowBlock.RowIndex; ++rowIndex)
-            {
-                yield return new Row(rowIndex, DefaultRowHeight / 20.0, []);
-            }
 
-            rowIndex++;
-            yield return rowBlock;
+        if (SinglePassMode)
+        {
+            foreach (var row in ReadWorksheetRowsSinglePass(biffStream))
+            {
+                for (; rowIndex < row.RowIndex; ++rowIndex)
+                {
+                    yield return new Row(rowIndex, DefaultRowHeight / 20.0, []);
+                }
+
+                rowIndex++;
+                yield return row;
+            }
+        }
+        else
+        {
+            foreach (var rowBlock in ReadWorksheetRows(biffStream))
+            {
+                for (; rowIndex < rowBlock.RowIndex; ++rowIndex)
+                {
+                    yield return new Row(rowIndex, DefaultRowHeight / 20.0, []);
+                }
+
+                rowIndex++;
+                yield return rowBlock;
+            }
         }
     }
 
@@ -134,41 +154,59 @@ internal sealed class XlsWorksheet : IWorksheet
     private IEnumerable<Row> ReadWorksheetRows(XlsBiffStream biffStream)
     {
         var rowIndex = 0;
+        List<List<Cell>> cellListPool = [];
 
         while (rowIndex < RowCount)
         {
             GetBlockSize(rowIndex, out var blockRowCount, out var minOffset, out var maxOffset);
 
-            var block = ReadNextBlock(biffStream, rowIndex, blockRowCount, minOffset, maxOffset);
-
-            for (var i = 0; i < blockRowCount; ++i)
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            var block = System.Buffers.ArrayPool<Row?>.Shared.Rent(blockRowCount);
+#else
+            var block = new Row?[blockRowCount];
+#endif
+            try
             {
-                if (block.Rows.TryGetValue(rowIndex + i, out var row))
+                ReadNextBlock(biffStream, rowIndex, blockRowCount, minOffset, maxOffset, block, cellListPool);
+
+                for (var i = 0; i < blockRowCount; ++i)
                 {
-                    yield return row;
+                    if (block[i].HasValue)
+                    {
+                        yield return block[i]!.Value;
+
+                        // Safe: ReadCurrentRow() already consumed cells before this MoveNext resumed.
+                        var consumed = block[i]!.Value.Cells;
+                        consumed.Clear();
+                        cellListPool.Add(consumed);
+                    }
                 }
+            }
+            finally
+            {
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+                System.Buffers.ArrayPool<Row?>.Shared.Return(block, clearArray: true);
+#endif
             }
 
             rowIndex += blockRowCount;
         }
     }
 
-    private XlsRowBlock ReadNextBlock(XlsBiffStream biffStream, int startRow, int rows, int minOffset, int maxOffset)
+    private void ReadNextBlock(XlsBiffStream biffStream, int startRow, int rows, int minOffset, int maxOffset, Row?[] result, List<List<Cell>> cellListPool)
     {
-        var result = new XlsRowBlock();
-
         // Ensure rows with physical records are initialized with height
         for (var i = 0; i < rows; i++)
         {
             if (RowOffsetMap.TryGetValue(startRow + i, out _))
             {
-                EnsureRow(result, startRow + i);
+                EnsureRow(result, startRow, startRow + i, cellListPool);
             }
         }
 
         if (minOffset == int.MaxValue)
         {
-            return result;
+            return;
         }
 
         biffStream.Position = minOffset;
@@ -184,18 +222,18 @@ internal sealed class XlsWorksheet : IWorksheet
 
             if (rec is XlsBiffBlankCell cell)
             {
-                var currentRow = EnsureRow(result, cell.RowIndex);
+                var cellList = EnsureRow(result, startRow, cell.RowIndex, cellListPool);
 
                 if (cell.Id == BIFFRECORDTYPE.MULRK)
                 {
                     var cellValues = ReadMultiCell(cell);
-                    currentRow.Cells.AddRange(cellValues);
+                    cellList.AddRange(cellValues);
                 }
                 else
                 {
                     var xfIndex = GetXfIndexForCell(cell, ixfe);
                     var cellValue = ReadSingleCell(biffStream, cell, xfIndex);
-                    currentRow.Cells.Add(cellValue);
+                    cellList.Add(cellValue);
                 }
 
                 ixfe = null;
@@ -206,13 +244,12 @@ internal sealed class XlsWorksheet : IWorksheet
 #endif
 
         }
-
-        return result;
     }
 
-    private Row EnsureRow(XlsRowBlock result, int rowIndex)
+    private List<Cell> EnsureRow(Row?[] result, int startRow, int rowIndex, List<List<Cell>> cellListPool)
     {
-        if (!result.Rows.TryGetValue(rowIndex, out var currentRow))
+        int i = rowIndex - startRow;
+        if (!result[i].HasValue)
         {
             var height = DefaultRowHeight / 20.0;
             if (RowOffsetMap.TryGetValue(rowIndex, out var rowOffset) && rowOffset.RowHeight != null)
@@ -220,12 +257,21 @@ internal sealed class XlsWorksheet : IWorksheet
                 height = (rowOffset.UseDefaultRowHeight ? DefaultRowHeight : rowOffset.RowHeight.Value) / 20.0;
             }
 
-            currentRow = new Row(rowIndex, height, []);
+            List<Cell> cells;
+            if (cellListPool.Count > 0)
+            {
+                cells = cellListPool[^1];
+                cellListPool.RemoveAt(cellListPool.Count - 1);
+            }
+            else
+            {
+                cells = [];
+            }
 
-            result.Rows.Add(rowIndex, currentRow);
+            result[i] = new Row(rowIndex, height, cells);
         }
 
-        return currentRow;
+        return result[i]!.Value.Cells;
     }
 
     private IEnumerable<Cell> ReadMultiCell(XlsBiffBlankCell cell)
@@ -452,12 +498,14 @@ internal sealed class XlsWorksheet : IWorksheet
 
         var recordOffset = biffStream.Position;
         var rec = biffStream.Read();
-        while (rec != null && rec is not XlsBiffEof)
+        var stopAtCells = false;
+        while (!stopAtCells && rec != null && rec is not XlsBiffEof)
         {
             switch (rec)
             {
                 case XlsBiffDimensions dims:
-                    // FieldCount = dims.LastColumn;
+                    if (SinglePassMode)
+                        FieldCount = dims.LastColumn; // Use dimension hint in single-pass mode
                     RowCount = (int)dims.LastRow;
                     break;
                 case XlsBiffDefaultRowHeight defaultRowHeightRecord:
@@ -506,12 +554,26 @@ internal sealed class XlsWorksheet : IWorksheet
                     CodeName = codeName.GetValue(Encoding);
                     break;
                 case XlsBiffRow row:
+                    if (SinglePassMode)
+                    {
+                        // In single-pass mode, stop before processing cell data;
+                        // ReadRows() will stream cells in one forward pass
+                        stopAtCells = true;
+                        break;
+                    }
+
                     SetMinMaxRow(row.RowIndex, row);
 
                     // Count rows by row records without affecting the overlap in OffsetMap
                     maxRowCountFromRowRecord = Math.Max(maxRowCountFromRowRecord, row.RowIndex + 1);
                     break;
                 case XlsBiffBlankCell cell:
+                    if (SinglePassMode)
+                    {
+                        stopAtCells = true;
+                        break;
+                    }
+
                     if (!cell.IsEmpty)
                     {
                         if (cell is XlsBiffMulRKCell mcell)
@@ -559,7 +621,10 @@ internal sealed class XlsWorksheet : IWorksheet
         if (mergeCells.Count > 0)
             MergeCells = mergeCells.ToArray();
 
-        FieldCount = maxCellColumn;
+        if (!SinglePassMode)
+        {
+            FieldCount = maxCellColumn;
+        }
 
         maxRowCount = Math.Max(maxRowCount, maxRowCountFromRowRecord);
         if (RowCount < maxRowCount)
@@ -585,6 +650,84 @@ internal sealed class XlsWorksheet : IWorksheet
 
         rowOffset.UseDefaultRowHeight = row.UseDefaultRowHeight;
         rowOffset.RowHeight = row.RowHeight;
+    }
+
+    private IEnumerable<Row> ReadWorksheetRowsSinglePass(XlsBiffStream biffStream)
+    {
+        int lastYieldedRowIndex = -1;
+        int currentRowIndex = -1;
+        List<Cell> currentRowCells = [];
+        Dictionary<int, double> rowHeights = [];
+        ushort? ixfe = null;
+
+        var rec = biffStream.Read();
+        while (rec != null && rec is not XlsBiffEof)
+        {
+            switch (rec)
+            {
+                case XlsBiffRow row:
+                    rowHeights[row.RowIndex] = row.UseDefaultRowHeight
+                        ? DefaultRowHeight / 20.0
+                        : row.RowHeight / 20.0;
+                    break;
+                case XlsBiffBlankCell cell:
+                    {
+                        if (cell.RowIndex <= lastYieldedRowIndex)
+                        {
+                            throw new InvalidOperationException(
+                                "File contains out-of-order cells. Use SinglePassMode = false to read this file.");
+                        }
+
+                        if (cell.RowIndex != currentRowIndex)
+                        {
+                            if (currentRowIndex != -1)
+                            {
+                                var height = rowHeights.TryGetValue(currentRowIndex, out var h) ? h : DefaultRowHeight / 20.0;
+                                yield return new Row(currentRowIndex, height, currentRowCells);
+                                lastYieldedRowIndex = currentRowIndex;
+                                rowHeights.Remove(lastYieldedRowIndex);
+                                currentRowCells.Clear();
+                            }
+
+                            currentRowIndex = cell.RowIndex;
+                        }
+
+                        if (!cell.IsEmpty)
+                        {
+                            if (cell.Id == BIFFRECORDTYPE.MULRK)
+                            {
+                                currentRowCells.AddRange(ReadMultiCell(cell));
+                            }
+                            else
+                            {
+                                var xfIndex = GetXfIndexForCell(cell, ixfe);
+                                currentRowCells.Add(ReadSingleCell(biffStream, cell, xfIndex));
+                            }
+                        }
+
+                        ixfe = null;
+                    }
+
+                    break;
+                case { Id: BIFFRECORDTYPE.IXFE }:
+                    ixfe = rec.ReadUInt16(0);
+                    break;
+            }
+
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            rec.Return();
+#endif
+            rec = biffStream.Read();
+
+            if (rec is XlsBiffBOF)
+                break;
+        }
+
+        if (currentRowIndex != -1 && currentRowCells.Count > 0)
+        {
+            var height = rowHeights.TryGetValue(currentRowIndex, out var h) ? h : DefaultRowHeight / 20.0;
+            yield return new Row(currentRowIndex, height, currentRowCells);
+        }
     }
 
     private void SetMinMaxRowOffset(int rowIndex, int recordOffset, int maxOverlapRow)
@@ -615,10 +758,5 @@ internal sealed class XlsWorksheet : IWorksheet
         public int MaxCellOffset { get; set; }
 
         public int MaxOverlapRowIndex { get; set; }
-    }
-    
-    private sealed class XlsRowBlock
-    {
-        public Dictionary<int, Row> Rows { get; } = [];
     }
 }

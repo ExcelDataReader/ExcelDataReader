@@ -5,9 +5,11 @@ namespace ExcelDataReader;
 
 internal sealed class ExcelBinaryReader : ExcelDataReader<XlsWorkbook, XlsWorksheet>
 {
-    public ExcelBinaryReader(Stream stream, string password, Encoding fallbackEncoding)
+    public ExcelBinaryReader(Stream stream, string password, Encoding fallbackEncoding, bool singlePassMode = false)
     {
         Workbook = new XlsWorkbook(stream, password, fallbackEncoding);
+        Workbook.SinglePassMode = singlePassMode;
+        SinglePassMode = singlePassMode;
 
         // By default, the data reader is positioned on the first result.
         Reset();

@@ -44,4 +44,11 @@ public class ExcelReaderConfiguration
     /// Default: 0 - analyzes the entire file (CSV only, has no effect on other formats).
     /// </summary>
     public int AnalyzeInitialCsvRows { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to skip the initial full-scan pass used to determine FieldCount and RowCount.
+    /// When true, RowCount throws InvalidOperationException and FieldCount reflects the maximum column index seen so far,
+    /// growing dynamically as rows are read. Default: false (XLS and XLSX/XLSB only, has no effect on CSV).
+    /// </summary>
+    public bool SinglePassMode { get; set; }
 }

@@ -46,6 +46,8 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
 
     private const string NMergeCell = "mergeCell";
 
+    private const string NDimension = "dimension";
+
     private const string ACustomHeight = "customHeight";
     private const string AHt = "ht";
 
@@ -65,45 +67,55 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
         {
             if (Reader.IsStartElement(NSheetData, ProperNamespaces.NsSpreadsheetMl))
             {
-                yield return new SheetDataBeginRecord();
-                if (!XmlReaderHelper.ReadFirstContent(Reader))
+                if (preparing)
                 {
-                    yield return new SheetDataEndRecord();
-                    continue;
-                }
+                    // Fast pre-scan: read row/column indices directly without allocating per-cell records.
+                    int maxRowIndex = int.MinValue;
+                    int maxColumnIndex = int.MinValue;
 
-                int rowIndex = -1;
-                while (!Reader.EOF)
-                {
-                    if (Reader.IsStartElement(NRow, ProperNamespaces.NsSpreadsheetMl))
+                    if (XmlReaderHelper.ReadFirstContent(Reader))
                     {
-                        if (int.TryParse(Reader.GetAttribute(AR), out int arValue))
-                            rowIndex = arValue - 1; // The row attribute is 1-based
-                        else
-                            rowIndex++;
-
-#pragma warning disable CA1806 // Do not ignore method results
-                        int.TryParse(Reader.GetAttribute(AHidden), out int hidden);
-                        int.TryParse(Reader.GetAttribute(ACustomHeight), out int _);
-#pragma warning restore CA1806 // Do not ignore method results
-
-                        double? height = double.TryParse(Reader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var ahtValue) ? Math.Abs(ahtValue) : null;
-
-                        yield return new RowHeaderRecord(rowIndex, hidden != 0, height);
-
-                        if (!XmlReaderHelper.ReadFirstContent(Reader))
-                        {
-                            continue;
-                        }
-
-                        int nextColumnIndex = 0;
+                        int seqRowIndex = -1;
                         while (!Reader.EOF)
                         {
-                            if (Reader.IsStartElement(NC, ProperNamespaces.NsSpreadsheetMl))
+                            if (Reader.IsStartElement(NRow, ProperNamespaces.NsSpreadsheetMl))
                             {
-                                var cell = ReadCell(nextColumnIndex, ProperNamespaces.NsSpreadsheetMl);
-                                nextColumnIndex = cell.ColumnIndex + 1;
-                                yield return cell;
+                                // Mirror ReadOverride: use r attribute if valid, otherwise sequential
+                                if (int.TryParse(Reader.GetAttribute(AR), out int arValue))
+                                    seqRowIndex = arValue - 1;
+                                else
+                                    seqRowIndex++;
+
+                                maxRowIndex = Math.Max(maxRowIndex, seqRowIndex);
+
+                                if (XmlReaderHelper.ReadFirstContent(Reader))
+                                {
+                                    int nextColumnIndex = 0;
+                                    while (!Reader.EOF)
+                                    {
+                                        if (Reader.IsStartElement(NC, ProperNamespaces.NsSpreadsheetMl))
+                                        {
+                                            // Mirror ReadCell: use the r attribute if valid, otherwise sequential
+                                            int colIndex;
+                                            if (ReferenceHelper.ParseReference(Reader.GetAttribute(AR), out int referenceColumn, out _))
+                                                colIndex = referenceColumn - 1;
+                                            else
+                                                colIndex = nextColumnIndex;
+
+                                            nextColumnIndex = colIndex + 1;
+
+                                            // Only non-empty cells count toward the column maximum
+                                            if (!Reader.IsEmptyElement)
+                                                maxColumnIndex = Math.Max(maxColumnIndex, colIndex);
+
+                                            Reader.Skip();
+                                        }
+                                        else if (!XmlReaderHelper.SkipContent(Reader))
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
                             }
                             else if (!XmlReaderHelper.SkipContent(Reader))
                             {
@@ -111,13 +123,65 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
                             }
                         }
                     }
-                    else if (!XmlReaderHelper.SkipContent(Reader))
-                    {
-                        break;
-                    }
-                }
 
-                yield return new SheetDataEndRecord();
+                    yield return new ScanResultRecord(maxRowIndex, maxColumnIndex);
+                }
+                else
+                {
+                    yield return new SheetDataBeginRecord();
+                    if (!XmlReaderHelper.ReadFirstContent(Reader))
+                    {
+                        yield return new SheetDataEndRecord();
+                        continue;
+                    }
+
+                    int rowIndex = -1;
+                    while (!Reader.EOF)
+                    {
+                        if (Reader.IsStartElement(NRow, ProperNamespaces.NsSpreadsheetMl))
+                        {
+                            if (int.TryParse(Reader.GetAttribute(AR), out int arValue))
+                                rowIndex = arValue - 1; // The row attribute is 1-based
+                            else
+                                rowIndex++;
+
+#pragma warning disable CA1806 // Do not ignore method results
+                            int.TryParse(Reader.GetAttribute(AHidden), out int hidden);
+                            int.TryParse(Reader.GetAttribute(ACustomHeight), out int _);
+#pragma warning restore CA1806 // Do not ignore method results
+
+                            double? height = double.TryParse(Reader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var ahtValue) ? Math.Abs(ahtValue) : null;
+
+                            yield return new RowHeaderRecord(rowIndex, hidden != 0, height);
+
+                            if (!XmlReaderHelper.ReadFirstContent(Reader))
+                            {
+                                continue;
+                            }
+
+                            int nextColumnIndex = 0;
+                            while (!Reader.EOF)
+                            {
+                                if (Reader.IsStartElement(NC, ProperNamespaces.NsSpreadsheetMl))
+                                {
+                                    var cell = ReadCell(nextColumnIndex, ProperNamespaces.NsSpreadsheetMl);
+                                    nextColumnIndex = cell.ColumnIndex + 1;
+                                    yield return cell;
+                                }
+                                else if (!XmlReaderHelper.SkipContent(Reader))
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        else if (!XmlReaderHelper.SkipContent(Reader))
+                        {
+                            break;
+                        }
+                    }
+
+                    yield return new SheetDataEndRecord();
+                }
             }
             else if (Reader.IsStartElement(NMergeCells, ProperNamespaces.NsSpreadsheetMl))
             {
@@ -193,6 +257,17 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
 
                 Reader.Skip();
             }
+            else if (Reader.IsStartElement(NDimension, ProperNamespaces.NsSpreadsheetMl))
+            {
+                var refAttr = Reader.GetAttribute(ARef);
+                if (refAttr != null)
+                {
+                    var range = CellRange.Parse(refAttr);
+                    yield return new DimensionRecord(range.ToColumn + 1);
+                }
+
+                Reader.Skip();
+            }
             else if (!XmlReaderHelper.SkipContent(Reader))
             {
                 break;
@@ -258,25 +333,6 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
             columnIndex = referenceColumn - 1; // ParseReference is 1-based
         else
             columnIndex = nextColumnIndex;
-
-        if (preparing)
-        {
-            // We only care about columnIndex and if there is any content or not when preparing.
-            if (!XmlReaderHelper.ReadFirstContent(Reader))
-            {
-                return new CellRecord(columnIndex, 0, null, null);
-            }
-
-            while (!Reader.EOF)
-            {
-                if (!XmlReaderHelper.SkipContent(Reader))
-                {
-                    break;
-                }
-            }
-
-            return new CellRecord(columnIndex, 0, string.Empty, null);
-        }
 
         var aS = Reader.GetAttribute(AS);
         if (aS != null)

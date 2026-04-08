@@ -1003,6 +1003,34 @@ public abstract class ExcelTestBase
         Assert.That(reader.GetCellStyle(2).VerticalAlignment, Is.EqualTo(VerticalAlignment.Bottom));
     }
 
+    [Test]
+    public void GitIssue618_SinglePassMode_RowCountThrows()
+    {
+        using var reader = OpenReader(OpenStream("Test10x10"), new ExcelReaderConfiguration { SinglePassMode = true });
+        Assert.Throws<InvalidOperationException>(() => _ = reader.RowCount);
+        reader.Read();
+        Assert.Throws<InvalidOperationException>(() => _ = reader.RowCount);
+    }
+
+    [Test]
+    public void GitIssue618_SinglePassMode_AsDataSet()
+    {
+        using var reader = OpenReader(OpenStream("Test10x10"), new ExcelReaderConfiguration { SinglePassMode = true });
+        var dataSet = reader.AsDataSet();
+        Assert.That(dataSet.Tables[0].Rows.Count, Is.EqualTo(10));
+        Assert.That(dataSet.Tables[0].Columns.Count, Is.EqualTo(10));
+        Assert.That(dataSet.Tables[0].Rows[1][0], Is.EqualTo("10x10"));
+        Assert.That(dataSet.Tables[0].Rows[9][9], Is.EqualTo("10x27"));
+    }
+
+    [Test]
+    public void GitIssue618_SinglePassMode_FieldCountGrows()
+    {
+        using var reader = OpenReader(OpenStream("Test10x10"), new ExcelReaderConfiguration { SinglePassMode = true });
+        reader.Read();
+        Assert.That(reader.FieldCount, Is.GreaterThanOrEqualTo(10));
+    }
+
     protected IExcelDataReader OpenReader(string name)
     {
         return OpenReader(OpenStream(name));

@@ -23,6 +23,8 @@ internal class CommonWorkbook
     /// </summary>
     public List<ExtendedFormat> CellStyleExtendedFormats { get; } = [];
 
+    public bool SinglePassMode { get; set; }
+
     private NumberFormatString GeneralNumberFormat { get; } = new("General");
 
     public ExtendedFormat GetEffectiveCellStyle(int xfIndex, int numberFormatFromCell)

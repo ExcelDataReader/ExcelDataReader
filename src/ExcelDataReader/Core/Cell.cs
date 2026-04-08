@@ -12,4 +12,4 @@ namespace ExcelDataReader.Core;
 /// the Cell XF, with optional overrides from a Cell Style XF.
 /// </param>
 /// <param name="Error">Cell error -or- <s langword="null"/>.</param>
-internal sealed record Cell(int ColumnIndex, object? Value, ExtendedFormat EffectiveStyle, CellError? Error);
+internal readonly record struct Cell(int ColumnIndex, object? Value, ExtendedFormat EffectiveStyle, CellError? Error);

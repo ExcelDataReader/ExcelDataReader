@@ -134,7 +134,7 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
     {
         for (var i = 0; i < Sheets.Count; ++i)
         {
-            yield return new XlsWorksheet(this, Sheets[i], Stream);
+            yield return new XlsWorksheet(this, Sheets[i], Stream, SinglePassMode);
         }
     }
 
