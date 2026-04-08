@@ -552,14 +552,6 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
         Assert.That(actualRowsHeights, Is.EqualTo(expectedRowHeights));
     }
 
-    [Test]
-    public void GitIssue541BuiltinFormat55IsDate()
-    {
-        using var reader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Test_git_issue_541.xlsx"));
-        Assert.That(reader.Read(), Is.True);
-        Assert.That(reader.GetValue(0), Is.EqualTo(new DateTime(2021, 1, 15)));
-    }
-
     protected override IExcelDataReader OpenReader(Stream stream, ExcelReaderConfiguration configuration = null) 
     => ExcelReaderFactory.CreateOpenXmlReader(stream, configuration);
 

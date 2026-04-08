@@ -22,14 +22,6 @@ public class ExcelOpenXmlStrictReaderTest : ExcelOpenXmlReaderBase
         }
     }
 
-    [Test]
-    public void GitIssue541BuiltinFormat55IsDate()
-    {
-        using var reader = OpenReader("Test_git_issue_541");
-        reader.Read();
-        Assert.That(reader.GetValue(0), Is.EqualTo(new DateTime(2021, 1, 15)));
-    }
-
     protected override IExcelDataReader OpenReader(Stream stream, ExcelReaderConfiguration configuration = null)
     {
         return ExcelReaderFactory.CreateOpenXmlReader(stream, configuration);

@@ -1003,6 +1003,14 @@ public abstract class ExcelTestBase
         Assert.That(reader.GetCellStyle(2).VerticalAlignment, Is.EqualTo(VerticalAlignment.Bottom));
     }
 
+    [Test]
+    public void GitIssue541BuiltinFormat55IsDate()
+    {
+        using var reader = OpenReader("Test_git_issue_541");
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetValue(0), Is.EqualTo(new DateTime(2021, 1, 15)));
+    }
+
     protected IExcelDataReader OpenReader(string name)
     {
         return OpenReader(OpenStream(name));
