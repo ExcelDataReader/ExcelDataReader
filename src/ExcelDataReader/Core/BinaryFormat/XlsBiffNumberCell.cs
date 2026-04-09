@@ -15,5 +15,5 @@ internal sealed class XlsBiffNumberCell : XlsBiffBlankCell
     /// <summary>
     /// Gets the value of this cell.
     /// </summary>
-    public double Value => Id == BIFFRECORDTYPE.NUMBER_OLD ? ReadDouble(0x7) : ReadDouble(0x6);
+    public double Value => Id == BIFFRECORDTYPE.NUMBER_V2 ? ReadDouble(0x7) : ReadDouble(0x6);
 }

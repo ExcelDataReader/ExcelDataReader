@@ -15,5 +15,5 @@ internal sealed class XlsBiffIntegerCell : XlsBiffBlankCell
     /// <summary>
     /// Gets the cell value.
     /// </summary>
-    public int Value => Id == BIFFRECORDTYPE.INTEGER_OLD ? ReadUInt16(0x7) : ReadUInt16(0x6);
+    public int Value => Id == BIFFRECORDTYPE.INTEGER_V2 ? ReadUInt16(0x7) : ReadUInt16(0x6);
 }
