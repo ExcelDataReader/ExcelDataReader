@@ -42,12 +42,12 @@ public static class ExcelReaderFactory
             var document = new CompoundDocument(fileStream);
             if (TryGetWorkbook(fileStream, document, out var stream))
             {
-                return new ExcelBinaryReader(stream, configuration.Password, configuration.FallbackEncoding);
+                return new ExcelBinaryReader(stream, configuration.Password, configuration.FallbackEncoding, configuration.Culture);
             }
 
             if (TryGetEncryptedPackage(fileStream, document, configuration.Password, out stream))
             {
-                return new ExcelOpenXmlReader(stream);
+                return new ExcelOpenXmlReader(stream, configuration.Culture);
             }
 
             throw new ExcelReaderException(Errors.ErrorStreamWorkbookNotFound);
@@ -55,13 +55,13 @@ public static class ExcelReaderFactory
 
         if (XlsWorkbook.IsRawBiffStream(probe))
         {
-            return new ExcelBinaryReader(fileStream, configuration.Password, configuration.FallbackEncoding);
+            return new ExcelBinaryReader(fileStream, configuration.Password, configuration.FallbackEncoding, configuration.Culture);
         }
 
         if (probe[0] == 0x50 && probe[1] == 0x4B)
         {
             // zip files start with 'PK'
-            return new ExcelOpenXmlReader(fileStream);
+            return new ExcelOpenXmlReader(fileStream, configuration.Culture);
         }
 
         throw new HeaderException(Errors.ErrorHeaderSignature);
@@ -92,7 +92,7 @@ public static class ExcelReaderFactory
             var document = new CompoundDocument(fileStream);
             if (TryGetWorkbook(fileStream, document, out var stream))
             {
-                return new ExcelBinaryReader(stream, configuration.Password, configuration.FallbackEncoding);
+                return new ExcelBinaryReader(stream, configuration.Password, configuration.FallbackEncoding, configuration.Culture);
             }
             else
             {
@@ -101,7 +101,7 @@ public static class ExcelReaderFactory
         }
         else if (XlsWorkbook.IsRawBiffStream(probe))
         {
-            return new ExcelBinaryReader(fileStream, configuration.Password, configuration.FallbackEncoding);
+            return new ExcelBinaryReader(fileStream, configuration.Password, configuration.FallbackEncoding, configuration.Culture);
         }
         else
         {
@@ -135,7 +135,7 @@ public static class ExcelReaderFactory
             var document = new CompoundDocument(fileStream);
             if (TryGetEncryptedPackage(fileStream, document, configuration.Password, out var stream))
             {
-                return new ExcelOpenXmlReader(stream);
+                return new ExcelOpenXmlReader(stream, configuration.Culture);
             }
 
             throw new ExcelReaderException(Errors.ErrorCompoundNoOpenXml);
@@ -144,7 +144,7 @@ public static class ExcelReaderFactory
         if (probe[0] == 0x50 && probe[1] == 0x4B)
         {
             // Zip files start with 'PK'
-            return new ExcelOpenXmlReader(fileStream);
+            return new ExcelOpenXmlReader(fileStream, configuration.Culture);
         }
 
         throw new HeaderException(Errors.ErrorHeaderSignature);

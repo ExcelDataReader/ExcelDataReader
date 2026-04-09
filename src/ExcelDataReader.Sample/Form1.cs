@@ -53,7 +53,7 @@ public partial class Form1 : Form
             var sw = new Stopwatch();
             sw.Start();
 
-            using IExcelDataReader reader = string.Equals(Path.GetExtension(textBox1.Text), ".csv", StringComparison.OrdinalIgnoreCase) ? 
+            using IExcelDataReader reader = string.Equals(Path.GetExtension(textBox1.Text), ".csv", StringComparison.OrdinalIgnoreCase) ?
                 ExcelReaderFactory.CreateCsvReader(stream) : ExcelReaderFactory.CreateReader(stream);
 
             var openTiming = sw.ElapsedMilliseconds;
@@ -63,7 +63,8 @@ public partial class Form1 : Form
                 UseColumnDataType = false,
                 ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
                 {
-                    UseHeaderRow = firstRowNamesCheckBox.Checked
+                    UseHeaderRow = firstRowNamesCheckBox.Checked,
+                    FillMergedCellsValue = fillMergeCellCheckBox.Checked
                 }
             });
 
@@ -75,7 +76,7 @@ public partial class Form1 : Form
             if (tablenames.Count > 0)
                 sheetCombo.SelectedIndex = 0;
         }
-        catch (Exception ex) 
+        catch (Exception ex)
         {
             MessageBox.Show(ex.ToString(), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
