@@ -24,7 +24,7 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
     private const uint SheetDataBegin = 0x91;
     private const uint SheetDataEnd = 0x92;
     private const uint SheetPr = 0x93;
-    private const uint WsDim = 0x94; // BrtWsDim - worksheet dimensions
+    private const uint SheetDim = 0x94; // BrtWsDim - worksheet dimensions
     private const uint SheetFormatPr = 0x1E5;
 
     // private const uint ColumnsBegin = 0x186;
@@ -111,7 +111,7 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
                     return new SheetPrRecord(codeName);
                 }
 
-            case SheetDim: // BrtWsDim
+            case SheetDim: // BrtWsDim - worksheet dimensions (rwFirst, rwLast, colFirst, colLast)
                 {
                     int dimFromRow = GetInt32(buffer, 0);
                     int dimToRow = GetInt32(buffer, 4);
@@ -128,12 +128,6 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
                     if (unsynced)
                         defaultHeight = GetWord(buffer, 6);
                     return new SheetFormatPrRecord(defaultHeight);
-                }
-
-            case WsDim: // BrtWsDim - worksheet dimensions (rwFirst, rwLast, colFirst, colLast)
-                {
-                    int colLast = GetInt32(buffer, 12);
-                    return new DimensionRecord(colLast + 1);
                 }
 
             case Column: // BrtColInfo 
