@@ -557,7 +557,7 @@ public class FormatReaderTest
             Assert.That(format.IsDateTimeFormat, Is.False, $"Format string '{formatString}' incorrectly detected as date/time");
         }
     }
-}
+
     /// <summary>
     /// Verifies that the format strings produced by the culture-specific conversion (for locales such
     /// as en-US and en-GB) are themselves valid date/time format strings that ExcelDataReader will
