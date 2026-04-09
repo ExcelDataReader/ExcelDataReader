@@ -17,6 +17,8 @@ internal interface IWorksheet
 
     int RowCount { get; }
 
+    CellRange Dimension { get; }
+
     CellRange[] MergeCells { get; }
 
     List<Column> ColumnWidths { get; }

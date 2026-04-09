@@ -53,6 +53,12 @@ public interface IExcelDataReader : IDataReader
     int RowCount { get; }
 
     /// <summary>
+    /// Gets the dimension of the current result.
+    /// </summary>
+    /// <remarks>Main use case is analysis of clipboard data. Potentially unreliable in other use cases.</remarks>
+    CellRange Dimension { get; }
+
+    /// <summary>
     /// Gets the height of the current row in points.
     /// </summary>
     double RowHeight { get; }

@@ -81,6 +81,8 @@ internal sealed class XlsWorksheet : IWorksheet
 
     public int RowCount { get; private set; }
 
+    public CellRange Dimension { get; private set; }
+
     public bool IsDate1904 { get; private set; }
 
     public bool SinglePassMode { get; }
@@ -507,6 +509,7 @@ internal sealed class XlsWorksheet : IWorksheet
                     if (SinglePassMode)
                         FieldCount = dims.LastColumn; // Use dimension hint in single-pass mode
                     RowCount = (int)dims.LastRow;
+                    Dimension = new CellRange(dims.FirstColumn, (int)dims.FirstRow, dims.LastColumn - 1, (int)dims.LastRow - 1);
                     break;
                 case XlsBiffDefaultRowHeight defaultRowHeightRecord:
                     DefaultRowHeight = defaultRowHeightRecord.RowHeight;

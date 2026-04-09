@@ -64,6 +64,9 @@ internal sealed class XlsxWorksheet : IWorksheet
                 case HeaderFooterRecord headerFooter:
                     HeaderFooter = headerFooter.HeaderFooter;
                     break;
+                case SheetDimRecord dimRecord:
+                    Dimension = dimRecord.Range;
+                    break;
             }
         }
 
@@ -85,6 +88,8 @@ internal sealed class XlsxWorksheet : IWorksheet
     public int FieldCount { get; }
 
     public int RowCount { get; }
+
+    public CellRange Dimension { get; private set; }
 
     public string Name { get; }
 

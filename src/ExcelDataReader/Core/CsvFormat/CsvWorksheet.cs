@@ -65,6 +65,8 @@ internal sealed class CsvWorksheet : IWorksheet
         }
     }
 
+    public CellRange Dimension => null;
+
     public Stream Stream { get; }
 
     public Encoding Encoding { get; }

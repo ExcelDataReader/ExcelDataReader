@@ -38,6 +38,17 @@ public class ExcelOpenXmlBinaryReaderTest : ExcelOpenXmlReaderBase
         Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List1"));
     }
 
+    [Test]
+    public void ClipboardDimension()
+    {
+        using var excelReader = OpenReader("Test_Clipboard_Biff12");
+
+        Assert.That(excelReader.Dimension.FromRow, Is.EqualTo(10));
+        Assert.That(excelReader.Dimension.ToRow, Is.EqualTo(11));
+        Assert.That(excelReader.Dimension.FromColumn, Is.EqualTo(6));
+        Assert.That(excelReader.Dimension.ToColumn, Is.EqualTo(7));
+    }
+
     /// <inheritdoc />
     protected override Stream OpenStream(string name)
     {

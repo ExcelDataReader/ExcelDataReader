@@ -1094,6 +1094,16 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     }
 
     [Test]
+    public void ClipboardDimension()
+    {
+        using var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Test_Clipboard_Biff8.xls"));
+
+        Assert.That(excelReader.Dimension.FromRow, Is.EqualTo(10));
+        Assert.That(excelReader.Dimension.ToRow, Is.EqualTo(11));
+        Assert.That(excelReader.Dimension.FromColumn, Is.EqualTo(6));
+        Assert.That(excelReader.Dimension.ToColumn, Is.EqualTo(7));
+    }    
+        
     public void Read_XlsExcel20()
     {
         using var stream = Configuration.GetTestWorkbook(Path.Combine("xls", "SIMPLE.XLS"));
