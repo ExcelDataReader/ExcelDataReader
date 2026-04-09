@@ -68,13 +68,25 @@ public static class ExcelDataReaderExtensions
 
     private static DataTable AsDataTable(IExcelDataReader self, ExcelDataTableConfiguration configuration)
     {
-        var result = new DataTable { TableName = self.Name };
+        var result = new DataTable { TableName = self.Name, CaseSensitive = configuration.CaseSentitive };
         result.ExtendedProperties.Add("visiblestate", self.VisibleState);
         var first = true;
         var emptyRows = 0;
+        List<CellRange> mergedCellsList = [];
+        Dictionary<(int Row, int Column), object> mergeCellValue = [];
+
+        // If need to fill merged cells, check the next row have merged cells
+        var nextRowHaveMergedCell = false;
+        if (configuration.FillMergedCellsValue)
+        {
+            mergedCellsList = self.MergeCells.OrderBy(c => c.FromRow).ThenBy(c => c.FromColumn).ToList();
+        }
+
+        int rowIndex = -1;
         List<int> columnIndices = [];
         while (self.Read())
         {
+            rowIndex++;
             if (first)
             {
                 if (configuration.UseHeaderRow && configuration.ReadHeaderRow != null)
@@ -82,7 +94,7 @@ public static class ExcelDataReaderExtensions
                     configuration.ReadHeaderRow(self);
                 }
 
-                if (configuration.ReadHeader != null) 
+                if (configuration.ReadHeader != null)
                 {
                     var dict = configuration.ReadHeader(self);
                     foreach (var kvp in dict)
@@ -96,8 +108,8 @@ public static class ExcelDataReaderExtensions
                         result.Columns.Add(column);
                         columnIndices.Add(columnIndex);
                     }
-                } 
-                else 
+                }
+                else
                 {
                     for (var i = 0; i < self.FieldCount; i++)
                     {
@@ -137,7 +149,8 @@ public static class ExcelDataReaderExtensions
                 continue;
             }
 
-            if (IsEmptyRow(self, configuration))
+            // if next row is containing merged cells, skip the empty row check
+            if (!nextRowHaveMergedCell && IsEmptyRow(self, configuration))
             {
                 emptyRows++;
                 continue;
@@ -157,6 +170,36 @@ public static class ExcelDataReaderExtensions
                 var columnIndex = columnIndices[i];
 
                 var value = self.GetValue(columnIndex);
+                if (configuration.FillMergedCellsValue)
+                {
+                    var range = mergedCellsList.Find(range => range.FromRow <= rowIndex &&
+                                              range.ToRow >= rowIndex &&
+                                              range.FromColumn <= columnIndex &&
+                                              range.ToColumn >= columnIndex);
+                    if (range != null)
+                    {
+                        if (mergeCellValue.TryGetValue((range.FromRow, range.FromColumn), out var mergedValue))
+                        {
+                            value = mergedValue;
+                        }
+                        else
+                        {
+                            mergeCellValue[(range.FromRow, range.FromColumn)] = value;
+                        }
+
+                        // mark next row is in merged range, skip empty row check and to fill row
+                        if (rowIndex < range.ToRow)
+                        {
+                            nextRowHaveMergedCell = true;
+                        }
+                        else if (rowIndex == range.ToRow && columnIndex == range.ToColumn)
+                        {
+                            mergedCellsList.Remove(range);
+                            nextRowHaveMergedCell = false;
+                        }
+                    }
+                }
+
                 if (configuration.TransformValue != null)
                 {
                     var transformedValue = configuration.TransformValue(self, i, value);

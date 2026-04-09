@@ -6,6 +6,11 @@ namespace ExcelDataReader;
 public class ExcelDataTableConfiguration
 {
     /// <summary>
+    /// Gets or sets a value indicating whether the DataTable should be case sensitive. Useful when setting a primary key after loading from Excel.
+    /// </summary>
+    public bool CaseSentitive { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating the prefix of generated column names.
     /// </summary>
     public string EmptyColumnNamePrefix { get; set; } = "Column";
@@ -43,4 +48,9 @@ public class ExcelDataTableConfiguration
     /// Gets or sets a callback to determine whether to transform the cell value.
     /// </summary>
     public Func<IExcelDataReader, int, object, object> TransformValue { get; set; }
+    
+    /// <summary>
+    /// Gets or sets a value indicating whether merged cells should be filled with their top-left cell's value.
+    /// </summary>
+    public bool FillMergedCellsValue { get; set; }
 }

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 
 namespace ExcelDataReader;
 
@@ -51,4 +52,11 @@ public class ExcelReaderConfiguration
     /// growing dynamically as rows are read. Default: false (XLS and XLSX/XLSB only, has no effect on CSV).
     /// </summary>
     public bool SinglePassMode { get; set; }
+  
+    /// <summary>
+    /// Gets or sets the culture to use when mapping locale-dependent built-in number format indices
+    /// to format strings. Affects indices 14 (short date) and 22 (short date and time).
+    /// When null (the default), hardcoded format strings are used for backward compatibility.
+    /// </summary>
+    public CultureInfo Culture { get; set; }
 }

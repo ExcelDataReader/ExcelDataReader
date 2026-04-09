@@ -138,6 +138,13 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
     // Default: 0 - analyzes the entire file (CSV only, has no effect on other
     // formats)
     AnalyzeInitialCsvRows = 0,
+
+    // Gets or sets the culture to use when mapping locale-dependent built-in
+    // number format indices to format strings. Affects indices 14 (short date)
+    // and 22 (short date and time). When null (the default), hardcoded format
+    // strings are used for backward compatibility.
+    // (XLS and XLSX/XLSB only, has no effect on CSV)
+    Culture = CultureInfo.CurrentCulture,
 });
 ```
 
@@ -184,7 +191,11 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
         // headers.
         FilterColumn = (rowReader, columnIndex) => {
             return true;
-        }
+        },
+
+        // Gets or sets a value indicating whether merged cells should be filled
+        // with their top-left cell's value. Default: false
+        FillMergedCellsValue = false,
     }
 });
 ```
