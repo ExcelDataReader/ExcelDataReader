@@ -506,8 +506,6 @@ internal sealed class XlsWorksheet : IWorksheet
             switch (rec)
             {
                 case XlsBiffDimensions dims:
-                    if (SinglePassMode)
-                        FieldCount = dims.LastColumn; // Use dimension hint in single-pass mode
                     RowCount = (int)dims.LastRow;
                     Dimension = new CellRange(dims.FirstColumn, (int)dims.FirstRow, dims.LastColumn - 1, (int)dims.LastRow - 1);
                     break;

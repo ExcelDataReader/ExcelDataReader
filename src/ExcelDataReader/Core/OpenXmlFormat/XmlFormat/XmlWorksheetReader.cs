@@ -263,7 +263,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
                 if (refAttr != null)
                 {
                     var range = CellRange.Parse(refAttr);
-                    yield return new DimensionRecord(range.ToColumn + 1);
+                    yield return new SheetDimRecord(range);
                 }
 
                 Reader.Skip();

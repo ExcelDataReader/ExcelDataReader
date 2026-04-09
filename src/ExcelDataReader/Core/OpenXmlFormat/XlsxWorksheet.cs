@@ -36,8 +36,8 @@ internal sealed class XlsxWorksheet : IWorksheet
         {
             switch (record)
             {
-                case DimensionRecord dim when singlePassMode:
-                    columnIndexMaximum = Math.Max(columnIndexMaximum, dim.LastColumn - 1);
+                case SheetDimRecord dimRecord:
+                    Dimension = dimRecord.Range;
                     break;
                 case SheetDataBeginRecord _ when singlePassMode:
                     // In single-pass mode stop before reading cells; ReadRows() will be the only pass
@@ -63,9 +63,6 @@ internal sealed class XlsxWorksheet : IWorksheet
                     break;
                 case HeaderFooterRecord headerFooter:
                     HeaderFooter = headerFooter.HeaderFooter;
-                    break;
-                case SheetDimRecord dimRecord:
-                    Dimension = dimRecord.Range;
                     break;
             }
         }

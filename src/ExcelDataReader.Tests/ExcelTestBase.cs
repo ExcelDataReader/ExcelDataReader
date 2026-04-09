@@ -1027,7 +1027,13 @@ public abstract class ExcelTestBase
     public void GitIssue618_SinglePassMode_FieldCountGrows()
     {
         using var reader = OpenReader(OpenStream("Test10x10"), new ExcelReaderConfiguration { SinglePassMode = true });
+        Assert.That(reader.FieldCount, Is.Zero);
         reader.Read();
+        Assert.That(reader.FieldCount, Is.EqualTo(9));
+        while (reader.Read())
+        {            
+        }
+        
         Assert.That(reader.FieldCount, Is.GreaterThanOrEqualTo(10));
     }
 

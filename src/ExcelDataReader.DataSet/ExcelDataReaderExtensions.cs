@@ -83,6 +83,7 @@ public static class ExcelDataReaderExtensions
         }
 
         int rowIndex = -1;
+        int lastCheckedFieldCount = 0;
         List<int> columnIndices = [];
         while (self.Read())
         {
@@ -136,12 +137,32 @@ public static class ExcelDataReaderExtensions
                 }
 
                 result.BeginLoadData();
+                lastCheckedFieldCount = self.FieldCount;
                 first = false;
 
                 if (configuration.UseHeaderRow)
                 {
                     continue;
                 }
+            }
+            else if (configuration.ReadHeader == null && self.FieldCount > lastCheckedFieldCount)
+            {
+                // Grow DataTable columns dynamically when FieldCount increases (e.g. single-pass mode)
+                for (var i = lastCheckedFieldCount; i < self.FieldCount; i++)
+                {
+                    if (configuration.FilterColumn != null && !configuration.FilterColumn(self, i))
+                    {
+                        continue;
+                    }
+
+                    var name = configuration.EmptyColumnNamePrefix + i;
+                    var columnName = GetUniqueColumnName(result, name);
+                    var column = new DataColumn(columnName, typeof(object)) { Caption = name };
+                    result.Columns.Add(column);
+                    columnIndices.Add(i);
+                }
+
+                lastCheckedFieldCount = self.FieldCount;
             }
 
             if (configuration.FilterRow != null && !configuration.FilterRow(self))
