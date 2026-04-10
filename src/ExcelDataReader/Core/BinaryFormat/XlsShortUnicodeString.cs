@@ -1,4 +1,5 @@
 using System.Text;
+using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.BinaryFormat;
 
@@ -23,6 +24,13 @@ internal sealed class XlsShortUnicodeString(byte[] bytes, uint offset) : IXlsStr
         if (CharacterCount == 0)
         {
             return string.Empty;
+        }
+
+        int available = _bytes.Length - (int)_offset - 2;
+        int needed = IsMultiByte ? CharacterCount * 2 : CharacterCount;
+        if (available < needed)
+        {
+            throw new ExcelReaderException(Errors.ErrorBiffStringSize);
         }
 
         if (IsMultiByte)

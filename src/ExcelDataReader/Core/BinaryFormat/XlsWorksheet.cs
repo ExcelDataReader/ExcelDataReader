@@ -1,4 +1,5 @@
 using System.Text;
+using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.BinaryFormat;
 
@@ -365,6 +366,11 @@ internal sealed class XlsWorksheet : IWorksheet
                 value = GetLabelString((XlsBiffLabelCell)cell, effectiveStyle);
                 break;
             case BIFFRECORDTYPE.LABELSST:
+                if (Workbook.SST == null)
+                {
+                    throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+                }
+
                 value = Workbook.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex, Encoding);
                 break;
             case BIFFRECORDTYPE.RK:
