@@ -14,18 +14,10 @@ internal sealed partial class ZipWorker : IDisposable
     private const string Format = "xml";
     private const string BinFormat = "bin";
 
-    // Pre-populate the shared NameTable with every namespace URI and element/attribute name
-    // used by the xlsx/xlsb readers. When the XmlReader parses a namespace declaration it
-    // calls NameTable.Add() which returns the pre-existing atom, turning every subsequent
-    // Reader.NamespaceURI == someConstantString comparison into a cheap reference-equality
-    // check instead of a full 65-character string comparison.
-    private static readonly XmlNameTable XmlNameTable = BuildNameTable();
-
     private static readonly XmlReaderSettings XmlSettings = new()
     {
         IgnoreComments = true,
         IgnoreWhitespace = true,
-        NameTable = XmlNameTable,
     };
 
     private readonly Dictionary<string, ZipArchiveEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
@@ -211,60 +203,6 @@ internal sealed partial class ZipWorker : IDisposable
         }
 
         return null;
-    }
-
-    private static NameTable BuildNameTable()
-    {
-        var nt = new NameTable();
-
-        // Namespace URIs
-        nt.Add(XmlNamespaces.NsSpreadsheetMl);
-        nt.Add(XmlNamespaces.StrictNsSpreadsheetMl);
-        nt.Add(XmlNamespaces.NsDocumentRelationship);
-        nt.Add(XmlNamespaces.StrictNsDocumentRelationship);
-
-        // High-frequency element local names (worksheet inner loops)
-        nt.Add("worksheet");
-        nt.Add("sheetData");
-        nt.Add("row");
-        nt.Add("c");
-        nt.Add("v");
-        nt.Add("f");
-        nt.Add("is");
-        nt.Add("t");
-
-        // SST
-        nt.Add("sst");
-        nt.Add("si");
-        nt.Add("r");
-        nt.Add("rPh");
-        nt.Add("phoneticPr");
-
-        // Workbook
-        nt.Add("workbook");
-        nt.Add("sheets");
-        nt.Add("sheet");
-        nt.Add("bookViews");
-        nt.Add("workbookView");
-
-        // Styles
-        nt.Add("styleSheet");
-        nt.Add("cellXfs");
-        nt.Add("xf");
-        nt.Add("numFmts");
-        nt.Add("numFmt");
-
-        // Common structural elements
-        nt.Add("mergeCell");
-        nt.Add("mergeCells");
-        nt.Add("dimension");
-        nt.Add("col");
-        nt.Add("cols");
-        nt.Add("headerFooter");
-        nt.Add("sheetPr");
-        nt.Add("sheetFormatPr");
-
-        return nt;
     }
 
     // BufferedStream wrapping is essential for all targets: BiffReader.TryReadVariableValue reads
