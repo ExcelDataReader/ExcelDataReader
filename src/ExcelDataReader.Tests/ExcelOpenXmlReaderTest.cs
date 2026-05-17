@@ -7,6 +7,47 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
     /// <inheritdoc />
     protected override DateTime GitIssue82TodayDate => new(2013, 4, 19);
 
+    /// <summary>
+    /// Regression test for https://github.com/ExcelDataReader/ExcelDataReader/issues/741.
+    /// The static XmlNameTable in ZipWorker is shared across all XmlReader instances.
+    /// NameTable is not thread-safe: concurrent Add() calls from multiple threads corrupt
+    /// its internal hash table, causing GetAttribute() to return null and subsequently
+    /// uint.Parse(null) to throw ArgumentNullException.
+    /// </summary>
+    [Test]
+    public void Issue741_ConcurrentOpenXml()
+    {
+        const int threadCount = 8;
+        var barrier = new System.Threading.Barrier(threadCount);
+        var exceptions = new System.Collections.Concurrent.ConcurrentBag<Exception>();
+
+        var tasks = Enumerable.Range(0, threadCount).Select(i => System.Threading.Tasks.Task.Run(() =>
+        {
+            try
+            {
+                // Synchronise all threads to hit CreateReader at the same instant,
+                // maximising the chance of triggering the NameTable race condition.
+                barrier.SignalAndWait();
+
+                using var stream = Configuration.GetTestWorkbook("Test10x10.xlsx");
+                using var reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+                while (reader.Read())
+                {
+                    for (int col = 0; col < reader.FieldCount; col++)
+                        reader.GetValue(col);
+                }
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+        })).ToArray();
+
+        System.Threading.Tasks.Task.WaitAll(tasks);
+
+        Assert.That(exceptions, Is.Empty, $"Exception(s) thrown during concurrent reads:\n{string.Join("\n", exceptions.Select(e => e.ToString()))}");
+    }
+
     [Test]
     public void FailTest()
     {
