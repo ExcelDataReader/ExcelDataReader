@@ -577,4 +577,21 @@ public class ExcelCsvReaderTest
         Assert.That(ds.Tables[0].Rows[1][3], Is.EqualTo(" "));
         Assert.That(ds.Tables[0].Rows[1][4], Is.EqualTo("15"));
     }
+
+    [Test]
+    public void Issue614_BackslashEscapedQuote()
+    {
+        // CSV uses \" to escape quotes inside quoted fields (not RFC 4180 standard - requires opt-in via EscapeChar)
+        const string csv = "John,Doe,120 any st.,\"\\\"Anytown\\\", WW\",08123";
+
+        using var reader = ExcelReaderFactory.CreateCsvReader(
+            new MemoryStream(Encoding.UTF8.GetBytes(csv)),
+            new ExcelReaderConfiguration { EscapeChar = '\\' });
+
+        reader.Read();
+        object[] row = new object[reader.FieldCount];
+        reader.GetValues(row);
+
+        Assert.That(row, Is.EqualTo(new object[] { "John", "Doe", "120 any st.", "\"Anytown\", WW", "08123" }));
+    }
 }

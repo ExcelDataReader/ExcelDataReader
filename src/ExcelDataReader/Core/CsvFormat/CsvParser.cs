@@ -7,10 +7,11 @@ namespace ExcelDataReader.Core.CsvFormat;
 /// </summary>
 internal sealed class CsvParser
 {
-    public CsvParser(char separator, Encoding encoding, char? quoteChar = null, bool trimWhiteSpace = true)
+    public CsvParser(char separator, Encoding encoding, char? quoteChar = null, bool trimWhiteSpace = true, char? escapeChar = null)
     {
         Separator = separator;
         QuoteChar = quoteChar;
+        EscapeChar = escapeChar;
 
         Decoder = encoding.GetDecoder();
         Decoder.Fallback = new DecoderExceptionFallback();
@@ -28,6 +29,7 @@ internal sealed class CsvParser
         PreValue,
         Value,
         QuotedValue,
+        QuotedValueBackslash,
         QuotedValueQuote,
         Separator,
         Linebreak,
@@ -37,6 +39,8 @@ internal sealed class CsvParser
     private CsvState State { get; set; }
 
     private char? QuoteChar { get; }
+
+    private char? EscapeChar { get; }
 
     private int TrailingWhitespaceCount { get; set; }
 
@@ -97,6 +101,7 @@ internal sealed class CsvParser
                 CsvState.PreValue => ReadPreValue(c, bytesUsed),
                 CsvState.Value => ReadValue(c, bytesUsed),
                 CsvState.QuotedValue => ReadQuotedValue(c),
+                CsvState.QuotedValueBackslash => ReadQuotedValueBackslash(c),
                 CsvState.QuotedValueQuote => ReadQuotedValueQuote(c),
                 CsvState.Separator => ReadSeparator(),
                 CsvState.Linebreak => ReadLinebreak(c),
@@ -177,11 +182,24 @@ internal sealed class CsvParser
         {
             State = CsvState.QuotedValueQuote;
         }
+        else if (EscapeChar.HasValue && c == EscapeChar.Value)
+        {
+            State = CsvState.QuotedValueBackslash;
+        }
         else
         {
             ValueResult.Append(c);
         }
 
+        return true;
+    }
+
+    private bool ReadQuotedValueBackslash(char c)
+    {
+        // Emit the escaped character and return to quoted value.
+        // Handles \" -> " and \\ -> \ (and any other \x -> x for forward-compatibility).
+        ValueResult.Append(c);
+        State = CsvState.QuotedValue;
         return true;
     }
 

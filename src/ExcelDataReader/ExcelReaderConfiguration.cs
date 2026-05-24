@@ -51,4 +51,11 @@ public class ExcelReaderConfiguration
     /// growing dynamically as rows are read. Default: false (XLS and XLSX/XLSB only, has no effect on CSV).
     /// </summary>
     public bool SinglePassMode { get; set; }
+
+    /// <summary>
+    /// Gets or sets an escape character for CSV quoted fields (Default null - disabled).
+    /// When set, this character inside a quoted field escapes the next character (e.g. set to '\' to support \" as an escaped quote).
+    /// This is not part of RFC 4180; only enable it when reading files that use backslash-style escaping.
+    /// </summary>
+    public char? EscapeChar { get; set; }
 }
