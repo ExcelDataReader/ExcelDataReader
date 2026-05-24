@@ -149,6 +149,13 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
     // rows are read. Default: false
     // (XLS and XLSX/XLSB only, has no effect on CSV)
     SinglePassMode = false,
+
+    // Gets or sets an escape character for CSV quoted fields. When set, this
+    // character inside a quoted field escapes the next character, e.g. set to
+    // '\\' to support \" as an escaped quote. Not part of RFC 4180; only
+    // enable when reading files that use backslash-style escaping.
+    // Default: null - disabled (CSV only)
+    EscapeChar = null,
 });
 ```
 
