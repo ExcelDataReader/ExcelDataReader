@@ -84,7 +84,7 @@ public interface IExcelDataReader : IDataReader
     /// <param name="provider">
     /// An <see cref="IFormatProvider"/> (typically a <see cref="System.Globalization.CultureInfo"/>
     /// or <see cref="System.Globalization.DateTimeFormatInfo"/>) used to resolve locale-dependent
-    /// built-in number format indices (14–17 and 22) to culture-specific date/time format strings.
+    /// built-in number format indices (14–17 and 20–22) to culture-specific date/time format strings.
     /// Pass <see langword="null"/> to use Excel's original locale-independent built-in format strings,
     /// equivalent to calling <see cref="GetNumberFormatString(int)"/>.
     /// </param>

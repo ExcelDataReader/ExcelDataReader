@@ -124,6 +124,12 @@ internal static class BuiltinNumberFormat
             return new NumberFormatString(s, isDateTimeFormat: true, isTimeSpanFormat: false);
         }
 
+        if (numFmtId == 20)
+            return new NumberFormatString(TimePatternToExcel(dtf.ShortTimePattern), isDateTimeFormat: true, isTimeSpanFormat: false);
+
+        if (numFmtId == 21)
+            return new NumberFormatString(TimePatternToExcel(dtf.LongTimePattern), isDateTimeFormat: true, isTimeSpanFormat: false);
+
         if (numFmtId == 22)
         {
             var date = DatePatternToExcel(dtf.ShortDatePattern);
