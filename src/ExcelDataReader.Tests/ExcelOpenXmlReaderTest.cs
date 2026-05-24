@@ -673,13 +673,14 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
     }
 
     [Test]
-    public void Issue461_Format20WithEnUsCultureReturnsTwelveHourTime()
+    public void Issue461_Format20WithEnUsCultureFallsBackToSpecString()
     {
+        // en-US uses 12h AM/PM time, so index 20 (explicitly non-AM/PM) falls back to the spec string
         using var stream = Configuration.GetTestWorkbook("Issue461.xlsx");
         using var reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
 
         Assert.That(reader.Read(), Is.True);
-        Assert.That(reader.GetNumberFormatString(4, new System.Globalization.CultureInfo("en-US")), Is.EqualTo("h:mm AM/PM"));
+        Assert.That(reader.GetNumberFormatString(4, new System.Globalization.CultureInfo("en-US")), Is.EqualTo("h:mm"));
     }
 
     [Test]
@@ -703,13 +704,14 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
     }
 
     [Test]
-    public void Issue461_Format21WithEnUsCultureReturnsTwelveHourTime()
+    public void Issue461_Format21WithEnUsCultureFallsBackToSpecString()
     {
+        // en-US uses 12h AM/PM time, so index 21 (explicitly non-AM/PM) falls back to the spec string
         using var stream = Configuration.GetTestWorkbook("Issue461.xlsx");
         using var reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
 
         Assert.That(reader.Read(), Is.True);
-        Assert.That(reader.GetNumberFormatString(5, new System.Globalization.CultureInfo("en-US")), Is.EqualTo("h:mm:ss AM/PM"));
+        Assert.That(reader.GetNumberFormatString(5, new System.Globalization.CultureInfo("en-US")), Is.EqualTo("h:mm:ss"));
     }
 
     [Test]
