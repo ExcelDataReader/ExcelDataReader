@@ -67,4 +67,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --generate-notes --title "$TAG" ./**/*.nupkg
+        run: |
+          if [[ "$TAG" == *-* ]]; then PRERELEASE="--prerelease"; else PRERELEASE=""; fi
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --generate-notes --title "$TAG" $PRERELEASE ./**/*.nupkg
