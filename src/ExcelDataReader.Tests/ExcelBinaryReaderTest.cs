@@ -357,6 +357,24 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     }
 
     [Test]
+    public void AllowFeffAsByteOrder()
+    {
+        using var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Issue695_InvalidByteOrderFEFF.xls"));
+        int tableCount = 0;
+        do
+        {
+            while (excelReader.Read())
+            {
+            }
+
+            tableCount++;
+        }
+        while (excelReader.NextResult());
+
+        Assert.That(tableCount, Is.GreaterThan(0));
+    }
+
+    [Test]
     public void HandleRowBlocksWithOutOfOrderCells()
     {
         using var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("AllColumnsNotReadInHiddenTable.xls"));

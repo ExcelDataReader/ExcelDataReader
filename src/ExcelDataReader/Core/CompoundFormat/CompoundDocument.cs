@@ -13,7 +13,7 @@ internal sealed class CompoundDocument
 
         if (!Header.IsSignatureValid)
             throw new HeaderException(Errors.ErrorHeaderSignature);
-        if (Header.ByteOrder != 0xFFFE && Header.ByteOrder != 0xFFFF) // Some broken xls files uses 0xFFFF
+        if (Header.ByteOrder != 0xFFFE && Header.ByteOrder != 0xFFFF && Header.ByteOrder != 0xFEFF) // Some broken xls files use 0xFFFF or 0xFEFF
             throw new HeaderException(Errors.ErrorHeaderOrder);
 
         var difSectorChain = ReadDifSectorChain(reader);
