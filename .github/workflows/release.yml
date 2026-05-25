@@ -4,9 +4,13 @@ on:
   push:
     tags: ['v*']
 
+permissions: {}
+
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -19,9 +23,10 @@ jobs:
       - name: Parse version from tag
         id: version
         shell: pwsh
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
-          $tag = '${{ github.ref_name }}'
-          $version = $tag.TrimStart('v')
+          $version = $env:TAG.TrimStart('v')
           $parts = $version -split '-', 2
           $prefix = $parts[0]
           $suffix = if ($parts.Length -gt 1) { $parts[1] } else { '' }
@@ -32,7 +37,10 @@ jobs:
         run: dotnet restore --locked-mode
 
       - name: Build
-        run: dotnet build ExcelDataReader.sln --no-restore -c Release /p:TreatWarningsAsErrors=true /p:VersionPrefix=${{ steps.version.outputs.prefix }} /p:VersionSuffix=${{ steps.version.outputs.suffix }}
+        env:
+          VERSION_PREFIX: ${{ steps.version.outputs.prefix }}
+          VERSION_SUFFIX: ${{ steps.version.outputs.suffix }}
+        run: dotnet build ExcelDataReader.sln --no-restore -c Release /p:TreatWarningsAsErrors=true /p:VersionPrefix=$env:VERSION_PREFIX /p:VersionSuffix=$env:VERSION_SUFFIX
 
       - name: Test
         run: dotnet test src/ExcelDataReader.Tests/ExcelDataReader.Tests.csproj --no-build -c Release

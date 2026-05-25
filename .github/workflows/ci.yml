@@ -6,9 +6,13 @@ on:
     tags-ignore: ['**']
   pull_request:
 
+permissions: {}
+
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
