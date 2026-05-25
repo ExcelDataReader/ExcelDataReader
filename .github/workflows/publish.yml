@@ -1,0 +1,30 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: nuget-release
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Download packages from release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.nupkg' --dir packages
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Publish to NuGet.org
+        run: dotnet nuget push packages/*.nupkg --source https://api.nuget.org/v3/index.json
