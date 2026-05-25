@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Parse version from tag
+        id: version
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $version = $tag.TrimStart('v')
+          $parts = $version -split '-', 2
+          $prefix = $parts[0]
+          $suffix = if ($parts.Length -gt 1) { $parts[1] } else { '' }
+          "prefix=$prefix" >> $env:GITHUB_OUTPUT
+          "suffix=$suffix" >> $env:GITHUB_OUTPUT
+
+      - name: Restore
+        run: dotnet restore --locked-mode
+
+      - name: Build
+        run: dotnet build ExcelDataReader.sln --no-restore -c Release /p:TreatWarningsAsErrors=true /p:VersionPrefix=${{ steps.version.outputs.prefix }} /p:VersionSuffix=${{ steps.version.outputs.suffix }}
+
+      - name: Test
+        run: dotnet test src/ExcelDataReader.Tests/ExcelDataReader.Tests.csproj --no-build -c Release
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: '**/*.nupkg'
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: nuget-release
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          name: packages
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Publish to NuGet.org
+        run: dotnet nuget push **/*.nupkg --source https://api.nuget.org/v3/index.json

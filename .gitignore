@@ -4,6 +4,7 @@
 !.gitignore
 !.gitattributes
 !.globalconfig
+!.github
 
 # User-specific files
 *.suo
