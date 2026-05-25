@@ -10,10 +10,7 @@ If you are reporting an issue it is really useful if you can supply an example E
 
 ## Continuous integration
 
-| Branch  | Build status |
-|---------|--------------|
-| develop | [![Build status](https://ci.appveyor.com/api/projects/status/ii6hbs9otpbg1nqh/branch/develop?svg=true)](https://ci.appveyor.com/project/andersnm/exceldatareader/branch/develop) |
-| master  | [![Build status](https://ci.appveyor.com/api/projects/status/ii6hbs9otpbg1nqh/branch/master?svg=true)](https://ci.appveyor.com/project/andersnm/exceldatareader/branch/master) |
+[![CI](https://github.com/ExcelDataReader/ExcelDataReader/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/ExcelDataReader/ExcelDataReader/actions/workflows/ci.yml)
 
 ## Supported file formats and versions
 
