@@ -422,20 +422,37 @@ static void RenderSpectreTable(DataTable dt)
 
 static void RenderRawTable(string[]? headers, List<string[]> rows)
 {
+    // Determine the actual maximum column count across headers and all rows.
+    // In single-pass mode rows may have fewer fields than the header (trailing
+    // empty cells are not stored), and later rows may have more columns than
+    // earlier ones. Pad everything to the widest row.
+    int colCount = headers?.Length ?? 0;
+    foreach (var row in rows)
+        colCount = Math.Max(colCount, row.Length);
+
     var table = new Table();
     if (headers is not null)
     {
         foreach (var h in headers)
             table.AddColumn(Markup.Escape(h));
+
+        for (int i = headers.Length; i < colCount; i++)
+            table.AddColumn($"Col{i + 1}");
     }
-    else if (rows.Count > 0)
+    else
     {
-        for (int i = 0; i < rows[0].Length; i++)
+        for (int i = 0; i < colCount; i++)
             table.AddColumn($"Col{i + 1}");
     }
 
     foreach (var row in rows)
-        table.AddRow(row.Select(v => Markup.Escape(v)).ToArray());
+    {
+        var cells = new string[colCount];
+        for (int i = 0; i < colCount; i++)
+            cells[i] = i < row.Length ? Markup.Escape(row[i]) : string.Empty;
+
+        table.AddRow(cells);
+    }
 
     AnsiConsole.Write(table);
 }
