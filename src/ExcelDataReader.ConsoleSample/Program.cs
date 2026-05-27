@@ -460,7 +460,7 @@ static void RenderRawTable(string[]? headers, List<string[]> rows)
 static void WriteSeparated(DataTable dt, char sep)
 {
     static string Escape(string s, char sep) =>
-        s.Contains(sep) || s.Contains('"') || s.Contains('\n')
+        s.Contains(sep) || s.Contains('"') || s.Contains('\n') || s.Contains('\r')
             ? $"\"{s.Replace("\"", "\"\"")}\""
             : s;
 
@@ -471,7 +471,7 @@ static void WriteSeparated(DataTable dt, char sep)
 static void WriteSeparatedRow(string[] cells, char sep)
 {
     static string Escape(string s, char sep) =>
-        s.Contains(sep) || s.Contains('"') || s.Contains('\n')
+        s.Contains(sep) || s.Contains('"') || s.Contains('\n') || s.Contains('\r')
             ? $"\"{s.Replace("\"", "\"\"")}\""
             : s;
 
