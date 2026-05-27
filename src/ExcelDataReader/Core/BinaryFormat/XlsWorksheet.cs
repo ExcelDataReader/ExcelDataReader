@@ -650,8 +650,7 @@ internal sealed class XlsWorksheet : IWorksheet
             Workbook.AddNumberFormat(biffFormat.Key, biffFormat.Value.GetValue(Encoding));
         }
 
-        if (mergeCells.Count > 0)
-            MergeCells = mergeCells.ToArray();
+        MergeCells = mergeCells.ToArray();
 
         if (!SinglePassMode)
         {

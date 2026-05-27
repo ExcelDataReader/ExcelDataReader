@@ -49,7 +49,7 @@ internal sealed class CsvWorksheet : IWorksheet
 
     public HeaderFooter HeaderFooter => null;
 
-    public CellRange[] MergeCells => null;
+    public CellRange[] MergeCells => [];
 
     public int FieldCount { get; }
 

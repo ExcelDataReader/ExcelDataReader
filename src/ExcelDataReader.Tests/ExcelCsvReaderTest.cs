@@ -1,3 +1,4 @@
+using System.Data;
 using System.Text;
 
 namespace ExcelDataReader.Tests;
@@ -593,5 +594,21 @@ public class ExcelCsvReaderTest
         reader.GetValues(row);
 
         Assert.That(row, Is.EqualTo(new object[] { "John", "Doe", "120 any st.", "\"Anytown\", WW", "08123" }));
+    }
+
+    [Test]
+    public void FillMergedCellsValueDoesNotCrashOnCsv()
+    {
+        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "comma_in_quotes.csv")));
+        DataSet result = excelReader.AsDataSet(new ExcelDataSetConfiguration
+        {
+            ConfigureDataTable = _ => new ExcelDataTableConfiguration
+            {
+                FillMergedCellsValue = true
+            }
+        });
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Tables[0].Rows.Count, Is.EqualTo(2));
     }
 }

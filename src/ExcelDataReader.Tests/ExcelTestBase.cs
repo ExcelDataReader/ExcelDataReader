@@ -1097,6 +1097,24 @@ public abstract class ExcelTestBase
         Assert.That(result.Tables[0].Rows[5][1], Is.EqualTo("Merge Cell 4"));
         Assert.That(result.Tables[0].Rows[5][2], Is.EqualTo("Merge Cell 4"));
     }
+
+    [Test]
+    public void AsDataSetFillMergedCellsValueWithNoMergeCells()
+    {
+        using IExcelDataReader excelReader = OpenReader("10x10");
+        DataSet result = excelReader.AsDataSet(new ExcelDataSetConfiguration
+        {
+            ConfigureDataTable = _ => new ExcelDataTableConfiguration
+            {
+                UseHeaderRow = true,
+                FillMergedCellsValue = true
+            }
+        });
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Tables[0].Rows.Count, Is.EqualTo(9));
+        Assert.That(result.Tables[0].Columns.Count, Is.EqualTo(10));
+    }
     
     protected IExcelDataReader OpenReader(string name)
     {

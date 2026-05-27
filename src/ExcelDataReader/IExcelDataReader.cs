@@ -38,7 +38,7 @@ public interface IExcelDataReader : IDataReader
     HeaderFooter HeaderFooter { get; }
 
     /// <summary>
-    /// Gets the list of merged cell ranges.
+    /// Gets the list of merged cell ranges, or an empty array if there are none.
     /// </summary>
     CellRange[] MergeCells { get; }
 
