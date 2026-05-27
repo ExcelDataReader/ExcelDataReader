@@ -6,6 +6,8 @@
     <UseArtifactsOutput>true</UseArtifactsOutput>
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- Lock file disabled for the console sample: PublishAot pulls in SDK-version-specific ILCompiler packages -->
+    <RestorePackagesWithLockFile Condition="'$(MSBuildProjectName)' == 'ExcelDataReader.ConsoleSample'">false</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(MSBuildProjectName)' == 'ExcelDataReader' OR '$(MSBuildProjectName)' == 'ExcelDataReader.DataSet'">
