@@ -54,7 +54,10 @@ public partial class Form1 : Form
             sw.Start();
 
             using IExcelDataReader reader = string.Equals(Path.GetExtension(textBox1.Text), ".csv", StringComparison.OrdinalIgnoreCase) ?
-                ExcelReaderFactory.CreateCsvReader(stream) : ExcelReaderFactory.CreateReader(stream);
+                ExcelReaderFactory.CreateCsvReader(stream) : ExcelReaderFactory.CreateReader(stream, new()
+                {
+                    SinglePassMode = singlePassModeCheckBox.Checked,
+                });
 
             var openTiming = sw.ElapsedMilliseconds;
             // reader.IsFirstRowAsColumnNames = firstRowNamesCheckBox.Checked;

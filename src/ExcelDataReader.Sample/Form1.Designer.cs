@@ -46,6 +46,7 @@ public partial class Form1
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.label1 = new System.Windows.Forms.Label();
             this.fillMergeCellCheckBox = new System.Windows.Forms.CheckBox();
+            this.singlePassModeCheckBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataSet1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
@@ -180,11 +181,23 @@ public partial class Form1
             this.fillMergeCellCheckBox.Text = "fill merged cells by left-top cell";
             this.fillMergeCellCheckBox.UseVisualStyleBackColor = true;
             // 
+            // singlePassModeCheckBox
+            // 
+            this.singlePassModeCheckBox.AutoSize = true;
+            this.singlePassModeCheckBox.Location = new System.Drawing.Point(469, 28);
+            this.singlePassModeCheckBox.Margin = new System.Windows.Forms.Padding(2);
+            this.singlePassModeCheckBox.Name = "singlePassModeCheckBox";
+            this.singlePassModeCheckBox.Size = new System.Drawing.Size(113, 16);
+            this.singlePassModeCheckBox.TabIndex = 10;
+            this.singlePassModeCheckBox.Text = "single pass mode";
+            this.singlePassModeCheckBox.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(887, 530);
+            this.Controls.Add(this.singlePassModeCheckBox);
             this.Controls.Add(this.fillMergeCellCheckBox);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.statusStrip1);
@@ -223,4 +236,5 @@ public partial class Form1
     private Label label1;
     private DataSet ds;
     private CheckBox fillMergeCellCheckBox;
+    private CheckBox singlePassModeCheckBox;
 }
