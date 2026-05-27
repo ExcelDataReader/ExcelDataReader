@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace ExcelDataReader;
@@ -257,6 +258,11 @@ public static class ExcelDataReaderExtensions
         return true;
     }
 
+    // DataColumn.DataType setter requires [DynamicallyAccessedMembers] but the type comes from GetType() on
+    // values written by ExcelDataReader (string, double, DateTime, etc.) — always available at runtime.
+#if NET5_0_OR_GREATER
+    [System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Types returned by GetType() on ExcelDataReader output values are always fully available at runtime.")]
+#endif
     private static void FixDataTypes(DataSet dataset)
     {
         var tables = new List<DataTable>(dataset.Tables.Count);
