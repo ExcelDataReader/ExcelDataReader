@@ -19,11 +19,12 @@ static Command BuildExcelCommand()
     var sheetNameOpt = new Option<string[]>("--sheet-name", ["-n"]) { Description = "Filter by sheet name (repeatable; names may contain commas)", AllowMultipleArgumentsPerToken = false };
     var sheetIndexOpt = new Option<string[]>("--sheet-index", ["-i"]) { Description = "Filter by 1-based sheet index, comma-separated or repeatable (e.g. 2,5,7)", AllowMultipleArgumentsPerToken = false };
     var noHeaderOpt = new Option<bool>("--no-header", ["-H"]) { Description = "Don't treat first row as column names" };
-    var fillMergedOpt = new Option<bool>("--fill-merged") { Description = "Fill merged cell values across the merged range" };
+    var fillMergedOpt = new Option<bool>("--fill-merged") { Description = "Fill merged cell values across the merged range (implies --dataset)" };
     var singlePassOpt = new Option<bool>("--single-pass") { Description = "Enable single pass mode (skips pre-scan for row/column counts)" };
     var outputOpt = new Option<OutputFormat>("--output", ["-o"]) { Description = "Data output format: table, csv, tsv (default: no data output, stats only)", DefaultValueFactory = _ => OutputFormat.None };
     var passwordOpt = new Option<string?>("--password", ["-p"]) { Description = "Password for protected workbooks" };
     var encodingOpt = new Option<string>("--encoding", ["-e"]) { Description = "Fallback encoding for XLS BIFF2-5 (default: windows-1252)", DefaultValueFactory = _ => "windows-1252" };
+    var dataSetOpt = new Option<bool>("--dataset") { Description = "Use AsDataSet extension (loads all data into a DataSet in memory)" };
 
     var cmd = new Command("excel", "Read XLS, XLSX, or XLSB files");
     cmd.Arguments.Add(fileArg);
@@ -35,6 +36,7 @@ static Command BuildExcelCommand()
     cmd.Options.Add(outputOpt);
     cmd.Options.Add(passwordOpt);
     cmd.Options.Add(encodingOpt);
+    cmd.Options.Add(dataSetOpt);
 
     cmd.SetAction(parseResult =>
     {
@@ -42,11 +44,12 @@ static Command BuildExcelCommand()
         var sheetNames = parseResult.GetValue(sheetNameOpt) ?? [];
         var sheetIndexTokens = parseResult.GetValue(sheetIndexOpt) ?? [];
         var noHeader = parseResult.GetValue(noHeaderOpt);
-        var noFillMerged = !parseResult.GetValue(fillMergedOpt);
+        var fillMerged = parseResult.GetValue(fillMergedOpt);
         var singlePass = parseResult.GetValue(singlePassOpt);
         var output = parseResult.GetValue(outputOpt);
         var password = parseResult.GetValue(passwordOpt);
         var encodingName = parseResult.GetValue(encodingOpt)!;
+        var useDataSet = parseResult.GetValue(dataSetOpt) || fillMerged;
 
         // Expand comma-separated index tokens into a set of 1-based indices.
         var nameSet = new HashSet<string>(sheetNames, StringComparer.Ordinal);
@@ -80,31 +83,43 @@ static Command BuildExcelCommand()
 
         var openMs = sw.ElapsedMilliseconds;
 
-        var ds = reader.AsDataSet(new ExcelDataSetConfiguration
+        if (useDataSet)
         {
-            UseColumnDataType = false,
-            FilterSheet = (tableReader, sheetIndex) =>
+            var ds = reader.AsDataSet(new ExcelDataSetConfiguration
             {
-                if (!hasFilter)
-                    return true;
+                UseColumnDataType = false,
+                FilterSheet = (tableReader, sheetIndex) =>
+                {
+                    if (!hasFilter)
+                        return true;
 
-                // sheetIndex is 0-based; expose as 1-based to the user.
-                return nameSet.Contains(tableReader.Name) || indexSet.Contains(sheetIndex + 1);
-            },
-            ConfigureDataTable = _ => new ExcelDataTableConfiguration
-            {
-                UseHeaderRow = !noHeader,
-                FillMergedCellsValue = !noFillMerged,
-            }
-        });
+                    // sheetIndex is 0-based; expose as 1-based to the user.
+                    return nameSet.Contains(tableReader.Name) || indexSet.Contains(sheetIndex + 1);
+                },
+                ConfigureDataTable = _ => new ExcelDataTableConfiguration
+                {
+                    UseHeaderRow = !noHeader,
+                    FillMergedCellsValue = fillMerged,
+                }
+            });
 
-        var readMs = sw.ElapsedMilliseconds - openMs;
-        var memAfter = Process.GetCurrentProcess().WorkingSet64;
+            var readMs = sw.ElapsedMilliseconds - openMs;
+            var memAfter = Process.GetCurrentProcess().WorkingSet64;
 
-        PrintStats(openMs, readMs, ds, memBefore, memAfter);
+            PrintStats(openMs, readMs, ds, memBefore, memAfter);
 
-        if (output != OutputFormat.None)
-            RenderSheets(ds, output);
+            if (output != OutputFormat.None)
+                RenderSheets(ds, output);
+        }
+        else
+        {
+            var sheets = ReadRaw(reader, noHeader, hasFilter, nameSet, indexSet, output);
+
+            var readMs = sw.ElapsedMilliseconds - openMs;
+            var memAfter = Process.GetCurrentProcess().WorkingSet64;
+
+            PrintRawStats(openMs, readMs, sheets, memBefore, memAfter);
+        }
     });
 
     return cmd;
@@ -121,6 +136,7 @@ static Command BuildCsvCommand()
     var separatorsOpt = new Option<string?>("--separators") { Description = "Separator candidates, e.g. \",;\" -- use \\t for TAB (default: , ; TAB | #)" };
     var quoteCharOpt = new Option<string?>("--quote-char") { Description = "Quote character (default: \")" };
     var escapeCharOpt = new Option<string?>("--escape-char") { Description = "Escape character for quoted fields (default: disabled)" };
+    var dataSetOpt = new Option<bool>("--dataset") { Description = "Use AsDataSet extension (loads all data into a DataSet in memory)" };
 
     var cmd = new Command("csv", "Read CSV files");
     cmd.Arguments.Add(fileArg);
@@ -131,6 +147,7 @@ static Command BuildCsvCommand()
     cmd.Options.Add(separatorsOpt);
     cmd.Options.Add(quoteCharOpt);
     cmd.Options.Add(escapeCharOpt);
+    cmd.Options.Add(dataSetOpt);
 
     cmd.SetAction(parseResult =>
     {
@@ -142,6 +159,7 @@ static Command BuildCsvCommand()
         var separatorsStr = parseResult.GetValue(separatorsOpt);
         var quoteCharStr = parseResult.GetValue(quoteCharOpt);
         var escapeCharStr = parseResult.GetValue(escapeCharOpt);
+        var useDataSet = parseResult.GetValue(dataSetOpt);
 
         var config = new ExcelReaderConfiguration
         {
@@ -161,25 +179,123 @@ static Command BuildCsvCommand()
 
         var openMs = sw.ElapsedMilliseconds;
 
-        var ds = reader.AsDataSet(new ExcelDataSetConfiguration
+        if (useDataSet)
         {
-            UseColumnDataType = false,
-            ConfigureDataTable = _ => new ExcelDataTableConfiguration
+            var ds = reader.AsDataSet(new ExcelDataSetConfiguration
             {
-                UseHeaderRow = !noHeader,
-            }
-        });
+                UseColumnDataType = false,
+                ConfigureDataTable = _ => new ExcelDataTableConfiguration
+                {
+                    UseHeaderRow = !noHeader,
+                }
+            });
 
-        var readMs = sw.ElapsedMilliseconds - openMs;
-        var memAfter = Process.GetCurrentProcess().WorkingSet64;
+            var readMs = sw.ElapsedMilliseconds - openMs;
+            var memAfter = Process.GetCurrentProcess().WorkingSet64;
 
-        PrintStats(openMs, readMs, ds, memBefore, memAfter);
+            PrintStats(openMs, readMs, ds, memBefore, memAfter);
 
-        if (output != OutputFormat.None)
-            RenderSheets(ds, output);
+            if (output != OutputFormat.None)
+                RenderSheets(ds, output);
+        }
+        else
+        {
+            var sheets = ReadRaw(reader, noHeader, hasFilter: false, nameSet: [], indexSet: [], output);
+
+            var readMs = sw.ElapsedMilliseconds - openMs;
+            var memAfter = Process.GetCurrentProcess().WorkingSet64;
+
+            PrintRawStats(openMs, readMs, sheets, memBefore, memAfter);
+        }
     });
 
     return cmd;
+}
+
+// ---- raw reader loop --------------------------------------------------------
+static List<(string Name, long Rows, int Cols)> ReadRaw(
+    IExcelDataReader reader,
+    bool noHeader,
+    bool hasFilter,
+    HashSet<string> nameSet,
+    HashSet<int> indexSet,
+    OutputFormat output)
+{
+    var sheets = new List<(string Name, long Rows, int Cols)>();
+    bool firstOutput = true;
+    int sheetNumber = 0;
+    const int tableRowCap = 100;
+
+    do
+    {
+        sheetNumber++;
+        if (hasFilter && !nameSet.Contains(reader.Name) && !indexSet.Contains(sheetNumber))
+            continue;
+
+        string sheetName = reader.Name;
+        long sheetRows = 0;
+        int sheetCols = 0;
+        string[]? headers = null;
+        List<string[]>? tableBuffer = output == OutputFormat.Table ? [] : null;
+
+        // Read header row if applicable.
+        if (!noHeader && reader.Read())
+        {
+            headers = new string[reader.FieldCount];
+            for (int i = 0; i < reader.FieldCount; i++)
+                headers[i] = reader.GetValue(i)?.ToString() ?? string.Empty;
+
+            sheetCols = Math.Max(sheetCols, reader.FieldCount);
+        }
+
+        // Emit header to separated output immediately.
+        if (output is OutputFormat.Csv or OutputFormat.Tsv)
+        {
+            char sep = output == OutputFormat.Csv ? ',' : '\t';
+            if (!firstOutput)
+                Console.WriteLine();
+
+            if (sheets.Count > 0)
+                Console.WriteLine($"# Sheet: {sheetName}");
+
+            if (headers is not null)
+                WriteSeparatedRow(headers, sep);
+        }
+
+        // Read data rows.
+        while (reader.Read())
+        {
+            sheetRows++;
+            sheetCols = Math.Max(sheetCols, reader.FieldCount);
+
+            var cells = new string[reader.FieldCount];
+            for (int i = 0; i < reader.FieldCount; i++)
+                cells[i] = reader.GetValue(i)?.ToString() ?? string.Empty;
+
+            if (output is OutputFormat.Csv or OutputFormat.Tsv)
+                WriteSeparatedRow(cells, output == OutputFormat.Csv ? ',' : '\t');
+            else if (output == OutputFormat.Table && sheetRows <= tableRowCap)
+                tableBuffer!.Add(cells);
+        }
+
+        // Render buffered table output.
+        if (output == OutputFormat.Table)
+        {
+            if (sheets.Count > 0)
+                AnsiConsole.MarkupLine($"[bold]{Markup.Escape(sheetName)}[/]");
+
+            if (sheetRows > tableRowCap)
+                Console.Error.WriteLine($"(showing first {tableRowCap:N0} of {sheetRows:N0} rows — use --output csv for full output)");
+
+            RenderRawTable(headers, tableBuffer!);
+        }
+
+        sheets.Add((sheetName, sheetRows, sheetCols));
+        firstOutput = false;
+    }
+    while (reader.NextResult());
+
+    return sheets;
 }
 
 // ---- helpers ----------------------------------------------------------------
@@ -195,8 +311,8 @@ static void PrintStats(long openMs, long readMs, DataSet ds, long memBefore, lon
             maxCols = dt.Columns.Count;
     }
 
-    long totalCells = totalRows * maxCols;
-    double cellsPerSec = readMs > 0 ? totalCells * 1000.0 / readMs : double.PositiveInfinity;
+    long totalMs = openMs + readMs;
+    string rateStr = BuildRateStr(totalRows * maxCols, totalMs);
     long memDeltaMb = (memAfter - memBefore) / (1024 * 1024);
 
     Console.Error.WriteLine($"Open:   {openMs,6:N0} ms");
@@ -212,8 +328,47 @@ static void PrintStats(long openMs, long readMs, DataSet ds, long memBefore, lon
         Console.Error.WriteLine(")");
     }
 
-    Console.Error.WriteLine($"Total:  {openMs + readMs,6:N0} ms  (~{cellsPerSec / 1_000_000:F1}M cells/sec)");
+    Console.Error.WriteLine($"Total:  {totalMs,6:N0} ms{rateStr}");
     Console.Error.WriteLine($"Memory: {(memDeltaMb >= 0 ? "+" : string.Empty)}{memDeltaMb} MB");
+}
+
+static void PrintRawStats(long openMs, long readMs, List<(string Name, long Rows, int Cols)> sheets, long memBefore, long memAfter)
+{
+    long totalRows = sheets.Sum(s => s.Rows);
+    int maxCols = sheets.Count > 0 ? sheets.Max(s => s.Cols) : 0;
+
+    long totalMs = openMs + readMs;
+    string rateStr = BuildRateStr(totalRows * maxCols, totalMs);
+    long memDeltaMb = (memAfter - memBefore) / (1024 * 1024);
+
+    Console.Error.WriteLine($"Open:   {openMs,6:N0} ms");
+    Console.Error.Write($"Read:   {readMs,6:N0} ms  ({totalRows:N0} rows x {maxCols} cols");
+    if (sheets.Count > 1)
+    {
+        Console.Error.WriteLine($" across {sheets.Count} sheets)");
+        foreach (var (name, rows, cols) in sheets)
+            Console.Error.WriteLine($"  {name}: {rows:N0} rows x {cols} cols");
+    }
+    else
+    {
+        Console.Error.WriteLine(")");
+    }
+
+    Console.Error.WriteLine($"Total:  {totalMs,6:N0} ms{rateStr}");
+    Console.Error.WriteLine($"Memory: {(memDeltaMb >= 0 ? "+" : string.Empty)}{memDeltaMb} MB");
+}
+
+static string BuildRateStr(long totalCells, long totalMs)
+{
+    if (totalMs <= 0)
+        return string.Empty;
+
+    double cellsPerSec = totalCells * 1000.0 / totalMs;
+    return cellsPerSec >= 1_000_000
+        ? $"  (~{cellsPerSec / 1_000_000:F1}M cells/sec)"
+        : cellsPerSec >= 1_000
+        ? $"  (~{cellsPerSec / 1_000:F1}K cells/sec)"
+        : $"  (~{cellsPerSec:F0} cells/sec)";
 }
 
 static void RenderSheets(DataSet ds, OutputFormat output)
@@ -244,12 +399,43 @@ static void RenderSheets(DataSet ds, OutputFormat output)
 
 static void RenderSpectreTable(DataTable dt)
 {
+    const int tableRowCap = 100;
     var table = new Table();
     foreach (DataColumn col in dt.Columns)
         table.AddColumn(Markup.Escape(col.ColumnName));
 
+    int rendered = 0;
     foreach (DataRow row in dt.Rows)
+    {
+        if (rendered >= tableRowCap)
+            break;
+
         table.AddRow(row.ItemArray.Select(v => Markup.Escape(v?.ToString() ?? string.Empty)).ToArray());
+        rendered++;
+    }
+
+    if (dt.Rows.Count > tableRowCap)
+        Console.Error.WriteLine($"(showing first {tableRowCap:N0} of {dt.Rows.Count:N0} rows — use --output csv for full output)");
+
+    AnsiConsole.Write(table);
+}
+
+static void RenderRawTable(string[]? headers, List<string[]> rows)
+{
+    var table = new Table();
+    if (headers is not null)
+    {
+        foreach (var h in headers)
+            table.AddColumn(Markup.Escape(h));
+    }
+    else if (rows.Count > 0)
+    {
+        for (int i = 0; i < rows[0].Length; i++)
+            table.AddColumn($"Col{i + 1}");
+    }
+
+    foreach (var row in rows)
+        table.AddRow(row.Select(v => Markup.Escape(v)).ToArray());
 
     AnsiConsole.Write(table);
 }
@@ -263,6 +449,16 @@ static void WriteSeparated(DataTable dt, char sep)
 
     foreach (DataRow row in dt.Rows)
         Console.WriteLine(string.Join(sep, row.ItemArray.Select(v => Escape(v?.ToString() ?? string.Empty, sep))));
+}
+
+static void WriteSeparatedRow(string[] cells, char sep)
+{
+    static string Escape(string s, char sep) =>
+        s.Contains(sep) || s.Contains('"') || s.Contains('\n')
+            ? $"\"{s.Replace("\"", "\"\"")}\""
+            : s;
+
+    Console.WriteLine(string.Join(sep, cells.Select(v => Escape(v, sep))));
 }
 
 #pragma warning disable SA1649 // File name should match first type name (top-level statements use implicit Program class)
