@@ -19,7 +19,7 @@ static Command BuildExcelCommand()
     var sheetNameOpt = new Option<string[]>("--sheet-name", ["-n"]) { Description = "Filter by sheet name (repeatable; names may contain commas)", AllowMultipleArgumentsPerToken = false };
     var sheetIndexOpt = new Option<string[]>("--sheet-index", ["-i"]) { Description = "Filter by 1-based sheet index, comma-separated or repeatable (e.g. 2,5,7)", AllowMultipleArgumentsPerToken = false };
     var noHeaderOpt = new Option<bool>("--no-header", ["-H"]) { Description = "Don't treat first row as column names" };
-    var noFillMergedOpt = new Option<bool>("--no-fill-merged") { Description = "Don't fill merged cell values" };
+    var fillMergedOpt = new Option<bool>("--fill-merged") { Description = "Fill merged cell values across the merged range" };
     var singlePassOpt = new Option<bool>("--single-pass") { Description = "Enable single pass mode (skips pre-scan for row/column counts)" };
     var outputOpt = new Option<OutputFormat>("--output", ["-o"]) { Description = "Data output format: table, csv, tsv (default: no data output, stats only)", DefaultValueFactory = _ => OutputFormat.None };
     var passwordOpt = new Option<string?>("--password", ["-p"]) { Description = "Password for protected workbooks" };
@@ -30,7 +30,7 @@ static Command BuildExcelCommand()
     cmd.Options.Add(sheetNameOpt);
     cmd.Options.Add(sheetIndexOpt);
     cmd.Options.Add(noHeaderOpt);
-    cmd.Options.Add(noFillMergedOpt);
+    cmd.Options.Add(fillMergedOpt);
     cmd.Options.Add(singlePassOpt);
     cmd.Options.Add(outputOpt);
     cmd.Options.Add(passwordOpt);
@@ -42,7 +42,7 @@ static Command BuildExcelCommand()
         var sheetNames = parseResult.GetValue(sheetNameOpt) ?? [];
         var sheetIndexTokens = parseResult.GetValue(sheetIndexOpt) ?? [];
         var noHeader = parseResult.GetValue(noHeaderOpt);
-        var noFillMerged = parseResult.GetValue(noFillMergedOpt);
+        var noFillMerged = !parseResult.GetValue(fillMergedOpt);
         var singlePass = parseResult.GetValue(singlePassOpt);
         var output = parseResult.GetValue(outputOpt);
         var password = parseResult.GetValue(passwordOpt);
