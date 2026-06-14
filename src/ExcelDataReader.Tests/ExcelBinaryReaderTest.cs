@@ -464,6 +464,54 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         Assert.That(ds.Tables[0].Rows[0].ItemArray, Is.EqualTo(new[] { "A1", "B1" }));
     }
 
+    [Test]
+    public void Issue753_BooleanOnlyXls_FieldCountIsDetected()
+    {
+        using var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("issue753.xls"));
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.FieldCount, Is.EqualTo(4));
+
+        var boolCount = 0;
+        do
+        {
+            for (var col = 0; col < reader.FieldCount; col++)
+            {
+                if (reader.GetValue(col) is bool)
+                {
+                    boolCount++;
+                }
+            }
+        }
+        while (reader.Read());
+
+        Assert.That(boolCount, Is.GreaterThan(0));
+    }
+
+    [Test]
+    public void Issue753_BooleanOnlyXls_SinglePassMode_FieldCountAndValuesAreDetected()
+    {
+        using var reader = ExcelReaderFactory.CreateBinaryReader(
+            Configuration.GetTestWorkbook("issue753.xls"),
+            new ExcelReaderConfiguration { SinglePassMode = true });
+
+        Assert.That(reader.FieldCount, Is.Zero);
+        var boolCount = 0;
+        while (reader.Read())
+        {
+            for (var col = 0; col < reader.FieldCount; col++)
+            {
+                if (reader.GetValue(col) is bool)
+                {
+                    boolCount++;
+                }
+            }
+        }
+
+        Assert.That(reader.FieldCount, Is.EqualTo(4));
+        Assert.That(boolCount, Is.GreaterThan(0));
+    }
+
     [TestCase]
     public void ExcelLibraryNonContinuousMiniStream()
     {

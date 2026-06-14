@@ -215,6 +215,7 @@ internal sealed class XlsBiffStream : IDisposable
 
             case BIFFRECORDTYPE.BOOLERR:
             case BIFFRECORDTYPE.BOOLERR_OLD:
+                return new XlsBiffBoolErrCell(bytes);
             case BIFFRECORDTYPE.BLANK:
             case BIFFRECORDTYPE.BLANK_OLD:
                 return new XlsBiffBlankCell(bytes);
