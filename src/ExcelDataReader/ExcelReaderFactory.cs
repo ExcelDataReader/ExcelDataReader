@@ -25,13 +25,7 @@ public static class ExcelReaderFactory
     public static IExcelDataReader CreateReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
-
-        if (configuration.LeaveOpen)
-        {
-            fileStream = new LeaveOpenStream(fileStream);
-        }
-
-        fileStream = GetSeekableStream(fileStream);
+        fileStream = PrepareInputStream(fileStream, configuration);
 
         var probe = new byte[8];
         fileStream.Seek(0, SeekOrigin.Begin);
@@ -78,13 +72,7 @@ public static class ExcelReaderFactory
     public static IExcelDataReader CreateBinaryReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
-
-        if (configuration.LeaveOpen)
-        {
-            fileStream = new LeaveOpenStream(fileStream);
-        }
-
-        fileStream = GetSeekableStream(fileStream);
+        fileStream = PrepareInputStream(fileStream, configuration);
 
         var probe = new byte[8];
         fileStream.Seek(0, SeekOrigin.Begin);
@@ -122,13 +110,7 @@ public static class ExcelReaderFactory
     public static IExcelDataReader CreateOpenXmlReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
-
-        if (configuration.LeaveOpen)
-        {
-            fileStream = new LeaveOpenStream(fileStream);
-        }
-
-        fileStream = GetSeekableStream(fileStream);
+        fileStream = PrepareInputStream(fileStream, configuration);
 
         var probe = new byte[8];
         fileStream.Seek(0, SeekOrigin.Begin);
@@ -165,13 +147,7 @@ public static class ExcelReaderFactory
     public static IExcelDataReader CreateCsvReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
-
-        if (configuration.LeaveOpen)
-        {
-            fileStream = new LeaveOpenStream(fileStream);
-        }
-
-        fileStream = GetSeekableStream(fileStream);
+        fileStream = PrepareInputStream(fileStream, configuration);
 
         return new ExcelCsvReader(fileStream, configuration.FallbackEncoding, configuration.AutodetectSeparators, configuration.AnalyzeInitialCsvRows, configuration.QuoteChar, configuration.TrimWhiteSpace, configuration.EscapeChar);
     }
@@ -238,5 +214,15 @@ public static class ExcelReaderFactory
             seekableStream.Seek(0, SeekOrigin.Begin);
             return seekableStream;
         }
+    }
+
+    private static Stream PrepareInputStream(Stream fileStream, ExcelReaderConfiguration configuration)
+    {
+        if (configuration.LeaveOpen)
+        {
+            fileStream = new LeaveOpenStream(fileStream);
+        }
+
+        return GetSeekableStream(fileStream);
     }
 }
