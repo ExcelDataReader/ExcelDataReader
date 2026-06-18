@@ -90,6 +90,7 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 | `CodeName`                                                                              | returns the VBA code name identifier of the current sheet.                                                                                                                                                              |
 | `FieldCount`                                                                            | returns the number of columns in the current sheet.                                                                                                                                                                     |
 | `RowCount`                                                                              | returns the number of rows in the current sheet. This includes terminal empty rows which are otherwise excluded by AsDataSet(). Throws `InvalidOperationException` on CSV files when used with `AnalyzeInitialCsvRows`. |
+| `Depth`                                                                                 | always returns `0` because ExcelDataReader does not expose nested result sets.                                                                                                                                          |
 | `HeaderFooter`                                                                          | returns an object with information about the headers and footers, or `null` if there are none.                                                                                                                          |
 | `MergeCells`                                                                            | returns an array of merged cell ranges in the current sheet.                                                                                                                                                            |
 | `RowHeight`                                                                             | returns the visual height of the current row in points. May be 0 if the row is hidden.                                                                                                                                  |
@@ -216,12 +217,13 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
 Setting up `AsDataSet()` configuration, use the FilterRow callback to implement a "progress indicator" while loading, e.g.:
 
 ```c#
+int currentRow = 0;
 var result = reader.AsDataSet(new ExcelDataSetConfiguration()
 {
     ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
     {
         FilterRow = (rowReader) => {
-            int progress = (int)Math.Ceiling((decimal)rowReader.Depth / (decimal)rowReader.RowCount * (decimal)100);
+            int progress = (int)Math.Ceiling((decimal)++currentRow / (decimal)rowReader.RowCount * (decimal)100);
             // progress is in the range 0..100
             return true;
         }

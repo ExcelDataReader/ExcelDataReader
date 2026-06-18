@@ -27,6 +27,21 @@ public class ExcelCsvReaderTest
     }
 
     [Test]
+    public void Issue443_DepthAlwaysZero_Csv()
+    {
+        using var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "comma_in_quotes.csv")));
+        Assert.That(reader.Depth, Is.Zero);
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.Depth, Is.Zero);
+
+        while (reader.Read())
+        {
+            Assert.That(reader.Depth, Is.Zero);
+        }
+    }
+
+    [Test]
     public void CsvEscapedQuotes()
     {
         using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "escaped_quotes.csv")));

@@ -759,6 +759,27 @@ public abstract class ExcelTestBase
     }
 
     [Test]
+    public void Issue443_DepthAlwaysZero()
+    {
+        using IExcelDataReader reader = OpenReader("MultiSheet");
+        Assert.That(reader.Depth, Is.Zero);
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.Depth, Is.Zero);
+
+        while (reader.Read())
+        {
+            Assert.That(reader.Depth, Is.Zero);
+        }
+
+        Assert.That(reader.NextResult(), Is.True);
+        Assert.That(reader.Depth, Is.Zero);
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.Depth, Is.Zero);
+    }
+
+    [Test]
     public void UnicodeCharsTest()
     {
         using IExcelDataReader excelReader = OpenReader("UnicodeChars");

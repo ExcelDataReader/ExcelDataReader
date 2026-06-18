@@ -42,7 +42,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     // We shouldn't expose the internal array here. 
     public CellRange[] MergeCells => _worksheetIterator?.Current?.MergeCells;
 
-    public int Depth { get; private set; }
+    public int Depth => 0;
 
     public int ResultsCount => Workbook?.ResultsCount ?? -1;
 
@@ -305,7 +305,6 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
         ReadCurrentRow();
 
-        Depth++;
         return true;
     }
 
@@ -357,7 +356,6 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     private void ResetSheetData()
     {
-        Depth = -1;
         RowCells = null;
     }
 
