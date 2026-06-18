@@ -219,9 +219,9 @@ internal sealed class XlsxWorksheet : IWorksheet
                     return timeSpan;
                 }
 
-                if (numberFormat.IsDateTimeFormat && DateTimeOffset.TryParse(s, out DateTimeOffset dateTimeOffset))
+                if (numberFormat.IsDateTimeFormat && DateTime.TryParse(s, out DateTime dateTime))
                 {
-                    return dateTimeOffset;
+                    return dateTime;
                 }
 
                 return s;
