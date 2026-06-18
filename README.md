@@ -158,6 +158,10 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
 });
 ```
 
+`CreateReader()`, `CreateBinaryReader()`, and `CreateOpenXmlReader()` require seek support during probing and binary/compound parsing. If the input stream is non-seekable, ExcelDataReader copies it to a `MemoryStream` first.
+
+This is a 4.0 breaking behavior change: when a non-seekable stream is copied, the original source stream may be consumed even when `LeaveOpen = true`.
+
 ### AsDataSet() configuration options
 
 The `AsDataSet()` method accepts an optional configuration object to modify the behavior of the DataSet conversion:

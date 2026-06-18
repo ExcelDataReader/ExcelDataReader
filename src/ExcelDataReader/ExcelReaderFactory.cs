@@ -31,6 +31,8 @@ public static class ExcelReaderFactory
             fileStream = new LeaveOpenStream(fileStream);
         }
 
+        fileStream = GetSeekableStream(fileStream);
+
         var probe = new byte[8];
         fileStream.Seek(0, SeekOrigin.Begin);
         fileStream.ReadAtLeast(probe, 0, probe.Length);
@@ -82,6 +84,8 @@ public static class ExcelReaderFactory
             fileStream = new LeaveOpenStream(fileStream);
         }
 
+        fileStream = GetSeekableStream(fileStream);
+
         var probe = new byte[8];
         fileStream.Seek(0, SeekOrigin.Begin);
         fileStream.ReadAtLeast(probe, 0, probe.Length);
@@ -123,6 +127,8 @@ public static class ExcelReaderFactory
         {
             fileStream = new LeaveOpenStream(fileStream);
         }
+
+        fileStream = GetSeekableStream(fileStream);
 
         var probe = new byte[8];
         fileStream.Seek(0, SeekOrigin.Begin);
@@ -215,5 +221,20 @@ public static class ExcelReaderFactory
 
         stream = encryption.CreateEncryptedPackageStream(packageStream, secretKey);
         return true;
+    }
+
+    private static Stream GetSeekableStream(Stream fileStream)
+    {
+        if (fileStream.CanSeek)
+            return fileStream;
+
+        using (fileStream)
+        {
+            // LeaveOpen semantics are handled by wrapping the caller stream before this call.
+            var seekableStream = new MemoryStream();
+            fileStream.CopyTo(seekableStream);
+            seekableStream.Seek(0, SeekOrigin.Begin);
+            return seekableStream;
+        }
     }
 }
