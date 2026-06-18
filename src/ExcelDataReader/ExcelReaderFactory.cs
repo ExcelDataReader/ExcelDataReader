@@ -171,6 +171,8 @@ public static class ExcelReaderFactory
             fileStream = new LeaveOpenStream(fileStream);
         }
 
+        fileStream = GetSeekableStream(fileStream);
+
         return new ExcelCsvReader(fileStream, configuration.FallbackEncoding, configuration.AutodetectSeparators, configuration.AnalyzeInitialCsvRows, configuration.QuoteChar, configuration.TrimWhiteSpace, configuration.EscapeChar);
     }
 

@@ -55,6 +55,16 @@ public class ExcelReaderFactoryTests
     }
 
     [Test]
+    public void CreateCsvReader_NonSeekableStream_Succeeds()
+    {
+        using var stream = Configuration.GetTestWorkbook(Path.Combine("csv", "MOCK_DATA.csv"));
+        using var nonSeekableStream = SeekErrorMemoryStream.CreateFromStream(stream);
+        using IExcelDataReader excelReader = ExcelReaderFactory.CreateCsvReader(nonSeekableStream);
+
+        Assert.That(excelReader.Read(), Is.True);
+    }
+
+    [Test]
     public void CreateReader_NonSeekableCopyFailure_DisposesSourceWhenLeaveOpenFalse()
     {
         var stream = new ThrowOnReadNonSeekableStream();
