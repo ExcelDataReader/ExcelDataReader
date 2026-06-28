@@ -13,7 +13,8 @@ public abstract class ExcelOpenXmlReaderBase : ExcelTestBase
         reader.Read();
         Assert.That(reader.GetString(0), Is.EqualTo("col1"));
         Assert.That(reader.GetString(4), Is.EqualTo("col5"));
-        Assert.That(reader.GetString(9), Is.Null);  // column 9 is empty in first row
+        Assert.That(reader.IsDBNull(9), Is.True);  // column 9 is empty in first row
+        Assert.Throws<InvalidCastException>(() => reader.GetString(9));
 
         reader.Read();
         Assert.That(reader.GetString(0), Is.EqualTo("10x10"));

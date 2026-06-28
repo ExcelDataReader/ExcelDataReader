@@ -116,7 +116,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     /// <inheritdoc />
     public DataTable GetSchemaTable() => throw new NotSupportedException();
 
-    public string GetString(int i) => GetValue(i) is DBNull ? null! : (string)GetValue(i);
+    public string GetString(int i) => (string)GetValue(i);
 
     public object GetValue(int i)
     {

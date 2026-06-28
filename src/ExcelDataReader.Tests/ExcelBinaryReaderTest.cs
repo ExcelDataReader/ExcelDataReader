@@ -709,7 +709,8 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         for (int i = 0; i < 7; i++)
         {
             reader.Read();
-            Assert.That(string.IsNullOrEmpty(reader.GetString(1)), Is.True, "Row = " + i);
+            Assert.That(reader.IsDBNull(1), Is.True, "Row = " + i);
+            Assert.Throws<InvalidCastException>(() => reader.GetString(1), "Row = " + i);
         }
 
         reader.Read();
@@ -1015,12 +1016,16 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         reader.Read();
         Assert.That(reader.RowCount, Is.EqualTo(10));
         Assert.That(reader.FieldCount, Is.EqualTo(10));
-        Assert.That(reader.GetString(0), Is.EqualTo(null));
-        Assert.That(reader.GetString(2), Is.EqualTo(null));
-        Assert.That(reader.GetString(6), Is.EqualTo(null));
+        Assert.That(reader.IsDBNull(0), Is.True);
+        Assert.That(reader.IsDBNull(2), Is.True);
+        Assert.That(reader.IsDBNull(6), Is.True);
+        Assert.Throws<InvalidCastException>(() => reader.GetString(0));
+        Assert.Throws<InvalidCastException>(() => reader.GetString(2));
+        Assert.Throws<InvalidCastException>(() => reader.GetString(6));
 
         reader.Read();
-        Assert.That(reader.GetString(0), Is.EqualTo(null));
+        Assert.That(reader.IsDBNull(0), Is.True);
+        Assert.Throws<InvalidCastException>(() => reader.GetString(0));
 
         reader.Read();
         reader.Read();
@@ -1031,7 +1036,8 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         reader.Read();
         reader.Read();
         reader.Read();
-        Assert.That(reader.GetString(9), Is.EqualTo(null));
+        Assert.That(reader.IsDBNull(9), Is.True);
+        Assert.Throws<InvalidCastException>(() => reader.GetString(9));
     }
 
     [Test]
@@ -1041,36 +1047,36 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         
         // First row contains formula errors
         reader.Read();
-        Assert.That(reader.GetString(0), Is.EqualTo(null));
+        Assert.Throws<InvalidCastException>(() => reader.GetString(0));
         Assert.That(reader.GetCellError(0), Is.EqualTo(CellError.DIV0));
 
-        Assert.That(reader.GetString(1), Is.EqualTo(null));
+        Assert.Throws<InvalidCastException>(() => reader.GetString(1));
         Assert.That(reader.GetCellError(1), Is.EqualTo(CellError.NA));
 
-        Assert.That(reader.GetString(2), Is.EqualTo(null));
+        Assert.Throws<InvalidCastException>(() => reader.GetString(2));
         Assert.That(reader.GetCellError(2), Is.EqualTo(CellError.VALUE));
 
-        Assert.That(reader.GetString(3), Is.EqualTo(null));
+        Assert.Throws<InvalidCastException>(() => reader.GetString(3));
         Assert.That(reader.GetCellError(3), Is.EqualTo(CellError.NAME));
 
-        Assert.That(reader.GetString(4), Is.EqualTo(null));
+        Assert.Throws<InvalidCastException>(() => reader.GetString(4));
         Assert.That(reader.GetCellError(4), Is.EqualTo(CellError.REF));
 
         // Second row contains error constants
         reader.Read();
-        Assert.That(reader.GetString(0), Is.EqualTo(null));
+        Assert.Throws<InvalidCastException>(() => reader.GetString(0));
         Assert.That(reader.GetCellError(0), Is.EqualTo(CellError.DIV0));
 
-        Assert.That(reader.GetString(1), Is.EqualTo(null));
+        Assert.Throws<InvalidCastException>(() => reader.GetString(1));
         Assert.That(reader.GetCellError(1), Is.EqualTo(CellError.NA));
 
-        Assert.That(reader.GetString(2), Is.EqualTo(null));
+        Assert.Throws<InvalidCastException>(() => reader.GetString(2));
         Assert.That(reader.GetCellError(2), Is.EqualTo(CellError.VALUE));
 
-        Assert.That(reader.GetString(3), Is.EqualTo(null));
+        Assert.Throws<InvalidCastException>(() => reader.GetString(3));
         Assert.That(reader.GetCellError(3), Is.EqualTo(CellError.NAME));
 
-        Assert.That(reader.GetString(4), Is.EqualTo(null));
+        Assert.Throws<InvalidCastException>(() => reader.GetString(4));
         Assert.That(reader.GetCellError(4), Is.EqualTo(CellError.REF));
     }
 
@@ -1168,7 +1174,8 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         reader.Read();
         Assert.That(reader.GetString(0), Is.EqualTo("col1"));
         Assert.That(reader.GetString(4), Is.EqualTo("col5"));
-        Assert.That(reader.GetString(9), Is.Null);  // column 9 is empty in first row
+        Assert.That(reader.IsDBNull(9), Is.True);  // column 9 is empty in first row
+        Assert.Throws<InvalidCastException>(() => reader.GetString(9));
 
         // Repeated lookups of the same SST index must return the same value
         Assert.That(reader.GetString(0), Is.EqualTo("col1"));
@@ -1211,7 +1218,7 @@ public class ExcelBinaryReaderTest : ExcelTestBase
 
         reader.Read();
         Assert.That(reader.GetValue(0), Is.EqualTo("Record1"));
-        Assert.That(reader.GetValue(2), Is.EqualTo(null));
+        Assert.That(reader.GetValue(2), Is.EqualTo(DBNull.Value));
 
         reader.Read();
         Assert.That(reader.GetValue(0), Is.EqualTo(double.NaN));
