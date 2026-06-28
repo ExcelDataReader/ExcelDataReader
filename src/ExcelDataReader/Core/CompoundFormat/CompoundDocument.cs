@@ -33,9 +33,9 @@ internal sealed class CompoundDocument
 
     internal List<uint> MiniSectorTable { get; }
 
-    internal CompoundDirectoryEntry RootEntry { get; set; }
+    internal CompoundDirectoryEntry RootEntry { get; set; } = null!;
 
-    internal List<CompoundDirectoryEntry> Entries { get; set; }
+    internal List<CompoundDirectoryEntry> Entries { get; set; } = [];
 
     // NOTE: DateTime.MaxValue.ToFileTime() fails on Unity in timezones with DST and +~6h offset, like Sidney Australia
     private static long SafeFileTimeMaxDate { get; } = DateTime.MaxValue.ToFileTimeUtc();
@@ -65,9 +65,9 @@ internal sealed class CompoundDocument
 
 #if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
     // params ReadOnlySpan<T> avoids the implicit array allocation on modern runtimes.
-    internal CompoundDirectoryEntry FindEntry(params ReadOnlySpan<string> entryNames)
+    internal CompoundDirectoryEntry? FindEntry(params ReadOnlySpan<string> entryNames)
 #else
-    internal CompoundDirectoryEntry FindEntry(params string[] entryNames)
+    internal CompoundDirectoryEntry? FindEntry(params string[] entryNames)
 #endif
     {
         foreach (var e in Entries)

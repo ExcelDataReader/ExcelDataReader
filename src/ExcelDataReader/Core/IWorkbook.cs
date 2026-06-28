@@ -1,5 +1,3 @@
-﻿#nullable enable
-
 using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core;

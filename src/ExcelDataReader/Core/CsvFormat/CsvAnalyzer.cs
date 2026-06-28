@@ -16,8 +16,8 @@ internal static class CsvAnalyzer
         var buffer = new byte[bufferSize];
         var bytesRead = stream.ReadAtLeast(buffer, 0, probeSize);
 
-        autodetectEncoding = GetEncodingFromBom(buffer, out bomLength);
-        autodetectEncoding ??= fallbackEncoding;
+        var detectedEncoding = GetEncodingFromBom(buffer, out bomLength);
+        autodetectEncoding = detectedEncoding ?? fallbackEncoding;
 
         if (separators == null || separators.Length == 0)
         {
@@ -144,7 +144,7 @@ internal static class CsvAnalyzer
         }
     }
 
-    private static Encoding GetEncodingFromBom(byte[] bom, out int bomLength)
+    private static Encoding? GetEncodingFromBom(byte[] bom, out int bomLength)
     {
         var encodings = new[]
         {
@@ -189,6 +189,6 @@ internal static class CsvAnalyzer
 
         public int RowCount { get; set; }
 
-        public CsvParser Buffer { get; set; }
+        public required CsvParser Buffer { get; set; }
     }
 }

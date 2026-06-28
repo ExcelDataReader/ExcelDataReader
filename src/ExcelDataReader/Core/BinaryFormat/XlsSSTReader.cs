@@ -1,4 +1,6 @@
-﻿namespace ExcelDataReader.Core.BinaryFormat;
+using System.Diagnostics.CodeAnalysis;
+
+namespace ExcelDataReader.Core.BinaryFormat;
 
 /// <summary>
 /// Helper class for parsing the BIFF8 Shared String Table (SST).
@@ -13,7 +15,7 @@ internal sealed class XlsSSTReader
         StringTail,
     }
 
-    private XlsBiffRecord CurrentRecord { get; set; }
+    private XlsBiffRecord CurrentRecord { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets the offset into the current record's byte content. May point at the end when the current record has been parsed entirely.
@@ -22,11 +24,11 @@ internal sealed class XlsSSTReader
 
     private SstState CurrentState { get; set; } = SstState.StartStringHeader;
 
-    private XlsSSTStringHeader CurrentHeader { get; set; }
+    private XlsSSTStringHeader CurrentHeader { get; set; } = null!;
 
     private int CurrentRemainingCharacters { get; set; }
 
-    private byte[] CurrentResult { get; set; }
+    private byte[] CurrentResult { get; set; } = null!;
 
     private int CurrentResultOffset { get; set; }
 
@@ -79,7 +81,7 @@ internal sealed class XlsSSTReader
         }
     }
 
-    public IXlsString Flush()
+    public IXlsString? Flush()
     {
         if (CurrentState == SstState.StringTail)
         {
@@ -89,7 +91,7 @@ internal sealed class XlsSSTReader
         return null;
     }
 
-    private bool TryReadString(out IXlsString result)
+    private bool TryReadString([NotNullWhen(true)] out IXlsString? result)
     {
         if (CurrentState == SstState.StartStringHeader)
         {

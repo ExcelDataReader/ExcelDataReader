@@ -22,7 +22,7 @@ internal sealed class XlsBiffStream : IDisposable
     private int _readAheadStart;
     private int _readAheadEnd;
 
-    public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, BIFFTYPE? defaultType = null, string password = null, byte[] secretKey = null, EncryptionInfo encryption = null)
+    public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, BIFFTYPE? defaultType = null, string? password = null, byte[]? secretKey = null, EncryptionInfo? encryption = null)
     {
         BaseStream = baseStream;
         Position = offset;
@@ -46,7 +46,7 @@ internal sealed class XlsBiffStream : IDisposable
         if (secretKey != null)
         {
             SecretKey = secretKey;
-            Encryption = encryption;
+            Encryption = encryption ?? throw new ArgumentNullException(nameof(encryption));
             Cipher = Encryption.CreateCipher();
         }
         else
@@ -96,16 +96,16 @@ internal sealed class XlsBiffStream : IDisposable
 
     public Stream BaseStream { get; }
 
-    public byte[] SecretKey { get; }
+    public byte[]? SecretKey { get; }
 
-    public EncryptionInfo Encryption { get; }
+    public EncryptionInfo? Encryption { get; }
 
-    public SymmetricAlgorithm Cipher { get; }
+    public SymmetricAlgorithm? Cipher { get; }
 
     /// <summary>
     /// Gets or sets the ICryptoTransform instance used to decrypt the current block.
     /// </summary>
-    public ICryptoTransform CipherTransform { get; set; }
+    public ICryptoTransform? CipherTransform { get; set; }
 
     /// <summary>
     /// Gets or sets the current block number being decrypted with CipherTransform.
@@ -140,7 +140,7 @@ internal sealed class XlsBiffStream : IDisposable
     /// Reads record under cursor and advances cursor position to next record.
     /// </summary>
     /// <returns>The record -or- null.</returns>
-    public XlsBiffRecord Read()
+    public XlsBiffRecord? Read()
     {
         // Minimum record size is 4
         if ((uint)Position + 4 >= Size)
@@ -161,7 +161,7 @@ internal sealed class XlsBiffStream : IDisposable
     /// </summary>
     /// <param name="stream">The stream.</param>
     /// <returns>The record -or- null.</returns>
-    public XlsBiffRecord GetRecord(Stream stream)
+    public XlsBiffRecord? GetRecord(Stream stream)
     {
         // Capture the logical record start before consuming header bytes from the read-ahead
         // buffer; this is the value DecryptRecord() needs for its block-number calculation.
@@ -290,7 +290,7 @@ internal sealed class XlsBiffStream : IDisposable
     public void Dispose()
     {
         CipherTransform?.Dispose();
-        ((IDisposable)Cipher)?.Dispose();
+        Cipher?.Dispose();
     }
 
     private static int GetBiffVersion(XlsBiffBOF bof)
@@ -372,6 +372,9 @@ internal sealed class XlsBiffStream : IDisposable
     {
         CipherTransform?.Dispose();
 
+        if (Encryption == null || SecretKey == null || Cipher == null)
+            throw new InvalidOperationException("Encryption is not initialized.");
+
         var blockKey = Encryption.GenerateBlockKey(blockNumber, SecretKey);
         CipherTransform = Cipher.CreateDecryptor(blockKey, null);
         CipherBlock = blockNumber;
@@ -382,11 +385,13 @@ internal sealed class XlsBiffStream : IDisposable
     /// </summary>
     private void AlignBlockDecryptor(int blockOffset)
     {
+        var cipherTransform = CipherTransform ?? throw new InvalidOperationException("Decryptor is not initialized.");
+
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
         var bytes = System.Buffers.ArrayPool<byte>.Shared.Rent(blockOffset);
         try
         {
-            CryptoHelpers.DecryptBytes(CipherTransform, bytes, blockOffset);
+            CryptoHelpers.DecryptBytes(cipherTransform, bytes, blockOffset);
         }
         finally
         {
@@ -394,12 +399,14 @@ internal sealed class XlsBiffStream : IDisposable
         }
 #else
         var bytes = new byte[blockOffset];
-        CryptoHelpers.DecryptBytes(CipherTransform, bytes, blockOffset);
+        CryptoHelpers.DecryptBytes(cipherTransform, bytes, blockOffset);
 #endif
     }
 
     private void DecryptRecord(int startPosition, BIFFRECORDTYPE id, byte[] bytes, int recordSize)
     {
+        var encryption = Encryption ?? throw new InvalidOperationException("Encryption is not initialized.");
+
         // Decrypt the last read record, find it's start offset relative to the current stream position
         int startDecrypt = 4;
         switch (id)
@@ -437,11 +444,13 @@ internal sealed class XlsBiffStream : IDisposable
                     CreateBlockDecryptor(blockNumber);
                 }
 
-                if (Encryption.IsXor)
+                if (encryption.IsXor)
                 {
                     // Bypass everything and hook into the XorTransform instance to set the XorArrayIndex pr record.
                     // This is a hack to use the XorTransform otherwise transparently to the other encryption methods.
-                    var xorTransform = (XorManaged.XorTransform)CipherTransform;
+                    var xorTransform = CipherTransform as XorManaged.XorTransform;
+                    if (xorTransform == null)
+                        throw new InvalidOperationException("XOR decryptor is not initialized.");
                     xorTransform.XorArrayIndex = offset + recordSize - 4;
                 }
 
@@ -449,7 +458,8 @@ internal sealed class XlsBiffStream : IDisposable
                 var chunkSize = Math.Min(recordSize - position, 1024 - blockOffset);
 
                 Array.Copy(bytes, position, inputBlock, 0, chunkSize);
-                CryptoHelpers.DecryptBytes(CipherTransform, inputBlock, chunkSize, outputBlock);
+                var cipherTransform = CipherTransform ?? throw new InvalidOperationException("Decryptor is not initialized.");
+                CryptoHelpers.DecryptBytes(cipherTransform, inputBlock, chunkSize, outputBlock);
 
                 for (var i = 0; i < chunkSize; i++)
                 {

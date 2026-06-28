@@ -1,28 +1,29 @@
-﻿using System.Globalization;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text;
 
 namespace ExcelDataReader.Core.NumberFormat;
 
 internal sealed class FractionSection
 {
-    public required List<string> IntegerPart { get; init; }
+    public required List<string>? IntegerPart { get; init; }
 
     public required List<string> Numerator { get; init; }
 
-    public required List<string> DenominatorPrefix { get; init; }
+    public required List<string>? DenominatorPrefix { get; init; }
 
     public required List<string> Denominator { get; init; }
 
     public required int DenominatorConstant { get; init; }
 
-    public required List<string> DenominatorSuffix { get; init; }
+    public required List<string>? DenominatorSuffix { get; init; }
 
-    public required List<string> FractionSuffix { get; init; }
+    public required List<string>? FractionSuffix { get; init; }
 
-    public static bool TryParse(List<string> tokens, out FractionSection format)
+    public static bool TryParse(List<string> tokens, [NotNullWhen(true)] out FractionSection? format)
     {
-        List<string> numeratorParts = null;
-        List<string> denominatorParts = null;
+        List<string>? numeratorParts = null;
+        List<string>? denominatorParts = null;
 
         for (var i = 0; i < tokens.Count; i++)
         {
@@ -44,7 +45,7 @@ internal sealed class FractionSection
 
         GetNumerator(numeratorParts, out var integerPart, out var numeratorPart);
 
-        if (!TryGetDenominator(denominatorParts, out var denominatorPrefix, out var denominatorPart, out var denominatorConstant, out var denominatorSuffix, out var fractionSuffix))
+        if (denominatorParts == null || !TryGetDenominator(denominatorParts, out var denominatorPrefix, out var denominatorPart, out var denominatorConstant, out var denominatorSuffix, out var fractionSuffix))
         {
             format = null;
             return false;
@@ -64,7 +65,7 @@ internal sealed class FractionSection
         return true;
     }
 
-    private static void GetNumerator(List<string> tokens, out List<string> integerPart, out List<string> numeratorPart)
+    private static void GetNumerator(List<string> tokens, out List<string>? integerPart, out List<string> numeratorPart)
     {
         var hasPlaceholder = false;
         var hasSpace = false;
@@ -109,7 +110,7 @@ internal sealed class FractionSection
         }
     }
 
-    private static bool TryGetDenominator(List<string> tokens, out List<string> denominatorPrefix, out List<string> denominatorPart, out int denominatorConstant, out List<string> denominatorSuffix, out List<string> fractionSuffix)
+    private static bool TryGetDenominator(List<string> tokens, out List<string>? denominatorPrefix, [NotNullWhen(true)] out List<string>? denominatorPart, out int denominatorConstant, out List<string>? denominatorSuffix, out List<string>? fractionSuffix)
     {
         var index = 0;
         var hasPlaceholder = false;

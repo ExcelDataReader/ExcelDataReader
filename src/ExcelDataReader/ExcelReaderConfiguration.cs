@@ -16,7 +16,7 @@ public class ExcelReaderConfiguration
     /// <summary>
     /// Gets or sets the password used to open password protected workbooks.
     /// </summary>
-    public string Password { get; set; }
+    public string? Password { get; set; }
 
     /// <summary>
     /// Gets or sets an array of CSV separator candidates. The reader autodetects which best fits the input data. Default: , ; TAB | # (CSV only).

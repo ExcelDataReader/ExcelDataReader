@@ -52,9 +52,10 @@ internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, str
                     if (Reader.IsStartElement(ElementSheet, ProperNamespaces.NsSpreadsheetMl))
                     {
                         var rid = Reader.GetAttribute(AttributeRelationshipId, ProperNamespaces.NsDocumentRelationship);
+                        var sheetId = Reader.GetAttribute(AttributeSheetId);
                         yield return new SheetRecord(
                             Reader.GetAttribute(AttributeName),
-                            uint.Parse(Reader.GetAttribute(AttributeSheetId), CultureInfo.InvariantCulture),
+                            uint.TryParse(sheetId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedSheetId) ? parsedSheetId : 0,
                             rid,
                             Reader.GetAttribute(AttributeVisibleState),
                             rid != null && _worksheetsRels.TryGetValue(rid, out var path) ? path : null);
@@ -77,7 +78,7 @@ internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, str
                 {
                     if (Reader.IsStartElement("workbookView", ProperNamespaces.NsSpreadsheetMl))
                     {
-                        string activeTab = Reader.GetAttribute("activeTab");
+                        string? activeTab = Reader.GetAttribute("activeTab");
                         int activeTabInt = int.TryParse(activeTab, out var result) ? result : 0;
                         yield return new WorkbookActRecord(activeTabInt);
                         Reader.Skip();

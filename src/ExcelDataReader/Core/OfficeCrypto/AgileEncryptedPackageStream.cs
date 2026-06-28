@@ -29,7 +29,7 @@ internal sealed class AgileEncryptedPackageStream : Stream
 
     public override long Position { get => Offset - SegmentLength + SegmentOffset; set => Seek(value, SeekOrigin.Begin); }
 
-    private Stream Stream { get; set; }
+    private Stream? Stream { get; set; }
 
     private byte[] Key { get; }
 
@@ -121,11 +121,12 @@ internal sealed class AgileEncryptedPackageStream : Stream
 
     private void ReadSegment()
     {
+        var stream = Stream ?? throw new ObjectDisposedException(nameof(AgileEncryptedPackageStream));
         var salt = Encryption.GenerateBlockKey(SegmentIndex, IV);
         
         // NOTE: +8 skips EncryptedPackage header
-        Stream.Seek(8 + Offset, SeekOrigin.Begin);
-        Stream.ReadAtLeast(SegmentBytes, 0, SegmentLength);
+        stream.Seek(8 + Offset, SeekOrigin.Begin);
+        stream.ReadAtLeast(SegmentBytes, 0, SegmentLength);
 
         using (var cipher = Encryption.CreateCipher())
         {

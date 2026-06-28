@@ -44,12 +44,12 @@ internal sealed class XorManaged : SymmetricAlgorithm
     {
     }
 
-    public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[] rgbIV)
+    public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV)
     {
         return new XorTransform(rgbKey, 0);
     }
 
-    public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[] rgbIV)
+    public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV)
     {
         throw new NotImplementedException();
     }

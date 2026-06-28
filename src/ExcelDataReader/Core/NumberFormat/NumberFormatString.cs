@@ -78,5 +78,5 @@ public class NumberFormatString
 
     private IReadOnlyList<Section> Sections { get; }
 
-    private Section GetFirstSection(SectionType type) => Sections.FirstOrDefault(section => section.Type == type);
+    private Section? GetFirstSection(SectionType type) => Sections.FirstOrDefault(section => section.Type == type);
 }

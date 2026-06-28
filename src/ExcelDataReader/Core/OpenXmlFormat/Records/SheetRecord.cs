@@ -1,14 +1,12 @@
-﻿using System.Globalization;
-
-#nullable enable
+using System.Globalization;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.Records;
 
-internal sealed class SheetRecord(string name, uint id, string? rid, string visibleState, string? path) : Record
+internal sealed class SheetRecord(string? name, uint id, string? rid, string? visibleState, string? path) : Record
 {
-    public string Name { get; } = name;
+    public string Name { get; } = name ?? string.Empty;
 
-    public string VisibleState { get; } = string.IsNullOrEmpty(visibleState) ? "visible" : visibleState.ToLower(CultureInfo.InvariantCulture);
+    public string VisibleState { get; } = visibleState is { Length: > 0 } state ? state.ToLower(CultureInfo.InvariantCulture) : "visible";
 
     public uint Id { get; } = id;
 

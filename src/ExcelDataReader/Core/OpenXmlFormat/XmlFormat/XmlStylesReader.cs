@@ -70,7 +70,7 @@ internal sealed class XmlStylesReader(XmlReader reader) : XmlRecordReader(reader
                         int.TryParse(Reader.GetAttribute(ANumFmtId), NumberStyles.Integer, CultureInfo.InvariantCulture, out var numFmtId);
                         var formatCode = Reader.GetAttribute(AFormatCode);
 
-                        yield return new NumberFormatRecord(numFmtId, formatCode);
+                        yield return new NumberFormatRecord(numFmtId, formatCode ?? string.Empty);
                         Reader.Skip();
                     }
                     else if (!XmlReaderHelper.SkipContent(Reader))

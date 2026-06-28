@@ -45,7 +45,7 @@ internal sealed class CompoundStream : Stream
 
     public List<uint> SectorChain { get; }
 
-    public List<uint> RootSectorChain { get; }
+    public List<uint>? RootSectorChain { get; }
 
     public override bool CanRead => true;
 
@@ -57,7 +57,7 @@ internal sealed class CompoundStream : Stream
 
     public override long Position { get => Offset - _sectorBufferValidLength + SectorOffset; set => Seek(value, SeekOrigin.Begin); }
 
-    private Stream BaseStream { get; set; }
+    private Stream? BaseStream { get; set; }
 
     private CompoundDocument Document { get; }
 
@@ -151,6 +151,13 @@ internal sealed class CompoundStream : Stream
 
     private void ReadMiniSector()
     {
+        var baseStream = BaseStream ?? throw new ObjectDisposedException(nameof(CompoundStream));
+
+        if (RootSectorChain == null)
+        {
+            throw new InvalidOperationException("Mini stream sector chain is not initialized.");
+        }
+
         var sector = SectorChain[SectorChainOffset];
         var miniStreamOffset = (int)Document.GetMiniSectorOffset(sector);
 
@@ -163,10 +170,10 @@ internal sealed class CompoundStream : Stream
         var rootSector = RootSectorChain[rootSectorIndex];
         var rootOffset = miniStreamOffset % Document.Header.SectorSize;
 
-        BaseStream.Seek(Document.GetSectorOffset(rootSector) + rootOffset, SeekOrigin.Begin);
+        baseStream.Seek(Document.GetSectorOffset(rootSector) + rootOffset, SeekOrigin.Begin);
 
         var chunkSize = (int)Math.Min(Length - Offset, Document.Header.MiniSectorSize);
-        if (BaseStream.ReadAtLeast(_sectorBuffer, 0, chunkSize) < chunkSize)
+        if (baseStream.ReadAtLeast(_sectorBuffer, 0, chunkSize) < chunkSize)
         {
             throw new CompoundDocumentException(Errors.ErrorEndOfFile);
         }
@@ -178,11 +185,13 @@ internal sealed class CompoundStream : Stream
 
     private void ReadRegularSector()
     {
+        var baseStream = BaseStream ?? throw new ObjectDisposedException(nameof(CompoundStream));
+
         var sector = SectorChain[SectorChainOffset];
-        BaseStream.Seek(Document.GetSectorOffset(sector), SeekOrigin.Begin);
+        baseStream.Seek(Document.GetSectorOffset(sector), SeekOrigin.Begin);
 
         var chunkSize = (int)Math.Min(Length - Offset, Document.Header.SectorSize);
-        if (BaseStream.ReadAtLeast(_sectorBuffer, 0, chunkSize) < chunkSize)
+        if (baseStream.ReadAtLeast(_sectorBuffer, 0, chunkSize) < chunkSize)
         {
             throw new CompoundDocumentException(Errors.ErrorEndOfFile);
         }

@@ -40,65 +40,66 @@ internal sealed class XlsBiffFont : XlsBiffRecord
             // with the FONT record character set table here:
             // https://www.openoffice.org/sc/excelfileformat.pdf
             var byteStringCharacterSet = ReadByte(12);
+            Encoding GetEncodingOrDefault(int codePage) => EncodingHelper.GetEncoding((ushort)codePage) ?? ByteStringEncoding;
             switch (byteStringCharacterSet)
             {
                 case 0: // ANSI Latin
                 case 1: // System default
-                    ByteStringEncoding = EncodingHelper.GetEncoding(1252);
+                    ByteStringEncoding = GetEncodingOrDefault(1252);
                     break;
                 case 77: // Apple roman
-                    ByteStringEncoding = EncodingHelper.GetEncoding(10000);
+                    ByteStringEncoding = GetEncodingOrDefault(10000);
                     break;
                 case 128: // ANSI Japanese Shift-JIS
-                    ByteStringEncoding = EncodingHelper.GetEncoding(932);
+                    ByteStringEncoding = GetEncodingOrDefault(932);
                     break;
                 case 129: // ANSI Korean (Hangul)
-                    ByteStringEncoding = EncodingHelper.GetEncoding(949);
+                    ByteStringEncoding = GetEncodingOrDefault(949);
                     break;
                 case 130: // ANSI Korean (Johab)
-                    ByteStringEncoding = EncodingHelper.GetEncoding(1361);
+                    ByteStringEncoding = GetEncodingOrDefault(1361);
                     break;
                 case 134: // ANSI Chinese Simplified GBK
-                    ByteStringEncoding = EncodingHelper.GetEncoding(936);
+                    ByteStringEncoding = GetEncodingOrDefault(936);
                     break;
                 case 136: // ANSI Chinese Traditional BIG5
-                    ByteStringEncoding = EncodingHelper.GetEncoding(950);
+                    ByteStringEncoding = GetEncodingOrDefault(950);
                     break;
                 case 161: // ANSI Greek
-                    ByteStringEncoding = EncodingHelper.GetEncoding(1253);
+                    ByteStringEncoding = GetEncodingOrDefault(1253);
                     break;
                 case 162: // ANSI Turkish
-                    ByteStringEncoding = EncodingHelper.GetEncoding(1254);
+                    ByteStringEncoding = GetEncodingOrDefault(1254);
                     break;
                 case 163: // ANSI Vietnamese
-                    ByteStringEncoding = EncodingHelper.GetEncoding(1258);
+                    ByteStringEncoding = GetEncodingOrDefault(1258);
                     break;
                 case 177: // ANSI Hebrew
-                    ByteStringEncoding = EncodingHelper.GetEncoding(1255);
+                    ByteStringEncoding = GetEncodingOrDefault(1255);
                     break;
                 case 178: // ANSI Arabic
-                    ByteStringEncoding = EncodingHelper.GetEncoding(1256);
+                    ByteStringEncoding = GetEncodingOrDefault(1256);
                     break;
                 case 186: // ANSI Baltic
-                    ByteStringEncoding = EncodingHelper.GetEncoding(1257);
+                    ByteStringEncoding = GetEncodingOrDefault(1257);
                     break;
                 case 204: // ANSI Cyrillic
-                    ByteStringEncoding = EncodingHelper.GetEncoding(1251);
+                    ByteStringEncoding = GetEncodingOrDefault(1251);
                     break;
                 case 222: // ANSI Thai
-                    ByteStringEncoding = EncodingHelper.GetEncoding(874);
+                    ByteStringEncoding = GetEncodingOrDefault(874);
                     break;
                 case 238: // ANSI Latin II
-                    ByteStringEncoding = EncodingHelper.GetEncoding(1250);
+                    ByteStringEncoding = GetEncodingOrDefault(1250);
                     break;
                 case 255: // OEM Latin
-                    ByteStringEncoding = EncodingHelper.GetEncoding(850);
+                    ByteStringEncoding = GetEncodingOrDefault(850);
                     break;
             }
         }
     }
 
-    public Encoding ByteStringEncoding { get; }
+    public Encoding ByteStringEncoding { get; } = Encoding.GetEncoding(1252);
 
     public string GetFontName(Encoding encoding) => _fontName.GetValue(encoding);
 }

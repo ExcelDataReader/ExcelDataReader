@@ -5,7 +5,7 @@ namespace ExcelDataReader;
 
 internal sealed class ExcelBinaryReader : ExcelDataReader<XlsWorkbook, XlsWorksheet>
 {
-    public ExcelBinaryReader(Stream stream, string password, Encoding fallbackEncoding, bool singlePassMode = false)
+    public ExcelBinaryReader(Stream stream, string? password, Encoding fallbackEncoding, bool singlePassMode = false)
     {
         Workbook = new XlsWorkbook(stream, password, fallbackEncoding);
         Workbook.SinglePassMode = singlePassMode;

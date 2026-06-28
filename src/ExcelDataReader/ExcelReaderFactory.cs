@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using ExcelDataReader.Core.BinaryFormat;
 using ExcelDataReader.Core.CompoundFormat;
 using ExcelDataReader.Core.OfficeCrypto;
@@ -22,7 +23,7 @@ public static class ExcelReaderFactory
     /// <param name="fileStream">The file stream.</param>
     /// <param name="configuration">The configuration object.</param>
     /// <returns>The excel data reader.</returns>
-    public static IExcelDataReader CreateReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
+    public static IExcelDataReader CreateReader(Stream fileStream, ExcelReaderConfiguration? configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
         fileStream = PrepareInputStream(fileStream, configuration);
@@ -69,7 +70,7 @@ public static class ExcelReaderFactory
     /// <param name="fileStream">The file stream.</param>
     /// <param name="configuration">The configuration object.</param>
     /// <returns>The excel data reader.</returns>
-    public static IExcelDataReader CreateBinaryReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
+    public static IExcelDataReader CreateBinaryReader(Stream fileStream, ExcelReaderConfiguration? configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
         fileStream = PrepareInputStream(fileStream, configuration);
@@ -107,7 +108,7 @@ public static class ExcelReaderFactory
     /// <param name="fileStream">The file stream.</param>
     /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>
     /// <returns>The excel data reader.</returns>
-    public static IExcelDataReader CreateOpenXmlReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
+    public static IExcelDataReader CreateOpenXmlReader(Stream fileStream, ExcelReaderConfiguration? configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
         fileStream = PrepareInputStream(fileStream, configuration);
@@ -144,7 +145,7 @@ public static class ExcelReaderFactory
     /// <param name="fileStream">The file stream.</param>
     /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>
     /// <returns>The excel data reader.</returns>
-    public static IExcelDataReader CreateCsvReader(Stream fileStream, ExcelReaderConfiguration configuration = null)
+    public static IExcelDataReader CreateCsvReader(Stream fileStream, ExcelReaderConfiguration? configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
         fileStream = PrepareInputStream(fileStream, configuration);
@@ -152,7 +153,7 @@ public static class ExcelReaderFactory
         return new ExcelCsvReader(fileStream, configuration.FallbackEncoding, configuration.AutodetectSeparators, configuration.AnalyzeInitialCsvRows, configuration.QuoteChar, configuration.TrimWhiteSpace, configuration.EscapeChar);
     }
 
-    private static bool TryGetWorkbook(Stream fileStream, CompoundDocument document, out Stream stream)
+    private static bool TryGetWorkbook(Stream fileStream, CompoundDocument document, [NotNullWhen(true)] out Stream? stream)
     {
         var workbookEntry = document.FindEntry(DirectoryEntryWorkbook, DirectoryEntryBook);
         if (workbookEntry != null)
@@ -170,7 +171,7 @@ public static class ExcelReaderFactory
         return false;
     }
 
-    private static bool TryGetEncryptedPackage(Stream fileStream, CompoundDocument document, string password, out Stream stream)
+    private static bool TryGetEncryptedPackage(Stream fileStream, CompoundDocument document, string? password, [NotNullWhen(true)] out Stream? stream)
     {
         var encryptedPackage = document.FindEntry(DirectoryEntryEncryptedPackage);
         var encryptionInfo = document.FindEntry(DirectoryEntryEncryptionInfo);

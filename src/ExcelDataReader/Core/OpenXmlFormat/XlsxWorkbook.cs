@@ -32,9 +32,11 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
 
     private void ReadWorkbook()
     {
-        using RecordReader reader = _zipWorker.GetWorkbookReader();
+        using var reader = _zipWorker.GetWorkbookReader();
+        if (reader == null)
+            return;
 
-        while (reader?.Read() is { } record)
+        while (reader.Read() is { } record)
         {                
             switch (record)
             {

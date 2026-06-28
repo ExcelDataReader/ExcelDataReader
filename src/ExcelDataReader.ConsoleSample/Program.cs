@@ -94,7 +94,8 @@ static Command BuildExcelCommand()
                         return true;
 
                     // sheetIndex is 0-based; expose as 1-based to the user.
-                    return nameSet.Contains(tableReader.Name) || indexSet.Contains(sheetIndex + 1);
+                    var sheetName = tableReader.Name ?? string.Empty;
+                    return nameSet.Contains(sheetName) || indexSet.Contains(sheetIndex + 1);
                 },
                 ConfigureDataTable = _ => new ExcelDataTableConfiguration
                 {
@@ -229,10 +230,11 @@ static List<(string Name, long Rows, int Cols)> ReadRaw(
     do
     {
         sheetNumber++;
-        if (hasFilter && !nameSet.Contains(reader.Name) && !indexSet.Contains(sheetNumber))
+        var sheetName = reader.Name ?? string.Empty;
+
+        if (hasFilter && !nameSet.Contains(sheetName) && !indexSet.Contains(sheetNumber))
             continue;
 
-        string sheetName = reader.Name;
         long sheetRows = 0;
         int sheetCols = 0;
         string[]? headers = null;

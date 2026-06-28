@@ -36,18 +36,18 @@ internal sealed class XlsWorksheet : IWorksheet
     /// </summary>
     public string Name { get; }
 
-    public string CodeName { get; private set; }
+    public string? CodeName { get; private set; }
 
     /// <summary>
     /// Gets the visibility of worksheet.
     /// </summary>
     public string VisibleState { get; }
 
-    public HeaderFooter HeaderFooter { get; private set; }
+    public HeaderFooter? HeaderFooter { get; private set; }
 
-    public CellRange[] MergeCells { get; private set; }
+    public CellRange[] MergeCells { get; private set; } = [];
 
-    public List<Column> ColumnWidths { get; private set; }
+    public List<Column> ColumnWidths { get; private set; } = [];
 
     /// <summary>
     /// Gets the worksheet data offset.
@@ -81,7 +81,7 @@ internal sealed class XlsWorksheet : IWorksheet
 
     public int RowCount { get; private set; }
 
-    public CellRange Dimension { get; private set; }
+    public CellRange? Dimension { get; private set; }
 
     public bool IsDate1904 { get; private set; }
 
@@ -336,7 +336,7 @@ internal sealed class XlsWorksheet : IWorksheet
         var effectiveStyle = Workbook.GetEffectiveCellStyle(xfIndex, cell.Format);
         var numberFormatIndex = effectiveStyle.NumberFormatIndex;
 
-        object value = null;
+        object? value = null;
         CellError? error = null;
         switch (cell.Id)
         {
@@ -401,7 +401,7 @@ internal sealed class XlsWorksheet : IWorksheet
         return cell.GetValue(labelEncoding);
     }
 
-    private XlsBiffFont GetFont(int fontIndex)
+    private XlsBiffFont? GetFont(int fontIndex)
     {
         if (fontIndex < 0 || fontIndex >= Workbook.Fonts.Count)
         {
@@ -411,7 +411,7 @@ internal sealed class XlsWorksheet : IWorksheet
         return Workbook.Fonts[fontIndex];
     }
 
-    private object TryGetFormulaValue(XlsBiffStream biffStream, XlsBiffFormulaCell formulaCell, ExtendedFormat effectiveStyle, out CellError? error)
+    private object? TryGetFormulaValue(XlsBiffStream biffStream, XlsBiffFormulaCell formulaCell, ExtendedFormat effectiveStyle, out CellError? error)
     {
         error = null;
         switch (formulaCell.FormulaType)
@@ -430,7 +430,7 @@ internal sealed class XlsWorksheet : IWorksheet
         }
     }
 
-    private string TryGetFormulaString(XlsBiffStream biffStream, ExtendedFormat effectiveStyle)
+    private string? TryGetFormulaString(XlsBiffStream biffStream, ExtendedFormat effectiveStyle)
     {
         var rec = biffStream.Read();
         if (rec is { Id: BIFFRECORDTYPE.SHAREDFMLA })
@@ -516,8 +516,8 @@ internal sealed class XlsWorksheet : IWorksheet
         if (biffStream.BiffVersion == 0 || (biffStream.BiffType != BIFFTYPE.Worksheet && biffStream.BiffType != BIFFTYPE.MacroSheet))
             return;
 
-        XlsBiffHeaderFooterString header = null;
-        XlsBiffHeaderFooterString footer = null;
+        XlsBiffHeaderFooterString? header = null;
+        XlsBiffHeaderFooterString? footer = null;
 
         var ixfeOffset = -1;
 
@@ -574,7 +574,7 @@ internal sealed class XlsWorksheet : IWorksheet
                     biffFormats.Add((ushort)biffFormats.Count, fmt23);
                     break;
                 case XlsBiffSimpleValueRecord codePage when rec.Id == BIFFRECORDTYPE.CODEPAGE:
-                    Encoding = EncodingHelper.GetEncoding(codePage.Value);
+                    Encoding = EncodingHelper.GetEncoding(codePage.Value) ?? Encoding;
                     break;
                 case XlsBiffHeaderFooterString h when rec.Id == BIFFRECORDTYPE.HEADER && rec.RecordSize > 0:
                     header = h;

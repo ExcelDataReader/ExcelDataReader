@@ -7,17 +7,17 @@ internal interface IWorksheet
 {
     string Name { get; }
 
-    string CodeName { get; }
+    string? CodeName { get; }
 
     string VisibleState { get; }
 
-    HeaderFooter HeaderFooter { get; }
+    HeaderFooter? HeaderFooter { get; }
 
     int FieldCount { get; }
 
     int RowCount { get; }
 
-    CellRange Dimension { get; }
+    CellRange? Dimension { get; }
 
     CellRange[] MergeCells { get; }
 

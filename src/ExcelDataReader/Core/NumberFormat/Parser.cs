@@ -4,14 +4,14 @@ namespace ExcelDataReader.Core.NumberFormat;
 
 internal static class Parser
 {
-    public static Section ParseSection(Tokenizer reader, out bool syntaxError)
+    public static Section? ParseSection(Tokenizer reader, out bool syntaxError)
     {
         bool hasDateParts = false;
         bool hasDurationParts = false;
         bool hasGeneralPart = false;
         bool hasTextPart = false;
-        Condition condition = null;
-        Color color = null;
+        Condition? condition = null;
+        Color? color = null;
         List<string> tokens = [];
 
         syntaxError = false;
@@ -72,10 +72,10 @@ internal static class Parser
         }
 
         SectionType type;
-        FractionSection fraction = null;
-        ExponentialSection exponential = null;
-        DecimalSection number = null;
-        List<string> generalTextDateDuration = null;
+        FractionSection? fraction = null;
+        ExponentialSection? exponential = null;
+        DecimalSection? number = null;
+        List<string>? generalTextDateDuration = null;
 
         if (hasDateParts)
         {
@@ -135,7 +135,7 @@ internal static class Parser
     /// Parses as many placeholders and literals needed to format a number with optional decimals. 
     /// Returns number of tokens parsed, or 0 if the tokens didn't form a number.
     /// </summary>
-    internal static int ParseNumberTokens(List<string> tokens, int startPosition, out List<string> beforeDecimal, out bool decimalSeparator, out List<string> afterDecimal)
+    internal static int ParseNumberTokens(List<string> tokens, int startPosition, out List<string>? beforeDecimal, out bool decimalSeparator, out List<string>? afterDecimal)
     {
         beforeDecimal = null;
         afterDecimal = null;
@@ -214,7 +214,7 @@ internal static class Parser
         }
     }
 
-    private static string ReadToken(Tokenizer reader, out bool syntaxError)
+    private static string? ReadToken(Tokenizer reader, out bool syntaxError)
     {
         var offset = reader.Position;
         if (
@@ -279,7 +279,7 @@ internal static class Parser
         return false;
     }
 
-    private static bool TryParseCondition(string token, out Condition result)
+    private static bool TryParseCondition(string token, out Condition? result)
     {
         var tokenizer = new Tokenizer(token);
 
@@ -338,7 +338,7 @@ internal static class Parser
         return true;
     }
 
-    private static bool TryParseColor(string token, out Color color)
+    private static bool TryParseColor(string token, out Color? color)
     {
         // TODO: Color1..59
         var tokenizer = new Tokenizer(token);

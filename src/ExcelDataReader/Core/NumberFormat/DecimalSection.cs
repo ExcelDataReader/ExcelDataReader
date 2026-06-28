@@ -1,4 +1,6 @@
-﻿namespace ExcelDataReader.Core.NumberFormat;
+using System.Diagnostics.CodeAnalysis;
+
+namespace ExcelDataReader.Core.NumberFormat;
 
 internal sealed class DecimalSection
 {
@@ -14,7 +16,7 @@ internal sealed class DecimalSection
 
     public required List<string> AfterDecimal { get; init; }
 
-    public static bool TryParse(List<string> tokens, out DecimalSection format)
+    public static bool TryParse(List<string> tokens, [NotNullWhen(true)] out DecimalSection? format)
     {
         if (Parser.ParseNumberTokens(tokens, 0, out var beforeDecimal, out var decimalSeparator, out var afterDecimal) == tokens.Count)
         {
@@ -23,9 +25,9 @@ internal sealed class DecimalSection
 
             format = new DecimalSection()
             {
-                BeforeDecimal = beforeDecimal,
+                BeforeDecimal = beforeDecimal ?? [],
                 DecimalSeparator = decimalSeparator,
-                AfterDecimal = afterDecimal,
+                AfterDecimal = afterDecimal ?? [],
                 PercentMultiplier = multiplier,
                 ThousandDivisor = divisor,
                 ThousandSeparator = thousandSeparator
