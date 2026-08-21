@@ -17,12 +17,18 @@ internal sealed class XlsxWorksheet : IWorksheet
         DefaultRowHeight = 15;
 
         if (Path is not { Length: > 0 } worksheetPath)
+        {
+            ColumnWidths = [];
             return;
+        }
 
         using var sheetStream = Document.GetWorksheetReader(worksheetPath, !singlePassMode);
         
         if (sheetStream == null)
+        {
+            ColumnWidths = [];
             return;
+        }
 
         int rowIndexMaximum = int.MinValue;
         int columnIndexMaximum = int.MinValue;
@@ -98,7 +104,7 @@ internal sealed class XlsxWorksheet : IWorksheet
 
     public CellRange[] MergeCells { get; } = [];
 
-    public List<Column> ColumnWidths { get; } = [];
+    public List<Column> ColumnWidths { get; }
 
     private string? Path { get; set; }
 
