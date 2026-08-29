@@ -9,7 +9,7 @@ internal interface IWorksheet
 
     string? CodeName { get; }
 
-    string VisibleState { get; }
+    string? VisibleState { get; }
 
     HeaderFooter? HeaderFooter { get; }
 

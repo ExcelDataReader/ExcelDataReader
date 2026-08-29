@@ -27,6 +27,13 @@ public class ExcelCsvReaderTest
     }
 
     [Test]
+    public void VisibleStateIsNullForCsv()
+    {
+        using var excelReader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "comma_in_quotes.csv")));
+        Assert.That(excelReader.VisibleState, Is.Null);
+    }
+
+    [Test]
     public void Issue443_DepthAlwaysZero_Csv()
     {
         using var reader = ExcelReaderFactory.CreateCsvReader(Configuration.GetTestWorkbook(Path.Combine("csv", "comma_in_quotes.csv")));

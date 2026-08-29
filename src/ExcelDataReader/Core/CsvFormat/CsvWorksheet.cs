@@ -45,7 +45,7 @@ internal sealed class CsvWorksheet : IWorksheet
 
     public string? CodeName => null;
 
-    public string VisibleState => "visible";
+    public string? VisibleState => null;
 
     public HeaderFooter? HeaderFooter => null;
 
