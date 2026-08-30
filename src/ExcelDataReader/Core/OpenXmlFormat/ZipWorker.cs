@@ -3,8 +3,6 @@ using System.Xml;
 using ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
-#nullable enable
-
 namespace ExcelDataReader.Core.OpenXmlFormat;
 
 internal sealed partial class ZipWorker : IDisposable

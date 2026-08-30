@@ -1,4 +1,6 @@
-﻿namespace ExcelDataReader.Core.NumberFormat;
+using System.Diagnostics.CodeAnalysis;
+
+namespace ExcelDataReader.Core.NumberFormat;
 
 internal sealed class ExponentialSection
 {
@@ -12,7 +14,7 @@ internal sealed class ExponentialSection
 
     public required List<string> Power { get; init; }
 
-    public static bool TryParse(List<string> tokens, out ExponentialSection format)
+    public static bool TryParse(List<string> tokens, [NotNullWhen(true)] out ExponentialSection? format)
     {
         format = null;
 
@@ -36,9 +38,9 @@ internal sealed class ExponentialSection
 
         format = new ExponentialSection()
         {
-            BeforeDecimal = beforeDecimal,
+            BeforeDecimal = beforeDecimal ?? [],
             DecimalSeparator = decimalSeparator,
-            AfterDecimal = afterDecimal,
+            AfterDecimal = afterDecimal ?? [],
             ExponentialToken = exponentialToken,
             Power = tokens.GetRange(position, tokens.Count - position)
         };

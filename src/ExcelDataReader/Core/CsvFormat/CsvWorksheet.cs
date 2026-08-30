@@ -43,11 +43,11 @@ internal sealed class CsvWorksheet : IWorksheet
 
     public string Name => string.Empty;
 
-    public string CodeName => null;
+    public string? CodeName => null;
 
-    public string VisibleState => null;
+    public string? VisibleState => null;
 
-    public HeaderFooter HeaderFooter => null;
+    public HeaderFooter? HeaderFooter => null;
 
     public CellRange[] MergeCells => [];
 
@@ -66,7 +66,7 @@ internal sealed class CsvWorksheet : IWorksheet
         }
     }
 
-    public CellRange Dimension => null;
+    public CellRange? Dimension => null;
 
     public Stream Stream { get; }
 
@@ -78,7 +78,7 @@ internal sealed class CsvWorksheet : IWorksheet
 
     public char? EscapeChar { get; }
 
-    public List<Column> ColumnWidths => null;
+    public List<Column> ColumnWidths => [];
 
     public bool TrimWhiteSpace { get; }
 

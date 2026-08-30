@@ -104,5 +104,5 @@ internal sealed class CompoundHeader
     /// <summary>
     /// Gets or sets the first 109 locations in the DIF sector chain.
     /// </summary>
-    public List<uint> First109DifSectorChain { get; set; }
+    public List<uint> First109DifSectorChain { get; set; } = [];
 }

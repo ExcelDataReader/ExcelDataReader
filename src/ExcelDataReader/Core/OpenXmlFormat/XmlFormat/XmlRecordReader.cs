@@ -5,13 +5,13 @@ namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
 internal abstract class XmlRecordReader(XmlReader reader) : RecordReader
 {
-    private IEnumerator<Record> _enumerator;
+    private IEnumerator<Record>? _enumerator;
 
     public XmlProperNamespaces ProperNamespaces { get; set; } = new(reader.IsStartElement() && reader.NamespaceURI == XmlNamespaces.StrictNsSpreadsheetMl);
 
     protected XmlReader Reader { get; } = reader;
 
-    public override Record Read()
+    public override Record? Read()
     {
         _enumerator ??= ReadOverride().GetEnumerator();
         if (_enumerator.MoveNext())

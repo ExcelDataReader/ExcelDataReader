@@ -1,6 +1,6 @@
-﻿using System.Data;
-#if NET8_0_OR_GREATER
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
+#if NET8_0_OR_GREATER
 #endif
 using ExcelDataReader.Core;
 
@@ -15,10 +15,10 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     where TWorkbook : IWorkbook<TWorksheet>
     where TWorksheet : IWorksheet
 {
-    private IEnumerator<TWorksheet> _worksheetIterator;
-    private IEnumerator<Row> _rowIterator;
-    private IEnumerator<TWorksheet> _cachedWorksheetIterator;
-    private List<TWorksheet> _cachedWorksheets;
+    private IEnumerator<TWorksheet>? _worksheetIterator;
+    private IEnumerator<Row>? _rowIterator;
+    private IEnumerator<TWorksheet>? _cachedWorksheetIterator;
+    private List<TWorksheet>? _cachedWorksheets;
     private int _idx;
     private bool _singlePassMode;
 
@@ -27,20 +27,20 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         Dispose(false);
     }
 
-    public string Name => _worksheetIterator?.Current?.Name;
+    public string? Name => _worksheetIterator?.Current?.Name;
 
-    public string CodeName => _worksheetIterator?.Current?.CodeName;
+    public string? CodeName => _worksheetIterator?.Current?.CodeName;
 
-    public string VisibleState => _worksheetIterator?.Current?.VisibleState;
+    public string? VisibleState => _worksheetIterator?.Current?.VisibleState;
 
-    public int ActiveSheet => this.Workbook.ActiveSheet;
+    public int ActiveSheet => GetWorkbook().ActiveSheet;
 
-    public bool IsActiveSheet => _idx == this.Workbook.ActiveSheet;
+    public bool IsActiveSheet => _idx == GetWorkbook().ActiveSheet;
 
-    public HeaderFooter HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
+    public HeaderFooter? HeaderFooter => _worksheetIterator?.Current?.HeaderFooter;
 
     // We shouldn't expose the internal array here. 
-    public CellRange[] MergeCells => _worksheetIterator?.Current?.MergeCells;
+    public CellRange[] MergeCells => _worksheetIterator?.Current?.MergeCells ?? [];
 
     public int Depth => 0;
 
@@ -56,7 +56,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         ? throw new InvalidOperationException("RowCount is not available in SinglePassMode.")
         : (_worksheetIterator?.Current?.RowCount ?? 0);
 
-    public CellRange Dimension => _worksheetIterator?.Current?.Dimension;
+    public CellRange? Dimension => _worksheetIterator?.Current?.Dimension;
 
     public int RecordsAffected => throw new NotSupportedException();
 
@@ -64,9 +64,9 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     protected bool SinglePassMode { set => _singlePassMode = value; }
 
-    protected TWorkbook Workbook { get; set; }
+    protected TWorkbook? Workbook { get; set; }
 
-    private Cell?[] RowCells { get; set; }
+    private Cell?[]? RowCells { get; set; }
 
     public object this[int i] => GetValue(i);
 
@@ -76,12 +76,12 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     public byte GetByte(int i) => (byte)GetValue(i);
 
-    public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
+    public long GetBytes(int i, long fieldOffset, byte[]? buffer, int bufferoffset, int length)
         => throw new NotSupportedException();
 
     public char GetChar(int i) => (char)GetValue(i);
 
-    public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
+    public long GetChars(int i, long fieldoffset, char[]? buffer, int bufferoffset, int length)
          => throw new NotSupportedException();
 
     public IDataReader GetData(int i) => throw new NotSupportedException();
@@ -97,7 +97,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 #if NET8_0_OR_GREATER
     [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)]
 #endif
-    public Type GetFieldType(int i) => GetValue(i)?.GetType();
+    public Type GetFieldType(int i) => GetValue(i)?.GetType() ?? typeof(DBNull);
 
     public float GetFloat(int i) => (float)GetValue(i);
 
@@ -123,7 +123,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         if (RowCells == null)
             throw new InvalidOperationException("No data exists for the row/column.");
         
-        return RowCells[i]?.Value;
+        return RowCells[i]?.Value ?? DBNull.Value;
     }
 
     public int GetValues(object[] values)
@@ -134,30 +134,30 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         int readingLenth = values.Length > FieldCount ? FieldCount : values.Length;
         for (int i = 0; i < readingLenth; i++)
         {
-            values[i] = RowCells[i]?.Value;
+            values[i] = RowCells[i]?.Value ?? DBNull.Value;
         }
 
         return readingLenth;
     }
            
-    public bool IsDBNull(int i) => GetValue(i) == null;
+    public bool IsDBNull(int i) => GetValue(i) is DBNull;
 
-    public string GetNumberFormatString(int i)
+    public string? GetNumberFormatString(int i)
     {
         if (RowCells == null)
             throw new InvalidOperationException("No data exists for the row/column.");
         if (RowCells[i]?.EffectiveStyle is not { } effectiveStyle)
             return null;
-        return Workbook.GetNumberFormatString(effectiveStyle.NumberFormatIndex, null)?.FormatString;
+        return GetWorkbook().GetNumberFormatString(effectiveStyle.NumberFormatIndex, null)?.FormatString;
     }
 
-    public string GetNumberFormatString(int i, IFormatProvider provider)
+    public string? GetNumberFormatString(int i, IFormatProvider? provider)
     {
         if (RowCells == null)
             throw new InvalidOperationException("No data exists for the row/column.");
         if (RowCells[i]?.EffectiveStyle is not { } effectiveStyle)
             return null;
-        return Workbook.GetNumberFormatString(effectiveStyle.NumberFormatIndex, provider)?.FormatString;
+        return GetWorkbook().GetNumberFormatString(effectiveStyle.NumberFormatIndex, provider)?.FormatString;
     }
 
     public int GetNumberFormatIndex(int i)
@@ -342,6 +342,11 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
             _cachedWorksheets = [];
         }
 
+        if (Workbook is null)
+        {
+            yield break;
+        }
+
         _cachedWorksheetIterator ??= Workbook.ReadWorksheets().GetEnumerator();
 
         while (_cachedWorksheetIterator.MoveNext())
@@ -365,7 +370,11 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
         Array.Clear(RowCells, 0, RowCells.Length);
 
-        foreach (var cell in _rowIterator.Current.Cells)
+        var rowIterator = _rowIterator;
+        if (rowIterator == null)
+            throw new InvalidOperationException("No data exists for the row/column.");
+
+        foreach (var cell in rowIterator.Current.Cells)
         {
             if (cell.ColumnIndex >= RowCells.Length)
             {
@@ -383,5 +392,10 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
             RowCells[cell.ColumnIndex] = cell;
         }
+    }
+
+    private TWorkbook GetWorkbook()
+    {
+        return Workbook ?? throw new InvalidOperationException("Workbook is not initialized.");
     }
 }

@@ -8,7 +8,7 @@ internal sealed class CompoundDirectoryEntry
     /// <summary>
     /// Gets or sets the name of directory entry.
     /// </summary>
-    public string EntryName { get; set; }
+    public string? EntryName { get; set; }
 
     /// <summary>
     /// Gets or sets the entry type.

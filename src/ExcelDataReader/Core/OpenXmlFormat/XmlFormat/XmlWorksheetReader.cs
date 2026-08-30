@@ -195,7 +195,8 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
                     if (Reader.IsStartElement(NMergeCell, ProperNamespaces.NsSpreadsheetMl))
                     {
                         var cellRefs = Reader.GetAttribute(ARef);
-                        yield return new MergeCellRecord(CellRange.Parse(cellRefs));
+                        if (!string.IsNullOrEmpty(cellRefs))
+                            yield return new MergeCellRecord(CellRange.Parse(cellRefs));
 
                         Reader.Skip();
                     }
@@ -228,8 +229,8 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
                         var customWidth = Reader.GetAttribute(ACustomWidth);
                         var hidden = Reader.GetAttribute(AHidden);
 
-                        var maxVal = int.Parse(max, CultureInfo.InvariantCulture);
-                        var minVal = int.Parse(min, CultureInfo.InvariantCulture);
+                        var maxVal = int.TryParse(max, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedMax) ? parsedMax : 0;
+                        var minVal = int.TryParse(min, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedMin) ? parsedMin : 0;
                         double.TryParse(width, NumberStyles.Float, CultureInfo.InvariantCulture, out double widthVal);
 
                         // Note: column indexes need to be converted to be zero-indexed
@@ -275,7 +276,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
         }
     }
 
-    private HeaderFooter ReadHeaderFooter(string nsSpreadsheetMl)
+    private HeaderFooter? ReadHeaderFooter(string nsSpreadsheetMl)
     {
         var differentFirst = Reader.GetAttribute(ADifferentFirst) == "1";
         var differentOddEven = Reader.GetAttribute(ADifferentOddEven) == "1";
@@ -350,7 +351,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
             return new CellRecord(columnIndex, xfIndex, null, null);
         }
 
-        object value = null;
+        object? value = null;
         CellError? error = null;
         while (!Reader.EOF)
         {
@@ -374,7 +375,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
 
         return new CellRecord(columnIndex, xfIndex, value, error);
 
-        static void ConvertCellValue(string rawValue, string aT, out object value, out CellError? error)
+        static void ConvertCellValue(string rawValue, string? aT, out object? value, out CellError? error)
         {
             const NumberStyles style = NumberStyles.Any;
 

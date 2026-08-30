@@ -451,13 +451,13 @@ public abstract class ExcelTestBase
 
         // Check errors on first row return null
         reader.Read();
-        Assert.That(reader.GetValue(0), Is.Null);
+        Assert.That(reader.GetValue(0), Is.EqualTo(DBNull.Value));
         Assert.That(reader.GetCellError(0), Is.EqualTo(CellError.DIV0));
 
-        Assert.That(reader.GetValue(1), Is.Null);
+        Assert.That(reader.GetValue(1), Is.EqualTo(DBNull.Value));
         Assert.That(reader.GetCellError(1), Is.EqualTo(CellError.NA));
 
-        Assert.That(reader.GetValue(2), Is.Null);
+        Assert.That(reader.GetValue(2), Is.EqualTo(DBNull.Value));
         Assert.That(reader.GetCellError(2), Is.EqualTo(CellError.VALUE));
 
         Assert.That(reader.RowCount, Is.EqualTo(1));
@@ -470,17 +470,17 @@ public abstract class ExcelTestBase
 
         // DataSet dataSet = excelReader.AsDataSet(true);
         excelReader.Read();
-        Assert.That(excelReader.GetValue(0), Is.Null);
+        Assert.That(excelReader.GetValue(0), Is.EqualTo(DBNull.Value));
         Assert.That(excelReader.GetString(1), Is.EqualTo("a"));
         Assert.That(excelReader.GetString(2), Is.EqualTo("b"));
-        Assert.That(excelReader.GetValue(3), Is.Null);
+        Assert.That(excelReader.GetValue(3), Is.EqualTo(DBNull.Value));
         Assert.That(excelReader.GetString(4), Is.EqualTo("d"));
 
         excelReader.Read();
-        Assert.That(excelReader.GetValue(0), Is.Null);
-        Assert.That(excelReader.GetValue(1), Is.Null);
+        Assert.That(excelReader.GetValue(0), Is.EqualTo(DBNull.Value));
+        Assert.That(excelReader.GetValue(1), Is.EqualTo(DBNull.Value));
         Assert.That(excelReader.GetString(2), Is.EqualTo("Test"));
-        Assert.That(excelReader.GetValue(3), Is.Null);
+        Assert.That(excelReader.GetValue(3), Is.EqualTo(DBNull.Value));
         Assert.That(excelReader.GetDouble(4), Is.EqualTo(1));
     }
 
@@ -911,7 +911,7 @@ public abstract class ExcelTestBase
 
             for (var i = 0; i < reader.FieldCount; i++)
             {
-                if (reader.GetValue(i) != null)
+                if (reader.GetValue(i) is not DBNull)
                     return false;
             }
 
@@ -922,7 +922,7 @@ public abstract class ExcelTestBase
         {
             for (var i = 0; i < reader.FieldCount; i++)
             {
-                if (reader.GetValue(i) != null)
+                if (reader.GetValue(i) is not DBNull)
                     return false;
             }
 

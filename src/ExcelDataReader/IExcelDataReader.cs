@@ -10,17 +10,17 @@ public interface IExcelDataReader : IDataReader
     /// <summary>
     /// Gets the sheet name.
     /// </summary>
-    string Name { get; }
+    string? Name { get; }
 
     /// <summary>
     /// Gets the sheet VBA code name.
     /// </summary>
-    string CodeName { get; }
+    string? CodeName { get; }
 
     /// <summary>
     /// Gets the sheet visible state.
     /// </summary>
-    string VisibleState { get; }
+    string? VisibleState { get; }
 
     /// <summary>
     /// Gets the active sheet.
@@ -35,7 +35,7 @@ public interface IExcelDataReader : IDataReader
     /// <summary>
     /// Gets the sheet header and footer -or- <see langword="null"/> if none set.
     /// </summary>
-    HeaderFooter HeaderFooter { get; }
+    HeaderFooter? HeaderFooter { get; }
 
     /// <summary>
     /// Gets the list of merged cell ranges, or an empty array if there are none.
@@ -56,7 +56,7 @@ public interface IExcelDataReader : IDataReader
     /// Gets the dimension of the current result.
     /// </summary>
     /// <remarks>Main use case is analysis of clipboard data. Potentially unreliable in other use cases.</remarks>
-    CellRange Dimension { get; }
+    CellRange? Dimension { get; }
 
     /// <summary>
     /// Gets the height of the current row in points.
@@ -74,7 +74,7 @@ public interface IExcelDataReader : IDataReader
     /// </summary>
     /// <param name="i">The index of the field to find.</param>
     /// <returns>The number format string of the specified field.</returns>
-    string GetNumberFormatString(int i);
+    string? GetNumberFormatString(int i);
 
     /// <summary>
     /// Gets the number format for the specified field using locale-dependent format patterns,
@@ -89,7 +89,7 @@ public interface IExcelDataReader : IDataReader
     /// equivalent to calling <see cref="GetNumberFormatString(int)"/>.
     /// </param>
     /// <returns>The number format string of the specified field.</returns>
-    string GetNumberFormatString(int i, IFormatProvider provider);
+    string? GetNumberFormatString(int i, IFormatProvider? provider);
 
     /// <summary>
     /// Gets the number format index for the specified field -or- -1 if there is no value.

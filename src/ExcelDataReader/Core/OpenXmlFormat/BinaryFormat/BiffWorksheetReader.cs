@@ -107,7 +107,7 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
                     // To behave the same as when reading an xml based file. 
                     // GetAttribute returns null both if the attribute is missing
                     // or if it is empty.
-                    string codeName = length == 0 ? null : GetString(buffer, 19 + 4, length);
+                    string? codeName = length == 0 ? null : GetString(buffer, 19 + 4, length);
                     return new SheetPrRecord(codeName);
                 }
 
@@ -234,7 +234,7 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
                 return Record.Default;
         }
 
-        CellRecord ReadCell(object value, CellError? errorValue = null)
+        CellRecord ReadCell(object? value, CellError? errorValue = null)
         {
             int column = (int)GetDWord(buffer, 0);
             uint xfIndex = GetDWord(buffer, 4) & 0xffffff;

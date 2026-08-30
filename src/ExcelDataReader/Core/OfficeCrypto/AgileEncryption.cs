@@ -39,9 +39,9 @@ internal sealed class AgileEncryption : EncryptionInfo
 
     public int HashSize { get; set; }
 
-    public byte[] SaltValue { get; set; }
+    public byte[] SaltValue { get; set; } = [];
 
-    public byte[] PasswordSaltValue { get; set; }
+    public byte[] PasswordSaltValue { get; set; } = [];
 
     public CipherIdentifier PasswordCipherAlgorithm { get; set; }
 
@@ -49,11 +49,11 @@ internal sealed class AgileEncryption : EncryptionInfo
 
     public HashIdentifier PasswordHashAlgorithm { get; set; }
 
-    public byte[] PasswordEncryptedKeyValue { get; set; }
+    public byte[] PasswordEncryptedKeyValue { get; set; } = [];
 
-    public byte[] PasswordEncryptedVerifierHashInput { get; set; }
+    public byte[] PasswordEncryptedVerifierHashInput { get; set; } = [];
 
-    public byte[] PasswordEncryptedVerifierHashValue { get; set; }
+    public byte[] PasswordEncryptedVerifierHashValue { get; set; } = [];
 
     public int PasswordSpinCount { get; set; }
 
@@ -239,6 +239,9 @@ internal sealed class AgileEncryption : EncryptionInfo
                 int.TryParse(xmlReader.GetAttribute("hashSize"), out int hashSize);
 #pragma warning restore CA1806 // Do not ignore method results
 
+                if (cipherAlgorithm == null || cipherChaining == null || hashAlgorithm == null || saltValue == null)
+                    throw new XmlException("Invalid keyData in encryption info.");
+
                 SaltValue = Convert.FromBase64String(saltValue);
                 HashSize = hashSize; // given in bytes, also given implicitly by SHA512
                 KeyBits = keyBits;
@@ -307,6 +310,12 @@ internal sealed class AgileEncryption : EncryptionInfo
                 int.TryParse(xmlReader.GetAttribute("blockSize"), out int blockSize);
                 int.TryParse(xmlReader.GetAttribute("keyBits"), out int keyBits);
 #pragma warning restore CA1806 // Do not ignore method results
+
+                if (cipherAlgorithm == null || cipherChaining == null || hashAlgorithm == null || saltValue == null ||
+                    encryptedVerifierHashInput == null || encryptedVerifierHashValue == null || encryptedKeyValue == null)
+                {
+                    throw new XmlException("Invalid encryptedKey in encryption info.");
+                }
 
                 PasswordSaltValue = Convert.FromBase64String(saltValue);
                 PasswordCipherAlgorithm = ParseCipher(cipherAlgorithm/*, blockSize * 8*/);

@@ -95,9 +95,9 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 | `MergeCells`                                                                            | returns an array of merged cell ranges in the current sheet.                                                                                                                                                            |
 | `RowHeight`                                                                             | returns the visual height of the current row in points. May be 0 if the row is hidden.                                                                                                                                  |
 | `GetColumnWidth()`                                                                      | returns the width of a column in character units. May be 0 if the column is hidden.                                                                                                                                     |
-| `GetFieldType()`                                                                        | returns the type of a value in the current row. Always one of the types supported by Excel: `double`, `int`, `bool`, `DateTime`, `TimeSpan`, `string`, or `null` if there is no value.                                  |
-| `IsDBNull()`                                                                            | checks if a value in the current row is null.                                                                                                                                                                           |
-| `GetValue()`                                                                            | returns a value from the current row as an `object`, or `null` if there is no value.                                                                                                                                    |
+| `GetFieldType()`                                                                        | returns the type of a value in the current row. Always one of the types supported by Excel: `double`, `int`, `bool`, `DateTime`, `TimeSpan`, `string`, or `typeof(DBNull)` if there is no value.                        |
+| `IsDBNull()`                                                                            | returns `true` if a value in the current row is `DBNull` (i.e. the cell is empty).                                                                                                                                     |
+| `GetValue()`                                                                            | returns a value from the current row as an `object`, or `DBNull.Value` if there is no value.                                                                                                                            |
 | `GetDouble()`<br/>`GetInt32()`<br/>`GetBoolean()`<br/>`GetDateTime()`<br/>`GetString()` | return a value from the current row cast to their respective type.                                                                                                                                                      |
 | `GetNumberFormatString()`                                                               | returns a string containing the formatting codes for a value in the current row, or `null` if there is no value. See also the Formatting section below.                                                                 |
 | `GetNumberFormatIndex()`                                                                | returns the number format index for a value in the current row. Index values below 164 refer to built-in number formats, otherwise indicate a custom number format.                                                     |
@@ -160,8 +160,6 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
 ```
 
 `CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()`, and `CreateCsvReader()` require seek support during probing and parsing. If the input stream is non-seekable, ExcelDataReader copies it to a `MemoryStream` first.
-
-This is a 4.0 breaking behavior change: when a non-seekable stream is copied, the original source stream may be consumed even when `LeaveOpen = true`.
 
 ### AsDataSet() configuration options
 
@@ -261,7 +259,76 @@ See also:
 - https://github.com/andersnm/ExcelNumberFormat
 - https://www.nuget.org/packages/ExcelNumberFormat
 
-## Important note when upgrading from ExcelDataReader 2.x
+## Upgrading from 3.x to 4.0
+
+### Null cells now return `DBNull.Value` instead of `null`
+
+`GetValue()` now returns `DBNull.Value` instead of `null` for empty cells, aligning with the `IDataReader` contract. `GetFieldType()` correspondingly returns `typeof(DBNull)` instead of `null`.
+
+**Before (3.x):**
+```c#
+var value = reader.GetValue(i);
+if (value == null)
+{
+    // cell is empty
+}
+```
+
+**After (4.0):**
+```c#
+if (reader.IsDBNull(i))
+{
+    // cell is empty
+}
+// or
+var value = reader.GetValue(i);
+if (value is DBNull)
+{
+    // cell is empty
+}
+```
+
+The typed getters (`GetString()`, `GetBoolean()`, `GetDateTime()`, etc.) will throw `InvalidCastException` when called on an empty cell. Always check `IsDBNull(i)` first:
+
+```c#
+// Before (3.x): returned null for empty cells
+string value = reader.GetString(i);
+
+// After (4.0): throws InvalidCastException for empty cells — check first
+string? value = reader.IsDBNull(i) ? null : reader.GetString(i);
+```
+
+### `GetValue()` returns `DateTime` instead of `DateTimeOffset` for strict OpenXml dates
+
+In strict OpenXml mode, date values were previously returned as `DateTimeOffset`. They are now returned as `DateTime`, consistent with all other date handling in ExcelDataReader.
+
+```c#
+// Before (3.x)
+var value = (DateTimeOffset)reader.GetValue(i);
+
+// After (4.0)
+var value = reader.GetDateTime(i); // or (DateTime)reader.GetValue(i)
+```
+
+### Non-seekable streams are consumed even when `LeaveOpen = true`
+
+If the input stream is non-seekable, ExcelDataReader copies it to a `MemoryStream`. When this copy occurs, the source stream is fully consumed regardless of the `LeaveOpen` setting. If you need to reuse the source stream, ensure it is seekable before passing it to `CreateReader()`.
+
+### `TransformValue` callback parameter types changed to nullable
+
+The `ExcelDataTableConfiguration.TransformValue` delegate type changed from `Func<IExcelDataReader, int, object, object>` to `Func<IExcelDataReader, int, object?, object?>`. If you assigned a named method to this property, update its signature:
+
+```c#
+// Before (3.x)
+object MyTransform(IExcelDataReader reader, int col, object value) => ...;
+
+// After (4.0)
+object? MyTransform(IExcelDataReader reader, int col, object? value) => ...;
+```
+
+Anonymous lambdas are unaffected — the compiler infers the parameter types automatically.
+
+## Upgrading from 2.x to 3.x
 
 ExcelDataReader 3 had some breaking changes, and older code may produce error messages similar to:
 

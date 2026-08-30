@@ -10,7 +10,7 @@ namespace ExcelDataReader.Core.BinaryFormat;
 /// </summary>
 internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
 {
-    internal XlsWorkbook(Stream stream, string password, Encoding fallbackEncoding)
+    internal XlsWorkbook(Stream stream, string? password, Encoding fallbackEncoding)
     {
         Stream = stream;
 
@@ -45,25 +45,25 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
 
     public int BiffVersion { get; }
 
-    public byte[] SecretKey { get; }
+    public byte[]? SecretKey { get; }
 
-    public EncryptionInfo Encryption { get; }
+    public EncryptionInfo? Encryption { get; }
 
     public Encoding Encoding { get; private set; }
 
-    public XlsBiffInterfaceHdr InterfaceHdr { get; set; }
+    public XlsBiffInterfaceHdr? InterfaceHdr { get; set; }
 
-    public XlsBiffRecord Mms { get; set; }
+    public XlsBiffRecord? Mms { get; set; }
 
-    public XlsBiffRecord WriteAccess { get; set; }
+    public XlsBiffRecord? WriteAccess { get; set; }
 
-    public XlsBiffSimpleValueRecord CodePage { get; set; }
+    public XlsBiffSimpleValueRecord? CodePage { get; set; }
 
-    public XlsBiffRecord Dsf { get; set; }
+    public XlsBiffRecord? Dsf { get; set; }
 
-    public XlsBiffRecord Country { get; set; }
+    public XlsBiffRecord? Country { get; set; }
 
-    public XlsBiffSimpleValueRecord Backup { get; set; }
+    public XlsBiffSimpleValueRecord? Backup { get; set; }
 
     public List<XlsBiffFont> Fonts { get; } = [];
 
@@ -72,13 +72,13 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
     /// <summary>
     /// Gets or sets the Shared String Table of workbook.
     /// </summary>
-    public XlsBiffSST SST { get; set; }
+    public XlsBiffSST? SST { get; set; }
 
-    public XlsBiffRecord ExtSST { get; set; }
+    public XlsBiffRecord? ExtSST { get; set; }
 
     public bool IsDate1904 { get; private set; }
 
-    public int ResultsCount => Sheets?.Count ?? -1;
+    public int ResultsCount => Sheets.Count;
 
     public int ActiveSheet { get; private set; }
 
@@ -172,7 +172,7 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
                     // of the code page values specified in [CODEPG] or the special value 1200, which means that the
                     // workbook is Unicode.
                     CodePage = codePage;
-                    Encoding = EncodingHelper.GetEncoding(CodePage.Value);
+                    Encoding = EncodingHelper.GetEncoding(CodePage.Value) ?? Encoding;
                     break;
                 case XlsBiffSimpleValueRecord is1904 when rec.Id == BIFFRECORDTYPE.DATE1904:
                     IsDate1904 = is1904.Value == 1;

@@ -11,7 +11,8 @@ public static class AssertUtilities
         Assert.That(excelReader.GetString(0), Is.EqualTo("column a"));
         Assert.That(excelReader.GetString(1), Is.EqualTo(" column b"));
         Assert.That(excelReader.GetString(2), Is.EqualTo(" column b"));
-        Assert.That(excelReader.GetString(3), Is.Null);
+        Assert.That(excelReader.IsDBNull(3), Is.True);
+        Assert.Throws<InvalidCastException>(() => excelReader.GetString(3));
         Assert.That(excelReader.GetString(4), Is.EqualTo("column e"));
         Assert.That(excelReader.GetString(5), Is.EqualTo(" column b"));
 

@@ -8,8 +8,8 @@ namespace ExcelDataReader.Core.BinaryFormat;
 internal sealed class XlsBiffSST : XlsBiffRecord
 {
     private readonly XlsSSTReader _reader = new();
-    private string[] _materializedStrings;
-    private List<IXlsString> _strings = [];
+    private string?[]? _materializedStrings;
+    private List<IXlsString?> _strings = [];
 
     internal XlsBiffSST(byte[] bytes)
         : base(bytes)
@@ -64,13 +64,13 @@ internal sealed class XlsBiffSST : XlsBiffRecord
     /// </summary>
     /// <param name="sstIndex">Index of string to get.</param>
     /// <param name="encoding">Workbook encoding.</param>
-    /// <returns>string value if it was found, empty string otherwise.</returns>
-    public string GetString(uint sstIndex, Encoding encoding)
+    /// <returns>string value if it was found, null otherwise.</returns>
+    public string? GetString(uint sstIndex, Encoding encoding)
     {
         if (_materializedStrings == null)
         {
             if (sstIndex < _strings.Count)
-                return _strings[(int)sstIndex].GetValue(encoding);
+                return _strings[(int)sstIndex]?.GetValue(encoding);
             return null;
         }
 
@@ -81,7 +81,7 @@ internal sealed class XlsBiffSST : XlsBiffRecord
         if (cached != null)
             return cached;
 
-        var s = _strings[(int)sstIndex].GetValue(encoding);
+        var s = _strings[(int)sstIndex]?.GetValue(encoding);
         _materializedStrings[sstIndex] = s;
         _strings[(int)sstIndex] = null;
         return s;

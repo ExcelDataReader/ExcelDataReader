@@ -7,12 +7,12 @@ namespace ExcelDataReader.Core.OfficeCrypto;
 /// </summary>
 internal sealed class RC4Managed : SymmetricAlgorithm
 {
-    public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[] rgbIV)
+    public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV)
     {
         return new RC4Transform(rgbKey);
     }
 
-    public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[] rgbIV)
+    public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV)
     {
         throw new NotImplementedException();
     }

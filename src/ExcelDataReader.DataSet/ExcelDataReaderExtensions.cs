@@ -15,7 +15,7 @@ public static class ExcelDataReaderExtensions
     /// <param name="self">The IExcelDataReader instance.</param>
     /// <param name="configuration">An optional configuration object to modify the behavior of the conversion.</param>
     /// <returns>A dataset with all workbook contents.</returns>
-    public static DataSet AsDataSet(this IExcelDataReader self, ExcelDataSetConfiguration configuration = null)
+    public static DataSet AsDataSet(this IExcelDataReader self, ExcelDataSetConfiguration? configuration = null)
     {
         configuration ??= new();
 
@@ -74,7 +74,7 @@ public static class ExcelDataReaderExtensions
         var first = true;
         var emptyRows = 0;
         List<CellRange> mergedCellsList = [];
-        Dictionary<(int Row, int Column), object> mergeCellValue = [];
+        Dictionary<(int Row, int Column), object?> mergeCellValue = [];
 
         // If need to fill merged cells, check the next row have merged cells
         var nextRowHaveMergedCell = false;
@@ -121,8 +121,8 @@ public static class ExcelDataReaderExtensions
                         }
 
                         var name = configuration.UseHeaderRow
-                            ? Convert.ToString(self.GetValue(i), CultureInfo.CurrentCulture)
-                            : null;
+                            ? Convert.ToString(self.GetValue(i), CultureInfo.CurrentCulture) ?? string.Empty
+                            : string.Empty;
 
                         if (string.IsNullOrEmpty(name))
                         {
@@ -224,7 +224,7 @@ public static class ExcelDataReaderExtensions
 
                 if (configuration.TransformValue != null)
                 {
-                    var transformedValue = configuration.TransformValue(self, i, value);
+                    var transformedValue = configuration.TransformValue(self, i, value is DBNull ? null : value);
                     if (transformedValue != null)
                         value = transformedValue;
                 }
@@ -246,12 +246,12 @@ public static class ExcelDataReaderExtensions
             var value = reader.GetValue(i);
             if (configuration.TransformValue != null)
             {
-                var transformedValue = configuration.TransformValue(reader, i, value);
+                var transformedValue = configuration.TransformValue(reader, i, value is DBNull ? null : value);
                 if (transformedValue != null)
                     value = transformedValue;
             }
 
-            if (value != null)
+            if (value != null && value is not DBNull)
                 return false;
         }
 
@@ -275,10 +275,10 @@ public static class ExcelDataReaderExtensions
                 continue;
             }
 
-            DataTable newTable = null;
+            DataTable? newTable = null;
             for (int i = 0; i < table.Columns.Count; i++)
             {
-                Type type = null;
+                Type? type = null;
                 foreach (DataRow row in table.Rows)
                 {
                     if (row.IsNull(i))

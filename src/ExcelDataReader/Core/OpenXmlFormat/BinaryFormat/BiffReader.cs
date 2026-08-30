@@ -1,8 +1,6 @@
-﻿using System.Text;
+using System.Text;
 
 using ExcelDataReader.Core.OpenXmlFormat.Records;
-
-#nullable enable
 
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 

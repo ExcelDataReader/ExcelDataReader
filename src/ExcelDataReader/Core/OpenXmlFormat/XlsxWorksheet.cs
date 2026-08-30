@@ -16,13 +16,19 @@ internal sealed class XlsxWorksheet : IWorksheet
         Path = refSheet.Path;
         DefaultRowHeight = 15;
 
-        if (string.IsNullOrEmpty(Path))
+        if (Path is not { Length: > 0 } worksheetPath)
+        {
+            ColumnWidths = [];
             return;
+        }
 
-        using var sheetStream = Document.GetWorksheetReader(Path, !singlePassMode);
+        using var sheetStream = Document.GetWorksheetReader(worksheetPath, !singlePassMode);
         
         if (sheetStream == null)
+        {
+            ColumnWidths = [];
             return;
+        }
 
         int rowIndexMaximum = int.MinValue;
         int columnIndexMaximum = int.MinValue;
@@ -86,21 +92,21 @@ internal sealed class XlsxWorksheet : IWorksheet
 
     public int RowCount { get; }
 
-    public CellRange Dimension { get; private set; }
+    public CellRange? Dimension { get; private set; }
 
     public string Name { get; }
 
-    public string CodeName { get; }
+    public string? CodeName { get; }
 
     public string VisibleState { get; }
 
-    public HeaderFooter HeaderFooter { get; }
+    public HeaderFooter? HeaderFooter { get; }
 
-    public CellRange[] MergeCells { get; }
+    public CellRange[] MergeCells { get; } = [];
 
     public List<Column> ColumnWidths { get; }
 
-    private string Path { get; set; }
+    private string? Path { get; set; }
 
     private double DefaultRowHeight { get; }
 
@@ -110,10 +116,10 @@ internal sealed class XlsxWorksheet : IWorksheet
 
     public IEnumerable<Row> ReadRows()
     {
-        if (string.IsNullOrEmpty(Path))
+        if (Path is not { Length: > 0 } worksheetPath)
             yield break;
 
-        using RecordReader sheetStream = Document.GetWorksheetReader(Path, false);
+        using var sheetStream = Document.GetWorksheetReader(worksheetPath, false);
         if (sheetStream == null)
             yield break;
 
@@ -185,7 +191,7 @@ internal sealed class XlsxWorksheet : IWorksheet
         }
     }
 
-    private object ConvertCellValue(object value, int numberFormatIndex)
+    private object? ConvertCellValue(object? value, int numberFormatIndex)
     {
         switch (value)
         {
@@ -213,13 +219,13 @@ internal sealed class XlsxWorksheet : IWorksheet
                 return date;
 
             case string s:
-                NumberFormatString numberFormat = Workbook.GetNumberFormatString(numberFormatIndex, null);
-                if (numberFormat.IsTimeSpanFormat && TryParseToTimeSpan(s, out var timeSpan))
+                NumberFormatString? numberFormat = Workbook.GetNumberFormatString(numberFormatIndex, null);
+                if (numberFormat?.IsTimeSpanFormat == true && TryParseToTimeSpan(s, out var timeSpan))
                 {
                     return timeSpan;
                 }
 
-                if (numberFormat.IsDateTimeFormat && DateTime.TryParse(s, out DateTime dateTime))
+                if (numberFormat?.IsDateTimeFormat == true && DateTime.TryParse(s, out DateTime dateTime))
                 {
                     return dateTime;
                 }

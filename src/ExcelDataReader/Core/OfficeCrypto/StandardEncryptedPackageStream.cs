@@ -19,51 +19,51 @@ internal sealed class StandardEncryptedPackageStream : Stream
         BaseStream = new CryptoStream(underlyingStream, Decryptor, CryptoStreamMode.Read);
     }
 
-    public override bool CanRead => BaseStream.CanRead;
+    public override bool CanRead => GetBaseStream().CanRead;
 
-    public override bool CanSeek => BaseStream.CanSeek;
+    public override bool CanSeek => GetBaseStream().CanSeek;
 
-    public override bool CanWrite => BaseStream.CanWrite;
+    public override bool CanWrite => GetBaseStream().CanWrite;
 
     public override long Length => DecryptedLength;
 
     public override long Position
     {
-        get => BaseStream.Position;
-        set => BaseStream.Position = value;
+        get => GetBaseStream().Position;
+        set => GetBaseStream().Position = value;
     }
 
-    private CryptoStream BaseStream { get; set; }
+    private CryptoStream? BaseStream { get; set; }
 
-    private SymmetricAlgorithm Cipher { get; set; }
+    private SymmetricAlgorithm? Cipher { get; set; }
 
-    private ICryptoTransform Decryptor { get; set; }
+    private ICryptoTransform? Decryptor { get; set; }
 
     private long DecryptedLength { get; }
 
     public override void Flush()
     {
-        BaseStream.Flush();
+        GetBaseStream().Flush();
     }
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        return BaseStream.Read(buffer, offset, count);
+        return GetBaseStream().Read(buffer, offset, count);
     }
 
     public override long Seek(long offset, SeekOrigin origin)
     {
-        return BaseStream.Seek(offset, origin);
+        return GetBaseStream().Seek(offset, origin);
     }
 
     public override void SetLength(long value)
     {
-        BaseStream.SetLength(value);
+        GetBaseStream().SetLength(value);
     }
 
     public override void Write(byte[] buffer, int offset, int count)
     {
-        BaseStream.Write(buffer, offset, count);
+        GetBaseStream().Write(buffer, offset, count);
     }
 
     protected override void Dispose(bool disposing)
@@ -73,7 +73,7 @@ internal sealed class StandardEncryptedPackageStream : Stream
             Decryptor?.Dispose();
             Decryptor = null;
 
-            ((IDisposable)Cipher)?.Dispose();
+            Cipher?.Dispose();
             Cipher = null;
 
             BaseStream?.Dispose();
@@ -81,5 +81,10 @@ internal sealed class StandardEncryptedPackageStream : Stream
         }
 
         base.Dispose(disposing);
+    }
+
+    private CryptoStream GetBaseStream()
+    {
+        return BaseStream ?? throw new ObjectDisposedException(nameof(StandardEncryptedPackageStream));
     }
 }

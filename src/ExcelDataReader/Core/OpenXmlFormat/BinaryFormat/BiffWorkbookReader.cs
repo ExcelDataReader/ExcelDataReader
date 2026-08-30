@@ -1,6 +1,4 @@
-﻿using ExcelDataReader.Core.OpenXmlFormat.Records;
-
-#nullable enable
+using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 

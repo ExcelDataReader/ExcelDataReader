@@ -1,5 +1,3 @@
-﻿#nullable enable
-
 namespace ExcelDataReader.Core;
 
 internal static class ReferenceHelper
