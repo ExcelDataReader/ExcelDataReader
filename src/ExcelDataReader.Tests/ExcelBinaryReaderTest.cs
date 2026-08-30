@@ -1019,6 +1019,9 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         Assert.That(reader.IsDBNull(0), Is.True);
         Assert.That(reader.IsDBNull(2), Is.True);
         Assert.That(reader.IsDBNull(6), Is.True);
+        Assert.That(reader.GetFieldType(0), Is.EqualTo(typeof(DBNull)));
+        Assert.That(reader.GetFieldType(2), Is.EqualTo(typeof(DBNull)));
+        Assert.That(reader.GetFieldType(6), Is.EqualTo(typeof(DBNull)));
         Assert.Throws<InvalidCastException>(() => reader.GetString(0));
         Assert.Throws<InvalidCastException>(() => reader.GetString(2));
         Assert.Throws<InvalidCastException>(() => reader.GetString(6));
