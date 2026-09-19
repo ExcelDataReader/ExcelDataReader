@@ -60,6 +60,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
     public IEnumerable<SpreadsheetXmlWorksheet> ReadWorksheets()
     {
         for (int i = 0; i < _worksheets.Count; i++)
+        {
             yield return SpreadsheetXmlWorksheet.Create(
                 _stream,
                 i,
@@ -68,7 +69,119 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
                 _worksheets[i].ExpandedColumnCount,
                 _stylesById,
                 SinglePassMode);
+        }
     }
+
+    private static (string Name, string VisibleState, int ExpandedColumnCount) ParseWorksheetDescriptor(XmlReader worksheetReader, XmlReader workbookReader)
+    {
+        string name = GetSpreadsheetAttribute(workbookReader, "Name") ?? string.Empty;
+        string visibleState = "visible";
+        int expandedColumnCount = 0;
+
+        using (worksheetReader)
+        {
+            while (worksheetReader.Read())
+            {
+                if (worksheetReader.NodeType != XmlNodeType.Element)
+                    continue;
+
+                if (worksheetReader.LocalName == "WorksheetOptions" && worksheetReader.NamespaceURI == ExcelNamespace)
+                {
+                    visibleState = SpreadsheetXmlWorksheet.ParseVisibleState(worksheetReader.ReadSubtree());
+                    continue;
+                }
+
+                if (worksheetReader.LocalName == "Table" && worksheetReader.NamespaceURI == SpreadsheetNamespace)
+                {
+                    expandedColumnCount = ParseInt(GetSpreadsheetAttribute(worksheetReader, "ExpandedColumnCount"));
+                    SkipElement(worksheetReader);
+                }
+            }
+        }
+
+        return (name, visibleState, expandedColumnCount);
+    }
+
+    private static XmlReader CreateXmlReaderAtStart(Stream stream, bool tolerateLeadingWhitespace)
+    {
+        if (stream.CanSeek)
+        {
+            stream.Seek(0, SeekOrigin.Begin);
+            if (tolerateLeadingWhitespace)
+            {
+                SkipLeadingAsciiWhitespace(stream);
+            }
+        }
+
+        var settings = new XmlReaderSettings
+        {
+            DtdProcessing = DtdProcessing.Prohibit,
+            IgnoreComments = true,
+            IgnoreWhitespace = true,
+            CloseInput = false,
+        };
+
+        return XmlReader.Create(stream, settings);
+    }
+
+    private static void SkipLeadingAsciiWhitespace(Stream stream)
+    {
+        while (true)
+        {
+            int value = stream.ReadByte();
+            if (value < 0)
+                return;
+
+            if (!IsAsciiWhitespace((byte)value))
+            {
+                stream.Seek(-1, SeekOrigin.Current);
+                return;
+            }
+        }
+    }
+
+    private static bool IsAsciiWhitespace(byte value)
+        => value == (byte)' ' || value == (byte)'\t' || value == (byte)'\r' || value == (byte)'\n';
+
+    private static void SkipElement(XmlReader reader)
+    {
+        if (reader.IsEmptyElement)
+            return;
+
+        int depth = reader.Depth;
+        while (reader.Read() && !(reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth))
+        {
+        }
+    }
+
+    private static string? GetSpreadsheetAttribute(XmlReader reader, string attributeName)
+        => reader.GetAttribute(attributeName, SpreadsheetNamespace) ?? reader.GetAttribute(attributeName);
+
+    private static int ParseInt(string? value, int defaultValue = 0)
+        => int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result) ? result : defaultValue;
+
+    private static bool ParseBool(string? value)
+        => value == "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+
+    private static HorizontalAlignment ParseHorizontalAlignment(string? value) => value?.ToLowerInvariant() switch
+    {
+        "left" => HorizontalAlignment.Left,
+        "center" => HorizontalAlignment.Center,
+        "right" => HorizontalAlignment.Right,
+        "justify" => HorizontalAlignment.Justified,
+        "distributed" => HorizontalAlignment.Distributed,
+        _ => HorizontalAlignment.General,
+    };
+
+    private static VerticalAlignment ParseVerticalAlignment(string? value) => value?.ToLowerInvariant() switch
+    {
+        "top" => VerticalAlignment.Top,
+        "center" => VerticalAlignment.Center,
+        "bottom" => VerticalAlignment.Bottom,
+        "justify" => VerticalAlignment.Justify,
+        "distributed" => VerticalAlignment.Distributed,
+        _ => VerticalAlignment.Bottom,
+    };
 
     private void ParseWorkbook(Stream stream)
     {
@@ -113,36 +226,6 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
                 _worksheets.Add(ParseWorksheetDescriptor(workbookReader.ReadSubtree(), workbookReader));
             }
         }
-    }
-
-    private static (string Name, string VisibleState, int ExpandedColumnCount) ParseWorksheetDescriptor(XmlReader worksheetReader, XmlReader workbookReader)
-    {
-        string name = GetSpreadsheetAttribute(workbookReader, "Name") ?? string.Empty;
-        string visibleState = "visible";
-        int expandedColumnCount = 0;
-
-        using (worksheetReader)
-        {
-            while (worksheetReader.Read())
-            {
-                if (worksheetReader.NodeType != XmlNodeType.Element)
-                    continue;
-
-                if (worksheetReader.LocalName == "WorksheetOptions" && worksheetReader.NamespaceURI == ExcelNamespace)
-                {
-                    visibleState = SpreadsheetXmlWorksheet.ParseVisibleState(worksheetReader.ReadSubtree());
-                    continue;
-                }
-
-                if (worksheetReader.LocalName == "Table" && worksheetReader.NamespaceURI == SpreadsheetNamespace)
-                {
-                    expandedColumnCount = ParseInt(GetSpreadsheetAttribute(worksheetReader, "ExpandedColumnCount"));
-                    SkipElement(worksheetReader);
-                }
-            }
-        }
-
-        return (name, visibleState, expandedColumnCount);
     }
 
     private void ParseStyles(XmlReader stylesReader, Dictionary<string, ExtendedFormat> stylesById)
@@ -266,85 +349,4 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
             }
         }
     }
-
-    private static XmlReader CreateXmlReaderAtStart(Stream stream, bool tolerateLeadingWhitespace)
-    {
-        if (stream.CanSeek)
-        {
-            stream.Seek(0, SeekOrigin.Begin);
-            if (tolerateLeadingWhitespace)
-            {
-                SkipLeadingAsciiWhitespace(stream);
-            }
-        }
-
-        var settings = new XmlReaderSettings
-        {
-            DtdProcessing = DtdProcessing.Prohibit,
-            IgnoreComments = true,
-            IgnoreWhitespace = true,
-            CloseInput = false,
-        };
-
-        return XmlReader.Create(stream, settings);
-    }
-
-    private static void SkipLeadingAsciiWhitespace(Stream stream)
-    {
-        while (true)
-        {
-            int value = stream.ReadByte();
-            if (value < 0)
-                return;
-
-            if (!IsAsciiWhitespace((byte)value))
-            {
-                stream.Seek(-1, SeekOrigin.Current);
-                return;
-            }
-        }
-    }
-
-    private static bool IsAsciiWhitespace(byte value)
-        => value == (byte)' ' || value == (byte)'\t' || value == (byte)'\r' || value == (byte)'\n';
-
-    private static void SkipElement(XmlReader reader)
-    {
-        if (reader.IsEmptyElement)
-            return;
-
-        int depth = reader.Depth;
-        while (reader.Read() && !(reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth))
-        {
-        }
-    }
-
-    private static string? GetSpreadsheetAttribute(XmlReader reader, string attributeName)
-        => reader.GetAttribute(attributeName, SpreadsheetNamespace) ?? reader.GetAttribute(attributeName);
-
-    private static int ParseInt(string? value, int defaultValue = 0)
-        => int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result) ? result : defaultValue;
-
-    private static bool ParseBool(string? value)
-        => value == "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
-
-    private static HorizontalAlignment ParseHorizontalAlignment(string? value) => value?.ToLowerInvariant() switch
-    {
-        "left" => HorizontalAlignment.Left,
-        "center" => HorizontalAlignment.Center,
-        "right" => HorizontalAlignment.Right,
-        "justify" => HorizontalAlignment.Justified,
-        "distributed" => HorizontalAlignment.Distributed,
-        _ => HorizontalAlignment.General,
-    };
-
-    private static VerticalAlignment ParseVerticalAlignment(string? value) => value?.ToLowerInvariant() switch
-    {
-        "top" => VerticalAlignment.Top,
-        "center" => VerticalAlignment.Center,
-        "bottom" => VerticalAlignment.Bottom,
-        "justify" => VerticalAlignment.Justify,
-        "distributed" => VerticalAlignment.Distributed,
-        _ => VerticalAlignment.Bottom,
-    };
 }

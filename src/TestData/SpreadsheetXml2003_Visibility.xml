@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="HiddenSheet">
+    <Table>
+      <Row>
+        <Cell><Data ss:Type="String">a</Data></Cell>
+      </Row>
+    </Table>
+    <x:WorksheetOptions>
+      <x:Visible>SheetHidden</x:Visible>
+    </x:WorksheetOptions>
+  </Worksheet>
+  <Worksheet ss:Name="VisibleSheet">
+    <Table>
+      <Row>
+        <Cell><Data ss:Type="String">b</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+  <Worksheet ss:Name="VeryHiddenSheet">
+    <Table>
+      <Row>
+        <Cell><Data ss:Type="String">c</Data></Cell>
+      </Row>
+    </Table>
+    <x:WorksheetOptions>
+      <x:Visible>SheetVeryHidden</x:Visible>
+    </x:WorksheetOptions>
+  </Worksheet>
+</Workbook>

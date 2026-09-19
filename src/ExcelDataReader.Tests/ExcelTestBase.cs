@@ -173,7 +173,7 @@ public abstract class ExcelTestBase
     {
         // Verify the file stream is closed and disposed by the reader
         {
-            var stream = OpenStream("10x10");
+            var stream = OpenFixtureStream("10x10");
             using (IExcelDataReader excelReader = OpenReader(stream, new ExcelReaderConfiguration()
             {
                 LeaveOpen = true
@@ -1027,7 +1027,7 @@ public abstract class ExcelTestBase
     [Test]
     public void Issue618_SinglePassMode_RowCountThrows()
     {
-        using var reader = OpenReader(OpenStream("10x10"), new ExcelReaderConfiguration { SinglePassMode = true });
+        using var reader = OpenReader(OpenFixtureStream("10x10"), new ExcelReaderConfiguration { SinglePassMode = true });
         Assert.Throws<InvalidOperationException>(() => _ = reader.RowCount);
         reader.Read();
         Assert.Throws<InvalidOperationException>(() => _ = reader.RowCount);
@@ -1036,7 +1036,7 @@ public abstract class ExcelTestBase
     [Test]
     public void Issue618_SinglePassMode_AsDataSet()
     {
-        using var reader = OpenReader(OpenStream("10x10"), new ExcelReaderConfiguration { SinglePassMode = true });
+        using var reader = OpenReader(OpenFixtureStream("10x10"), new ExcelReaderConfiguration { SinglePassMode = true });
         var dataSet = reader.AsDataSet();
         Assert.That(dataSet.Tables[0].Rows.Count, Is.EqualTo(10));
         Assert.That(dataSet.Tables[0].Columns.Count, Is.EqualTo(10));
@@ -1047,7 +1047,7 @@ public abstract class ExcelTestBase
     [Test]
     public void Issue618_SinglePassMode_FieldCountGrows()
     {
-        using var reader = OpenReader(OpenStream("10x10"), new ExcelReaderConfiguration { SinglePassMode = true });
+        using var reader = OpenReader(OpenFixtureStream("10x10"), new ExcelReaderConfiguration { SinglePassMode = true });
         Assert.That(reader.FieldCount, Is.Zero);
         reader.Read();
         Assert.That(reader.FieldCount, Is.EqualTo(9));
@@ -1141,8 +1141,18 @@ public abstract class ExcelTestBase
     
     protected IExcelDataReader OpenReader(string name)
     {
-        return OpenReader(OpenStream(name));
+        return OpenReader(OpenFixtureStream(name));
     }
+
+    protected Stream OpenFixtureStream(string name)
+    {
+        if (!IsFixtureSupported(name))
+            Assert.Ignore($"Fixture '{name}' is not supported by {GetType().Name}.");
+
+        return OpenStream(name);
+    }
+
+    protected virtual bool IsFixtureSupported(string name) => true;
 
     protected abstract Stream OpenStream(string name);
 

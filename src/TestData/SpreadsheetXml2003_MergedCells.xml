@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Sheet1">
+    <Table>
+      <Row>
+        <Cell ss:MergeAcross="1"><Data ss:Type="String">h</Data></Cell>
+      </Row>
+      <Row ss:Index="2">
+        <Cell ss:Index="3" ss:MergeDown="1"><Data ss:Type="String">v</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>

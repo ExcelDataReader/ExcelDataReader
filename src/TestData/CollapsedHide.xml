@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Sheet1">
+    <Table ss:ExpandedColumnCount="2" ss:ExpandedRowCount="4">
+      <Row ss:Height="15">
+        <Cell><Data ss:Type="String">a</Data></Cell>
+        <Cell><Data ss:Type="String">b</Data></Cell>
+      </Row>
+      <Row ss:Height="38.25" />
+      <Row ss:Height="6" />
+      <Row ss:Hidden="1">
+        <Cell><Data ss:Type="String">x</Data></Cell>
+        <Cell><Data ss:Type="String">y</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>

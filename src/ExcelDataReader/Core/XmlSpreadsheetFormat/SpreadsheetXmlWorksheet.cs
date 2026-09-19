@@ -29,7 +29,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         int worksheetIndex = -1)
     {
         Name = name;
-        CodeName = string.Empty;
+        CodeName = null;
         VisibleState = visibleState;
         HeaderFooter = null;
         _rows = rows;
@@ -61,19 +61,6 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
     public List<Column> ColumnWidths { get; }
 
-    public IEnumerable<Row> ReadRows()
-    {
-        if (_stream != null && _stylesById != null)
-        {
-            foreach (var row in StreamRows(_stream, _worksheetIndex, _stylesById))
-                yield return row;
-            yield break;
-        }
-
-        foreach (var row in _rows)
-            yield return row;
-    }
-
     public static SpreadsheetXmlWorksheet Create(
         Stream stream,
         int worksheetIndex,
@@ -91,7 +78,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 [],
                 [],
                 [],
-                expandedColumnCount,
+                0,
                 0,
                 null,
                 stream,
@@ -174,6 +161,19 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 rowCount,
                 dimension);
         }
+    }
+
+    public IEnumerable<Row> ReadRows()
+    {
+        if (_stream != null && _stylesById != null)
+        {
+            foreach (var row in StreamRows(_stream, _worksheetIndex, _stylesById))
+                yield return row;
+            yield break;
+        }
+
+        foreach (var row in _rows)
+            yield return row;
     }
 
     internal static string ParseVisibleState(XmlReader worksheetOptionsReader)
