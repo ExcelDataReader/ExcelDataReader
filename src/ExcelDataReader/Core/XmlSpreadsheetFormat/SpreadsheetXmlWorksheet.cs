@@ -77,6 +77,8 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         int worksheetIndex,
         string name,
         string visibleState,
+        string? codeName,
+        HeaderFooter? headerFooter,
         int expandedColumnCount,
         IReadOnlyDictionary<string, ExtendedFormat> stylesById,
         IReadOnlyDictionary<int, NumberFormatString>? formats,
@@ -87,8 +89,8 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             return new SpreadsheetXmlWorksheet(
                 name,
                 visibleState,
-                codeName: null,
-                headerFooter: null,
+                codeName,
+                headerFooter,
                 [],
                 [],
                 [],
@@ -138,7 +140,6 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             var mergeCells = new List<CellRange>();
             int maxColumn = -1;
             int maxRow = -1;
-            int expandedRowCount = 0;
 
             while (worksheetReader.Read())
             {
@@ -159,18 +160,14 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                         columnWidths,
                         mergeCells,
                         ref maxColumn,
-                        ref maxRow,
-                        ref expandedRowCount);
+                        ref maxRow);
                 }
             }
 
             int fieldCount = maxColumn + 1;
             int rowCount = maxRow + 1;
 
-            // NormalizeRows extends _rows to cover ExpandedRowCount empty trailing rows
-            // (used by Read() loop), while RowCount property reflects actual data rows.
-            int normalizedCount = Math.Max(rowCount, expandedRowCount);
-            var normalizedRows = NormalizeRows(rows, normalizedCount);
+            var normalizedRows = NormalizeRows(rows, rowCount);
             var dimension = fieldCount > 0 && rowCount > 0
                 ? new CellRange(0, 0, fieldCount - 1, rowCount - 1)
                 : null;
@@ -435,15 +432,12 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         List<Column> columnWidths,
         List<CellRange> mergeCells,
         ref int maxColumn,
-        ref int maxRow,
-        ref int expandedRowCount)
+        ref int maxRow)
     {
         using (tableReader)
         {
             if (!tableReader.Read() || tableReader.NodeType != XmlNodeType.Element)
                 return;
-
-            expandedRowCount = ParseInt(GetSpreadsheetAttribute(tableReader, "ExpandedRowCount"));
 
             int currentRowIndex = 0;
             int currentColumnDefinition = 0;
@@ -510,6 +504,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             }
 
             bool hidden = ParseBool(GetSpreadsheetAttribute(rowReader, "Hidden"));
+            int rowSpan = Math.Max(0, ParseInt(GetSpreadsheetAttribute(rowReader, "Span")));
             double rowHeight = hidden ? 0D : ParseDouble(GetSpreadsheetAttribute(rowReader, "Height"), 15D);
             var cells = new List<Cell>();
             int currentColumnIndex = 0;
@@ -555,8 +550,13 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             }
 
             rows.Add(new Row(currentRowIndex, rowHeight, cells));
-            maxRow = Math.Max(maxRow, currentRowIndex);
-            currentRowIndex++;
+            for (int i = 1; i <= rowSpan; i++)
+            {
+                rows.Add(new Row(currentRowIndex + i, rowHeight, []));
+            }
+
+            maxRow = Math.Max(maxRow, currentRowIndex + rowSpan);
+            currentRowIndex += rowSpan + 1;
         }
     }
 
@@ -576,6 +576,9 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
                 if (value is SpreadsheetXmlDateTime dateTime)
                     return TimeSpan.FromDays(dateTime.SerialDate);
+
+                if (value is string text && TimeSpan.TryParse(text, CultureInfo.InvariantCulture, out var timeSpan))
+                    return timeSpan;
             }
         }
 
@@ -754,7 +757,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         {
             DtdProcessing = DtdProcessing.Prohibit,
             IgnoreComments = true,
-            IgnoreWhitespace = true,
+            IgnoreWhitespace = false,
             CloseInput = false,
         };
 

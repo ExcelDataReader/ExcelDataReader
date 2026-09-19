@@ -10,7 +10,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
     private const string SpreadsheetNamespace = "urn:schemas-microsoft-com:office:spreadsheet";
     private const string ExcelNamespace = "urn:schemas-microsoft-com:office:excel";
 
-    private readonly List<(string Name, string VisibleState, int ExpandedColumnCount)> _worksheets = [];
+    private readonly List<(string Name, string VisibleState, string? CodeName, HeaderFooter? HeaderFooter, int ExpandedColumnCount)> _worksheets = [];
     private readonly Dictionary<string, ExtendedFormat> _stylesById = new(StringComparer.Ordinal)
     {
         ["Default"] = ExtendedFormat.Zero,
@@ -66,6 +66,8 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
                 i,
                 _worksheets[i].Name,
                 _worksheets[i].VisibleState,
+                _worksheets[i].CodeName,
+                _worksheets[i].HeaderFooter,
                 _worksheets[i].ExpandedColumnCount,
                 _stylesById,
                 Formats,
@@ -78,10 +80,12 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
         _stream.Dispose();
     }
 
-    private static (string Name, string VisibleState, int ExpandedColumnCount) ParseWorksheetDescriptor(XmlReader worksheetReader, XmlReader workbookReader)
+    private static (string Name, string VisibleState, string? CodeName, HeaderFooter? HeaderFooter, int ExpandedColumnCount) ParseWorksheetDescriptor(XmlReader worksheetReader, XmlReader workbookReader)
     {
         string name = GetSpreadsheetAttribute(workbookReader, "Name") ?? string.Empty;
         string visibleState = "visible";
+        string? codeName = null;
+        HeaderFooter? headerFooter = null;
         int expandedColumnCount = 0;
 
         using (worksheetReader)
@@ -93,7 +97,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
 
                 if (worksheetReader.LocalName == "WorksheetOptions" && worksheetReader.NamespaceURI == ExcelNamespace)
                 {
-                    visibleState = SpreadsheetXmlWorksheet.ParseVisibleState(worksheetReader.ReadSubtree());
+                    (visibleState, codeName, headerFooter) = SpreadsheetXmlWorksheet.ParseWorksheetOptions(worksheetReader.ReadSubtree());
                     continue;
                 }
 
@@ -105,7 +109,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
             }
         }
 
-        return (name, visibleState, expandedColumnCount);
+        return (name, visibleState, codeName, headerFooter, expandedColumnCount);
     }
 
     private static XmlReader CreateXmlReaderAtStart(Stream stream, bool tolerateLeadingWhitespace)

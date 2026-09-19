@@ -30,6 +30,11 @@
         <Cell ss:Index="2"><Data ss:Type="Boolean">1</Data></Cell>
       </Row>
     </Table>
+    <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+      <CodeName>Sheet1</CodeName>
+      <Header x:Data="&amp;LLeft&amp;CCenter&amp;RRight"/>
+      <Footer x:Data="&amp;LFoot&amp;CFooter&amp;RPage &amp;P"/>
+    </WorksheetOptions>
   </Worksheet>
   <Worksheet ss:Name="Sheet2">
     <Table>

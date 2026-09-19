@@ -9,6 +9,9 @@ public abstract class ExcelSpreadsheetContractTestBase : ExcelTestBase
 
         Assert.That(reader.ResultsCount, Is.EqualTo(2));
         Assert.That(reader.Name, Is.EqualTo("Sheet1"));
+        Assert.That(reader.CodeName, Is.EqualTo("Sheet1"));
+        Assert.That(reader.HeaderFooter?.OddHeader, Is.EqualTo("&LLeft&CCenter&RRight"));
+        Assert.That(reader.HeaderFooter?.OddFooter, Is.EqualTo("&LFoot&CFooter&RPage &P"));
         Assert.That(reader.FieldCount, Is.EqualTo(4));
 
         Assert.That(reader.Read(), Is.True);
@@ -37,6 +40,17 @@ public abstract class ExcelSpreadsheetContractTestBase : ExcelTestBase
         Assert.That(reader.Name, Is.EqualTo("Sheet2"));
         Assert.That(reader.Read(), Is.True);
         Assert.That(reader.GetString(0), Is.EqualTo("X"));
+    }
+
+    [Test]
+    public void SpreadsheetContract_SinglePassMode_PreservesSheetMetadata()
+    {
+        using var reader = OpenReader(OpenFixtureStream(GetFixtureWorksheetsRowsAndTypes()), new ExcelReaderConfiguration { SinglePassMode = true });
+
+        Assert.That(reader.Name, Is.EqualTo("Sheet1"));
+        Assert.That(reader.CodeName, Is.EqualTo("Sheet1"));
+        Assert.That(reader.HeaderFooter?.OddHeader, Is.EqualTo("&LLeft&CCenter&RRight"));
+        Assert.That(reader.HeaderFooter?.OddFooter, Is.EqualTo("&LFoot&CFooter&RPage &P"));
     }
 
     [Test]

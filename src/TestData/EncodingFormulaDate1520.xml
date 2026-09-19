@@ -98,7 +98,7 @@
    </Row>
    <Row>
     <Cell ss:StyleID="s21"><Data ss:Type="String">Изображение дня</Data></Cell>
-    <Cell ss:StyleID="s16" ss:Formula="=TODAY()"><Data ss:Type="DateTime">2026-09-19T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s16" ss:Formula="=TODAY()"><Data ss:Type="DateTime">2009-05-11T00:00:00.000</Data></Cell>
     <Cell ss:Index="5" ss:StyleID="s22"><Data ss:Type="DateTime">1899-12-31T11:01:30.000</Data></Cell>
    </Row>
    <Row>
