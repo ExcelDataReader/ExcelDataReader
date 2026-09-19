@@ -29,4 +29,9 @@ internal sealed class CsvWorkbook(Stream stream, Encoding encoding, char[] autod
     }
 
     public NumberFormatString? GetNumberFormatString(int index, IFormatProvider? provider) => null;
+
+    public void Dispose()
+    {
+        Stream.Dispose();
+    }
 }

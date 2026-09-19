@@ -73,6 +73,11 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
         }
     }
 
+    public void Dispose()
+    {
+        _stream.Dispose();
+    }
+
     private static (string Name, string VisibleState, int ExpandedColumnCount) ParseWorksheetDescriptor(XmlReader worksheetReader, XmlReader workbookReader)
     {
         string name = GetSpreadsheetAttribute(workbookReader, "Name") ?? string.Empty;

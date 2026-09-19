@@ -14,11 +14,4 @@ internal sealed class ExcelBinaryReader : ExcelDataReader<XlsWorkbook, XlsWorksh
         // By default, the data reader is positioned on the first result.
         Reset();
     }
-
-    public override void Close()
-    {
-        base.Close();
-        Workbook?.Stream?.Dispose();
-        Workbook = null;
-    }
 }

@@ -30,6 +30,11 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
             yield return new XlsxWorksheet(_zipWorker, this, sheet, SinglePassMode);
     }
 
+    public void Dispose()
+    {
+        _zipWorker.Dispose();
+    }
+
     private void ReadWorkbook()
     {
         using var reader = _zipWorker.GetWorkbookReader();

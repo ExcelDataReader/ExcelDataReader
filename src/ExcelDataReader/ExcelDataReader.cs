@@ -256,10 +256,14 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
         _worksheetIterator?.Dispose();
         _rowIterator?.Dispose();
+        _cachedWorksheetIterator?.Dispose();
 
         _worksheetIterator = null;
         _rowIterator = null;
+        _cachedWorksheetIterator = null;
         RowCells = null;
+        Workbook?.Dispose();
+        Workbook = default;
         IsClosed = true;
     }
 

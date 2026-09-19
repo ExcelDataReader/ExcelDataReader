@@ -16,13 +16,4 @@ internal sealed class ExcelOpenXmlReader : ExcelDataReader<XlsxWorkbook, XlsxWor
     }
 
     private ZipWorker? Document { get; set; }
-
-    public override void Close()
-    {
-        base.Close();
-
-        Document?.Dispose();
-        Workbook = null;
-        Document = null;
-    }
 }

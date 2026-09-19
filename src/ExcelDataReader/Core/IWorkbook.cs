@@ -6,7 +6,7 @@ namespace ExcelDataReader.Core;
 /// The common workbook interface between the binary and OpenXml formats.
 /// </summary>
 /// <typeparam name="TWorksheet">A type implementing IWorksheet.</typeparam>
-internal interface IWorkbook<TWorksheet>
+internal interface IWorkbook<TWorksheet> : IDisposable
     where TWorksheet : IWorksheet
 {
     int ResultsCount { get; }

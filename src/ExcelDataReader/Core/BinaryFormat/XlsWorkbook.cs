@@ -138,6 +138,11 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
         }
     }
 
+    public void Dispose()
+    {
+        Stream.Dispose();
+    }
+
     internal void AddXf(XlsBiffXF xf)
     {
         var extendedFormat = new ExtendedFormat(xf.ParentCellStyleXf, xf.Font, xf.Format, xf.IsLocked, xf.IsHidden, xf.IndentLevel, xf.HorizontalAlignment, xf.VerticalAlignment);
