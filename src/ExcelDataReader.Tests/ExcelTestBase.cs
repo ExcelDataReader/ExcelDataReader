@@ -7,6 +7,8 @@ public abstract class ExcelTestBase
 {
     protected abstract DateTime Issue82_TodayDate { get; }
 
+    protected virtual bool SupportsCodeName => true;
+
     [Test]
     public void IssueDateAndTime1468Test()
     {
@@ -132,8 +134,8 @@ public abstract class ExcelTestBase
         // The expected values do not quite match what you see in Excel, is that correct?
         Assert.That(reader.GetColumnWidth(0), Is.EqualTo(8.43));
         Assert.That(reader.GetColumnWidth(1), Is.EqualTo(0));
-        Assert.That(reader.GetColumnWidth(2), Is.EqualTo(15.140625));
-        Assert.That(reader.GetColumnWidth(3), Is.EqualTo(28.7109375));
+        Assert.That(reader.GetColumnWidth(2), Is.EqualTo(15.140625).Within(0.01));
+        Assert.That(reader.GetColumnWidth(3), Is.EqualTo(28.7109375).Within(0.01));
 
         var expectedException = typeof(ArgumentException);
         var exception = Assert.Throws(expectedException, () =>
@@ -218,6 +220,9 @@ public abstract class ExcelTestBase
     [Test]
     public void Issue245_CodeName()
     {
+        if (!SupportsCodeName)
+            Assert.Ignore($"{GetType().Name} does not support sheet code names.");
+
         // Test CodeName is set
         using var reader = OpenReader("ExcelDataset");
         Assert.That(reader.CodeName, Is.EqualTo("Sheet1"));

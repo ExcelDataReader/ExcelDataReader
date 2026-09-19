@@ -1,135 +1,142 @@
 <?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-          xmlns:o="urn:schemas-microsoft-com:office:office"
-          xmlns:x="urn:schemas-microsoft-com:office:excel"
-          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Styles>
-    <Style ss:ID="Default" ss:Name="Normal">
-      <NumberFormat ss:Format="General"/>
-    </Style>
-  </Styles>
-  <Worksheet ss:Name="Sheet1">
-    <Table ss:ExpandedColumnCount="10" ss:ExpandedRowCount="10">
-      <Row>
-        <Cell><Data ss:Type="String">10x1</Data></Cell>
-        <Cell><Data ss:Type="String">10x2</Data></Cell>
-        <Cell><Data ss:Type="String">10x3</Data></Cell>
-        <Cell><Data ss:Type="String">10x4</Data></Cell>
-        <Cell><Data ss:Type="String">10x5</Data></Cell>
-        <Cell><Data ss:Type="String">10x6</Data></Cell>
-        <Cell><Data ss:Type="String">10x7</Data></Cell>
-        <Cell><Data ss:Type="String">10x8</Data></Cell>
-        <Cell><Data ss:Type="String">10x9</Data></Cell>
-      </Row>
-      <Row>
-        <Cell><Data ss:Type="String">10x10</Data></Cell>
-        <Cell><Data ss:Type="String">10x11</Data></Cell>
-        <Cell><Data ss:Type="String">10x12</Data></Cell>
-        <Cell><Data ss:Type="String">10x13</Data></Cell>
-        <Cell><Data ss:Type="String">10x14</Data></Cell>
-        <Cell><Data ss:Type="String">10x15</Data></Cell>
-        <Cell><Data ss:Type="String">10x16</Data></Cell>
-        <Cell><Data ss:Type="String">10x17</Data></Cell>
-        <Cell><Data ss:Type="String">10x18</Data></Cell>
-        <Cell><Data ss:Type="String">10x19</Data></Cell>
-      </Row>
-      <Row>
-        <Cell><Data ss:Type="String">10x11</Data></Cell>
-        <Cell><Data ss:Type="String">10x12</Data></Cell>
-        <Cell><Data ss:Type="String">10x13</Data></Cell>
-        <Cell><Data ss:Type="String">10x14</Data></Cell>
-        <Cell><Data ss:Type="String">10x15</Data></Cell>
-        <Cell><Data ss:Type="String">10x16</Data></Cell>
-        <Cell><Data ss:Type="String">10x17</Data></Cell>
-        <Cell><Data ss:Type="String">10x18</Data></Cell>
-        <Cell><Data ss:Type="String">10x19</Data></Cell>
-        <Cell><Data ss:Type="String">10x20</Data></Cell>
-      </Row>
-      <Row>
-        <Cell><Data ss:Type="String">10x12</Data></Cell>
-        <Cell><Data ss:Type="String">10x13</Data></Cell>
-        <Cell><Data ss:Type="String">10x14</Data></Cell>
-        <Cell><Data ss:Type="String">10x15</Data></Cell>
-        <Cell><Data ss:Type="String">10x16</Data></Cell>
-        <Cell><Data ss:Type="String">10x17</Data></Cell>
-        <Cell><Data ss:Type="String">10x18</Data></Cell>
-        <Cell><Data ss:Type="String">10x19</Data></Cell>
-        <Cell><Data ss:Type="String">10x20</Data></Cell>
-        <Cell><Data ss:Type="String">10x21</Data></Cell>
-      </Row>
-      <Row>
-        <Cell><Data ss:Type="String">10x13</Data></Cell>
-        <Cell><Data ss:Type="String">10x14</Data></Cell>
-        <Cell><Data ss:Type="String">10x15</Data></Cell>
-        <Cell><Data ss:Type="String">10x16</Data></Cell>
-        <Cell><Data ss:Type="String">10x17</Data></Cell>
-        <Cell><Data ss:Type="String">10x18</Data></Cell>
-        <Cell><Data ss:Type="String">10x19</Data></Cell>
-        <Cell><Data ss:Type="String">10x20</Data></Cell>
-        <Cell><Data ss:Type="String">10x21</Data></Cell>
-        <Cell><Data ss:Type="String">10x22</Data></Cell>
-      </Row>
-      <Row>
-        <Cell><Data ss:Type="String">10x14</Data></Cell>
-        <Cell><Data ss:Type="String">10x15</Data></Cell>
-        <Cell><Data ss:Type="String">10x16</Data></Cell>
-        <Cell><Data ss:Type="String">10x17</Data></Cell>
-        <Cell><Data ss:Type="String">10x18</Data></Cell>
-        <Cell><Data ss:Type="String">10x19</Data></Cell>
-        <Cell><Data ss:Type="String">10x20</Data></Cell>
-        <Cell><Data ss:Type="String">10x21</Data></Cell>
-        <Cell><Data ss:Type="String">10x22</Data></Cell>
-        <Cell><Data ss:Type="String">10x23</Data></Cell>
-      </Row>
-      <Row>
-        <Cell><Data ss:Type="String">10x15</Data></Cell>
-        <Cell><Data ss:Type="String">10x16</Data></Cell>
-        <Cell><Data ss:Type="String">10x17</Data></Cell>
-        <Cell><Data ss:Type="String">10x18</Data></Cell>
-        <Cell><Data ss:Type="String">10x19</Data></Cell>
-        <Cell><Data ss:Type="String">10x20</Data></Cell>
-        <Cell><Data ss:Type="String">10x21</Data></Cell>
-        <Cell><Data ss:Type="String">10x22</Data></Cell>
-        <Cell><Data ss:Type="String">10x23</Data></Cell>
-        <Cell><Data ss:Type="String">10x24</Data></Cell>
-      </Row>
-      <Row>
-        <Cell><Data ss:Type="String">10x16</Data></Cell>
-        <Cell><Data ss:Type="String">10x17</Data></Cell>
-        <Cell><Data ss:Type="String">10x18</Data></Cell>
-        <Cell><Data ss:Type="String">10x19</Data></Cell>
-        <Cell><Data ss:Type="String">10x20</Data></Cell>
-        <Cell><Data ss:Type="String">10x21</Data></Cell>
-        <Cell><Data ss:Type="String">10x22</Data></Cell>
-        <Cell><Data ss:Type="String">10x23</Data></Cell>
-        <Cell><Data ss:Type="String">10x24</Data></Cell>
-        <Cell><Data ss:Type="String">10x25</Data></Cell>
-      </Row>
-      <Row>
-        <Cell><Data ss:Type="String">10x17</Data></Cell>
-        <Cell><Data ss:Type="String">10x18</Data></Cell>
-        <Cell><Data ss:Type="String">10x19</Data></Cell>
-        <Cell><Data ss:Type="String">10x20</Data></Cell>
-        <Cell><Data ss:Type="String">10x21</Data></Cell>
-        <Cell><Data ss:Type="String">10x22</Data></Cell>
-        <Cell><Data ss:Type="String">10x23</Data></Cell>
-        <Cell><Data ss:Type="String">10x24</Data></Cell>
-        <Cell><Data ss:Type="String">10x25</Data></Cell>
-        <Cell><Data ss:Type="String">10x26</Data></Cell>
-      </Row>
-      <Row>
-        <Cell><Data ss:Type="String">10x18</Data></Cell>
-        <Cell><Data ss:Type="String">10x19</Data></Cell>
-        <Cell><Data ss:Type="String">10x20</Data></Cell>
-        <Cell><Data ss:Type="String">10x21</Data></Cell>
-        <Cell><Data ss:Type="String">10x22</Data></Cell>
-        <Cell><Data ss:Type="String">10x23</Data></Cell>
-        <Cell><Data ss:Type="String">10x24</Data></Cell>
-        <Cell><Data ss:Type="String">10x25</Data></Cell>
-        <Cell><Data ss:Type="String">10x26</Data></Cell>
-        <Cell><Data ss:Type="String">10x27</Data></Cell>
-      </Row>
-    </Table>
-  </Worksheet>
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <LastAuthor>Johan Appelgren</LastAuthor>
+  <Created>1996-10-14T23:33:28Z</Created>
+  <LastSaved>2009-05-11T16:05:06Z</LastSaved>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>9300</WindowHeight>
+  <WindowWidth>15135</WindowWidth>
+  <WindowTopX>330</WindowTopX>
+  <WindowTopY>75</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Arial"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Sheet1">
+  <Table ss:ExpandedColumnCount="10" ss:ExpandedRowCount="10" x:FullColumns="1"
+   x:FullRows="1">
+   <Row>
+    <Cell><Data ss:Type="String">col1</Data></Cell>
+    <Cell ss:Index="3"><Data ss:Type="String">col3</Data></Cell>
+    <Cell ss:Index="5"><Data ss:Type="String">col5</Data></Cell>
+    <Cell ss:Index="7"><Data ss:Type="String">col7</Data></Cell>
+    <Cell ss:Index="9"><Data ss:Type="String">col9</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">10x10</Data></Cell>
+    <Cell ss:Index="10"><Data ss:Type="String">10x19</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">10x11</Data></Cell>
+    <Cell><Data ss:Type="String">10x12</Data></Cell>
+    <Cell><Data ss:Type="String">10x13</Data></Cell>
+    <Cell><Data ss:Type="String">10x14</Data></Cell>
+    <Cell><Data ss:Type="String">10x15</Data></Cell>
+    <Cell><Data ss:Type="String">10x16</Data></Cell>
+    <Cell><Data ss:Type="String">10x17</Data></Cell>
+    <Cell><Data ss:Type="String">10x18</Data></Cell>
+    <Cell><Data ss:Type="String">10x19</Data></Cell>
+    <Cell><Data ss:Type="String">10x20</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">10x12</Data></Cell>
+    <Cell ss:Index="10"><Data ss:Type="String">10x21</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">10x13</Data></Cell>
+    <Cell><Data ss:Type="String">10x14</Data></Cell>
+    <Cell><Data ss:Type="String">10x15</Data></Cell>
+    <Cell><Data ss:Type="String">10x16</Data></Cell>
+    <Cell><Data ss:Type="String">10x17</Data></Cell>
+    <Cell><Data ss:Type="String">10x18</Data></Cell>
+    <Cell><Data ss:Type="String">10x19</Data></Cell>
+    <Cell><Data ss:Type="String">10x20</Data></Cell>
+    <Cell><Data ss:Type="String">10x21</Data></Cell>
+    <Cell><Data ss:Type="String">10x22</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">10x14</Data></Cell>
+    <Cell><Data ss:Type="String">10x15</Data></Cell>
+    <Cell><Data ss:Type="String">10x16</Data></Cell>
+    <Cell><Data ss:Type="String">10x17</Data></Cell>
+    <Cell><Data ss:Type="String">10x18</Data></Cell>
+    <Cell><Data ss:Type="String">10x19</Data></Cell>
+    <Cell><Data ss:Type="String">10x20</Data></Cell>
+    <Cell><Data ss:Type="String">10x21</Data></Cell>
+    <Cell><Data ss:Type="String">10x22</Data></Cell>
+    <Cell><Data ss:Type="String">10x23</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">10x15</Data></Cell>
+    <Cell ss:Index="10"><Data ss:Type="String">10x24</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">10x16</Data></Cell>
+    <Cell><Data ss:Type="String">10x17</Data></Cell>
+    <Cell><Data ss:Type="String">10x18</Data></Cell>
+    <Cell><Data ss:Type="String">10x19</Data></Cell>
+    <Cell><Data ss:Type="String">10x20</Data></Cell>
+    <Cell><Data ss:Type="String">10x21</Data></Cell>
+    <Cell><Data ss:Type="String">10x22</Data></Cell>
+    <Cell><Data ss:Type="String">10x23</Data></Cell>
+    <Cell><Data ss:Type="String">10x24</Data></Cell>
+    <Cell><Data ss:Type="String">10x25</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">10x17</Data></Cell>
+    <Cell><Data ss:Type="String">10x18</Data></Cell>
+    <Cell><Data ss:Type="String">10x19</Data></Cell>
+    <Cell><Data ss:Type="String">10x20</Data></Cell>
+    <Cell><Data ss:Type="String">10x21</Data></Cell>
+    <Cell><Data ss:Type="String">10x22</Data></Cell>
+    <Cell><Data ss:Type="String">10x23</Data></Cell>
+    <Cell><Data ss:Type="String">10x24</Data></Cell>
+    <Cell><Data ss:Type="String">10x25</Data></Cell>
+    <Cell><Data ss:Type="String">10x26</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">10x18</Data></Cell>
+    <Cell><Data ss:Type="String">10x19</Data></Cell>
+    <Cell><Data ss:Type="String">10x20</Data></Cell>
+    <Cell><Data ss:Type="String">10x21</Data></Cell>
+    <Cell><Data ss:Type="String">10x22</Data></Cell>
+    <Cell><Data ss:Type="String">10x23</Data></Cell>
+    <Cell><Data ss:Type="String">10x24</Data></Cell>
+    <Cell><Data ss:Type="String">10x25</Data></Cell>
+    <Cell><Data ss:Type="String">10x26</Data></Cell>
+    <Cell><Data ss:Type="String">10x27</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <Selected/>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveCol>9</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
 </Workbook>

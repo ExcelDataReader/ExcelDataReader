@@ -1,27 +1,310 @@
 <?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-          xmlns:o="urn:schemas-microsoft-com:office:office"
-          xmlns:x="urn:schemas-microsoft-com:office:excel"
-          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Worksheet ss:Name="Sheet1">
-    <Table>
-      <Row>
-        <Cell><Data ss:Type="String">Name</Data></Cell>
-        <Cell><Data ss:Type="String">Duration</Data></Cell>
-      </Row>
-      <Row>
-        <Cell><Data ss:Type="String">Alice</Data></Cell>
-        <Cell><Data ss:Type="String">-13:57:00</Data></Cell>
-      </Row>
-      <Row>
-        <Cell><Data ss:Type="String">Bob</Data></Cell>
-        <Cell><Data ss:Type="String">-00:11:00</Data></Cell>
-      </Row>
-      <Row>
-        <Cell><Data ss:Type="String">Charlie</Data></Cell>
-        <Cell><Data ss:Type="String">00:11:00</Data></Cell>
-      </Row>
-    </Table>
-  </Worksheet>
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>Apache POI</Author>
+  <LastAuthor>Johan Appelgren</LastAuthor>
+  <Created>2025-01-23T13:11:31Z</Created>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>6765</WindowHeight>
+  <WindowWidth>21135</WindowWidth>
+  <WindowTopX>32767</WindowTopX>
+  <WindowTopY>32767</WindowTopY>
+  <MaxChange>0.0001</MaxChange>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Aptos Narrow" x:Family="Swiss" ss:Size="11"
+    ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s16">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"
+     ss:Color="#000000"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"
+     ss:Color="#000000"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"
+     ss:Color="#000000"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"
+     ss:Color="#000000"/>
+   </Borders>
+   <Font ss:FontName="Arial"/>
+   <Interior ss:Color="#C0C0C0" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s17">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"
+     ss:Color="#000000"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"
+     ss:Color="#000000"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"
+     ss:Color="#000000"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"
+     ss:Color="#000000"/>
+   </Borders>
+   <Font ss:FontName="Arial"/>
+  </Style>
+  <Style ss:ID="s20">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"
+     ss:Color="#000000"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"
+     ss:Color="#000000"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"
+     ss:Color="#000000"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"
+     ss:Color="#000000"/>
+   </Borders>
+   <Font ss:FontName="Arial"/>
+   <NumberFormat ss:Format="[hh]:mm"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Feuilles de temps et activités">
+  <Table ss:ExpandedColumnCount="2" ss:ExpandedRowCount="53" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultRowHeight="15">
+   <Column ss:AutoFitWidth="0" ss:Width="45.75"/>
+   <Column ss:AutoFitWidth="0" ss:Width="97.5"/>
+   <Row>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">Matricule</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="String">Temps - Écart réalisé</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-13:57</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:11</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:11:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:03:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:01:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:01</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:11:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:12</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:12:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:03</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:01:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:05:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:05:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:15:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:07</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:14:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:12:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:05:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:07:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:05:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:02</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:12:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:07:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:00:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:00:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:00:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:50:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:09:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-01:38</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:05</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:07:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:04</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:15:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:17:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:17:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:10</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:18</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:03</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:08</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:00:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:00:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:57</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:12:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:24</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:04</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:09:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:06:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:10:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:07:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:15:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="DateTime">1899-12-31T00:12:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">416</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">-00:19</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.3"/>
+    <Footer x:Margin="0.3"/>
+    <PageMargins x:Bottom="0.75" x:Left="0.7" x:Right="0.7" x:Top="0.75"/>
+   </PageSetup>
+   <Selected/>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
 </Workbook>

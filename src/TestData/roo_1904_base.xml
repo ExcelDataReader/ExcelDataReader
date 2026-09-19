@@ -1,13 +1,78 @@
 <?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-          xmlns:o="urn:schemas-microsoft-com:office:office"
-          xmlns:x="urn:schemas-microsoft-com:office:excel"
-          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Worksheet ss:Name="Sheet1">
-    <Table>
-      <Row><Cell><Data ss:Type="DateTime">2009-06-15T00:00:00.000</Data></Cell></Row>
-      <Row><Cell><Data ss:Type="DateTime">2013-04-19T00:00:00.000</Data></Cell></Row>
-    </Table>
-  </Worksheet>
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>NICHOLAS FINGER</Author>
+  <LastAuthor>Johan Appelgren</LastAuthor>
+  <Created>2013-04-14T20:27:41Z</Created>
+  <LastSaved>2013-04-19T15:12:43Z</LastSaved>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>15825</WindowHeight>
+  <WindowWidth>25365</WindowWidth>
+  <WindowTopX>23505</WindowTopX>
+  <WindowTopY>5145</WindowTopY>
+  <TabRatio>500</TabRatio>
+  <Date1904/>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+  <DisplayInkNotes>False</DisplayInkNotes>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Verdana"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s28">
+   <Font ss:FontName="Century Gothic" x:Family="Swiss"/>
+   <NumberFormat ss:Format="dd/mm/yyyy"/>
+   <Protection ss:Protected="0"/>
+  </Style>
+  <Style ss:ID="s29">
+   <Font ss:FontName="Century Gothic" x:Family="Swiss"/>
+   <NumberFormat ss:Format="m/d/yyyy"/>
+   <Protection ss:Protected="0"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Prices">
+  <Table ss:ExpandedColumnCount="1" ss:ExpandedRowCount="2" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultColumnWidth="52.5">
+   <Column ss:AutoFitWidth="0" ss:Width="71.25"/>
+   <Row ss:Height="13.5">
+    <Cell ss:StyleID="s28"><Data ss:Type="DateTime">2009-06-15T00:00:00.000</Data></Cell>
+   </Row>
+   <Row ss:Height="13.5">
+    <Cell ss:StyleID="s29"><Data ss:Type="DateTime">2013-04-19T00:00:00.000</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <Print>
+    <ValidPrinterInfo/>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <Selected/>
+   <DoNotDisplayOutline/>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>1</ActiveRow>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
 </Workbook>

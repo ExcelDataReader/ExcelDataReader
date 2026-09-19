@@ -1,21 +1,120 @@
 <?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-          xmlns:o="urn:schemas-microsoft-com:office:office"
-          xmlns:x="urn:schemas-microsoft-com:office:excel"
-          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Worksheet ss:Name="Sheet1">
-    <Table ss:ExpandedColumnCount="2" ss:ExpandedRowCount="10">
-      <Row><Cell><Data ss:Type="String">r1</Data></Cell><Cell><Data ss:Type="Number">1</Data></Cell></Row>
-      <Row><Cell><Data ss:Type="String">r2</Data></Cell><Cell><Data ss:Type="Number">2</Data></Cell></Row>
-      <Row><Cell><Data ss:Type="String">r3</Data></Cell><Cell><Data ss:Type="Number">3.14159265358979</Data></Cell></Row>
-      <Row><Cell><Data ss:Type="String">r4</Data></Cell><Cell><Data ss:Type="Number">-3.14159265358979</Data></Cell></Row>
-      <Row><Cell><Data ss:Type="String">r5</Data></Cell><Cell><Data ss:Type="Number">3.14159265358979E-300</Data></Cell></Row>
-      <Row><Cell><Data ss:Type="String">r6</Data></Cell><Cell><Data ss:Type="Number">-3.14159265358979E-300</Data></Cell></Row>
-      <Row><Cell><Data ss:Type="String">r7</Data></Cell><Cell><Data ss:Type="Number">3.14159265358979E+300</Data></Cell></Row>
-      <Row><Cell><Data ss:Type="String">r8</Data></Cell><Cell><Data ss:Type="Number">-3.14159265358979E+300</Data></Cell></Row>
-      <Row><Cell><Data ss:Type="String">r9</Data></Cell><Cell><Data ss:Type="Number">3.14159265358979E+14</Data></Cell></Row>
-      <Row><Cell><Data ss:Type="String">r10</Data></Cell><Cell><Data ss:Type="Number">-3.14159265358979E+14</Data></Cell></Row>
-    </Table>
-  </Worksheet>
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>negri</Author>
+  <LastAuthor>Johan Appelgren</LastAuthor>
+  <Created>2009-02-05T19:47:14Z</Created>
+  <LastSaved>2013-02-06T11:03:32Z</LastSaved>
+  <Company>PR&amp;A</Company>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>12120</WindowHeight>
+  <WindowWidth>15195</WindowWidth>
+  <WindowTopX>855</WindowTopX>
+  <WindowTopY>45</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Arial"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s16" ss:Name="Tusental">
+   <NumberFormat ss:Format="_(* #,##0.00_);_(* \(#,##0.00\);_(* &quot;-&quot;??_);_(@_)"/>
+  </Style>
+  <Style ss:ID="s18">
+   <NumberFormat ss:Format="0.0000000000000000"/>
+  </Style>
+  <Style ss:ID="s19">
+   <NumberFormat ss:Format="Scientific"/>
+  </Style>
+  <Style ss:ID="s20" ss:Parent="s16">
+   <Font ss:FontName="Arial"/>
+   <NumberFormat ss:Format="_(* #,##0_);_(* \(#,##0\);_(* &quot;-&quot;??_);_(@_)"/>
+  </Style>
+  <Style ss:ID="s21" ss:Parent="s16">
+   <Font ss:FontName="Arial"/>
+   <NumberFormat ss:Format="#,##0"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Precision">
+  <Table ss:ExpandedColumnCount="3" ss:ExpandedRowCount="10" x:FullColumns="1"
+   x:FullRows="1">
+   <Column ss:Width="217.5"/>
+   <Column ss:AutoFitWidth="0" ss:Width="152.25"/>
+   <Column ss:Width="131.25"/>
+   <Row>
+    <Cell><Data ss:Type="String">To test numeric precision and negative numbers</Data></Cell>
+   </Row>
+   <Row ss:Index="3">
+    <Cell><Data ss:Type="String">pi</Data></Cell>
+    <Cell ss:StyleID="s18"><Data ss:Type="Number">3.14159265358979</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String" x:Ticked="1">-Ln(pi)</Data></Cell>
+    <Cell ss:StyleID="s18"><Data ss:Type="Number">-3.14159265358979</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">A very small positive</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">3.1415926535897903E-300</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">A very small negative</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">-3.1415926535897903E-300</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">A very big positive</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">3.1415926535897931E+300</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">A very big negative</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">-3.1415926535897931E+300</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">A large positive integer</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="Number">314159265358979</Data></Cell>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">A large negative integer</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="Number">-314159265358979</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.49212598499999999"/>
+    <Footer x:Margin="0.49212598499999999"/>
+   </PageSetup>
+   <Print>
+    <ValidPrinterInfo/>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <Selected/>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>11</ActiveRow>
+     <ActiveCol>1</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
 </Workbook>

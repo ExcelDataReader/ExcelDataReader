@@ -1,15 +1,2254 @@
 <?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-          xmlns:o="urn:schemas-microsoft-com:office:office"
-          xmlns:x="urn:schemas-microsoft-com:office:excel"
-          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Worksheet ss:Name="Sheet1">
-    <Table ss:ExpandedColumnCount="2" ss:ExpandedRowCount="13">
-      <Row ss:Index="13">
-        <Cell><Data ss:Type="Number">1</Data></Cell>
-        <Cell><Data ss:Type="String">070202</Data></Cell>
-      </Row>
-    </Table>
-  </Worksheet>
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>tarnowska</Author>
+  <LastAuthor>Johan Appelgren</LastAuthor>
+  <LastPrinted>2012-07-23T09:01:45Z</LastPrinted>
+  <Created>2010-08-10T07:41:28Z</Created>
+  <LastSaved>2013-03-12T08:20:37Z</LastSaved>
+  <Company>Roto Frank</Company>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>8445</WindowHeight>
+  <WindowWidth>14955</WindowWidth>
+  <WindowTopX>240</WindowTopX>
+  <WindowTopY>375</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Arial" x:CharSet="238"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s16" ss:Name="Valuta">
+   <NumberFormat
+    ss:Format="_-* #,##0.00\ &quot;zł&quot;_-;\-* #,##0.00\ &quot;zł&quot;_-;_-* &quot;-&quot;??\ &quot;zł&quot;_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s17">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+  </Style>
+  <Style ss:ID="s18">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="s19">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Arial" x:CharSet="238" ss:Size="14"/>
+  </Style>
+  <Style ss:ID="s20">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Arial" x:CharSet="238" ss:Size="14"/>
+  </Style>
+  <Style ss:ID="s21">
+   <Alignment ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="s22">
+   <NumberFormat ss:Format="Short Date"/>
+  </Style>
+  <Style ss:ID="s23">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <NumberFormat ss:Format="@"/>
+  </Style>
+  <Style ss:ID="s24">
+   <Font ss:FontName="Arial" x:CharSet="238" x:Family="Swiss" ss:Size="11"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s25">
+   <Alignment ss:Vertical="Bottom" ss:WrapText="1"/>
+  </Style>
+  <Style ss:ID="s26">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Bottom"/>
+   <Font ss:FontName="Arial" x:CharSet="238" ss:Size="14"/>
+  </Style>
+  <Style ss:ID="s27">
+   <Alignment ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="s28">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Arial" x:CharSet="238" ss:Size="14"/>
+  </Style>
+  <Style ss:ID="s29">
+   <Alignment ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s30">
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"/>
+  </Style>
+  <Style ss:ID="s31">
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s32">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"/>
+  </Style>
+  <Style ss:ID="s33">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"/>
+  </Style>
+  <Style ss:ID="s34">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s35">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s36">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s37">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"/>
+  </Style>
+  <Style ss:ID="s38">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s39">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"/>
+   <Interior ss:Color="#C0C0C0" ss:Pattern="Gray0625" ss:PatternColor="#000000"/>
+  </Style>
+  <Style ss:ID="s40">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"/>
+   <Interior ss:Color="#C0C0C0" ss:Pattern="Gray0625" ss:PatternColor="#000000"/>
+  </Style>
+  <Style ss:ID="s41">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"/>
+   <Interior ss:Color="#C0C0C0" ss:Pattern="Gray0625" ss:PatternColor="#000000"/>
+  </Style>
+  <Style ss:ID="s42">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s43">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"/>
+   <NumberFormat ss:Format="@"/>
+  </Style>
+  <Style ss:ID="s44" ss:Parent="s16">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"/>
+  </Style>
+  <Style ss:ID="s45">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="12"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s46">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+  </Style>
+  <Style ss:ID="s47">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <NumberFormat ss:Format="@"/>
+  </Style>
+  <Style ss:ID="s48">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s49">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Bold="1"/>
+   <NumberFormat ss:Format="@"/>
+  </Style>
+  <Style ss:ID="s50">
+   <Alignment ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+  </Style>
+  <Style ss:ID="s51">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Arial" x:CharSet="238" x:Family="Swiss"/>
+  </Style>
+  <Style ss:ID="s52">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Arial" x:CharSet="238" x:Family="Swiss"/>
+   <NumberFormat ss:Format="@"/>
+  </Style>
+  <Style ss:ID="s53">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+  </Style>
+  <Style ss:ID="s54">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+  </Style>
+  <Style ss:ID="s55" ss:Parent="s16">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <Interior/>
+  </Style>
+  <Style ss:ID="s56" ss:Parent="s16">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <Interior/>
+  </Style>
+  <Style ss:ID="s57" ss:Parent="s16">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <Interior/>
+  </Style>
+  <Style ss:ID="s58" ss:Parent="s16">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Arial" x:CharSet="238" x:Family="Swiss"/>
+   <Interior/>
+  </Style>
+  <Style ss:ID="s59" ss:Parent="s16">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <Interior/>
+  </Style>
+  <Style ss:ID="s60" ss:Parent="s16">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Arial" x:CharSet="238" x:Family="Swiss"/>
+   <Interior/>
+  </Style>
+  <Style ss:ID="s61" ss:Parent="s16">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Bold="1"/>
+   <Interior/>
+  </Style>
+  <Style ss:ID="s62" ss:Parent="s16">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Arial CE" x:CharSet="238"/>
+   <Interior/>
+  </Style>
+  <Style ss:ID="s63">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <Interior ss:Color="#FFFF00" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s64">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <Interior ss:Color="#FFFF00" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="@"/>
+  </Style>
+  <Style ss:ID="s65" ss:Parent="s16">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <Interior ss:Color="#FFFF00" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s66">
+   <Alignment ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <Interior ss:Color="#FFFF00" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s67" ss:Parent="s16">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <Interior ss:Color="#FFFF00" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s68">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <Interior ss:Color="#FFFF00" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s69" ss:Parent="s16">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238"/>
+   <Interior ss:Color="#FFFF00" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s70">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Bottom"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="14"/>
+   <Interior ss:Color="#C0C0C0" ss:Pattern="Gray0625" ss:PatternColor="#000000"/>
+  </Style>
+  <Style ss:ID="s72">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:WrapText="1"/>
+   <Font ss:FontName="LTUniversCE 330 BasicLight" x:CharSet="238" ss:Size="18"
+    ss:Bold="1"/>
+  </Style>
+ </Styles>
+ <Names>
+  <NamedRange ss:Name="_ZA1" ss:RefersTo="=Arkusz1!R1C26"/>
+ </Names>
+ <Worksheet ss:Name="Arkusz1">
+  <Names>
+   <NamedRange ss:Name="Print_Area" ss:RefersTo="=Arkusz1!R1C2:R37C6"/>
+  </Names>
+  <Table ss:ExpandedColumnCount="255" ss:ExpandedRowCount="220" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultColumnWidth="0" ss:DefaultRowHeight="0">
+   <Column ss:StyleID="s30" ss:Width="31.5"/>
+   <Column ss:StyleID="s30" ss:Width="286.5"/>
+   <Column ss:StyleID="s30" ss:Width="371.25"/>
+   <Column ss:StyleID="s30" ss:AutoFitWidth="0" ss:Width="107.25"/>
+   <Column ss:StyleID="s30" ss:Width="228.75"/>
+   <Column ss:StyleID="s30" ss:AutoFitWidth="0" ss:Width="104.25"/>
+   <Column ss:AutoFitWidth="0" ss:Width="48"/>
+   <Column ss:Hidden="1" ss:AutoFitWidth="0" ss:Width="48" ss:Span="3"/>
+   <Column ss:Index="12" ss:Hidden="1" ss:AutoFitWidth="0" ss:Width="54.75"/>
+   <Column ss:Hidden="1" ss:AutoFitWidth="0" ss:Width="48" ss:Span="225"/>
+   <Column ss:Index="239" ss:StyleID="s22" ss:Hidden="1" ss:AutoFitWidth="0"
+    ss:Width="162"/>
+   <Column ss:Hidden="1" ss:AutoFitWidth="0" ss:Width="48" ss:Span="3"/>
+   <Column ss:Index="244" ss:Hidden="1" ss:AutoFitWidth="0" ss:Width="219.75"/>
+   <Column ss:Hidden="1" ss:AutoFitWidth="0" ss:Width="285.75"/>
+   <Column ss:Hidden="1" ss:AutoFitWidth="0" ss:Width="48" ss:Span="5"/>
+   <Column ss:Index="252" ss:Hidden="1" ss:AutoFitWidth="0" ss:Width="484.5"/>
+   <Column ss:Hidden="1" ss:AutoFitWidth="0" ss:Width="192"/>
+   <Column ss:Hidden="1" ss:AutoFitWidth="0" ss:Width="102"/>
+   <Column ss:Hidden="1" ss:AutoFitWidth="0" ss:Width="36"/>
+   <Row ss:AutoFitHeight="0" ss:Height="81">
+    <Cell ss:Index="2" ss:MergeAcross="4" ss:StyleID="s72"><Data ss:Type="String">ZAMÓWIENIE STANDARDOWE  ARTYKUŁÓW BIUROWYCH </Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="244"><Data ss:Type="String">NALEŻY WYBRAĆ DZIAŁ</Data></Cell>
+    <Cell><Data ss:Type="String">NUMER ST. KOSZTÓW WSTAWIANY AUTOMATYCZNIE</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s46"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data></Cell>
+    <Cell ss:StyleID="s47"><Data ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data></Cell>
+    <Cell ss:StyleID="s54"><Data ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data></Cell>
+   </Row>
+   <Row ss:Height="48">
+    <Cell ss:Index="2" ss:StyleID="s29"><Data ss:Type="String">DATA ZŁOŻENIA ZAMÓWIENIA: &#10;DZIEŃ-MIESIĄC-ROK &#10;NP.: 01-09-2010</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><Data ss:Type="String">16-01-2013</Data><Comment
+      ss:Author="MIRIAM"><ss:Data xmlns="http://www.w3.org/TR/REC-html40"><Font
+        html:Face="Tahoma" x:CharSet="238" html:Size="8" html:Color="#000000">&#10;</Font><B><Font
+         html:Face="Tahoma" x:Family="Swiss" html:Size="12" html:Color="#000000">POLA SZARE WYPEŁNIA OSOBA ZAMAWIAJĄCA</Font></B></ss:Data></Comment><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="s24"><Data ss:Type="String">NAZWISKO I IMIĘ</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">DZIAŁ ZAKUPÓW</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21001112</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">AT. BROTHER LC1100BK</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">505096</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">62.36</Data></Cell>
+   </Row>
+   <Row ss:Height="18.75">
+    <Cell ss:Index="2" ss:StyleID="s31"><Data ss:Type="String">DZIAŁ ZAMAWIAJĄCY</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><Data ss:Type="String">DZIAŁ KSIĘGOWOŚCI</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Baran Anna</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">WOD</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21004100</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">AT. BROTHER LC1100HY-BK</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">505105</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">83.53</Data></Cell>
+   </Row>
+   <Row ss:Height="18.75">
+    <Cell ss:Index="2" ss:StyleID="s31"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Baran Ryszard</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">DZIAŁ KONSTRUKCYJNY</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21001300</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">AT. BROTHER LC1100HYC</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">505102</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">44.12</Data></Cell>
+   </Row>
+   <Row ss:Height="18.75">
+    <Cell ss:Index="2" ss:StyleID="s31"><Data ss:Type="String">NUMER ST. KOSZTÓW</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"
+     ss:Formula="=VLOOKUP(R[-2]C,R[-4]C[241]:R[22]C[242],2,FALSE)"><Data
+      ss:Type="Number">21001110</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Bąska Łukasz</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">DZIAŁ IT</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21001080</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">AT. BROTHER LC1100HY-M</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">505103</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">44.12</Data></Cell>
+   </Row>
+   <Row ss:Height="18.75">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Bielawski Wojciech</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">WUR </Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21002300</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">AT. BROTHER LC1100HY-Y</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">505104</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">44.12</Data></Cell>
+   </Row>
+   <Row ss:Height="18.75">
+    <Cell ss:Index="2" ss:StyleID="s31"><Data ss:Type="String">IMIĘ I NAZWISKO OSOBY ZAMAWIAJĄCEJ </Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><Data ss:Type="String">Muzyka Anna</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Bojarska Karolina </Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">DZIAŁ DANYCH PODSTAWOWYCH</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21001310</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">BLOK DO FLIPCHARTÓW CZYSTY 40 ARKUSZY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">190047</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">19.22</Data></Cell>
+   </Row>
+   <Row ss:Height="18.75">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Bordzoł Maciej </Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">CONTROLING</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21001130</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">BLOK DO FLIPCHARTÓW KRATKA 20 ARKUSZY </Data></Cell>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">024478</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">8.83</Data></Cell>
+   </Row>
+   <Row ss:Height="18.75">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Brynda Joanna</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">PRODUKCJA</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21004300</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">BLOK MAKULATUROWY A4 100k W KRATKĘ </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">110067</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.61</Data></Cell>
+   </Row>
+   <Row ss:Height="18.75">
+    <Cell ss:Index="2" ss:StyleID="s31"><Data ss:Type="String">NUMER ZAMÓWIENIA WEWNĘTRZNEGO</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">ZAMÓWIENIE 35-02-2013</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Brynda Paweł</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">PLANOWANIE PRODUKCJI </Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21002310</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">CHUSTECZKI DO CZYSZCZENIA EKRANÓW I MATRYC LCD/TFT 100SZT.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">163700</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">15.81</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="31.5">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Budzyńska Sylwia </Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">MWG 2101</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21008100</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">CIENKOPIS STABILO POINT 88 CZARNY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070183</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">1.49</Data></Cell>
+   </Row>
+   <Row ss:Height="36.75">
+    <Cell ss:StyleID="s42"><Data ss:Type="String">L. P. </Data></Cell>
+    <Cell ss:StyleID="s34"><Data ss:Type="String">NUMER ARTYKUŁU</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">NAZWA ARTYKUŁU</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">ZAMAWIANA &#10;ILOŚĆ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">CENA JEDNOSTKOWA</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">KWOTA </Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Budzyński Bogdan</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">MWG 2201 </Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="String">&#10;21000209 </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">CIENKOPIS STABILO POINT 88 CZERWONY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070181</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">1.49</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s37" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">070202</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s70"><Data ss:Type="String">ZAKREŚLACZ STABILO BOSS RÓŻOWY</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="Number">2.4900000000000002</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">2.4900000000000002</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Bulak Paweł </Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">DZIAŁ TECHNOLOGICZNY</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21002320</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">CIENKOPIS STABILO POINT 88 NIEBIESKI</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070182</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">1.49</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">070199</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">ZAKREŚLACZ STABILO BOSS ZIELONY</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="Number">2.4900000000000002</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">2.4900000000000002</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Chabros Renata</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">WOP</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21004400</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">CIENKOPIS STABILO POINT 88 ZESTAW 6 kol.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070184</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">8.99</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">070198</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">ZAKREŚLACZ STABILO BOSS ŻÓŁTY</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="Number">2.4900000000000002</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">2.4900000000000002</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Chudek Grzegorz</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">DZIAŁ JAKOŚCI</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21002200</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">CIENKOPIS STABILO POINT 88 ZIELONY </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070180</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">1.49</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">070216</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">OŁÓWEK STABILO SWANO BEZ GUMKI HB </Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="Number">0.6</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0.6</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Cybul Andrzej</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">DZIAŁ PERSONALNY</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21001090</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s48"><Data ss:Type="String">DŁUGOPIS ROTO W MARKECIE </Data></Cell>
+    <Cell ss:StyleID="s23"/>
+    <Cell ss:StyleID="s55"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">5</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">090095</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">TAŚMA 3M SCHOTCH MAGIC810 PODAJNIK 13X11 MM</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="Number">4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="Number">3.75</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">15</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Czerniachowski Michał</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">DZIAŁ KSIĘGOWOŚCI</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21001110</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">DŁUGOPIS ŻELOWY   WKŁAD NIEBIESKI</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">024639</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">1.42</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">6</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">030091/4 </Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">PRZEKŁADKI INDEKSUJĄCE DONAU</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="Number">8.83</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">17.66</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Dajek Sławomir</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">DZIAŁ WYSYŁEK</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21006100</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">DŁUGOPIS ŻELOWY WKŁAD CZARNY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">024637</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">1.42</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">7</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">030182</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">MARKER DONAU D-SINGER SUCHOŚCIERALNY CZARNY</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="Number">2.09</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">2.09</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Derecki Sebastian</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">DZIAŁ LOGISTYKI</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21001111</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">DZIURKACZ LACO L-300N CZARNY </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">024807</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">15.79</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">8</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Domin Krzysztof</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">MAGAZYN MATERIAŁÓW</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21005101</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">DZIURKACZ LACO L-300N CZERWONY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">024808</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">15.79</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">9</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Domińska Dorota</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s18"><Data ss:Type="String">DZIAŁ ROLET</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21004800</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ETYK. ZF4737 63,5x29,6 OP=675 25 ARK.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070048</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">32.18</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">10</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Dudzik Bartłomiej</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s21"><Data ss:Type="String">SEKRETARIAT</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21001010</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">ETYKIETA NA SEGREGATOR NA GRZBIETY CZERWONA <Font
+       html:Face="Arial" x:CharSet="238" x:Family="Swiss"> </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070587</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">28.99</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Dudzińska Justyna</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s21"><Data ss:Type="String">RADA PRACOWNIKÓW</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21001092</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">ETYKIETA NA SEGREGATOR NA GRZBIETY NIEBIESKA <Font
+       html:Face="Arial" x:CharSet="238" x:Family="Swiss"> </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070588</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">28.99</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Filipiak Paweł</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s21"><Data ss:Type="String">KOMISJA ZAKŁADOWA SOLIDARNOŚĆ</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">21001091</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">ETYKIETA NA SEGREGATOR NA GRZBIETY ZIELONA <Font
+       html:Face="Arial" x:CharSet="238" x:Family="Swiss"> </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070589</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">28.99</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">13</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Fiutka Grzegorz</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s21"><Data ss:Type="String">ROTO OKNA DACHOWE &#10;DZIAŁ SPRZEDAŻY POLSKA </Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">22002210</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">ETYKIETA NA SEGREGATOR NA GRZBIETY ŻÓLTA <Font
+       html:Face="Arial" x:CharSet="238" x:Family="Swiss"> </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070581</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">28.99</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">14</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Głos Aleksandra</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s21"><Data ss:Type="String">ROTO OKNA DACHOWE &#10;DZIAŁ SPRZEDAŻY EKSPORT </Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">22002300</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ETYKIETY APLI MULTI-3 105x148 </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">AP4713</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">38</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Górny Leszek</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s21"><Data ss:Type="String">ROTO OKNA DACHOWE &#10;DZIAŁ KSIĘGOWOŚCI</Data></Cell>
+    <Cell ss:StyleID="s19"><Data ss:Type="Number">22001200</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ETYKIETY APLI MULTI-3 105x57</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">AP4724</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">38</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">16</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Górny Marek</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s27"><Data ss:Type="String">ROTO OKNA DACHOWE &#10;DZIAŁ TECHNICZNY</Data></Cell>
+    <Cell ss:StyleID="s28"><Data ss:Type="Number">22002700</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ETYKIETY 99,1X93,1 MULTI-3 AP10500</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070103</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">38</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">17</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Górski Marcin</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s25"/>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">FOLIA LAMINACYJNA A3</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">080150</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">62.67</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">18</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Gralewska Anna</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s25"/>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">FOLIA LAMINACYJNA A4 (216*303) 80 MIC S</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">080145</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">34</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">19</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Grzegorczyk Piotr</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s25"/>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">FOLIA LAM. BROTHER TZ251 24MM T:BIAŁE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">510381</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">71.400000000000006</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="45">
+    <Cell ss:StyleID="s38"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[1],C[250]:C[251],2,FALSE)"><Data
+      ss:Type="String">KOD WSTAWIANY AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">NALEŻY WYBRAĆ ARTYKUŁ</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=VLOOKUP(RC[-2],C[247]:C[249],3,FALSE)"><Data
+      ss:Type="String">CENA WSTAWIANA AUTOMATYCZNIE</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=IF(ISNUMBER(RC[-1]),RC[-2]*RC[-1],0)"><Data
+      ss:Type="Number">0</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Guz Arkadiusz</Data></Cell>
+    <Cell ss:Index="244" ss:StyleID="s25"/>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">FOLIA LAM. BROTHER TZ651 24/8 T:ŻÓŁTE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">510366</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">78.16</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="19.5">
+    <Cell ss:Index="5" ss:StyleID="s38"><Data ss:Type="String">SUMA:</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33" ss:Formula="=SUM(R[-20]C:R[-1]C)"><Data ss:Type="Number">42.820000000000007</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Gziut Ryszard</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s51"><Data ss:Type="String">FOLIOPIS STABILO OPHEN CZARNY</Data></Cell>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">070226</Data></Cell>
+    <Cell ss:StyleID="s58"><Data ss:Type="Number">3.53</Data></Cell>
+   </Row>
+   <Row ss:Height="15">
+    <Cell ss:Index="6" ss:Formula="=RC[-2]*RC[-1]"><Data ss:Type="Number">0</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Hryniewicz Paweł </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">GĄBKA DO TABLIC MAGNET.-SUCHOŚCIER.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">024910</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">4.26</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="43.5">
+    <Cell ss:Index="3" ss:StyleID="s33"><Data ss:Type="String">POTWIERDZENIE OTRZYMANIA KOMPLETNEGO ZAMÓWIENIA</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="6" ss:Formula="=RC[-2]*RC[-1]"><Data ss:Type="Number">0</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Jasińska Marta </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">GRZBIETY DO BINDOWANIA CZERWONE MAX. ILOŚĆ KARTEK 105</Data></Cell>
+    <Cell ss:StyleID="s23"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">080060-09<Font html:Size="5"> </Font><Font
+       html:Face="Arial" x:CharSet="238" x:Family="Swiss"> </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">12.67</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="35.25">
+    <Cell ss:Index="3" ss:StyleID="s39"><Data ss:Type="String">DATA:</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="6" ss:Formula="=RC[-2]*RC[-1]"><Data ss:Type="Number">0</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Kapłański Damian</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">GRZBIETY DO BINDOWANIA CZERWONE MAX. ILOŚĆ KARTEK 65</Data></Cell>
+    <Cell ss:StyleID="s23"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">080059-09<Font html:Size="5"> </Font><Font
+       html:Face="Arial" x:CharSet="238" x:Family="Swiss"> </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">8.5</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="40.5">
+    <Cell ss:Index="3" ss:StyleID="s39"><Data ss:Type="String">PODPIS OSOBY ODBIERAJĄCEJ:</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="6" ss:Formula="=RC[-2]*RC[-1]"><Data ss:Type="Number">0</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Keller Jarosław</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">GUMKA AC 30 PELIKAN NIEBIESKO-BIAŁA</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">138114</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">1.43</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="28.5">
+    <Cell ss:Index="6" ss:Formula="=RC[-2]*RC[-1]"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Kępa Adam</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">GUMKA RASOPLAST B40</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">061121</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">1.01</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="6" ss:Formula="=RC[-2]*RC[-1]"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Kępka Zbigniew</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KALKULATOR VECTOR-DK-209DM</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">510261</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">23.49</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="6" ss:Formula="=RC[-2]*RC[-1]"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Kicia Marek</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI DŁUGIE PASKI 6 KOLORÓW </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8000-009</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">40,26</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="6" ss:Formula="=RC[-2]*RC[-1]"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Klajda Albert</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI DŁUGIE PASKI BIAŁE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8000-001 </Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">40,26</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="6" ss:Formula="=RC[-2]*RC[-1]"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Kostera Waldemar</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI DŁUGIE PASKI CZERWONE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8000-002</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">40,26</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Kowalczyk Andrzej</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI DŁUGIE PASKI NIEBIESKIE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8000-003</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">40,26</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Kowalczyk Renata </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI DŁUGIE PASKI POMARAŃCZOWE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8000-006</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">40,26</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Krakowiak Arkadiusz</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI DŁUGIE PASKI ZIELONE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8000-004</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">40,26</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Król Andrzej</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI DŁUGIE PASKI ŻÓŁTE </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8000-005</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">40,26</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Krupa Marek</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI PROSTOKĄTY  CZERWONE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8002-002</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">62,22</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Krzystanek Alfred</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI PROSTOKĄTY  NIEBIESKIE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8002-003</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">62,22</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Kuczyńska-Jakimiak Urszula</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI PROSTOKĄTY  POMARAŃCZOWE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8002-006</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">62,22</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Kukiełka Radosław</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI PROSTOKĄTY  ZIELONE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8002-004</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">62,22</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Kurlak Adam</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI PROSTOKĄTY 6 KOLORÓW </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8002-009</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">62,22</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Kuźmicz Mariusz</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI PROSTOKĄTY BIAŁE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8002-001</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">62,22</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Lato Dorota</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KARTKI DO MODERACJI PROSTOKĄTY ŻÓŁTE </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8002-005</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">62,22</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Leszko Rafał </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KLEJ W SZTYFCIE  DONAU 15 GR</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">921092</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.36</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Lis Krzysztof</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KLEJ W SZTYFCIE  DONAU 21 GR</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">921093</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">3</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Majka Paweł</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KLEJ W SZTYFCIE  DONAU 8 GR</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">921091</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">1.28</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Maleszyk Elżbieta</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KLIP DESKA  A4 CZARNA</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">180121</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">3.27</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Małyska Tadeusz </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KLIP DESKA  A4 CZERWONA</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">180122</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">3.27</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Mardoń Magdalena</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KLIP DESKA Z ZAMKNIĘCIEM A4 CZARNA</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">180134</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">5.66</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Marzec Sebastian</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KLIP DESKA Z ZAMKNIĘCIEM A4 CZERWONA</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">180135</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">5.66</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Marzęda Paweł</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s63"><Data ss:Type="String">KONTENEREK FIRMA EVEREST </Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s65"><Data ss:Type="Number">375</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Matyjaszczyk Edyta</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KOPERTA DL (110x220) KPL=1000 SZT.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">410088</Data></Cell>
+    <Cell ss:StyleID="s60"><Data ss:Type="Number">45.36</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Matyjaszczyk Arkadiusz </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KOPERTA SAMOK. C4 KPL=50 </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">410059</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">8.73</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Mazur Adam</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KOPERTA SAMOKL. C5 KPL=50</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">410058</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">4.93</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Meksuła Jerzy</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KOPERTA SAMOKL. C6 KPL=50</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">410053</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">1.65</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Mika Mirosław</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KOPERTA SAMOKL. DL KPL=50</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">410057</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">2.2799999999999998</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Miroń Tomasz</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s51"><Data ss:Type="String">KOREKTOR W TAŚMIE COMFORT</Data></Cell>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">470053</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">8.93</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Muzyka Anna</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KOSZULKA A4 GROSZKOWA BANTEX OP=100</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">151084</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">5.13</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Muzyka Renata</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">KOSZULKA NA 2CD OPAK=5 SZT.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">151133</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">8.27</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Niedziela Katarzyna</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">LINIJKA PLASTIKOWA DONAU 30 CM</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">030075</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">0.77</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Nowak Piotr </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">LINIJKA PLASTIKOWA DONAU 50 CM</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">030077</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.3199999999999998</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Oleksiak Piotr</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">LISTWY WSUWANE CZERWONE 10 MM</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">088333</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">32.74</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Orlik-Grzesik Patrycja</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">LISTWY WSUWANE CZERWONE 15 MM</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">080239/01</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">34.5</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Ostańska Dominika</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MAGNESY DO TABLI JEDNOKOLOROWE BIAŁE </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">140077</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">33.880000000000003</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Ostrowski Andrzej</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MAGNESY DO TABLI JEDNOKOLOROWE ZIELONE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">140078</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">33.880000000000003</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Pęksa Bartłomiej</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MAGNESY DO TABLI JEDNOKOLOROWE ŻÓŁTE </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">140079</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">33.880000000000003</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Pieczywek Paweł </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MAGNESY DO TABLI JEDNOKOLOROWE CZARNE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">140080</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">33.880000000000003</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Pietrak Beata</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MAGNESY DO TABLI JEDNOKOLOROWE CZERWONE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">140082</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">33.880000000000003</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Pietrzyk Anna</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MAGNESY DO TABLIC, ŚREDNICA 1 CM /9SZT /</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">MAG1</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">3.97</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Piętka Mateusz</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MAGNESY DO TABLIC, ŚREDNICA 2 CM /6SZT /</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">025887</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.04</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Polichańczuk Katarzyna</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER DO PISANIA NA CD DWUSTRONNY CZARNY 0,4-0,9 MM </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">520108</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">5.65</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Poljańska Elżbieta</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER DO PISANIA NA CD DWUSTRONNY NIEBIESKI 0,4-0,9 MM </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">520109</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">5.65</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Podleśny Jarosław </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER PERMANENTNY CZARNY OKR.N850 PENTEL</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">532260</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.2400000000000002</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Potocki Bartłomiej</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER PERMANENTNY CZERWONY OKR.N850 PENTEL</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">532261</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.2400000000000002</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Poździk Szczepan</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER PERMANENTNY NIEBIESKI OKR.N850 PENTEL</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">532262</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.2400000000000002</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Puła Aneta</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER PERMANENTNY ZIELONY OKR.N850 PENTEL</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">532263</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.2400000000000002</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Radzikowska Joanna</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER DONAU D-SINGER SUCHOŚCIERALNY CZARNY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">030182</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.09</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Radzikowski Marek</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER DONAU D-SINGER SUCHOŚCIERALNY  CZERWONY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">030183</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.09</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Remiszewska Elżbieta</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER DONAU D-SINGER SUCHOŚCIERALNY NIEBIESKI</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">030184</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.09</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Rojek Rafał</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER DONAU D-SINGER SUCHOŚCIERALNY ZIELONY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">030185</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.09</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Romanowski Andrzej</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER PENTEL JUMBO M180 CZARNY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">230023</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">17.690000000000001</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Salamon Andrzej</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER PENTEL JUMBO M180 CZERWONY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">230025</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">17.690000000000001</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Sidor Marek </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER PENTEL JUMBO M180 NIEBIESKI</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">230026</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">17.690000000000001</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Sidor Piotr</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MARKER PENTEL JUMBO M180 ZIELONY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">230024</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">17.690000000000001</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Sierzpowski Paweł</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">MYSZKA KOMPUTEROWA A4 TECH OP-50D </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">K951045</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">21.15</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Skoczek Dariusz</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">NOŻYCZKI  16CM</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">030002</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">6.04</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Skórko Maciej</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s48"><Data ss:Type="String">OBWOLUTA PRZEZROCZYSTA W MARKECIE </Data></Cell>
+    <Cell ss:StyleID="s49"/>
+    <Cell ss:StyleID="s61"/>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Skrzypiec Bogumiła</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">OKŁADKI FOLIE PRZEZROCZYSTE BEZBARWNE  OP=100 </Data></Cell>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">080070</Data></Cell>
+    <Cell ss:StyleID="s60"><Data ss:Type="Number">21.25</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Skrzypiec Edyta</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s50"><Data ss:Type="String">OKŁADKI KARTON CHROMOLUX DO BINDOWANIA  CZERWONE  OP=100</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">080077</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">21.61</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Sobiesiak Paweł</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s66"><Data ss:Type="String">OŁÓWEK AUTOMATYCZNY PENTEL AX 125</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">530444</Data></Cell>
+    <Cell ss:StyleID="s67"><Data ss:Type="Number">3.69</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Stasieczek-Poździk Agnieszka</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">OŁÓWEK STABILO SWANO BEZ GUMKI HB </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070216</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">0.6</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Stróżyński Paweł</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">OŁÓWEK STABILO SWANO Z GUMKĄ HB </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070215</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">0.67</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Suchorab Paweł </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s48"><Data ss:Type="String">PAPIER KSEROGRAFICZNY FORMAT A4 W MARKECIE  </Data></Cell>
+    <Cell ss:StyleID="s23"/>
+    <Cell ss:StyleID="s55"/>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Świć Daniel </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s48"><Data ss:Type="String">PAPIER KSEROGRAFICZNY FORMAT A3 W MARKECIE  </Data></Cell>
+    <Cell ss:StyleID="s23"/>
+    <Cell ss:StyleID="s55"/>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Szczygieł Arkadiusz</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PAPIER KSEROGRAFICZNY FORMAT A5 </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">010304</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">6.51</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Szczygieł Artur</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PAPIER CZERWONY (WIŚNIOWY)</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">811782</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">23.5</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Szlendak Jerzy</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PAPIER DO PLOTERA 914x50M 80G</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">800107</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">40.299999999999997</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Szumlak Dariusz</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s63"><Data ss:Type="String">PAPIER DO PLOTERA 841x50M </Data></Cell>
+    <Cell ss:StyleID="s68"><Data ss:Type="Number">811153</Data></Cell>
+    <Cell ss:StyleID="s69"><Data ss:Type="Number">39.229999999999997</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Szydłowski Jacek</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s63"><Data ss:Type="String">PAPIER DO PLOTERA 594x50 M </Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">800108</Data></Cell>
+    <Cell ss:StyleID="s69"><Data ss:Type="Number">28.07</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Szysiak Artur</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PAPIER KOLOROWY  A4  RÓŻOWY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8382026</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">23.5</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Tabiszewski Rafał</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PAPIER KOLOROWY  A4  ŻÓŁTY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">811778</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">23.5</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Tarnowska Mariola</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PAPIER KOLOROWY  A4 CZERWONY </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">811049</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">23.5</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Tatarczak Małgorzata</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PAPIER KOLOROWY  A4 ZIELONY </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">811975</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">23.5</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Tatarczak Mariusz</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PAPIER KOLOROWY A4  POMARAŃCZOWY </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">811878</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">23.5</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Waśkowicz Roman</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PAPIER KOLOROWY A4 NIEBIESKI</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">8382024</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">23.5</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Wołowik Piotr</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s63"><Data ss:Type="String">PAPIER SATYNOWY BIAŁY DCP CLAIREFONTAINE 160 G A4 </Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">810411</Data></Cell>
+    <Cell ss:StyleID="s67"><Data ss:Type="Number">29.07</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Woźniak Tomasz</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PAPIER SATYNOWY BIAŁY DCP CLAIREFONTAINE 106 G A4 </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">810455</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">29.07</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Wójtowicz Adam</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PINEZKI TABLICOWE BECZUŁKA OP=100 SZT. </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">170233</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">2.91</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Wójtowicz Tomasz </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PINEZKI TABLICOWE BECZUŁKA OP=50 SZT.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">170017</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">1.89</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Wróbel Marcin </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PIÓRO KULKOWE UB-104 UNI WKŁAD CZARNY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">520038</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">3.12</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Zając Ewa</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PIÓRO KULKOWE UB-104 UNI WKŁAD NIEBIESKI</Data></Cell>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">520040</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">3.12</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Zdunek Magdalena </Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PŁYN DO CZYSZCZENIA EKRANÓW LCD EMTEC 250ml</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">K953418</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">12.24</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Ziemichut Maciej</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PODKŁADKA NA BIURKO ZAOPATRZENIE WEWNĘTRZNE</Data></Cell>
+    <Cell ss:StyleID="s23"/>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">40</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Żuchowski Piotr</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PODKŁADKA POD MYSZ ZAOPATRZENIE WEWNĘTRZNE </Data></Cell>
+    <Cell ss:StyleID="s23"/>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">2.9</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="239" ss:StyleID="Default"><Data ss:Type="String">Żukowski Witold</Data></Cell>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PODUSZKI DO STEMPLI TRODAT 9052 CZARNY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">520226</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">7.37</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">PRZEKŁADKI DO SEGREGATORA ALFABETYCZNE<Font
+       html:Face="LTUnivers 430 BasicReg" x:CharSet="238" x:Family="Swiss"> A4/ A-Z SZARE</Font><Font
+       html:Face="Arial" x:Family="Swiss">   </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">150036</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">11.58</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">PRZEKŁADKI DO SEGREGATORA NUMERYCZNE<Font
+       html:Face="LTUnivers 430 BasicReg" x:CharSet="238" x:Family="Swiss"> A4/ 1-10 SZARE</Font><Font
+       html:Face="Arial" x:Family="Swiss">   </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">150032</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">7.21</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">PRZEKŁADKI DO SEGREGATORA NUMERYCZNE<Font
+       html:Face="LTUnivers 430 BasicReg" x:CharSet="238" x:Family="Swiss"> A4/ 1-12 SZARE</Font><Font
+       html:Face="Arial" x:Family="Swiss">   </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">150033</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">7.93</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">PRZEKŁADKI DO SEGREGATORA NUMERYCZNE<Font
+       html:Face="LTUnivers 430 BasicReg" x:CharSet="238" x:Family="Swiss"> A4/ 12-1 SZARE</Font><Font
+       html:Face="Arial" x:Family="Swiss">   </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">150661</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">10.61</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">PRZEKŁADKI DO SEGREGATORA NUMERYCZNE<Font
+       html:Face="LTUnivers 430 BasicReg" x:CharSet="238" x:Family="Swiss"> A4/ 1-31 SZARE</Font><Font
+       html:Face="Arial" x:Family="Swiss">   </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">150034</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">15.98</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">PRZEKŁADKI DO SEGREGATORA NUMERYCZNE<Font
+       html:Face="LTUnivers 430 BasicReg" x:CharSet="238" x:Family="Swiss"> A4/ 1-5 SZARE</Font><Font
+       html:Face="Arial" x:Family="Swiss">   </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">6205-00 <Font html:Face="Arial"
+       x:CharSet="238" x:Family="Swiss"> </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">3.32</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">PRZEKŁADKI DO SEGREGATORA NUMERYCZNE<Font
+       html:Face="LTUnivers 430 BasicReg" x:CharSet="238" x:Family="Swiss"> A4/ 1-6 SZARE</Font><Font
+       html:Face="Arial" x:Family="Swiss">   </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">150045</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">3.84</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PRZEKŁADKI INDEKSUJĄCE DONAU</Data></Cell>
+    <Cell ss:StyleID="s23"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">030091/4<Font html:Face="Arial"
+       x:CharSet="238" x:Family="Swiss"> </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">8.83</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">PUDEŁKO ARCHIW. A4/12 CM SZARE DONAU<Font
+       html:Size="4.2"> </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">024507</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">2.0299999999999998</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PUNKTY SAMOPRZYLEPNE NA LISTKACH NEULAND 5-KOLOROWE śred. 20 mm, op=1000 szt.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8078-109</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">31.72</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PUNKTY SAMOPRZYLEPNE NA LISTKACH NEULAND CZERWONE śred. 20 mm, op=1000 szt.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8078-102 </Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">31.72</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PUNKTY SAMOPRZYLEPNE NA LISTKACH NEULAND MARGERYTKI śred. 20 mm, op=1000 szt.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8078-100</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">31.72</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PUNKTY SAMOPRZYLEPNE NA LISTKACH NEULAND NIEBIESKIE śred. 20 mm, op=1000 szt.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8078-103</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">31.72</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:StyleID="s33"/>
+    <Cell ss:StyleID="s43"/>
+    <Cell ss:StyleID="s44"/>
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PUNKTY SAMOPRZYLEPNE NA LISTKACH NEULAND POMARAŃCZOWE  śred. 20 mm, op=1000 szt.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8078-106</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">31.72</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">PUNKTY SAMOPRZYLEPNE NA LISTKACH NEULAND ZIELONE śred. 20 mm, op=1000 szt.</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">8078-104</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">31.72</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ROZSZYWACZ LEVIATAN CZARNY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">023306</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">0.83</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ROZSZYWACZ DONAU CZERWONY Z BLOKADĄ </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">160006</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">3.37</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s63"><Data ss:Type="String">RYNIENKA BIAŁA </Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">140009</Data></Cell>
+    <Cell ss:StyleID="s65"><Data ss:Type="Number">5.59</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s63"><Data ss:Type="String">RYNIENKA CZERWONA </Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">140008</Data></Cell>
+    <Cell ss:StyleID="s65"><Data ss:Type="Number">5.59</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s63"><Data ss:Type="String">RYSIKI DO OŁÓWKA AUTOMATYCZNEGO 0,5 </Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">520081</Data></Cell>
+    <Cell ss:StyleID="s67"><Data ss:Type="Number">2.39</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">SEGREGATOR BIAŁY 7,5 CM DONAU</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">037007</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">4.9000000000000004</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">SEGREGATOR CZARNY 7,5 CM DONAU</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">037010</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">4.49</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">SEGREGATOR NA PŁYTY CD</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">151052</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">7.49</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">SKOROSZYT CZERWONY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">150066</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">0.53</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">STOJAK NA INFORMACJE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">720071</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">24.8</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ŚCIERECZKI DO CZYSZCZENIA PLASTIKU I METALU APLI 100szt</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">162204</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">11.91</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TAŚMA 3M SCHOTCH MAGIC810 PODAJNIK 13X11 MM</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">090095</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">3.75</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TAŚMA 3M SCHOTCH MAGIC810 PODAJNIK 19X7,6 MM</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">090096</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">3.92</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TAŚMA DO DRUKARKI BROTHER szer.: 12 mm</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">510368</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">47.06</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TAŚMA DO DRUKARKI BROTHER szer.: 18 mm</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">510369</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">57.65</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TAŚMA DO DRUKARKI BROTHER szer.: 24 mm </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">510381</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">63.53</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TASMA DO DRUKARKI DYMO 4501 BLACK WHITE SZER. 12 MM </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">260377</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">52.6</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TASMA DO DRUKARKI DYMO 4501 BLACK WHITE SZER. 9 MM </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">505518</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">56.49</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TECZKA MIESIĘCZNA ZAOPATRZENIE WEWNĘTRZNE </Data></Cell>
+    <Cell ss:StyleID="s23"/>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">43</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TECZKA ROCZNA ZAOPATRZENIE WEWNĘTRZNE </Data></Cell>
+    <Cell ss:StyleID="s23"/>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">30</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TECZKA WISZĄCA</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">150137</Data></Cell>
+    <Cell ss:StyleID="s57"><Data ss:Type="Number">4.5999999999999996</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TEMPERÓWKA </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">010078</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">6.42</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER BROTHER TN-2120</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">505087</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">235.3</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER CANON CEXV18 IR</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">502107</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">155.30000000000001</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER CANON FX 10 </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">500467</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">274.12</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER CANON FX3</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">500232</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">229.42</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER HP-CB540A BLACK </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">509646</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">225.16</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER HP-CB542A YELLOW</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">509652</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">194.94</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER HP-CB541A CYAN</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">509651</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">194.94</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER HP-CB543A MAGENTA</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">509653</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">194.94</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s51"><Data ss:Type="String">TONER HP-C9403A MATT BLACK</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">509713</Data></Cell>
+    <Cell ss:StyleID="s60"><Data ss:Type="Number">238.83</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s51"><Data ss:Type="String">TONER HP-C9401A GREY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">500341</Data></Cell>
+    <Cell ss:StyleID="s60"><Data ss:Type="Number">162.36000000000001</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s51"><Data ss:Type="String">TONER HP-C9400A YELLOW</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">509712</Data></Cell>
+    <Cell ss:StyleID="s60"><Data ss:Type="Number">156.47999999999999</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s51"><Data ss:Type="String">TONER HP-C9397A BLACK PHOTO</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">509753</Data></Cell>
+    <Cell ss:StyleID="s60"><Data ss:Type="Number">156.47999999999999</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s51"><Data ss:Type="String">TONER HP-C9399A MAGENTA</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">509711</Data></Cell>
+    <Cell ss:StyleID="s60"><Data ss:Type="Number">156.47999999999999</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s51"><Data ss:Type="String">TONER HP-C9398A CYAN</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">509754</Data></Cell>
+    <Cell ss:StyleID="s60"><Data ss:Type="Number">156.47999999999999</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER HP C7115A</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">500000</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">222.36</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER HP-C4836AE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">500268</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">120.01</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER HP-Q2612A</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">500014</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">249.41</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER HP-Q5949A </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">000657</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">310.58999999999997</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER HP-Q7553X P2015 CZARNY </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">509609</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">529.41999999999996</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER KYOCERA TK-60</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">509609</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">331.04</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER LEXMARK C540A1CG CYAN</Data></Cell>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">501381</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">188.61</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER LEXMARK C540A1KG BLACK</Data></Cell>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">501382</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">143.02000000000001</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER LEXMARK C540A1MG MAGENTA</Data></Cell>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">550350</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">188.61</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="0.75" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER LEXMARK C540A1YG YELLOW</Data></Cell>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">550351</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">188.61</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER LEXMARK C540H1K CZARNY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">501388</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">235.29</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER LEXMARK C540H1K CYAN</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">501385</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">385.21</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER LEXMARK C540H1K CZARNY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">501386</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">385.21</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER LEXMARK C540H1K CZARNY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">501387</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">385.21</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER LEXMARK 12A7465 T632/634</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">501219</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">1364.71</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER LEXMARK E 250A11E</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">501061</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">349.42</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER LEXMARK E260A</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">501058</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">335.29</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">Toner LEXMARK T640, T642, T644</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">501025</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">492.95</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER NASHUATEC DSM 616/615/618</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">500514</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">85.88</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER DO DRUKARKI HP DESK JET 1220C 51645AE BA5 CZARNY </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">500045</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">111.76</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER DO DRUKARKI HP DESK JET 1220C C6578DE BA5 KOLOROWY </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">500030</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">122.36</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER PANASONC KX-FA85E KX-FL</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">500300</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">204.71</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER RICOH AFICIO 1230D 2018D </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">500469</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">82.36</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s53"><Data ss:Type="String">TUSZ BROTHER LC-1280 VALUE PACK CMYK</Data></Cell>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">505198</Data></Cell>
+    <Cell ss:StyleID="s58"><Data ss:Type="Number">409.17</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TUSZ DO PLOTERA HP-51626 AE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">500041</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">111</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TONER DO PLOTERA HP-51640AE DJ BLACK 1120str</Data></Cell>
+    <Cell ss:StyleID="s46"><Data ss:Type="String">500058</Data></Cell>
+    <Cell ss:StyleID="s17"><Data ss:Type="Number">111.13</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TUSZ DO KSEROKOPIARKI BROTHER TN-2110 </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">505088</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">164.71</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TUSZ STEMPLARSKI NORIS 110S CZARNY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">520206</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">5.16</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">TUSZ STEMPLARSKI NORIS 110S CZERWONY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="Number">520207</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">5.16</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s48"><Data ss:Type="String">WKŁAD DO DŁUGOPISU ROTO W MARKECIE </Data></Cell>
+    <Cell ss:StyleID="s23"/>
+    <Cell ss:StyleID="s55"/>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">WPINKI DO SEGREGATORÓW DZIURKOWANE  OP=100 SZT. </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">089999</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">49.14</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">WPINKI DO SEGREGATORÓW SAMOPRZYLEPNE</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">089998</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">45.87</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ZAKREŚLACZ STABILO BOSS POMARAŃCZOWY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070201</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.4900000000000002</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ZAKREŚLACZ STABILO BOSS RÓŻOWY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070202</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.4900000000000002</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ZAKREŚLACZ STABILO BOSS ZIELONY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070199</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.4900000000000002</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ZAKREŚLACZ STABILO BOSS ŻÓŁTY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">070198</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">2.4900000000000002</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s48"><Data ss:Type="String">ZESZYT ROTO A4 W MARKECIE </Data></Cell>
+    <Cell ss:StyleID="s23"/>
+    <Cell ss:StyleID="s55"/>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ZSZYWACZ LACO H-401N CZARNY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">024772</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">15.81</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ZSZYWACZ LACO H-401N CZERWONY</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">024773</Data></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="Number">15.81</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">ZSZYWKI LACO 24/6 MIEDZIOWANE <Font
+       html:Face="Arial" x:CharSet="238" x:Family="Swiss"> </Font></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">025086</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">1.07</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ZSZYWKI STAPLES 24/6 </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">020024</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">0.34</Data></Cell>
+   </Row>
+   <Row ss:Height="20.25" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">ZSZYWKI 23/10 A” 1000 DELI 70K<B><Font
+        html:Face="LTUnivers 430 BasicReg" x:CharSet="238" x:Family="Swiss"
+        html:Size="16"> </Font></B></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">023445</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">1.89</Data></Cell>
+   </Row>
+   <Row ss:Height="15" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><Data ss:Type="String">ZSZYWKI STAPLES 24/6 </Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">020024</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">0.34</Data></Cell>
+   </Row>
+   <Row ss:Height="20.25" ss:Hidden="1">
+    <Cell ss:Index="252" ss:StyleID="s17"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40">ZSZYWKI 23/10 A” 1000 DELI 70K<B><Font
+        html:Face="LTUnivers 430 BasicReg" x:CharSet="238" x:Family="Swiss"
+        html:Size="16"> </Font></B></ss:Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">023445</Data></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="Number">1.89</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <ZeroHeight/>
+   <FitToPage/>
+   <Print>
+    <FitHeight>6</FitHeight>
+    <ValidPrinterInfo/>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <Scale>42</Scale>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <Zoom>75</Zoom>
+   <Selected/>
+   <DoNotDisplayGridlines/>
+   <DoNotDisplayZeros/>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>9</ActiveRow>
+     <ActiveCol>4</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+  <DataValidation xmlns="urn:schemas-microsoft-com:office:excel">
+   <Range>R3C3</Range>
+   <Type>List</Type>
+   <Value>R1C244:R27C244</Value>
+  </DataValidation>
+  <DataValidation xmlns="urn:schemas-microsoft-com:office:excel">
+   <Range>R7C3</Range>
+   <Type>List</Type>
+   <Value>R2C239:R161C239</Value>
+  </DataValidation>
+  <DataValidation xmlns="urn:schemas-microsoft-com:office:excel">
+   <Range>R13C3:R32C3</Range>
+   <Type>List</Type>
+   <Value>C252</Value>
+  </DataValidation>
+ </Worksheet>
 </Workbook>

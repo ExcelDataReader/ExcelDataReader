@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Globalization;
+using System.Text;
 using System.Xml;
 using ExcelDataReader.Core.NumberFormat;
 
@@ -256,7 +257,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         }
 
         var headerFooter = headerData != null || footerData != null
-            ? new HeaderFooter(footerData, headerData)
+            ? new HeaderFooter(NormalizeHeaderFooter(footerData), NormalizeHeaderFooter(headerData))
             : null;
 
         return (visibleState, codeName, headerFooter);
@@ -403,7 +404,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 var styleId = GetSpreadsheetAttribute(rowReader, "StyleID");
                 var effectiveStyle = styleId != null && stylesById.TryGetValue(styleId, out var style)
                     ? style
-                    : ExtendedFormat.Zero;
+                    : GetDefaultStyle(stylesById);
 
                 bool hasData = false;
                 var rawValue = ParseCellValue(rowReader.ReadSubtree(), out var cellError, out hasData);
@@ -482,7 +483,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
         int span = Math.Max(0, ParseInt(GetSpreadsheetAttribute(columnReader, "Span")));
         bool hidden = ParseBool(GetSpreadsheetAttribute(columnReader, "Hidden"));
-        double? width = ParseNullableDouble(GetSpreadsheetAttribute(columnReader, "Width"));
+        double? width = ParseColumnWidth(GetSpreadsheetAttribute(columnReader, "Width"));
         columnWidths.Add(new Column(currentColumn, currentColumn + span, hidden, width));
         currentColumn += span + 1;
     }
@@ -533,7 +534,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 var styleId = GetSpreadsheetAttribute(rowReader, "StyleID");
                 var effectiveStyle = styleId != null && stylesById.TryGetValue(styleId, out var style)
                     ? style
-                    : ExtendedFormat.Zero;
+                    : GetDefaultStyle(stylesById);
 
                 bool hasData = false;
                 var rawValue = ParseCellValue(rowReader.ReadSubtree(), out var cellError, out hasData);
@@ -561,7 +562,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
     private static object? ConvertCellValue(object? value, ExtendedFormat style, IReadOnlyDictionary<int, NumberFormatString>? formats)
     {
-        if (value is double number && style.NumberFormatIndex != 0)
+        if (style.NumberFormatIndex != 0)
         {
             NumberFormatString? fmt = null;
             formats?.TryGetValue(style.NumberFormatIndex, out fmt);
@@ -569,8 +570,17 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             fmt ??= BuiltinNumberFormat.GetBuiltinNumberFormat(style.NumberFormatIndex);
 #pragma warning restore CA1305
             if (fmt?.IsTimeSpanFormat == true)
-                return TimeSpan.FromDays(number);
+            {
+                if (value is double number)
+                    return TimeSpan.FromDays(number);
+
+                if (value is SpreadsheetXmlDateTime dateTime)
+                    return TimeSpan.FromDays(dateTime.SerialDate);
+            }
         }
+
+        if (value is SpreadsheetXmlDateTime date)
+            return date.Value;
 
         return value;
     }
@@ -593,7 +603,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
                 hasData = true;
                 var type = GetSpreadsheetAttribute(cellReader, "Type") ?? string.Empty;
-                var text = cellReader.ReadElementContentAsString();
+                var text = ReadElementText(cellReader);
 
                 return ParseDataText(type, text, out cellError);
             }
@@ -610,7 +620,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             case "Number":
                 return ParseDouble(value, 0D);
             case "DateTime":
-                if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dateTime))
+                if (TryParseSpreadsheetDateTime(value, out var dateTime))
                     return dateTime;
                 return value;
             case "Boolean":
@@ -658,6 +668,78 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         "#GETTING_DATA" => CellError.GETTING_DATA,
         _ => null,
     };
+
+    private static string? NormalizeHeaderFooter(string? value)
+        => value?
+            .Replace("&V", "&L")
+            .Replace("&H", "&R")
+            .Replace("&S", "&P");
+
+    private static ExtendedFormat GetDefaultStyle(IReadOnlyDictionary<string, ExtendedFormat> stylesById)
+        => stylesById.TryGetValue("Default", out var defaultStyle) ? defaultStyle : ExtendedFormat.Zero;
+
+    private static double? ParseColumnWidth(string? value)
+    {
+        var width = ParseNullableDouble(value);
+        if (width == null)
+            return null;
+
+        // SpreadsheetML stores column widths in points. The reader exposes the
+        // Excel character-width unit used by the binary and OpenXml readers.
+        return width / 5.25D;
+    }
+
+    private static string ReadElementText(XmlReader reader)
+    {
+        if (reader.IsEmptyElement)
+        {
+            reader.Read();
+            return string.Empty;
+        }
+
+        var result = new StringBuilder();
+        var depth = reader.Depth;
+        while (reader.Read())
+        {
+            if (reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth)
+                break;
+
+            if (reader.NodeType is XmlNodeType.Text or XmlNodeType.CDATA or XmlNodeType.SignificantWhitespace or XmlNodeType.Whitespace)
+            {
+                result.Append(reader.Value);
+            }
+        }
+
+        return result.ToString();
+    }
+
+    private static bool TryParseSpreadsheetDateTime(string value, out SpreadsheetXmlDateTime dateTime)
+    {
+        if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed))
+        {
+            dateTime = new SpreadsheetXmlDateTime(parsed, GetExcelSerialDate(parsed));
+            return true;
+        }
+
+        const string fakeLeapDay = "1900-02-29";
+        if (value.StartsWith(fakeLeapDay, StringComparison.Ordinal) &&
+            TimeSpan.TryParse(value.Substring(fakeLeapDay.Length).TrimStart('T'), CultureInfo.InvariantCulture, out var time))
+        {
+            dateTime = new SpreadsheetXmlDateTime(new DateTime(1900, 2, 28).Add(time), 60D + time.TotalDays);
+            return true;
+        }
+
+        dateTime = default;
+        return false;
+    }
+
+    private static double GetExcelSerialDate(DateTime dateTime)
+    {
+        var serialDate = (dateTime - new DateTime(1899, 12, 31)).TotalDays;
+        if (dateTime >= new DateTime(1900, 3, 1))
+            serialDate++;
+        return serialDate;
+    }
 
     private static XmlReader CreateXmlReaderAtStart(Stream stream, bool tolerateLeadingWhitespace)
     {
@@ -712,4 +794,11 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
     private static bool ParseBool(string? value)
         => value == "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+
+    private readonly struct SpreadsheetXmlDateTime(DateTime value, double serialDate)
+    {
+        public DateTime Value { get; } = value;
+
+        public double SerialDate { get; } = serialDate;
+    }
 }

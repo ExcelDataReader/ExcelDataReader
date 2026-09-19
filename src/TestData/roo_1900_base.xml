@@ -1,13 +1,76 @@
 <?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-          xmlns:o="urn:schemas-microsoft-com:office:office"
-          xmlns:x="urn:schemas-microsoft-com:office:excel"
-          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Worksheet ss:Name="Sheet1">
-    <Table>
-      <Row><Cell><Data ss:Type="DateTime">2009-06-15T00:00:00.000</Data></Cell></Row>
-      <Row><Cell><Data ss:Type="DateTime">2013-04-19T00:00:00.000</Data></Cell></Row>
-    </Table>
-  </Worksheet>
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>Stephen Pike</Author>
+  <LastAuthor>Johan Appelgren</LastAuthor>
+  <Created>2013-04-19T14:57:53Z</Created>
+  <LastSaved>2013-04-19T15:12:50Z</LastSaved>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>18375</WindowHeight>
+  <WindowWidth>25605</WindowWidth>
+  <WindowTopX>18405</WindowTopX>
+  <WindowTopY>6705</WindowTopY>
+  <TabRatio>500</TabRatio>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+  <DisplayInkNotes>False</DisplayInkNotes>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Calibri" x:CharSet="134" x:Family="Swiss" ss:Size="12"
+    ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s18">
+   <Font ss:FontName="Century Gothic" x:Family="Swiss"/>
+   <NumberFormat ss:Format="dd/mm/yyyy"/>
+   <Protection ss:Protected="0"/>
+  </Style>
+  <Style ss:ID="s19">
+   <Font ss:FontName="Century Gothic" x:Family="Swiss"/>
+   <NumberFormat ss:Format="m/d/yyyy"/>
+   <Protection ss:Protected="0"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Sheet1">
+  <Table ss:ExpandedColumnCount="1" ss:ExpandedRowCount="2" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultColumnWidth="66" ss:DefaultRowHeight="15.75">
+   <Row>
+    <Cell ss:StyleID="s18"><Data ss:Type="DateTime">2009-06-15T00:00:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s19"><Data ss:Type="DateTime">2013-04-19T00:00:00.000</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <Print>
+    <ValidPrinterInfo/>
+    <HorizontalResolution>-4</HorizontalResolution>
+    <VerticalResolution>-4</VerticalResolution>
+   </Print>
+   <Selected/>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>1</ActiveRow>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
 </Workbook>

@@ -1,20 +1,114 @@
 <?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-          xmlns:o="urn:schemas-microsoft-com:office:office"
-          xmlns:x="urn:schemas-microsoft-com:office:excel"
-          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Worksheet ss:Name="Sheet1">
-    <Table ss:ExpandedColumnCount="5" ss:ExpandedRowCount="2">
-      <Row>
-        <Cell ss:Index="2"><Data ss:Type="String">a</Data></Cell>
-        <Cell><Data ss:Type="String">b</Data></Cell>
-        <Cell ss:Index="5"><Data ss:Type="String">d</Data></Cell>
-      </Row>
-      <Row>
-        <Cell ss:Index="3"><Data ss:Type="String">Test</Data></Cell>
-        <Cell ss:Index="5"><Data ss:Type="Number">1</Data></Cell>
-      </Row>
-    </Table>
-  </Worksheet>
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>negri</Author>
+  <LastAuthor>Johan Appelgren</LastAuthor>
+  <Created>2009-02-05T19:47:14Z</Created>
+  <LastSaved>2012-12-17T10:48:49Z</LastSaved>
+  <Company>PR&amp;A</Company>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>13035</WindowHeight>
+  <WindowWidth>15195</WindowWidth>
+  <WindowTopX>480</WindowTopX>
+  <WindowTopY>60</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Arial"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s16">
+   <Font ss:FontName="Arial" x:Family="Swiss"/>
+  </Style>
+  <Style ss:ID="s18">
+   <Font ss:FontName="Arial" x:Family="Swiss" ss:Color="#222222"/>
+  </Style>
+  <Style ss:ID="s19">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Bottom" ss:WrapText="1"/>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Color="#000000"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Precision">
+  <Table ss:ExpandedColumnCount="5" ss:ExpandedRowCount="8" x:FullColumns="1"
+   x:FullRows="1">
+   <Column ss:Index="2" ss:Width="217.5"/>
+   <Column ss:AutoFitWidth="0" ss:Width="152.25" ss:Span="2"/>
+   <Row>
+    <Cell ss:Index="2"><Data ss:Type="String">a</Data></Cell>
+    <Cell><Data ss:Type="String">b</Data></Cell>
+    <Cell ss:Index="5"><Data ss:Type="String">d</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s19"/>
+    <Cell ss:StyleID="s19"><Data ss:Type="String">Test</Data></Cell>
+    <Cell ss:Index="5"><Data ss:Type="Number">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="3"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:Index="5"><Data ss:Type="Number">2</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s16"/>
+    <Cell><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:Index="5"><Data ss:Type="Number">3</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s16"/>
+    <Cell><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:Index="5"><Data ss:Type="Number">4</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s16"/>
+    <Cell><Data ss:Type="Number">5</Data></Cell>
+    <Cell ss:Index="5"><Data ss:Type="Number">5</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s16"/>
+    <Cell ss:StyleID="s18"><Data ss:Type="Number">6</Data></Cell>
+    <Cell ss:StyleID="s18"/>
+    <Cell ss:StyleID="s18"><Data ss:Type="Number">6</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s16"/>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.49212598499999999"/>
+    <Footer x:Margin="0.49212598499999999"/>
+   </PageSetup>
+   <Print>
+    <ValidPrinterInfo/>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <Selected/>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>5</ActiveRow>
+     <ActiveCol>1</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
 </Workbook>

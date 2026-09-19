@@ -6,16 +6,21 @@
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
  xmlns:html="http://www.w3.org/TR/REC-html40">
  <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>negri</Author>
+  <LastAuthor>Johan Appelgren</LastAuthor>
+  <Created>2009-02-05T19:47:14Z</Created>
+  <LastSaved>2012-12-17T14:14:34Z</LastSaved>
+  <Company>PR&amp;A</Company>
   <Version>16.00</Version>
  </DocumentProperties>
  <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
   <AllowPNG/>
  </OfficeDocumentSettings>
  <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
-  <WindowHeight>6765</WindowHeight>
-  <WindowWidth>21135</WindowWidth>
-  <WindowTopX>32767</WindowTopX>
-  <WindowTopY>32767</WindowTopY>
+  <WindowHeight>13035</WindowHeight>
+  <WindowWidth>15195</WindowWidth>
+  <WindowTopX>480</WindowTopX>
+  <WindowTopY>60</WindowTopY>
   <ProtectStructure>False</ProtectStructure>
   <ProtectWindows>False</ProtectWindows>
  </ExcelWorkbook>
@@ -23,37 +28,91 @@
   <Style ss:ID="Default" ss:Name="Normal">
    <Alignment ss:Vertical="Bottom"/>
    <Borders/>
-   <Font ss:FontName="Aptos Narrow" x:Family="Swiss" ss:Size="11"
-    ss:Color="#000000"/>
+   <Font ss:FontName="Arial"/>
    <Interior/>
    <NumberFormat/>
    <Protection/>
   </Style>
-  <Style ss:ID="s62">
-   <Font ss:FontName="Arial" x:Family="Swiss" ss:Color="#156082"/>
+  <Style ss:ID="s16">
+   <NumberFormat ss:Format="0.0000000000000000"/>
   </Style>
-  <Style ss:ID="s63">
+  <Style ss:ID="s17">
+   <NumberFormat ss:Format="Fixed"/>
+  </Style>
+  <Style ss:ID="s18">
+   <Font ss:FontName="Arial" x:Family="Swiss"/>
+  </Style>
+  <Style ss:ID="s19">
+   <NumberFormat ss:Format="Short Date"/>
+  </Style>
+  <Style ss:ID="s20">
+   <Font ss:FontName="Arial" x:Family="Swiss" ss:Color="#222222"/>
+  </Style>
+  <Style ss:ID="s22">
+   <Font ss:FontName="Arial" x:Family="Swiss" ss:Color="#4F81BD"/>
+  </Style>
+  <Style ss:ID="s23">
    <Font ss:FontName="Arial" x:Family="Swiss" ss:Color="#000000"/>
   </Style>
-  <Style ss:ID="s64">
+  <Style ss:ID="s24">
    <Font ss:FontName="Arial" x:Family="Swiss" ss:Color="#FF0000"/>
   </Style>
  </Styles>
- <Worksheet ss:Name="Sheet1">
-  <Table ss:ExpandedColumnCount="3" ss:ExpandedRowCount="1" x:FullColumns="1"
-   x:FullRows="1" ss:DefaultRowHeight="15">
+ <Worksheet ss:Name="Precision">
+  <Table ss:ExpandedColumnCount="3" ss:ExpandedRowCount="10" x:FullColumns="1"
+   x:FullRows="1">
+   <Column ss:Width="217.5"/>
+   <Column ss:AutoFitWidth="0" ss:Width="152.25"/>
+   <Column ss:Width="131.25"/>
    <Row>
-    <Cell ss:StyleID="s62"><Data ss:Type="String">test1</Data></Cell>
-    <Cell ss:StyleID="s63"><Data ss:Type="String">test2</Data></Cell>
-    <Cell ss:StyleID="s64"><Data ss:Type="String">test3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">test1</Data></Cell>
+    <Cell ss:StyleID="s23"><Data ss:Type="String">test2</Data></Cell>
+    <Cell ss:StyleID="s24"><Data ss:Type="String">test3</Data></Cell>
+   </Row>
+   <Row ss:Index="3">
+    <Cell ss:Index="2" ss:StyleID="s16"/>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s18"/>
+    <Cell ss:StyleID="s17"/>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s18"/>
+    <Cell ss:StyleID="s19"/>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s18"/>
+    <Cell ss:StyleID="s17"/>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s18"/>
+    <Cell ss:StyleID="s20"/>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s18"/>
+    <Cell ss:StyleID="s19"/>
+   </Row>
+   <Row ss:Index="10">
+    <Cell ss:Index="3" ss:StyleID="s18"/>
    </Row>
   </Table>
   <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.49212598499999999"/>
+    <Footer x:Margin="0.49212598499999999"/>
+   </PageSetup>
+   <Print>
+    <ValidPrinterInfo/>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
    <Selected/>
    <Panes>
     <Pane>
      <Number>3</Number>
-     <RangeSelection>R1C1:R1C3</RangeSelection>
+     <ActiveRow>9</ActiveRow>
+     <ActiveCol>2</ActiveCol>
     </Pane>
    </Panes>
    <ProtectObjects>False</ProtectObjects>

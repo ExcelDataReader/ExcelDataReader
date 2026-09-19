@@ -5,6 +5,8 @@ public class ExcelSpreadsheetXmlReaderTest : ExcelSpreadsheetContractTestBase
 {
     protected override DateTime Issue82_TodayDate => new(2013, 4, 19);
 
+    protected override bool SupportsCodeName => false;
+
     [Test]
     public void ReadSpreadsheetXml_LeadingWhitespaceBeforeDeclaration_IsTolerated()
     {

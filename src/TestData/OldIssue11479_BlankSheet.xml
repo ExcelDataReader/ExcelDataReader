@@ -6,16 +6,21 @@
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
  xmlns:html="http://www.w3.org/TR/REC-html40">
  <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>Ian</Author>
+  <LastAuthor>Johan Appelgren</LastAuthor>
+  <Created>2012-12-06T13:58:02Z</Created>
+  <LastSaved>2012-12-17T21:19:59Z</LastSaved>
+  <Company>Release Consulting Ltd</Company>
   <Version>16.00</Version>
  </DocumentProperties>
  <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
   <AllowPNG/>
  </OfficeDocumentSettings>
  <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
-  <WindowHeight>6765</WindowHeight>
-  <WindowWidth>21135</WindowWidth>
-  <WindowTopX>32767</WindowTopX>
-  <WindowTopY>32767</WindowTopY>
+  <WindowHeight>9270</WindowHeight>
+  <WindowWidth>18195</WindowWidth>
+  <WindowTopX>120</WindowTopX>
+  <WindowTopY>105</WindowTopY>
   <ProtectStructure>False</ProtectStructure>
   <ProtectWindows>False</ProtectWindows>
  </ExcelWorkbook>
@@ -23,19 +28,22 @@
   <Style ss:ID="Default" ss:Name="Normal">
    <Alignment ss:Vertical="Bottom"/>
    <Borders/>
-   <Font ss:FontName="Aptos Narrow" x:Family="Swiss" ss:Size="11"
-    ss:Color="#000000"/>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000"/>
    <Interior/>
    <NumberFormat/>
    <Protection/>
   </Style>
-  <Style ss:ID="s62">
+  <Style ss:ID="s16">
    <NumberFormat ss:Format="Short Date"/>
   </Style>
  </Styles>
- <Worksheet ss:Name="Sheet1">
+ <Worksheet ss:Name="test.csv">
   <Table ss:ExpandedColumnCount="5" ss:ExpandedRowCount="4" x:FullColumns="1"
    x:FullRows="1" ss:DefaultRowHeight="15">
+   <Column ss:Width="56.25"/>
+   <Column ss:AutoFitWidth="0" ss:Width="66.75"/>
+   <Column ss:AutoFitWidth="0" ss:Width="59.25" ss:Span="1"/>
+   <Column ss:Index="5" ss:AutoFitWidth="0" ss:Width="78"/>
    <Row>
     <Cell><Data ss:Type="String">column a</Data></Cell>
     <Cell><Data ss:Type="String"> column b</Data></Cell>
@@ -57,20 +65,31 @@
     <Cell><Data ss:Type="Number">5</Data></Cell>
    </Row>
    <Row>
-    <Cell ss:StyleID="s62"><Data ss:Type="DateTime">2012-10-12T00:00:00.000</Data></Cell>
-    <Cell ss:StyleID="s62"><Data ss:Type="DateTime">2012-10-13T00:00:00.000</Data></Cell>
-    <Cell ss:StyleID="s62"><Data ss:Type="DateTime">2012-10-14T00:00:00.000</Data></Cell>
-    <Cell ss:StyleID="s62"><Data ss:Type="DateTime">2012-10-15T00:00:00.000</Data></Cell>
-    <Cell ss:StyleID="s62"><Data ss:Type="DateTime">2012-10-16T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="DateTime">2012-10-12T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="DateTime">2012-10-13T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="DateTime">2012-10-14T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="DateTime">2012-10-15T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s16"><Data ss:Type="DateTime">2012-10-16T00:00:00.000</Data></Cell>
    </Row>
   </Table>
   <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.3"/>
+    <Footer x:Margin="0.3"/>
+    <PageMargins x:Bottom="0.75" x:Left="0.7" x:Right="0.7" x:Top="0.75"/>
+   </PageSetup>
+   <Print>
+    <ValidPrinterInfo/>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>0</VerticalResolution>
+   </Print>
    <Selected/>
    <Panes>
     <Pane>
      <Number>3</Number>
-     <ActiveRow>9</ActiveRow>
-     <ActiveCol>2</ActiveCol>
+     <ActiveRow>16</ActiveRow>
+     <ActiveCol>8</ActiveCol>
     </Pane>
    </Panes>
    <ProtectObjects>False</ProtectObjects>
@@ -82,6 +101,11 @@
    x:FullRows="1" ss:DefaultRowHeight="15">
   </Table>
   <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.3"/>
+    <Footer x:Margin="0.3"/>
+    <PageMargins x:Bottom="0.75" x:Left="0.7" x:Right="0.7" x:Top="0.75"/>
+   </PageSetup>
    <ProtectObjects>False</ProtectObjects>
    <ProtectScenarios>False</ProtectScenarios>
   </WorksheetOptions>
@@ -91,6 +115,11 @@
    x:FullRows="1" ss:DefaultRowHeight="15">
   </Table>
   <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.3"/>
+    <Footer x:Margin="0.3"/>
+    <PageMargins x:Bottom="0.75" x:Left="0.7" x:Right="0.7" x:Top="0.75"/>
+   </PageSetup>
    <ProtectObjects>False</ProtectObjects>
    <ProtectScenarios>False</ProtectScenarios>
   </WorksheetOptions>
