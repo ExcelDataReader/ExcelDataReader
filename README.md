@@ -23,6 +23,7 @@ If you are reporting an issue it is really useful if you can supply an example E
 | .xls      | -                | BIFF4       | 4.0 |
 | .xls      | -                | BIFF3       | 3.0 |
 | .xls      | -                | BIFF2       | 2.0, 2.2 |
+| .xml      | -                | SpreadsheetML | 2002, 2003 (XML Spreadsheet) |
 | .csv      | -                | CSV         | (All) |
 
 ## Finding the binaries
@@ -42,6 +43,7 @@ using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
 {
     // Auto-detect format, supports:
     //  - Binary Excel files (2.0-2003 format; *.xls)
+    //  - Legacy Excel XML Spreadsheet files (2002-2003 format; *.xml)
     //  - OpenXml Excel files (2007 format; *.xlsx, *.xlsb)
     using (var reader = ExcelReaderFactory.CreateReader(stream))
     {

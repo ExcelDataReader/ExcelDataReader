@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Styles>
+    <Style ss:ID="Default" ss:Name="Normal">
+      <NumberFormat ss:Format="General"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="Sheet1">
+    <Table ss:ExpandedColumnCount="20" ss:ExpandedRowCount="20">
+      <Row>
+        <Cell><Data ss:Type="String">R1C1</Data></Cell>
+        <Cell><Data ss:Type="String">R1C2</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">R2C1</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>

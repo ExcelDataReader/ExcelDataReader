@@ -22,6 +22,14 @@ public class ExcelReaderFactoryTests
         Assert.That(excelReader.GetType().Name, Is.EqualTo("ExcelOpenXmlReader"));
     }
 
+    [TestCase("SpreadsheetXml2003.xml")]
+    [TestCase("SpreadsheetXml2003_LeadingWhitespace.xml")]
+    public void ProbeSpreadsheetXml(string name)
+    {
+        using IExcelDataReader excelReader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook(name));
+        Assert.That(excelReader.GetType().Name, Is.EqualTo("ExcelSpreadsheetXmlReader"));
+    }
+
     [Test]
     public void CreateReader_NonSeekableBinaryStream_Succeeds()
     {

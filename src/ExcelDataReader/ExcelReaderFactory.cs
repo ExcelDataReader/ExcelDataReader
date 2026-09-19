@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using ExcelDataReader.Core.BinaryFormat;
 using ExcelDataReader.Core.CompoundFormat;
 using ExcelDataReader.Core.OfficeCrypto;
+using ExcelDataReader.Core.XmlSpreadsheetFormat;
 using ExcelDataReader.Exceptions;
 using ExcelDataReader.Misc;
 
@@ -59,6 +60,11 @@ public static class ExcelReaderFactory
         {
             // zip files start with 'PK'
             return new ExcelOpenXmlReader(fileStream, configuration.SinglePassMode);
+        }
+
+        if (SpreadsheetXmlWorkbook.IsSpreadsheetXmlStream(fileStream))
+        {
+            return new ExcelSpreadsheetXmlReader(fileStream, configuration.SinglePassMode);
         }
 
         throw new HeaderException(Errors.ErrorHeaderSignature);

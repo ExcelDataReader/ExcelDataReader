@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Styles>
+    <Style ss:ID="Default" ss:Name="Normal">
+      <NumberFormat ss:Format="General"/>
+    </Style>
+    <Style ss:ID="sDate">
+      <NumberFormat ss:Format="yyyy-mm-dd"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="Sheet1">
+    <Table ss:ExpandedColumnCount="4" ss:ExpandedRowCount="4">
+      <Row>
+        <Cell><Data ss:Type="String">Name</Data></Cell>
+        <Cell><Data ss:Type="String">Value</Data></Cell>
+        <Cell><Data ss:Type="String">When</Data></Cell>
+        <Cell><Data ss:Type="String">Empty</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">A</Data></Cell>
+        <Cell><Data ss:Type="Number">42</Data></Cell>
+        <Cell ss:StyleID="sDate"><Data ss:Type="DateTime">2024-01-02T00:00:00.000</Data></Cell>
+        <Cell/>
+      </Row>
+      <Row ss:Index="4">
+        <Cell ss:Index="2"><Data ss:Type="Boolean">1</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+  <Worksheet ss:Name="Sheet2">
+    <Table>
+      <Row>
+        <Cell><Data ss:Type="String">X</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>
