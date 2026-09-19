@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Sheet1">
+    <Table ss:ExpandedColumnCount="5" ss:ExpandedRowCount="3">
+      <Row>
+        <Cell><Data ss:Type="String">columna</Data></Cell>
+        <Cell><Data ss:Type="String">columnb</Data></Cell>
+        <Cell><Data ss:Type="String">columnc</Data></Cell>
+        <Cell><Data ss:Type="String">columnd</Data></Cell>
+        <Cell><Data ss:Type="String">columne</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="Number">1</Data></Cell>
+        <Cell><Data ss:Type="Number">2</Data></Cell>
+        <Cell><Data ss:Type="Number">3</Data></Cell>
+        <Cell><Data ss:Type="DateTime">2013-12-10T00:00:00.000</Data></Cell>
+        <Cell><Data ss:Type="String">red</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:Index="5"><Data ss:Type="String">yellow</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>

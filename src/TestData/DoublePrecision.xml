@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Sheet1">
+    <Table ss:ExpandedColumnCount="2" ss:ExpandedRowCount="10">
+      <Row><Cell><Data ss:Type="String">r1</Data></Cell><Cell><Data ss:Type="Number">1</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">r2</Data></Cell><Cell><Data ss:Type="Number">2</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">r3</Data></Cell><Cell><Data ss:Type="Number">3.14159265358979</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">r4</Data></Cell><Cell><Data ss:Type="Number">-3.14159265358979</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">r5</Data></Cell><Cell><Data ss:Type="Number">3.14159265358979E-300</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">r6</Data></Cell><Cell><Data ss:Type="Number">-3.14159265358979E-300</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">r7</Data></Cell><Cell><Data ss:Type="Number">3.14159265358979E+300</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">r8</Data></Cell><Cell><Data ss:Type="Number">-3.14159265358979E+300</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">r9</Data></Cell><Cell><Data ss:Type="Number">3.14159265358979E+14</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">r10</Data></Cell><Cell><Data ss:Type="Number">-3.14159265358979E+14</Data></Cell></Row>
+    </Table>
+  </Worksheet>
+</Workbook>

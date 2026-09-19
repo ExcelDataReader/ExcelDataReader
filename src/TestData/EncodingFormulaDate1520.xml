@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Sheet1">
+    <Table>
+      <Row>
+        <Cell><Data ss:Type="String">Name</Data></Cell>
+        <Cell><Data ss:Type="String">Col1</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">John test</Data></Cell>
+        <Cell><Data ss:Type="DateTime">2009-05-01T00:00:00.000</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Simon Hodgetts</Data></Cell>
+        <Cell><Data ss:Type="String">B3</Data></Cell>
+        <Cell><Data ss:Type="String">C3</Data></Cell>
+        <Cell><Data ss:Type="String">D3</Data></Cell>
+        <Cell><Data ss:Type="DateTime">2009-01-01T11:00:00.000</Data></Cell>
+      </Row>
+      <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String"></Data></Cell></Row>
+      <Row>
+        <Cell><Data ss:Type="String">librement réutilisable</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">librement réutilisable</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>

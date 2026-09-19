@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Sheet1">
+    <Table ss:ExpandedColumnCount="3" ss:ExpandedRowCount="7">
+      <!-- Row 0: header -->
+      <Row>
+        <Cell><Data ss:Type="String">Col1</Data></Cell>
+        <Cell><Data ss:Type="String">Col2</Data></Cell>
+        <Cell><Data ss:Type="String">Col3</Data></Cell>
+      </Row>
+      <!-- Row 1: "Merge Cell 1" spans rows 1-2, cols 0-1; "Merge Cell 2" spans rows 1-5, col 2 -->
+      <Row>
+        <Cell ss:MergeAcross="1" ss:MergeDown="1"><Data ss:Type="String">Merge Cell 1</Data></Cell>
+        <Cell ss:MergeDown="4"><Data ss:Type="String">Merge Cell 2</Data></Cell>
+      </Row>
+      <!-- Row 2: within merged ranges -->
+      <Row/>
+      <!-- Row 3: "Merge Cell 3" spans rows 3-5, col 0 -->
+      <Row>
+        <Cell ss:MergeDown="2"><Data ss:Type="String">Merge Cell 3</Data></Cell>
+      </Row>
+      <!-- Row 4: within merged range -->
+      <Row/>
+      <!-- Row 5: within merged range -->
+      <Row/>
+      <!-- Row 6: "Merge Cell 4" spans row 6, cols 0-2 -->
+      <Row>
+        <Cell ss:MergeAcross="2"><Data ss:Type="String">Merge Cell 4</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>

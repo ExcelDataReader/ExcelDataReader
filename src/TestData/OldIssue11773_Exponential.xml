@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Sheet1">
+    <Table ss:ExpandedColumnCount="7" ss:ExpandedRowCount="2">
+      <Row>
+        <Cell><Data ss:Type="String">a</Data></Cell>
+        <Cell><Data ss:Type="String">b</Data></Cell>
+        <Cell><Data ss:Type="String">c</Data></Cell>
+        <Cell><Data ss:Type="String">d</Data></Cell>
+        <Cell><Data ss:Type="String">e</Data></Cell>
+        <Cell><Data ss:Type="String">f</Data></Cell>
+        <Cell><Data ss:Type="String">g</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="Number">1</Data></Cell>
+        <Cell><Data ss:Type="Number">2</Data></Cell>
+        <Cell><Data ss:Type="Number">3</Data></Cell>
+        <Cell><Data ss:Type="Number">4</Data></Cell>
+        <Cell><Data ss:Type="Number">5</Data></Cell>
+        <Cell><Data ss:Type="Number">6</Data></Cell>
+        <Cell><Data ss:Type="Number">2566.3716814159293</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>

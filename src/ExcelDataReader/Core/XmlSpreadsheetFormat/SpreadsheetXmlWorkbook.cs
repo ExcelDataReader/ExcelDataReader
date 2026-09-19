@@ -68,6 +68,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
                 _worksheets[i].VisibleState,
                 _worksheets[i].ExpandedColumnCount,
                 _stylesById,
+                Formats,
                 SinglePassMode);
         }
     }

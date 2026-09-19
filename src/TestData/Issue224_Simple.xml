@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Styles>
+    <Style ss:ID="Default" ss:Name="Normal">
+      <NumberFormat ss:Format="General"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="Sheet1">
+    <Table ss:ExpandedColumnCount="1" ss:ExpandedRowCount="1">
+      <Row>
+        <Cell><Data ss:Type="String">Test</Data></Cell>
+      </Row>
+    </Table>
+    <x:WorksheetOptions>
+      <x:PageSetup>
+        <x:Header x:Margin="0.5" x:Data="&amp;LLeft åäö &amp;T&amp;CCenter åäö &amp;D&amp;RRight  åäö &amp;P"/>
+        <x:Footer x:Margin="0.5" x:Data="&amp;LLeft åäö &amp;P&amp;CFooter åäö &amp;P&amp;RRight åäö &amp;D"/>
+      </x:PageSetup>
+    </x:WorksheetOptions>
+  </Worksheet>
+</Workbook>

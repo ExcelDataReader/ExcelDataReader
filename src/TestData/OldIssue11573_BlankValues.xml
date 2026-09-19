@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Sheet1">
+    <Table ss:ExpandedColumnCount="2" ss:ExpandedRowCount="13">
+      <Row ss:Index="13">
+        <Cell><Data ss:Type="Number">1</Data></Cell>
+        <Cell><Data ss:Type="String">070202</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>

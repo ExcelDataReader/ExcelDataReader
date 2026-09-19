@@ -2,6 +2,7 @@
 
 using System.Globalization;
 using System.Xml;
+using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Core.XmlSpreadsheetFormat;
 
@@ -13,11 +14,15 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     private readonly List<Row> _rows;
     private readonly Stream? _stream;
     private readonly IReadOnlyDictionary<string, ExtendedFormat>? _stylesById;
+    private readonly IReadOnlyDictionary<int, NumberFormatString>? _formats;
     private readonly int _worksheetIndex;
 
+#pragma warning disable CS8618 // CodeName is intentionally nullable (null for sheets without x:CodeName), matching CsvWorksheet pattern
     private SpreadsheetXmlWorksheet(
         string name,
         string visibleState,
+        string? codeName,
+        HeaderFooter? headerFooter,
         List<Row> rows,
         List<Column> columnWidths,
         CellRange[] mergeCells,
@@ -26,12 +31,15 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         CellRange? dimension,
         Stream? stream = null,
         IReadOnlyDictionary<string, ExtendedFormat>? stylesById = null,
+        IReadOnlyDictionary<int, NumberFormatString>? formats = null,
         int worksheetIndex = -1)
     {
         Name = name;
-        CodeName = null;
+#pragma warning disable CS8601 // Intentional: CodeName can be null for sheets without x:CodeName, matching the pattern of CsvWorksheet.CodeName
+        CodeName = codeName;
+#pragma warning restore CS8601
         VisibleState = visibleState;
-        HeaderFooter = null;
+        HeaderFooter = headerFooter;
         _rows = rows;
         ColumnWidths = columnWidths;
         MergeCells = mergeCells;
@@ -40,8 +48,10 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         Dimension = dimension;
         _stream = stream;
         _stylesById = stylesById;
+        _formats = formats;
         _worksheetIndex = worksheetIndex;
     }
+#pragma warning restore CS8618
 
     public string Name { get; }
 
@@ -68,6 +78,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         string visibleState,
         int expandedColumnCount,
         IReadOnlyDictionary<string, ExtendedFormat> stylesById,
+        IReadOnlyDictionary<int, NumberFormatString>? formats,
         bool singlePassMode)
     {
         if (singlePassMode)
@@ -75,6 +86,8 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             return new SpreadsheetXmlWorksheet(
                 name,
                 visibleState,
+                codeName: null,
+                headerFooter: null,
                 [],
                 [],
                 [],
@@ -83,6 +96,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 null,
                 stream,
                 stylesById,
+                formats,
                 worksheetIndex);
         }
 
@@ -100,14 +114,14 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             currentWorksheetIndex++;
             if (currentWorksheetIndex == worksheetIndex)
             {
-                return Parse(workbookReader.ReadSubtree(), stylesById);
+                return Parse(workbookReader.ReadSubtree(), stylesById, formats);
             }
         }
 
         throw new XmlException("Invalid SpreadsheetML worksheet.");
     }
 
-    public static SpreadsheetXmlWorksheet Parse(XmlReader worksheetReader, IReadOnlyDictionary<string, ExtendedFormat> stylesById)
+    public static SpreadsheetXmlWorksheet Parse(XmlReader worksheetReader, IReadOnlyDictionary<string, ExtendedFormat> stylesById, IReadOnlyDictionary<int, NumberFormatString>? formats = null)
     {
         using (worksheetReader)
         {
@@ -116,11 +130,14 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
             var name = GetSpreadsheetAttribute(worksheetReader, "Name") ?? string.Empty;
             var visibleState = "visible";
+            string? codeName = null;
+            HeaderFooter? headerFooter = null;
             var rows = new List<Row>();
             var columnWidths = new List<Column>();
             var mergeCells = new List<CellRange>();
             int maxColumn = -1;
             int maxRow = -1;
+            int expandedRowCount = 0;
 
             while (worksheetReader.Read())
             {
@@ -129,24 +146,30 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
                 if (worksheetReader.LocalName == "WorksheetOptions" && worksheetReader.NamespaceURI == ExcelNamespace)
                 {
-                    visibleState = ParseVisibleState(worksheetReader.ReadSubtree());
+                    (visibleState, codeName, headerFooter) = ParseWorksheetOptions(worksheetReader.ReadSubtree());
                 }
                 else if (worksheetReader.LocalName == "Table" && worksheetReader.NamespaceURI == SpreadsheetNamespace)
                 {
                     ParseTable(
                         worksheetReader.ReadSubtree(),
                         stylesById,
+                        formats,
                         rows,
                         columnWidths,
                         mergeCells,
                         ref maxColumn,
-                        ref maxRow);
+                        ref maxRow,
+                        ref expandedRowCount);
                 }
             }
 
             int fieldCount = maxColumn + 1;
             int rowCount = maxRow + 1;
-            var normalizedRows = NormalizeRows(rows, rowCount);
+
+            // NormalizeRows extends _rows to cover ExpandedRowCount empty trailing rows
+            // (used by Read() loop), while RowCount property reflects actual data rows.
+            int normalizedCount = Math.Max(rowCount, expandedRowCount);
+            var normalizedRows = NormalizeRows(rows, normalizedCount);
             var dimension = fieldCount > 0 && rowCount > 0
                 ? new CellRange(0, 0, fieldCount - 1, rowCount - 1)
                 : null;
@@ -154,6 +177,8 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             return new SpreadsheetXmlWorksheet(
                 name,
                 visibleState,
+                codeName,
+                headerFooter,
                 normalizedRows,
                 columnWidths,
                 [.. mergeCells],
@@ -167,7 +192,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     {
         if (_stream != null && _stylesById != null)
         {
-            foreach (var row in StreamRows(_stream, _worksheetIndex, _stylesById))
+            foreach (var row in StreamRows(_stream, _worksheetIndex, _stylesById, _formats))
                 yield return row;
             yield break;
         }
@@ -176,34 +201,76 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             yield return row;
     }
 
-    internal static string ParseVisibleState(XmlReader worksheetOptionsReader)
+    internal static (string VisibleState, string? CodeName, HeaderFooter? HeaderFooter) ParseWorksheetOptions(XmlReader worksheetOptionsReader)
     {
+        string visibleState = "visible";
+        string? codeName = null;
+        string? headerData = null;
+        string? footerData = null;
+
         using (worksheetOptionsReader)
         {
             while (worksheetOptionsReader.Read())
             {
-                if (worksheetOptionsReader.NodeType == XmlNodeType.Element &&
-                    worksheetOptionsReader.LocalName == "Visible" &&
-                    worksheetOptionsReader.NamespaceURI == ExcelNamespace)
+                ReadCurrentNode:
+                if (worksheetOptionsReader.NodeType != XmlNodeType.Element ||
+                    worksheetOptionsReader.NamespaceURI != ExcelNamespace)
+                {
+                    continue;
+                }
+
+                if (worksheetOptionsReader.LocalName == "Visible")
                 {
                     var visible = worksheetOptionsReader.ReadElementContentAsString();
-                    return visible.ToLowerInvariant() switch
+                    visibleState = visible.ToLowerInvariant() switch
                     {
                         "sheethidden" => "hidden",
                         "sheetveryhidden" => "veryhidden",
                         _ => "visible",
                     };
                 }
+                else if (worksheetOptionsReader.LocalName == "CodeName")
+                {
+                    codeName = worksheetOptionsReader.ReadElementContentAsString();
+                }
+                else if (worksheetOptionsReader.LocalName == "Header")
+                {
+                    headerData = worksheetOptionsReader.GetAttribute("Data", ExcelNamespace);
+                    worksheetOptionsReader.Skip();
+                }
+                else if (worksheetOptionsReader.LocalName == "Footer")
+                {
+                    footerData = worksheetOptionsReader.GetAttribute("Data", ExcelNamespace);
+                    worksheetOptionsReader.Skip();
+                }
+                else
+                {
+                    continue;
+                }
+
+                // ReadElementContentAsString/Skip already advanced past the end tag.
+                // If the reader is now at another element, handle it without calling Read() first.
+                if (worksheetOptionsReader.NodeType == XmlNodeType.Element)
+                    goto ReadCurrentNode;
             }
         }
 
-        return "visible";
+        var headerFooter = headerData != null || footerData != null
+            ? new HeaderFooter(footerData, headerData)
+            : null;
+
+        return (visibleState, codeName, headerFooter);
     }
+
+    // Keep for callers that only need the visible state (e.g. workbook-level scan).
+    internal static string ParseVisibleState(XmlReader worksheetOptionsReader)
+        => ParseWorksheetOptions(worksheetOptionsReader).VisibleState;
 
     private static IEnumerable<Row> StreamRows(
         Stream stream,
         int worksheetIndex,
-        IReadOnlyDictionary<string, ExtendedFormat> stylesById)
+        IReadOnlyDictionary<string, ExtendedFormat> stylesById,
+        IReadOnlyDictionary<int, NumberFormatString>? formats)
     {
         using var workbookReader = CreateXmlReaderAtStart(stream, tolerateLeadingWhitespace: true);
         int currentWorksheetIndex = -1;
@@ -220,7 +287,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             if (currentWorksheetIndex != worksheetIndex)
                 continue;
 
-            foreach (var row in StreamRowsFromWorksheet(workbookReader.ReadSubtree(), stylesById))
+            foreach (var row in StreamRowsFromWorksheet(workbookReader.ReadSubtree(), stylesById, formats))
                 yield return row;
             yield break;
         }
@@ -228,7 +295,8 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
     private static IEnumerable<Row> StreamRowsFromWorksheet(
         XmlReader worksheetReader,
-        IReadOnlyDictionary<string, ExtendedFormat> stylesById)
+        IReadOnlyDictionary<string, ExtendedFormat> stylesById,
+        IReadOnlyDictionary<int, NumberFormatString>? formats)
     {
         using (worksheetReader)
         {
@@ -241,7 +309,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                     worksheetReader.LocalName == "Table" &&
                     worksheetReader.NamespaceURI == SpreadsheetNamespace)
                 {
-                    foreach (var row in StreamRowsFromTable(worksheetReader.ReadSubtree(), stylesById))
+                    foreach (var row in StreamRowsFromTable(worksheetReader.ReadSubtree(), stylesById, formats))
                         yield return row;
                     yield break;
                 }
@@ -251,7 +319,8 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
     private static IEnumerable<Row> StreamRowsFromTable(
         XmlReader tableReader,
-        IReadOnlyDictionary<string, ExtendedFormat> stylesById)
+        IReadOnlyDictionary<string, ExtendedFormat> stylesById,
+        IReadOnlyDictionary<int, NumberFormatString>? formats)
     {
         using (tableReader)
         {
@@ -275,6 +344,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 var row = ParseRowForStreaming(
                     tableReader.ReadSubtree(),
                     stylesById,
+                    formats,
                     mergeCells,
                     ref currentRowIndex,
                     ref maxColumn,
@@ -295,6 +365,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     private static Row ParseRowForStreaming(
         XmlReader rowReader,
         IReadOnlyDictionary<string, ExtendedFormat> stylesById,
+        IReadOnlyDictionary<int, NumberFormatString>? formats,
         List<CellRange> mergeCells,
         ref int currentRowIndex,
         ref int maxColumn,
@@ -335,7 +406,8 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                     : ExtendedFormat.Zero;
 
                 bool hasData = false;
-                var value = ParseCellValue(rowReader.ReadSubtree(), out var cellError, out hasData);
+                var rawValue = ParseCellValue(rowReader.ReadSubtree(), out var cellError, out hasData);
+                var value = ConvertCellValue(rawValue, effectiveStyle, formats);
 
                 if (hasData || cellError != null || mergeAcross > 0 || mergeDown > 0)
                 {
@@ -357,16 +429,20 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     private static void ParseTable(
         XmlReader tableReader,
         IReadOnlyDictionary<string, ExtendedFormat> stylesById,
+        IReadOnlyDictionary<int, NumberFormatString>? formats,
         List<Row> rows,
         List<Column> columnWidths,
         List<CellRange> mergeCells,
         ref int maxColumn,
-        ref int maxRow)
+        ref int maxRow,
+        ref int expandedRowCount)
     {
         using (tableReader)
         {
             if (!tableReader.Read() || tableReader.NodeType != XmlNodeType.Element)
                 return;
+
+            expandedRowCount = ParseInt(GetSpreadsheetAttribute(tableReader, "ExpandedRowCount"));
 
             int currentRowIndex = 0;
             int currentColumnDefinition = 0;
@@ -385,6 +461,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                     ParseRow(
                         tableReader.ReadSubtree(),
                         stylesById,
+                        formats,
                         mergeCells,
                         rows,
                         ref currentRowIndex,
@@ -413,6 +490,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     private static void ParseRow(
         XmlReader rowReader,
         IReadOnlyDictionary<string, ExtendedFormat> stylesById,
+        IReadOnlyDictionary<int, NumberFormatString>? formats,
         List<CellRange> mergeCells,
         List<Row> rows,
         ref int currentRowIndex,
@@ -458,7 +536,8 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                     : ExtendedFormat.Zero;
 
                 bool hasData = false;
-                var value = ParseCellValue(rowReader.ReadSubtree(), out var cellError, out hasData);
+                var rawValue = ParseCellValue(rowReader.ReadSubtree(), out var cellError, out hasData);
+                var value = ConvertCellValue(rawValue, effectiveStyle, formats);
 
                 if (hasData || cellError != null || mergeAcross > 0 || mergeDown > 0)
                 {
@@ -478,6 +557,22 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             maxRow = Math.Max(maxRow, currentRowIndex);
             currentRowIndex++;
         }
+    }
+
+    private static object? ConvertCellValue(object? value, ExtendedFormat style, IReadOnlyDictionary<int, NumberFormatString>? formats)
+    {
+        if (value is double number && style.NumberFormatIndex != 0)
+        {
+            NumberFormatString? fmt = null;
+            formats?.TryGetValue(style.NumberFormatIndex, out fmt);
+#pragma warning disable CA1305 // Intentional: locale-independent check for IsTimeSpanFormat
+            fmt ??= BuiltinNumberFormat.GetBuiltinNumberFormat(style.NumberFormatIndex);
+#pragma warning restore CA1305
+            if (fmt?.IsTimeSpanFormat == true)
+                return TimeSpan.FromDays(number);
+        }
+
+        return value;
     }
 
     private static object? ParseCellValue(XmlReader cellReader, out CellError? cellError, out bool hasData)

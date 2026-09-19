@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Styles>
+    <Style ss:ID="Default" ss:Name="Normal"/>
+    <Style ss:ID="s21">
+      <Alignment ss:Vertical="Top"/>
+    </Style>
+    <Style ss:ID="s22">
+      <Alignment ss:Vertical="Center"/>
+    </Style>
+    <Style ss:ID="s23">
+      <Alignment ss:Vertical="Bottom"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="Sheet1">
+    <Table>
+      <Row>
+        <Cell ss:StyleID="s21"><Data ss:Type="String">Top</Data></Cell>
+        <Cell ss:StyleID="s22"><Data ss:Type="String">Center</Data></Cell>
+        <Cell ss:StyleID="s23"><Data ss:Type="String">Bottom</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>

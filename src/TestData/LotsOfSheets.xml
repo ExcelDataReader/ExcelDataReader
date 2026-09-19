@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Sheet1">
+    <Table>
+      <Row>
+        <Cell><Data ss:Type="String">StaffName</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+  <Worksheet ss:Name="Sheet2">
+    <Table>
+      <Row>
+        <Cell><Data ss:Type="String">StaffName</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+  <Worksheet ss:Name="$eInternal">
+    <Table>
+      <Row>
+        <Cell><Data ss:Type="String">ignored</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+  <Worksheet ss:Name="Sheet3">
+    <Table>
+      <Row>
+        <Cell><Data ss:Type="String">StaffName</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+  <Worksheet ss:Name="Sheet4">
+    <Table/>
+  </Worksheet>
+  <Worksheet ss:Name="Sheet5">
+    <Table>
+      <Row>
+        <Cell><Data ss:Type="String">StaffName</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>

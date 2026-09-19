@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Styles>
+    <Style ss:ID="Default" ss:Name="Normal"/>
+    <Style ss:ID="s21">
+      <NumberFormat ss:Format="[h]:mm:ss"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="Sheet1">
+    <Table>
+      <Row>
+        <Cell ss:StyleID="s21"><Data ss:Type="Number">0</Data></Cell>
+        <Cell/>
+        <Cell><Data ss:Type="DateTime">1899-12-31T00:00:00.000</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="s21"><Data ss:Type="Number">1</Data></Cell>
+        <Cell/>
+        <Cell><Data ss:Type="DateTime">1900-01-01T00:00:00.000</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="s21"><Data ss:Type="Number">2</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="s21"><Data ss:Type="Number">58</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="s21"><Data ss:Type="Number">59</Data></Cell>
+        <Cell/>
+        <Cell><Data ss:Type="DateTime">1900-02-28T00:00:00.000</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="s21"><Data ss:Type="Number">60</Data></Cell>
+        <Cell/>
+        <Cell><Data ss:Type="DateTime">1900-02-28T00:00:00.000</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="s21"><Data ss:Type="Number">61</Data></Cell>
+        <Cell/>
+        <Cell><Data ss:Type="DateTime">1900-03-01T00:00:00.000</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="s21"><Data ss:Type="Number">62</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="s21"><Data ss:Type="Number">63</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>
