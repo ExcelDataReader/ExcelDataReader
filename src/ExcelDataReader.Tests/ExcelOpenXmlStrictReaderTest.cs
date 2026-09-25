@@ -1,4 +1,6 @@
 using System.Data;
+using System.IO.Compression;
+using System.Text;
 
 namespace ExcelDataReader.Tests;
 
@@ -34,6 +36,38 @@ public class ExcelOpenXmlStrictReaderTest : ExcelOpenXmlReaderBase
         Assert.That(reader.GetDateTime(5), Is.EqualTo((DateTime)value));
     }
 
+    [Test]
+    public void Issue759_TimeOnlyCellsUseExcelBaseDate()
+    {
+        using IExcelDataReader reader = OpenReader("LocaleTime");
+        var dataSet = reader.AsDataSet();
+
+        Assert.That(dataSet.Tables[0].Rows[1][1], Is.EqualTo(new DateTime(1899, 12, 31, 1, 34, 0)));
+        Assert.That(dataSet.Tables[0].Rows[2][1], Is.EqualTo(new DateTime(1899, 12, 31, 1, 34, 0)));
+        Assert.That(dataSet.Tables[0].Rows[3][1], Is.EqualTo(new DateTime(1899, 12, 31, 18, 47, 0)));
+    }
+
+    [Test]
+    public void Issue759_TimeOnlyCellsUse1904BaseDateWithoutChangingExplicitDates()
+    {
+        using var workbook = new MemoryStream();
+        using (var source = OpenStream("LocaleTime"))
+            source.CopyTo(workbook);
+
+        using (var archive = new ZipArchive(workbook, ZipArchiveMode.Update, leaveOpen: true))
+        {
+            ReplaceEntry(archive, "xl/workbook.xml", xml => xml.Replace("<workbookPr ", "<workbookPr date1904=\"1\" "));
+            ReplaceEntry(archive, "xl/worksheets/sheet1.xml", xml => xml.Replace("<v>2012-11-28</v>", "<v>0001-01-01</v>"));
+        }
+
+        workbook.Position = 0;
+        using var reader = ExcelReaderFactory.CreateOpenXmlReader(workbook);
+        var dataSet = reader.AsDataSet();
+
+        Assert.That(dataSet.Tables[0].Rows[1][0], Is.EqualTo(new DateTime(1, 1, 1)));
+        Assert.That(dataSet.Tables[0].Rows[1][1], Is.EqualTo(new DateTime(1904, 1, 1, 1, 34, 0)));
+    }
+
     protected override IExcelDataReader OpenReader(Stream stream, ExcelReaderConfiguration configuration = null)
     {
         return ExcelReaderFactory.CreateOpenXmlReader(stream, configuration);
@@ -42,5 +76,17 @@ public class ExcelOpenXmlStrictReaderTest : ExcelOpenXmlReaderBase
     protected override Stream OpenStream(string name)
     {
         return Configuration.GetTestWorkbook(Path.Combine("strict", name + ".xlsx"));
+    }
+
+    private static void ReplaceEntry(ZipArchive archive, string path, Func<string, string> replace)
+    {
+        var entry = archive.GetEntry(path)!;
+        string xml;
+        using (var reader = new StreamReader(entry.Open(), Encoding.UTF8))
+            xml = reader.ReadToEnd();
+
+        entry.Delete();
+        using var writer = new StreamWriter(archive.CreateEntry(path).Open(), new UTF8Encoding(false));
+        writer.Write(replace(xml));
     }
 }

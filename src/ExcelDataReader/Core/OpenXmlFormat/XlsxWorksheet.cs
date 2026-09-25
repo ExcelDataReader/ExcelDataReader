@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Xml;
 using ExcelDataReader.Core.NumberFormat;
 using ExcelDataReader.Core.OpenXmlFormat.Records;
@@ -225,8 +226,13 @@ internal sealed class XlsxWorksheet : IWorksheet
                     return timeSpan;
                 }
 
-                if (numberFormat?.IsDateTimeFormat == true && DateTime.TryParse(s, out DateTime dateTime))
+                if (numberFormat?.IsDateTimeFormat == true &&
+                    DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.NoCurrentDateDefault, out DateTime dateTime))
                 {
+                    // NoCurrentDateDefault marks HH:mm:ss values with year 1; an explicit ISO date can also use that year.
+                    if (dateTime.Date == DateTime.MinValue && s.TrimStart().IndexOf(':') == 2)
+                        return Helpers.ConvertFromOATime(dateTime.TimeOfDay.TotalDays, Workbook.IsDate1904);
+
                     return dateTime;
                 }
 
