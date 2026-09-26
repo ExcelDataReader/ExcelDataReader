@@ -15,7 +15,7 @@ return rootCommand.Parse(args).Invoke();
 // ---- excel subcommand -------------------------------------------------------
 static Command BuildExcelCommand()
 {
-    var fileArg = new Argument<FileInfo>("file") { Description = "Path to the Excel file (XLS, XLSX, XLSB)" };
+    var fileArg = new Argument<FileInfo>("file") { Description = "Path to the Excel file (XLS, XLSX, XLSB, XML Spreadsheet 2003)" };
     var sheetNameOpt = new Option<string[]>("--sheet-name", ["-n"]) { Description = "Filter by sheet name (repeatable; names may contain commas)", AllowMultipleArgumentsPerToken = false };
     var sheetIndexOpt = new Option<string[]>("--sheet-index", ["-i"]) { Description = "Filter by 1-based sheet index, comma-separated or repeatable (e.g. 2,5,7)", AllowMultipleArgumentsPerToken = false };
     var noHeaderOpt = new Option<bool>("--no-header", ["-H"]) { Description = "Don't treat first row as column names" };
@@ -26,7 +26,7 @@ static Command BuildExcelCommand()
     var encodingOpt = new Option<string>("--encoding", ["-e"]) { Description = "Fallback encoding for XLS BIFF2-5 (default: windows-1252)", DefaultValueFactory = _ => "windows-1252" };
     var dataSetOpt = new Option<bool>("--dataset") { Description = "Use AsDataSet extension (loads all data into a DataSet in memory)" };
 
-    var cmd = new Command("excel", "Read XLS, XLSX, or XLSB files");
+    var cmd = new Command("excel", "Read XLS, XLSX, XLSB, or XML Spreadsheet 2003 files");
     cmd.Arguments.Add(fileArg);
     cmd.Options.Add(sheetNameOpt);
     cmd.Options.Add(sheetIndexOpt);

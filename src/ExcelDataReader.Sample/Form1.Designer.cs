@@ -55,7 +55,7 @@ public partial class Form1
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
-            this.openFileDialog1.Filter = "Supported files|*.xls;*.xlsx;*.xlsb;*.csv|xls|*.xls|xlsx|*.xlsx|xlsb|*.xlsb|csv|*" +
+            this.openFileDialog1.Filter = "Supported files|*.xls;*.xlsx;*.xlsb;*.xml;*.csv|xls|*.xls|xlsx|*.xlsx|xlsb|*.xlsb|xml|*.xml|csv|*" +
     ".csv|All|*.*";
             // 
             // button1
