@@ -24,6 +24,28 @@ public class ExcelSpreadsheetXmlReaderTest : ExcelSpreadsheetContractTestBase
         Assert.That(reader.RowCount, Is.EqualTo(2));
     }
 
+    [Test]
+    public void ReadSpreadsheetXml_SinglePassMode_HonorsRowSpan()
+    {
+        using var reader = ExcelReaderFactory.CreateReader(
+            Configuration.GetTestWorkbook("SpreadsheetXml2003_RowSpan.xml"),
+            new ExcelReaderConfiguration { SinglePassMode = true });
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo("First"));
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.IsDBNull(0), Is.True);
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.IsDBNull(0), Is.True);
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo("After span"));
+
+        Assert.That(reader.Read(), Is.False);
+    }
+
     protected override string GetFixtureWorksheetsRowsAndTypes() => "SpreadsheetXml2003";
 
     protected override string GetFixtureHiddenRow() => "SpreadsheetXml2003_HiddenRefreshRow";

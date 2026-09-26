@@ -346,7 +346,8 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                     mergeCells,
                     ref currentRowIndex,
                     ref maxColumn,
-                    ref maxRow);
+                    ref maxRow,
+                    out var rowSpan);
 
                 while (row.RowIndex > currentRowIndex)
                 {
@@ -355,7 +356,12 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 }
 
                 yield return row;
-                currentRowIndex = row.RowIndex + 1;
+                for (int i = 1; i <= rowSpan; i++)
+                {
+                    yield return new Row(row.RowIndex + i, row.Height, []);
+                }
+
+                currentRowIndex = row.RowIndex + rowSpan + 1;
             }
         }
     }
@@ -367,10 +373,12 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         List<CellRange> mergeCells,
         ref int currentRowIndex,
         ref int maxColumn,
-        ref int maxRow)
+        ref int maxRow,
+        out int rowSpan)
     {
         using (rowReader)
         {
+            rowSpan = 0;
             if (!rowReader.Read() || rowReader.NodeType != XmlNodeType.Element)
                 return new Row(currentRowIndex, 15D, []);
 
@@ -379,6 +387,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 currentRowIndex = rowIndexFromAttribute - 1;
 
             bool hidden = ParseBool(GetSpreadsheetAttribute(rowReader, "Hidden"));
+            rowSpan = Math.Max(0, ParseInt(GetSpreadsheetAttribute(rowReader, "Span")));
             double rowHeight = hidden ? 0D : ParseDouble(GetSpreadsheetAttribute(rowReader, "Height"), 15D);
             var cells = new List<Cell>();
             int currentColumnIndex = 0;
