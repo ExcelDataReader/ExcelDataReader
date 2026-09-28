@@ -75,13 +75,6 @@ internal sealed class AgileEncryption : EncryptionInfo
         return GenerateSecretKey(password, PasswordSaltValue, PasswordHashAlgorithm, PasswordEncryptedKeyValue, PasswordSpinCount, PasswordKeyBits, cipher);
     }
 
-    public override byte[] GenerateBlockKey(int blockNumber, byte[] secretKey)
-    {
-        var key = new byte[BlockSize];
-        GenerateBlockKey(blockNumber, secretKey, key);
-        return key;
-    }
-
     public override int GenerateBlockKey(int blockNumber, byte[] secretKey, byte[] destination)
     {
         CryptoHelpers.HashBlockKey(secretKey, blockNumber, HashAlgorithm, BlockSize, destination, BlockSize);
@@ -149,44 +142,13 @@ internal sealed class AgileEncryption : EncryptionInfo
         return decryptedKeyValue;
     }
 
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
     private static byte[] HashPassword(string password, byte[] saltValue, HashAlgorithm hashAlgorithm, int spinCount)
     {
         var saltAndPassword = CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password));
         var hash = hashAlgorithm.ComputeHash(saltAndPassword);
-
-        var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(4 + hash.Length);
-        var iterationData = rented.AsSpan(0, 4 + hash.Length);
-
-        for (var i = 0; i < spinCount; i++)
-        {
-            BitConverter.TryWriteBytes(iterationData[..4], i);
-            hash.CopyTo(iterationData[4..]);
-            hashAlgorithm.TryComputeHash(iterationData, hash, out _);
-        }
-
-        System.Buffers.ArrayPool<byte>.Shared.Return(rented);
-
+        CryptoHelpers.SpinHash(hashAlgorithm, hash, spinCount);
         return hash;
     }
-#else
-    private static byte[] HashPassword(string password, byte[] saltValue, HashAlgorithm hashAlgorithm, int spinCount)
-    {
-        var saltAndPassword = CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password));
-        var hash = hashAlgorithm.ComputeHash(saltAndPassword);
-
-        var iterationData = new byte[4 + hash.Length];
-
-        for (var i = 0; i < spinCount; i++)
-        {
-            CryptoHelpers.WriteInt32LittleEndian(iterationData, 0, i);
-            Buffer.BlockCopy(hash, 0, iterationData, 4, hash.Length);
-            hash = hashAlgorithm.ComputeHash(iterationData, 0, iterationData.Length);
-        }
-
-        return hash;
-    }
-#endif
 
     private static HashIdentifier ParseHash(string value)
     {

@@ -7,12 +7,12 @@ internal sealed class AgileEncryptedPackageStream : Stream
 {
     private const int SegmentLength = 4096;
 
-#if NET8_0_OR_GREATER
     private System.Security.Cryptography.SymmetricAlgorithm? _cipher;
+#if NET8_0_OR_GREATER
     private byte[]? _decryptBuffer;
     private byte[]? _ivBuffer;
-
 #endif
+
     public AgileEncryptedPackageStream(Stream stream, byte[] key, byte[] iv, EncryptionInfo encryption)
     {
         Stream = stream;
@@ -40,8 +40,6 @@ internal sealed class AgileEncryptedPackageStream : Stream
     private byte[] Key { get; }
 
     private byte[] IV { get; }
-
-    private HashIdentifier HashAlgorithm { get; }
 
     private EncryptionInfo Encryption { get; }
 
@@ -120,10 +118,8 @@ internal sealed class AgileEncryptedPackageStream : Stream
         {
             Stream?.Dispose();
             Stream = null;
-#if NET8_0_OR_GREATER
             _cipher?.Dispose();
             _cipher = null;
-#endif
         }
 
         base.Dispose(disposing);
@@ -137,13 +133,13 @@ internal sealed class AgileEncryptedPackageStream : Stream
         stream.Seek(8 + Offset, SeekOrigin.Begin);
         stream.ReadAtLeast(SegmentBytes, 0, SegmentLength);
 
-#if NET8_0_OR_GREATER
         if (_cipher == null)
         {
             _cipher = Encryption.CreateCipher();
             _cipher.Key = Key;
         }
 
+#if NET8_0_OR_GREATER
         if (_cipher.Mode == System.Security.Cryptography.CipherMode.CBC)
         {
             // One-shot decryption reuses the cipher, IV and buffers instead of creating a decryptor and CryptoStream per segment.
@@ -154,16 +150,10 @@ internal sealed class AgileEncryptedPackageStream : Stream
             (SegmentBytes, _decryptBuffer) = (_decryptBuffer, SegmentBytes);
         }
         else
+#endif
         {
             SegmentBytes = CryptoHelpers.DecryptBytes(_cipher, SegmentBytes, Key, Encryption.GenerateBlockKey(SegmentIndex, IV));
         }
-#else
-        var salt = Encryption.GenerateBlockKey(SegmentIndex, IV);
-        using (var cipher = Encryption.CreateCipher())
-        {
-            SegmentBytes = CryptoHelpers.DecryptBytes(cipher, SegmentBytes, Key, salt);
-        }
-#endif
 
         SegmentIndex++;
         Offset += SegmentLength;

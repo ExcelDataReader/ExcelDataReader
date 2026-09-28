@@ -42,6 +42,7 @@ internal static class CryptoHelpers
     /// <summary>
     /// Writes hash(prefix || LE32(blockNumber)) into <paramref name="destination"/>, truncated to
     /// <paramref name="keyLength"/> bytes and zero-padded to <paramref name="resultLength"/> bytes.
+    /// <paramref name="keyLength"/> must not exceed <paramref name="resultLength"/>.
     /// </summary>
     public static void HashBlockKey(byte[] prefix, int blockNumber, HashIdentifier hashAlgorithm, int keyLength, byte[] destination, int resultLength)
     {
@@ -65,7 +66,7 @@ internal static class CryptoHelpers
             _ => throw new InvalidOperationException("Unsupported hash algorithm"),
         };
 
-        var copyLength = Math.Min(Math.Min(hashLength, keyLength), resultLength);
+        var copyLength = Math.Min(hashLength, keyLength);
         hash[..copyLength].CopyTo(destination);
 #else
         var input = new byte[prefix.Length + 4];
@@ -76,32 +77,35 @@ internal static class CryptoHelpers
         using (var algorithm = Create(hashAlgorithm))
             hash = algorithm.ComputeHash(input);
 
-        var copyLength = Math.Min(Math.Min(hash.Length, keyLength), resultLength);
+        var copyLength = Math.Min(hash.Length, keyLength);
         Buffer.BlockCopy(hash, 0, destination, 0, copyLength);
 #endif
         Array.Clear(destination, copyLength, resultLength - copyLength);
     }
 
-#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
-    // params ReadOnlySpan<T> avoids the implicit array allocation on modern runtimes.
-    public static byte[] Combine(params ReadOnlySpan<byte[]> arrays)
-#else
-    public static byte[] Combine(params byte[][] arrays)
-#endif
+    /// <summary>
+    /// Runs the key derivation spin loop <c>hash = H(LE32(i) || hash)</c> in place.
+    /// <paramref name="hash"/> must be exactly one hash long.
+    /// </summary>
+    public static void SpinHash(HashAlgorithm hashAlgorithm, byte[] hash, int spinCount)
     {
-        var length = 0;
-        for (var i = 0; i < arrays.Length; i++)
-            length += arrays[i].Length;
-
-        byte[] ret = new byte[length];
-        int offset = 0;
-        foreach (byte[] data in arrays)
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        Span<byte> iterationData = stackalloc byte[4 + hash.Length];
+        for (var i = 0; i < spinCount; i++)
         {
-            Buffer.BlockCopy(data, 0, ret, offset, data.Length);
-            offset += data.Length;
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(iterationData[..4], i);
+            hash.CopyTo(iterationData[4..]);
+            hashAlgorithm.TryComputeHash(iterationData, hash, out _);
         }
-
-        return ret;
+#else
+        var iterationData = new byte[4 + hash.Length];
+        for (var i = 0; i < spinCount; i++)
+        {
+            WriteInt32LittleEndian(iterationData, 0, i);
+            Buffer.BlockCopy(hash, 0, iterationData, 4, hash.Length);
+            Buffer.BlockCopy(hashAlgorithm.ComputeHash(iterationData), 0, hash, 0, hash.Length);
+        }
+#endif
     }
 
     public static SymmetricAlgorithm CreateCipher(CipherIdentifier identifier, int keySize, int blockSize, CipherMode mode) => identifier switch 
@@ -143,9 +147,9 @@ internal static class CryptoHelpers
         return result;
     }
 
-    public static void DecryptBytes(ICryptoTransform transform, byte[] bytes, int chunkSize, byte[] output)
+    public static void DecryptBytes(ICryptoTransform transform, byte[] bytes, int inputOffset, int chunkSize, byte[] output)
     {
-        using MemoryStream msDecrypt = new(bytes, 0, chunkSize);
+        using MemoryStream msDecrypt = new(bytes, inputOffset, chunkSize);
         using CryptoStream csDecrypt = new(msDecrypt, transform, CryptoStreamMode.Read);
         csDecrypt.ReadAtLeast(output, 0, chunkSize);
     }

@@ -32,9 +32,16 @@ internal sealed class RC4Encryption : EncryptionInfo
         var h = CryptoHelpers.HashBytes(System.Text.Encoding.Unicode.GetBytes(password), HashIdentifier.MD5);
         Array.Resize(ref h, 5);
 
-        // Combine h + salt 16 times:
-        h = CryptoHelpers.Combine(h, salt, h, salt, h, salt, h, salt, h, salt, h, salt, h, salt, h, salt, h, salt, h, salt, h, salt, h, salt, h, salt, h, salt, h, salt, h, salt);
-        h = CryptoHelpers.HashBytes(h, HashIdentifier.MD5);
+        // 2.3.6.2: concatenate h and the salt 16 times, then hash and truncate to 5 bytes.
+        var combined = new byte[16 * (h.Length + salt.Length)];
+        for (var i = 0; i < 16; i++)
+        {
+            var offset = i * (h.Length + salt.Length);
+            Buffer.BlockCopy(h, 0, combined, offset, h.Length);
+            Buffer.BlockCopy(salt, 0, combined, offset + h.Length, salt.Length);
+        }
+
+        h = CryptoHelpers.HashBytes(combined, HashIdentifier.MD5);
         Array.Resize(ref h, 5);
         return h;
     }
@@ -47,13 +54,6 @@ internal sealed class RC4Encryption : EncryptionInfo
     public override Stream CreateEncryptedPackageStream(Stream stream, byte[] secretKey)
     {
         throw new NotImplementedException();
-    }
-
-    public override byte[] GenerateBlockKey(int blockNumber, byte[] secretKey)
-    {
-        var key = new byte[16];
-        GenerateBlockKey(blockNumber, secretKey, key);
-        return key;
     }
 
     public override int GenerateBlockKey(int blockNumber, byte[] secretKey, byte[] destination)

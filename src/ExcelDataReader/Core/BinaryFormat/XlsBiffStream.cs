@@ -23,7 +23,6 @@ internal sealed class XlsBiffStream : IDisposable
     private int _readAheadEnd;
 
     // Reused decryption buffers: one 1024-byte encryption block in/out, and the current block key. Allocated on first use.
-    private byte[]? _decryptInputBuffer;
     private byte[]? _decryptOutputBuffer;
     private byte[]? _blockKeyBuffer;
 
@@ -326,15 +325,16 @@ internal sealed class XlsBiffStream : IDisposable
     }
 
     /// <summary>
-    /// Decrypts <paramref name="count"/> bytes. The BIFF RC4 and XOR transforms are stream ciphers that
-    /// process any count in TransformBlock, so call them directly instead of allocating a CryptoStream per chunk.
+    /// Decrypts <paramref name="count"/> bytes starting at <paramref name="inputOffset"/>. The BIFF RC4 and XOR
+    /// transforms are stream ciphers that process any count in TransformBlock, so call them directly instead of
+    /// allocating a CryptoStream per chunk.
     /// </summary>
-    private static void Transform(ICryptoTransform transform, byte[] input, int count, byte[] output)
+    private static void Transform(ICryptoTransform transform, byte[] input, int inputOffset, int count, byte[] output)
     {
         if (transform is RC4Managed.RC4Transform or XorManaged.XorTransform)
-            transform.TransformBlock(input, 0, count, output, 0);
+            transform.TransformBlock(input, inputOffset, count, output, 0);
         else
-            CryptoHelpers.DecryptBytes(transform, input, count, output);
+            CryptoHelpers.DecryptBytes(transform, input, inputOffset, count, output);
     }
 
     // Serves 'count' bytes into dest[destOffset..], draining the read-ahead buffer first.
@@ -420,7 +420,7 @@ internal sealed class XlsBiffStream : IDisposable
         var cipherTransform = CipherTransform ?? throw new InvalidOperationException("Decryptor is not initialized.");
 
         var bytes = _decryptOutputBuffer ??= new byte[1024];
-        Transform(cipherTransform, bytes, blockOffset, bytes);
+        Transform(cipherTransform, bytes, 0, blockOffset, bytes);
     }
 
     private void DecryptRecord(int startPosition, BIFFRECORDTYPE id, byte[] bytes, int recordSize)
@@ -442,7 +442,6 @@ internal sealed class XlsBiffStream : IDisposable
         }
 
         // Max chunk size per iteration is 1024 (one encryption block boundary).
-        var inputBlock = _decryptInputBuffer ??= new byte[1024];
         var outputBlock = _decryptOutputBuffer ??= new byte[1024];
         var position = 0;
         while (position < recordSize)
@@ -469,16 +468,16 @@ internal sealed class XlsBiffStream : IDisposable
             // Decrypt at most up to the next 1024 byte boundary
             var chunkSize = Math.Min(recordSize - position, 1024 - blockOffset);
 
-            Array.Copy(bytes, position, inputBlock, 0, chunkSize);
             var cipherTransform = CipherTransform ?? throw new InvalidOperationException("Decryptor is not initialized.");
-            Transform(cipherTransform, inputBlock, chunkSize, outputBlock);
+            Transform(cipherTransform, bytes, position, chunkSize, outputBlock);
 
-            for (var i = 0; i < chunkSize; i++)
-            {
-                if (position >= startDecrypt)
-                    bytes[position] = outputBlock[i];
-                position++;
-            }
+            // Bytes before startDecrypt must still pass through the cipher to advance its
+            // keystream, but keep their original value.
+            var copyFrom = Math.Max(position, startDecrypt);
+            if (copyFrom < position + chunkSize)
+                Buffer.BlockCopy(outputBlock, copyFrom - position, bytes, copyFrom, position + chunkSize - copyFrom);
+
+            position += chunkSize;
         }
     }
 }

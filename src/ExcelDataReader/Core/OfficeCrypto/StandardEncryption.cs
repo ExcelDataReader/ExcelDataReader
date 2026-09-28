@@ -38,7 +38,7 @@ internal sealed class StandardEncryption : EncryptionInfo
         KeySize = BitConverter.ToInt32(bytes, 28);
 
         // Don't use this; is implementation-specific
-        // var providerType = (StandardProvider)BitConverter.ToUInt32(bytes, 32);
+        // var providerType = BitConverter.ToUInt32(bytes, 32);
 
         // skip two reserved dwords
         CSPName = System.Text.Encoding.Unicode.GetString(bytes, 44, headerSize - 44 + 12); // +12 because we start counting from the offset after HeaderSize
@@ -100,13 +100,6 @@ internal sealed class StandardEncryption : EncryptionInfo
         }
     }
 
-    private enum StandardProvider
-    {
-        Default = 0x00000000,
-        RC4 = 0x00000001,
-        AES = 0x00000018,
-    }
-
     private enum StandardCipher
     {
         Default = 0x00000000,
@@ -163,14 +156,6 @@ internal sealed class StandardEncryption : EncryptionInfo
         return new StandardEncryptedPackageStream(stream, secretKey, this);
     }
 
-    public override byte[] GenerateBlockKey(int blockNumber, byte[] secretKey)
-    {
-        var key = new byte[CryptoHelpers.MaxHashSize];
-        var length = GenerateBlockKey(blockNumber, secretKey, key);
-        Array.Resize(ref key, length);
-        return key;
-    }
-
     public override int GenerateBlockKey(int blockNumber, byte[] secretKey, byte[] destination)
     {
         if ((Flags & EncryptionHeaderFlags.AES) != 0)
@@ -207,7 +192,7 @@ internal sealed class StandardEncryption : EncryptionInfo
         else if ((Flags & EncryptionHeaderFlags.CryptoAPI) != 0)
         {
             // 2.3.5.2 RC4 CryptoAPI Encryption Key Generation
-            return GenerateCryptoApiSecretKey(password, SaltValue, HashAlgorithm, (int)KeySize);
+            return GenerateCryptoApiSecretKey(password, SaltValue, HashAlgorithm);
         }
         else
         {
@@ -241,7 +226,7 @@ internal sealed class StandardEncryption : EncryptionInfo
     /// <summary>
     /// 2.3.5.2 RC4 CryptoAPI Encryption Key Generation.
     /// </summary>
-    private static byte[] GenerateCryptoApiSecretKey(string password, byte[] saltValue, HashIdentifier hashAlgorithm, int keySize)
+    private static byte[] GenerateCryptoApiSecretKey(string password, byte[] saltValue, HashIdentifier hashAlgorithm)
     {
         return CryptoHelpers.HashBytes(CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password)), hashAlgorithm);
     }
@@ -255,31 +240,10 @@ internal sealed class StandardEncryption : EncryptionInfo
         using (var hashAlgorithm = CryptoHelpers.Create(hashIdentifier))
         {
             hash = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password)));
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-            Span<byte> iterationData = stackalloc byte[4 + hash.Length];
-            for (int i = 0; i < 50000; i++)
-            {
-                BitConverter.TryWriteBytes(iterationData[..4], i);
-                hash.CopyTo(iterationData[4..]);
-                hashAlgorithm.TryComputeHash(iterationData, hash, out _);
-            }
+            CryptoHelpers.SpinHash(hashAlgorithm, hash, 50000);
 
-            hash.CopyTo(iterationData);
-            BitConverter.TryWriteBytes(iterationData[hash.Length..], 0);
-            hashAlgorithm.TryComputeHash(iterationData, hash, out _);
-#else
-            var iterationData = new byte[4 + hash.Length];
-            for (int i = 0; i < 50000; i++)
-            {
-                CryptoHelpers.WriteInt32LittleEndian(iterationData, 0, i);
-                Buffer.BlockCopy(hash, 0, iterationData, 4, hash.Length);
-                hash = hashAlgorithm.ComputeHash(iterationData);
-            }
-
-            Buffer.BlockCopy(hash, 0, iterationData, 0, hash.Length);
-            CryptoHelpers.WriteInt32LittleEndian(iterationData, hash.Length, 0);
-            hash = hashAlgorithm.ComputeHash(iterationData);
-#endif
+            // One more round with the block number appended instead of prepended.
+            CryptoHelpers.HashBlockKey(hash, 0, hashIdentifier, hash.Length, hash, hash.Length);
 
             // The algorithm in this 'DeriveKey' function is the bit that's not clear from the documentation
             hash = DeriveKey(hash, hashAlgorithm, keySize, verifierHashSize);

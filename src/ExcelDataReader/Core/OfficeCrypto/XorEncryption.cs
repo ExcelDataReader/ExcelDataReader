@@ -23,9 +23,11 @@ internal sealed class XorEncryption : EncryptionInfo
         throw new NotImplementedException();
     }
 
-    public override byte[] GenerateBlockKey(int blockNumber, byte[] secretKey)
+    public override int GenerateBlockKey(int blockNumber, byte[] secretKey, byte[] destination)
     {
-        return secretKey;
+        // The XOR obfuscation array doesn't depend on the block number.
+        Buffer.BlockCopy(secretKey, 0, destination, 0, secretKey.Length);
+        return secretKey.Length;
     }
 
     public override byte[] GenerateSecretKey(string password)
