@@ -56,6 +56,17 @@ internal abstract class EncryptionInfo
 
     public abstract byte[] GenerateBlockKey(int blockNumber, byte[] secretKey);
 
+    /// <summary>
+    /// Writes the block key into <paramref name="destination"/> (at least <see cref="CryptoHelpers.MaxHashSize"/> bytes)
+    /// and returns its length. Used on per-block paths to avoid allocating a key array per block.
+    /// </summary>
+    public virtual int GenerateBlockKey(int blockNumber, byte[] secretKey, byte[] destination)
+    {
+        var key = GenerateBlockKey(blockNumber, secretKey);
+        Buffer.BlockCopy(key, 0, destination, 0, key.Length);
+        return key.Length;
+    }
+
     public abstract Stream CreateEncryptedPackageStream(Stream stream, byte[] secretKey);
 
     public abstract bool VerifyPassword(string password);

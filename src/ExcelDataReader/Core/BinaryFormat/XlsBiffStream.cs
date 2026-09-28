@@ -22,6 +22,11 @@ internal sealed class XlsBiffStream : IDisposable
     private int _readAheadStart;
     private int _readAheadEnd;
 
+    // Reused decryption buffers: one 1024-byte encryption block in/out, and the current block key. Allocated on first use.
+    private byte[]? _decryptInputBuffer;
+    private byte[]? _decryptOutputBuffer;
+    private byte[]? _blockKeyBuffer;
+
     public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, BIFFTYPE? defaultType = null, string? password = null, byte[]? secretKey = null, EncryptionInfo? encryption = null)
     {
         BaseStream = baseStream;
@@ -320,6 +325,18 @@ internal sealed class XlsBiffStream : IDisposable
         return 0;
     }
 
+    /// <summary>
+    /// Decrypts <paramref name="count"/> bytes. The BIFF RC4 and XOR transforms are stream ciphers that
+    /// process any count in TransformBlock, so call them directly instead of allocating a CryptoStream per chunk.
+    /// </summary>
+    private static void Transform(ICryptoTransform transform, byte[] input, int count, byte[] output)
+    {
+        if (transform is RC4Managed.RC4Transform or XorManaged.XorTransform)
+            transform.TransformBlock(input, 0, count, output, 0);
+        else
+            CryptoHelpers.DecryptBytes(transform, input, count, output);
+    }
+
     // Serves 'count' bytes into dest[destOffset..], draining the read-ahead buffer first.
     // When the buffer is exhausted it is refilled with a single BaseStream.Read(1024).
     // For large bodies that exceed the remaining buffer the tail is read directly from
@@ -366,17 +383,32 @@ internal sealed class XlsBiffStream : IDisposable
     }
 
     /// <summary>
-    /// Create an ICryptoTransform instance to decrypt a 1024-byte block.
+    /// Create or re-key the ICryptoTransform instance used to decrypt a 1024-byte block.
     /// </summary>
     private void CreateBlockDecryptor(int blockNumber)
     {
-        CipherTransform?.Dispose();
-
         if (Encryption == null || SecretKey == null || Cipher == null)
             throw new InvalidOperationException("Encryption is not initialized.");
 
-        var blockKey = Encryption.GenerateBlockKey(blockNumber, SecretKey);
-        CipherTransform = Cipher.CreateDecryptor(blockKey, null);
+        // This runs for every 1024-byte block and on every seek, so re-key the existing
+        // RC4/XOR transform in place instead of allocating a new key and transform.
+        switch (CipherTransform)
+        {
+            case RC4Managed.RC4Transform rc4:
+                var blockKey = _blockKeyBuffer ??= new byte[CryptoHelpers.MaxHashSize];
+                var keyLength = Encryption.GenerateBlockKey(blockNumber, SecretKey, blockKey);
+                rc4.Reset(blockKey, keyLength);
+                break;
+            case XorManaged.XorTransform xor:
+                // The XOR key doesn't depend on the block; the array index is set per record.
+                xor.XorArrayIndex = 0;
+                break;
+            default:
+                CipherTransform?.Dispose();
+                CipherTransform = Cipher.CreateDecryptor(Encryption.GenerateBlockKey(blockNumber, SecretKey), null);
+                break;
+        }
+
         CipherBlock = blockNumber;
     }
 
@@ -387,20 +419,8 @@ internal sealed class XlsBiffStream : IDisposable
     {
         var cipherTransform = CipherTransform ?? throw new InvalidOperationException("Decryptor is not initialized.");
 
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        var bytes = System.Buffers.ArrayPool<byte>.Shared.Rent(blockOffset);
-        try
-        {
-            CryptoHelpers.DecryptBytes(cipherTransform, bytes, blockOffset);
-        }
-        finally
-        {
-            System.Buffers.ArrayPool<byte>.Shared.Return(bytes);
-        }
-#else
-        var bytes = new byte[blockOffset];
-        CryptoHelpers.DecryptBytes(cipherTransform, bytes, blockOffset);
-#endif
+        var bytes = _decryptOutputBuffer ??= new byte[1024];
+        Transform(cipherTransform, bytes, blockOffset, bytes);
     }
 
     private void DecryptRecord(int startPosition, BIFFRECORDTYPE id, byte[] bytes, int recordSize)
@@ -422,59 +442,43 @@ internal sealed class XlsBiffStream : IDisposable
         }
 
         // Max chunk size per iteration is 1024 (one encryption block boundary).
-        // Rent both buffers once and reuse across iterations to avoid per-iteration allocations.
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        var inputBlock = System.Buffers.ArrayPool<byte>.Shared.Rent(1024);
-        var outputBlock = System.Buffers.ArrayPool<byte>.Shared.Rent(1024);
-#else
-        var inputBlock = new byte[1024];
-        var outputBlock = new byte[1024];
-#endif
-        try
+        var inputBlock = _decryptInputBuffer ??= new byte[1024];
+        var outputBlock = _decryptOutputBuffer ??= new byte[1024];
+        var position = 0;
+        while (position < recordSize)
         {
-            var position = 0;
-            while (position < recordSize)
+            var offset = startPosition + position;
+            int blockNumber = offset / 1024;
+            var blockOffset = offset % 1024;
+
+            if (blockNumber != CipherBlock)
             {
-                var offset = startPosition + position;
-                int blockNumber = offset / 1024;
-                var blockOffset = offset % 1024;
-
-                if (blockNumber != CipherBlock)
-                {
-                    CreateBlockDecryptor(blockNumber);
-                }
-
-                if (encryption.IsXor)
-                {
-                    // Bypass everything and hook into the XorTransform instance to set the XorArrayIndex pr record.
-                    // This is a hack to use the XorTransform otherwise transparently to the other encryption methods.
-                    var xorTransform = CipherTransform as XorManaged.XorTransform;
-                    if (xorTransform == null)
-                        throw new InvalidOperationException("XOR decryptor is not initialized.");
-                    xorTransform.XorArrayIndex = offset + recordSize - 4;
-                }
-
-                // Decrypt at most up to the next 1024 byte boundary
-                var chunkSize = Math.Min(recordSize - position, 1024 - blockOffset);
-
-                Array.Copy(bytes, position, inputBlock, 0, chunkSize);
-                var cipherTransform = CipherTransform ?? throw new InvalidOperationException("Decryptor is not initialized.");
-                CryptoHelpers.DecryptBytes(cipherTransform, inputBlock, chunkSize, outputBlock);
-
-                for (var i = 0; i < chunkSize; i++)
-                {
-                    if (position >= startDecrypt)
-                        bytes[position] = outputBlock[i];
-                    position++;
-                }
+                CreateBlockDecryptor(blockNumber);
             }
-        }
-        finally
-        {
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-            System.Buffers.ArrayPool<byte>.Shared.Return(inputBlock);
-            System.Buffers.ArrayPool<byte>.Shared.Return(outputBlock);
-#endif
+
+            if (encryption.IsXor)
+            {
+                // Bypass everything and hook into the XorTransform instance to set the XorArrayIndex pr record.
+                // This is a hack to use the XorTransform otherwise transparently to the other encryption methods.
+                var xorTransform = CipherTransform as XorManaged.XorTransform;
+                if (xorTransform == null)
+                    throw new InvalidOperationException("XOR decryptor is not initialized.");
+                xorTransform.XorArrayIndex = offset + recordSize - 4;
+            }
+
+            // Decrypt at most up to the next 1024 byte boundary
+            var chunkSize = Math.Min(recordSize - position, 1024 - blockOffset);
+
+            Array.Copy(bytes, position, inputBlock, 0, chunkSize);
+            var cipherTransform = CipherTransform ?? throw new InvalidOperationException("Decryptor is not initialized.");
+            Transform(cipherTransform, inputBlock, chunkSize, outputBlock);
+
+            for (var i = 0; i < chunkSize; i++)
+            {
+                if (position >= startDecrypt)
+                    bytes[position] = outputBlock[i];
+                position++;
+            }
         }
     }
 }

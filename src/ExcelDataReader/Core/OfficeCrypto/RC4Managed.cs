@@ -37,18 +37,7 @@ internal sealed class RC4Managed : SymmetricAlgorithm
 
         public RC4Transform(byte[] key)
         {
-            Key = key;
-            for (int i = 0; i < _s.Length; i++)
-            {
-                _s[i] = (byte)i;
-            }
-
-            for (int i = 0, j = 0; i < 256; i++)
-            {
-                j = (j + key[i % key.Length] + _s[i]) & 255;
-
-                Swap(_s, i, j);
-            }
+            Reset(key, key.Length);
         }
 
         public int InputBlockSize => 1024;
@@ -59,7 +48,26 @@ internal sealed class RC4Managed : SymmetricAlgorithm
 
         public bool CanReuseTransform => false;
 
-        public byte[] Key { get; }
+        /// <summary>
+        /// Re-runs the RC4 key schedule with the first <paramref name="keyLength"/> bytes of <paramref name="key"/>,
+        /// so the same instance can be reused for a new block key.
+        /// </summary>
+        public void Reset(byte[] key, int keyLength)
+        {
+            _index1 = 0;
+            _index2 = 0;
+            for (int i = 0; i < _s.Length; i++)
+            {
+                _s[i] = (byte)i;
+            }
+
+            for (int i = 0, j = 0; i < 256; i++)
+            {
+                j = (j + key[i % keyLength] + _s[i]) & 255;
+
+                Swap(_s, i, j);
+            }
+        }
 
         public void Dispose()
         {

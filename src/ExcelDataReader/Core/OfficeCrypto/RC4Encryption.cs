@@ -51,8 +51,15 @@ internal sealed class RC4Encryption : EncryptionInfo
 
     public override byte[] GenerateBlockKey(int blockNumber, byte[] secretKey)
     {
-        var salt = CryptoHelpers.Combine(secretKey, BitConverter.GetBytes(blockNumber));
-        return CryptoHelpers.HashBytes(salt, HashIdentifier.MD5);
+        var key = new byte[16];
+        GenerateBlockKey(blockNumber, secretKey, key);
+        return key;
+    }
+
+    public override int GenerateBlockKey(int blockNumber, byte[] secretKey, byte[] destination)
+    {
+        CryptoHelpers.HashBlockKey(secretKey, blockNumber, HashIdentifier.MD5, 16, destination, 16);
+        return 16;
     }
 
     public override byte[] GenerateSecretKey(string password)

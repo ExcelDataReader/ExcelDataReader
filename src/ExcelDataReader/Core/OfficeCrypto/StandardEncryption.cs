@@ -11,8 +11,6 @@ internal sealed class StandardEncryption : EncryptionInfo
     private const int AesBlockSize = 128;
     private const int RC4BlockSize = 8;
 
-    private static readonly byte[] _zeroes = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    
     public StandardEncryption(byte[] bytes)
     {
         Flags = (EncryptionHeaderFlags)BitConverter.ToUInt32(bytes, 4);
@@ -167,6 +165,14 @@ internal sealed class StandardEncryption : EncryptionInfo
 
     public override byte[] GenerateBlockKey(int blockNumber, byte[] secretKey)
     {
+        var key = new byte[CryptoHelpers.MaxHashSize];
+        var length = GenerateBlockKey(blockNumber, secretKey, key);
+        Array.Resize(ref key, length);
+        return key;
+    }
+
+    public override int GenerateBlockKey(int blockNumber, byte[] secretKey, byte[] destination)
+    {
         if ((Flags & EncryptionHeaderFlags.AES) != 0)
         {
             /*var salt = CryptoHelpers.Combine(secretKey, BitConverter.GetBytes(blockNumber));
@@ -179,16 +185,11 @@ internal sealed class StandardEncryption : EncryptionInfo
         }
         else if ((Flags & EncryptionHeaderFlags.CryptoAPI) != 0)
         {
-            byte[] salt = CryptoHelpers.Combine(secretKey, BitConverter.GetBytes(blockNumber));
-            salt = CryptoHelpers.HashBytes(salt, HashAlgorithm);
-            Array.Resize(ref salt, (int)KeySize / 8);
-            if (KeySize == 40)
-            {
-                // 2.3.5.2: If keyLength is exactly 40 bits, the encryption key MUST be composed of the first 40 bits of Hfinal and 88 bits set to zero, creating a 128-bit key.
-                salt = CryptoHelpers.Combine(salt, _zeroes);
-            }
-
-            return salt;
+            // 2.3.5.2: If keyLength is exactly 40 bits, the encryption key MUST be composed of the first 40 bits of Hfinal and 88 bits set to zero, creating a 128-bit key.
+            var keyLength = (int)KeySize / 8;
+            var resultLength = KeySize == 40 ? 16 : keyLength;
+            CryptoHelpers.HashBlockKey(secretKey, blockNumber, HashAlgorithm, keyLength, destination, resultLength);
+            return resultLength;
         }
         else
         {
@@ -254,12 +255,31 @@ internal sealed class StandardEncryption : EncryptionInfo
         using (var hashAlgorithm = CryptoHelpers.Create(hashIdentifier))
         {
             hash = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password)));
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            Span<byte> iterationData = stackalloc byte[4 + hash.Length];
             for (int i = 0; i < 50000; i++)
             {
-                hash = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(BitConverter.GetBytes(i), hash));
+                BitConverter.TryWriteBytes(iterationData[..4], i);
+                hash.CopyTo(iterationData[4..]);
+                hashAlgorithm.TryComputeHash(iterationData, hash, out _);
             }
 
-            hash = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(hash, BitConverter.GetBytes(0)));
+            hash.CopyTo(iterationData);
+            BitConverter.TryWriteBytes(iterationData[hash.Length..], 0);
+            hashAlgorithm.TryComputeHash(iterationData, hash, out _);
+#else
+            var iterationData = new byte[4 + hash.Length];
+            for (int i = 0; i < 50000; i++)
+            {
+                CryptoHelpers.WriteInt32LittleEndian(iterationData, 0, i);
+                Buffer.BlockCopy(hash, 0, iterationData, 4, hash.Length);
+                hash = hashAlgorithm.ComputeHash(iterationData);
+            }
+
+            Buffer.BlockCopy(hash, 0, iterationData, 0, hash.Length);
+            CryptoHelpers.WriteInt32LittleEndian(iterationData, hash.Length, 0);
+            hash = hashAlgorithm.ComputeHash(iterationData);
+#endif
 
             // The algorithm in this 'DeriveKey' function is the bit that's not clear from the documentation
             hash = DeriveKey(hash, hashAlgorithm, keySize, verifierHashSize);

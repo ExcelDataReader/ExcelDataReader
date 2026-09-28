@@ -77,9 +77,15 @@ internal sealed class AgileEncryption : EncryptionInfo
 
     public override byte[] GenerateBlockKey(int blockNumber, byte[] secretKey)
     {
-        var salt = CryptoHelpers.HashBytes(CryptoHelpers.Combine(secretKey, BitConverter.GetBytes(blockNumber)), HashAlgorithm);
-        Array.Resize(ref salt, BlockSize);
-        return salt;
+        var key = new byte[BlockSize];
+        GenerateBlockKey(blockNumber, secretKey, key);
+        return key;
+    }
+
+    public override int GenerateBlockKey(int blockNumber, byte[] secretKey, byte[] destination)
+    {
+        CryptoHelpers.HashBlockKey(secretKey, blockNumber, HashAlgorithm, BlockSize, destination, BlockSize);
+        return BlockSize;
     }
 
     public override Stream CreateEncryptedPackageStream(Stream stream, byte[] secretKey)
@@ -173,8 +179,7 @@ internal sealed class AgileEncryption : EncryptionInfo
 
         for (var i = 0; i < spinCount; i++)
         {
-            var buffer = BitConverter.GetBytes(i);
-            Buffer.BlockCopy(buffer, 0, iterationData, 0, 4);
+            CryptoHelpers.WriteInt32LittleEndian(iterationData, 0, i);
             Buffer.BlockCopy(hash, 0, iterationData, 4, hash.Length);
             hash = hashAlgorithm.ComputeHash(iterationData, 0, iterationData.Length);
         }

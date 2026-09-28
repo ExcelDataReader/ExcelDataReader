@@ -4,6 +4,11 @@ namespace ExcelDataReader.Core.OfficeCrypto;
 
 internal static class CryptoHelpers
 {
+    /// <summary>
+    /// Largest supported hash (SHA-512) in bytes; also an upper bound for block key lengths.
+    /// </summary>
+    public const int MaxHashSize = 64;
+
     public static HashAlgorithm Create(HashIdentifier hashAlgorithm) => hashAlgorithm switch
     {
         HashIdentifier.SHA512 => SHA512.Create(),
@@ -25,6 +30,57 @@ internal static class CryptoHelpers
     }
 
     public static byte[] Combine(byte[] first, byte[] second) => [.. first, .. second];
+
+    public static void WriteInt32LittleEndian(byte[] destination, int offset, int value)
+    {
+        destination[offset] = (byte)value;
+        destination[offset + 1] = (byte)(value >> 8);
+        destination[offset + 2] = (byte)(value >> 16);
+        destination[offset + 3] = (byte)(value >> 24);
+    }
+
+    /// <summary>
+    /// Writes hash(prefix || LE32(blockNumber)) into <paramref name="destination"/>, truncated to
+    /// <paramref name="keyLength"/> bytes and zero-padded to <paramref name="resultLength"/> bytes.
+    /// </summary>
+    public static void HashBlockKey(byte[] prefix, int blockNumber, HashIdentifier hashAlgorithm, int keyLength, byte[] destination, int resultLength)
+    {
+#if NET8_0_OR_GREATER
+        Span<byte> input = stackalloc byte[prefix.Length + 4];
+        prefix.CopyTo(input);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(input[prefix.Length..], blockNumber);
+
+        Span<byte> hash = stackalloc byte[MaxHashSize];
+        var hashLength = hashAlgorithm switch
+        {
+            HashIdentifier.SHA512 => SHA512.HashData(input, hash),
+            HashIdentifier.SHA384 => SHA384.HashData(input, hash),
+            HashIdentifier.SHA256 => SHA256.HashData(input, hash),
+#pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
+            HashIdentifier.SHA1 => SHA1.HashData(input, hash),
+#pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
+#pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
+            HashIdentifier.MD5 => MD5.HashData(input, hash),
+#pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
+            _ => throw new InvalidOperationException("Unsupported hash algorithm"),
+        };
+
+        var copyLength = Math.Min(Math.Min(hashLength, keyLength), resultLength);
+        hash[..copyLength].CopyTo(destination);
+#else
+        var input = new byte[prefix.Length + 4];
+        Buffer.BlockCopy(prefix, 0, input, 0, prefix.Length);
+        WriteInt32LittleEndian(input, prefix.Length, blockNumber);
+
+        byte[] hash;
+        using (var algorithm = Create(hashAlgorithm))
+            hash = algorithm.ComputeHash(input);
+
+        var copyLength = Math.Min(Math.Min(hash.Length, keyLength), resultLength);
+        Buffer.BlockCopy(hash, 0, destination, 0, copyLength);
+#endif
+        Array.Clear(destination, copyLength, resultLength - copyLength);
+    }
 
 #if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
     // params ReadOnlySpan<T> avoids the implicit array allocation on modern runtimes.
