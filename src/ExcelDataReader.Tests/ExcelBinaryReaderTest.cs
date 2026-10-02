@@ -628,6 +628,20 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         }
     }
 
+    [TestCase("Issue242_StdRc4PwdPassword.xls")]
+    [TestCase("Issue242_XorPwdPassword.xls")]
+    public void Issue242_PasswordReadsAcrossEncryptionBlocks(string file)
+    {
+        using var reader = ExcelReaderFactory.CreateBinaryReader(
+            Configuration.GetTestWorkbook(file),
+            new ExcelReaderConfiguration { Password = "password" });
+
+        // Reading the full workbook crosses multiple 1024-byte BIFF encryption blocks.
+        var dataSet = reader.AsDataSet();
+
+        Assert.That(dataSet.Tables[0].Rows[0][0], Is.EqualTo("Password: password"));
+    }
+
     [Test]
     public void BinaryThrowsInvalidPassword()
     {
