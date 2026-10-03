@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462</TargetFrameworks>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <PropertyGroup>
@@ -15,7 +16,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageReference Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" Version="18.7.37220.1" />
+    <PackageReference Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" Version="18.7.37220.1" Condition=" '$(TargetFramework)' != 'net462' " />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\ExcelDataReader\ExcelDataReader.csproj" />
@@ -25,5 +26,18 @@
     <EmbeddedResource Include="..\TestData\10x10000.xlsb" />
     <EmbeddedResource Include="..\TestData\10x10000.xls" />
     <EmbeddedResource Include="..\TestData\Issue289.xlsx" />
+    <EmbeddedResource Include="..\TestData\BigFormatted.xls" />
+    <EmbeddedResource Include="..\TestData\BigFormatted.xlsx" />
+    <EmbeddedResource Include="..\TestData\Issue263.xls" />
+    <EmbeddedResource Include="..\TestData\OldIssue11572_CodePage.xls" />
+    <EmbeddedResource Include="..\TestData\Issue173.xls" />
+    <EmbeddedResource Include="..\TestData\InvalidByteOrderValueInHeader.xls" />
+    <EmbeddedResource Include="..\TestData\LotsOfSheets.xls" />
+    <EmbeddedResource Include="..\TestData\LotsOfSheets.xlsx" />
+    <EmbeddedResource Include="..\TestData\LotsOfSheets.xlsb" />
+    <EmbeddedResource Include="..\TestData\agile_AES128_SHA1_CBC_pwd_password.xlsx" />
+    <EmbeddedResource Include="..\TestData\standard_AES128_SHA1_ECB_pwd_password.xlsx" />
+    <EmbeddedResource Include="..\TestData\Issue242_StdRc4PwdPassword.xls" />
+    <EmbeddedResource Include="..\TestData\Issue242_XorPwdPassword.xls" />
   </ItemGroup>
 </Project>

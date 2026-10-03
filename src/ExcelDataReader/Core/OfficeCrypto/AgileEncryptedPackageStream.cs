@@ -7,6 +7,12 @@ internal sealed class AgileEncryptedPackageStream : Stream
 {
     private const int SegmentLength = 4096;
 
+    private System.Security.Cryptography.SymmetricAlgorithm? _cipher;
+#if NET8_0_OR_GREATER
+    private byte[]? _decryptBuffer;
+    private byte[]? _ivBuffer;
+#endif
+
     public AgileEncryptedPackageStream(Stream stream, byte[] key, byte[] iv, EncryptionInfo encryption)
     {
         Stream = stream;
@@ -34,8 +40,6 @@ internal sealed class AgileEncryptedPackageStream : Stream
     private byte[] Key { get; }
 
     private byte[] IV { get; }
-
-    private HashIdentifier HashAlgorithm { get; }
 
     private EncryptionInfo Encryption { get; }
 
@@ -114,6 +118,8 @@ internal sealed class AgileEncryptedPackageStream : Stream
         {
             Stream?.Dispose();
             Stream = null;
+            _cipher?.Dispose();
+            _cipher = null;
         }
 
         base.Dispose(disposing);
@@ -122,15 +128,31 @@ internal sealed class AgileEncryptedPackageStream : Stream
     private void ReadSegment()
     {
         var stream = Stream ?? throw new ObjectDisposedException(nameof(AgileEncryptedPackageStream));
-        var salt = Encryption.GenerateBlockKey(SegmentIndex, IV);
-        
+
         // NOTE: +8 skips EncryptedPackage header
         stream.Seek(8 + Offset, SeekOrigin.Begin);
         stream.ReadAtLeast(SegmentBytes, 0, SegmentLength);
 
-        using (var cipher = Encryption.CreateCipher())
+        if (_cipher == null)
         {
-            SegmentBytes = CryptoHelpers.DecryptBytes(cipher, SegmentBytes, Key, salt);
+            _cipher = Encryption.CreateCipher();
+            _cipher.Key = Key;
+        }
+
+#if NET8_0_OR_GREATER
+        if (_cipher.Mode == System.Security.Cryptography.CipherMode.CBC)
+        {
+            // One-shot decryption reuses the cipher, IV and buffers instead of creating a decryptor and CryptoStream per segment.
+            _ivBuffer ??= new byte[CryptoHelpers.MaxHashSize];
+            var ivLength = Encryption.GenerateBlockKey(SegmentIndex, IV, _ivBuffer);
+            _decryptBuffer ??= new byte[SegmentLength];
+            _cipher.DecryptCbc(SegmentBytes, _ivBuffer.AsSpan(0, ivLength), _decryptBuffer, System.Security.Cryptography.PaddingMode.None);
+            (SegmentBytes, _decryptBuffer) = (_decryptBuffer, SegmentBytes);
+        }
+        else
+#endif
+        {
+            SegmentBytes = CryptoHelpers.DecryptBytes(_cipher, SegmentBytes, Key, Encryption.GenerateBlockKey(SegmentIndex, IV));
         }
 
         SegmentIndex++;

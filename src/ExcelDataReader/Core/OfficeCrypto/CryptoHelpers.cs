@@ -4,6 +4,11 @@ namespace ExcelDataReader.Core.OfficeCrypto;
 
 internal static class CryptoHelpers
 {
+    /// <summary>
+    /// Largest supported hash (SHA-512) in bytes; also an upper bound for block key lengths.
+    /// </summary>
+    public const int MaxHashSize = 64;
+
     public static HashAlgorithm Create(HashIdentifier hashAlgorithm) => hashAlgorithm switch
     {
         HashIdentifier.SHA512 => SHA512.Create(),
@@ -26,26 +31,81 @@ internal static class CryptoHelpers
 
     public static byte[] Combine(byte[] first, byte[] second) => [.. first, .. second];
 
-#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
-    // params ReadOnlySpan<T> avoids the implicit array allocation on modern runtimes.
-    public static byte[] Combine(params ReadOnlySpan<byte[]> arrays)
-#else
-    public static byte[] Combine(params byte[][] arrays)
-#endif
+    public static void WriteInt32LittleEndian(byte[] destination, int offset, int value)
     {
-        var length = 0;
-        for (var i = 0; i < arrays.Length; i++)
-            length += arrays[i].Length;
+        destination[offset] = (byte)value;
+        destination[offset + 1] = (byte)(value >> 8);
+        destination[offset + 2] = (byte)(value >> 16);
+        destination[offset + 3] = (byte)(value >> 24);
+    }
 
-        byte[] ret = new byte[length];
-        int offset = 0;
-        foreach (byte[] data in arrays)
+    /// <summary>
+    /// Writes hash(prefix || LE32(blockNumber)) into <paramref name="destination"/>, truncated to
+    /// <paramref name="keyLength"/> bytes and zero-padded to <paramref name="resultLength"/> bytes.
+    /// <paramref name="keyLength"/> must not exceed <paramref name="resultLength"/>.
+    /// </summary>
+    public static void HashBlockKey(byte[] prefix, int blockNumber, HashIdentifier hashAlgorithm, int keyLength, byte[] destination, int resultLength)
+    {
+#if NET8_0_OR_GREATER
+        Span<byte> input = stackalloc byte[prefix.Length + 4];
+        prefix.CopyTo(input);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(input[prefix.Length..], blockNumber);
+
+        Span<byte> hash = stackalloc byte[MaxHashSize];
+        var hashLength = hashAlgorithm switch
         {
-            Buffer.BlockCopy(data, 0, ret, offset, data.Length);
-            offset += data.Length;
-        }
+            HashIdentifier.SHA512 => SHA512.HashData(input, hash),
+            HashIdentifier.SHA384 => SHA384.HashData(input, hash),
+            HashIdentifier.SHA256 => SHA256.HashData(input, hash),
+#pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
+            HashIdentifier.SHA1 => SHA1.HashData(input, hash),
+#pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
+#pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
+            HashIdentifier.MD5 => MD5.HashData(input, hash),
+#pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
+            _ => throw new InvalidOperationException("Unsupported hash algorithm"),
+        };
 
-        return ret;
+        var copyLength = Math.Min(hashLength, keyLength);
+        hash[..copyLength].CopyTo(destination);
+#else
+        var input = new byte[prefix.Length + 4];
+        Buffer.BlockCopy(prefix, 0, input, 0, prefix.Length);
+        WriteInt32LittleEndian(input, prefix.Length, blockNumber);
+
+        byte[] hash;
+        using (var algorithm = Create(hashAlgorithm))
+            hash = algorithm.ComputeHash(input);
+
+        var copyLength = Math.Min(hash.Length, keyLength);
+        Buffer.BlockCopy(hash, 0, destination, 0, copyLength);
+#endif
+        Array.Clear(destination, copyLength, resultLength - copyLength);
+    }
+
+    /// <summary>
+    /// Runs the key derivation spin loop <c>hash = H(LE32(i) || hash)</c> in place.
+    /// <paramref name="hash"/> must be exactly one hash long.
+    /// </summary>
+    public static void SpinHash(HashAlgorithm hashAlgorithm, byte[] hash, int spinCount)
+    {
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        Span<byte> iterationData = stackalloc byte[4 + hash.Length];
+        for (var i = 0; i < spinCount; i++)
+        {
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(iterationData[..4], i);
+            hash.CopyTo(iterationData[4..]);
+            hashAlgorithm.TryComputeHash(iterationData, hash, out _);
+        }
+#else
+        var iterationData = new byte[4 + hash.Length];
+        for (var i = 0; i < spinCount; i++)
+        {
+            WriteInt32LittleEndian(iterationData, 0, i);
+            Buffer.BlockCopy(hash, 0, iterationData, 4, hash.Length);
+            Buffer.BlockCopy(hashAlgorithm.ComputeHash(iterationData), 0, hash, 0, hash.Length);
+        }
+#endif
     }
 
     public static SymmetricAlgorithm CreateCipher(CipherIdentifier identifier, int keySize, int blockSize, CipherMode mode) => identifier switch 
@@ -87,9 +147,9 @@ internal static class CryptoHelpers
         return result;
     }
 
-    public static void DecryptBytes(ICryptoTransform transform, byte[] bytes, int chunkSize, byte[] output)
+    public static void DecryptBytes(ICryptoTransform transform, byte[] bytes, int inputOffset, int chunkSize, byte[] output)
     {
-        using MemoryStream msDecrypt = new(bytes, 0, chunkSize);
+        using MemoryStream msDecrypt = new(bytes, inputOffset, chunkSize);
         using CryptoStream csDecrypt = new(msDecrypt, transform, CryptoStreamMode.Read);
         csDecrypt.ReadAtLeast(output, 0, chunkSize);
     }

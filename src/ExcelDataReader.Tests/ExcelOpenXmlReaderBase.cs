@@ -106,6 +106,19 @@ public abstract class ExcelOpenXmlReaderBase : ExcelTestBase
     }
 
     [Test]
+    public void AgileEncryptionReadsAcrossPackageSegments()
+    {
+        using var reader = OpenReader(
+            OpenStream("agile_AES128_SHA1_CBC_pwd_password"),
+            new ExcelReaderConfiguration() { Password = "password" });
+
+        // The encrypted package spans multiple 4096-byte segments; reading the dataset traverses its contents.
+        var dataSet = reader.AsDataSet();
+
+        Assert.That(dataSet.Tables[0].Rows[0][0], Is.EqualTo("Password: password"));
+    }
+
+    [Test]
     public void OpenXmlThrowsInvalidPasswordForWrongPassword()
     {
         Assert.Throws<Exceptions.InvalidPasswordException>(() =>
