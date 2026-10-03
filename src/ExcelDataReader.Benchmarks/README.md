@@ -2,7 +2,8 @@
 
 `ReadTextFragments` covers single-fragment and rich XLSX strings, SpreadsheetML
 Data text, and OOXML escapes. `ParseCustomFormats` covers custom number-format
-parsing. Both use `MemoryDiagnoser`; workbook generation happens in `GlobalSetup`,
+parsing, including simple decimals, conditions, dates, exponentials, and fractions.
+Both use `MemoryDiagnoser`; workbook generation happens in `GlobalSetup`,
 outside the measured operation. Existing `ReadAllStrings`, `ReadRealWorldFiles`,
 and `SinglePassRead` benchmarks provide whole-file comparisons.
 

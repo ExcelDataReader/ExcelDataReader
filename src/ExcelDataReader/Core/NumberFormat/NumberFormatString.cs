@@ -12,8 +12,9 @@ public class NumberFormatString
     public NumberFormatString(string formatString)
     {
         Tokenizer tokenizer = new(formatString);
-        List<Section> sections = [];
         var isValid = true;
+        bool isDateTimeFormat = false;
+        bool isTimeSpanFormat = false;
         while (true)
         {
             var section = Parser.ParseSection(tokenizer, out var syntaxError);
@@ -24,7 +25,8 @@ public class NumberFormatString
             if (section == null)
                 break;
 
-            sections.Add(section);
+            isDateTimeFormat |= section.Type == SectionType.Date;
+            isTimeSpanFormat |= section.Type == SectionType.Duration;
         }
 
         IsValid = isValid;
@@ -32,13 +34,8 @@ public class NumberFormatString
 
         if (isValid)
         {
-            Sections = sections;
-            IsDateTimeFormat = GetFirstSection(SectionType.Date) != null;
-            IsTimeSpanFormat = GetFirstSection(SectionType.Duration) != null;
-        }
-        else
-        {
-            Sections = [];
+            IsDateTimeFormat = isDateTimeFormat;
+            IsTimeSpanFormat = isTimeSpanFormat;
         }
     }
 
@@ -53,7 +50,6 @@ public class NumberFormatString
         FormatString = formatString;
         IsDateTimeFormat = isDateTimeFormat;
         IsTimeSpanFormat = isTimeSpanFormat;
-        Sections = [];
     }
 
     /// <summary>
@@ -75,8 +71,4 @@ public class NumberFormatString
     /// Gets a value indicating whether the format represents a TimeSpan.
     /// </summary>
     public bool IsTimeSpanFormat { get; }
-
-    private IReadOnlyList<Section> Sections { get; }
-
-    private Section? GetFirstSection(SectionType type) => Sections.FirstOrDefault(section => section.Type == type);
 }

@@ -11,12 +11,32 @@ public class FormatReaderTest
     [TestCase("General", true, false, false)]
     [TestCase("\\A0", true, false, false)]
     [TestCase("\u03BB0", false, false, false)]
+    [TestCase("0.00", true, false, false)]
+    [TestCase("0.00E+00", true, false, false)]
+    [TestCase("0.00e-00", true, false, false)]
+    [TestCase("E+00", false, false, false)]
+    [TestCase("\"E+\"0.00", true, false, false)]
+    [TestCase("# ?/?", true, false, false)]
+    [TestCase("yyyy;[h]:mm", true, true, true)]
+    [TestCase("yyyy;General@", false, false, false)]
+    [TestCase("[h]:mm;General@", false, false, false)]
+    [TestCase("[>=1.25e+2]0.00", true, false, false)]
+    [TestCase("[<>-0.5]0.00", true, false, false)]
+    [TestCase("[Red]0.00;[blue][h]:mm", true, false, true)]
+    [TestCase("[]0.00", true, false, false)]
     public void FormatClassification_PreservesEndOfInputAndSections(string text, bool valid, bool date, bool duration)
     {
         var format = new NumberFormatString(text);
         Assert.That(format.IsValid, Is.EqualTo(valid));
         Assert.That(format.IsDateTimeFormat, Is.EqualTo(date));
         Assert.That(format.IsTimeSpanFormat, Is.EqualTo(duration));
+    }
+
+    [TestCase("[>=]0")]
+    [TestCase("[<.]0")]
+    public void EmptyConditionValue_PreservesFormatException(string text)
+    {
+        Assert.Throws<FormatException>(() => new NumberFormatString(text));
     }
 
     [Test]

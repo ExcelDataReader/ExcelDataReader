@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-namespace ExcelDataReader.Core.NumberFormat;
+﻿namespace ExcelDataReader.Core.NumberFormat;
 
 internal static class Parser
 {
@@ -295,9 +293,7 @@ internal static class Parser
 
             if (ReadConditionValue(tokenizer))
             {
-                var valueString = tokenizer.Substring(conditionPosition, tokenizer.Position - conditionPosition);
-
-                result = new Condition(op, double.Parse(valueString, CultureInfo.InvariantCulture));
+                result = new Condition(op, tokenizer.ParseDouble(conditionPosition, tokenizer.Position - conditionPosition));
                 return true;
             }
         }

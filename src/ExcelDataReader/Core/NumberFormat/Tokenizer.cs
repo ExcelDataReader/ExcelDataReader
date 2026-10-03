@@ -15,6 +15,15 @@ internal sealed class Tokenizer(string fmt)
         return _formatString.Substring(startIndex, length);
     }
 
+    public double ParseDouble(int startIndex, int length)
+    {
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        return double.Parse(_formatString.AsSpan(startIndex, length), NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
+#else
+        return double.Parse(Substring(startIndex, length), CultureInfo.InvariantCulture);
+#endif
+    }
+
     public int Peek(int offset = 0)
     {
         if (Position + offset >= _formatString.Length)
