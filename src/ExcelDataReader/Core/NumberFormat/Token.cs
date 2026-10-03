@@ -1,101 +1,55 @@
-﻿namespace ExcelDataReader.Core.NumberFormat;
+namespace ExcelDataReader.Core.NumberFormat;
 
-internal static class Token
+internal readonly record struct Token(int Start, int Length)
 {
-    public static bool IsExponent(string token)
+    public bool IsCharacter(string source, char value) => Length == 1 && source[Start] == value;
+
+    public bool IsExponent(string source) => EqualsIgnoreCase(source, "e+") || EqualsIgnoreCase(source, "e-");
+
+    public bool IsNumberLiteral(string source)
     {
-        return
-            string.Equals(token, "e+", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(token, "e-", StringComparison.OrdinalIgnoreCase);
+        char first = source[Start];
+        if (first is '_' or '\\' or '"' or '*')
+            return true;
+
+        return Length == 1 && first is '0' or '#' or '?' or '.' or ',' or '!' or '&' or '%' or '+' or '-' or '$' or '\u20AC' or '\u00A3' or
+            '1' or '2' or '3' or '4' or '5' or '6' or '7' or '8' or '9' or '{' or '}' or '(' or ')' or ' ';
     }
 
-    public static bool IsNumberLiteral(string token)
+    public bool IsPlaceholder(string source) => Length == 1 && source[Start] is '0' or '#' or '?';
+
+    public bool IsGeneral(string source) => EqualsIgnoreCase(source, "general");
+
+    public bool IsDatePart(string source)
     {
-        return
-            IsPlaceholder(token) ||
-            IsLiteral(token) ||
-            token == ".";
+        return StartsWithIgnoreCase(source, "y") ||
+            StartsWithIgnoreCase(source, "m") ||
+            StartsWithIgnoreCase(source, "d") ||
+            StartsWithIgnoreCase(source, "s") ||
+            StartsWithIgnoreCase(source, "h") ||
+            (StartsWithIgnoreCase(source, "g") && !IsGeneral(source)) ||
+            EqualsIgnoreCase(source, "am/pm") ||
+            EqualsIgnoreCase(source, "a/p") ||
+            IsDurationPart(source);
     }
 
-    public static bool IsPlaceholder(string token)
-    {
-        return token == "0" || token == "#" || token == "?";
-    }
+    public bool IsDurationPart(string source) =>
+        StartsWithIgnoreCase(source, "[h") || StartsWithIgnoreCase(source, "[m") || StartsWithIgnoreCase(source, "[s");
 
-    public static bool IsGeneral(string token)
-    {
-        return string.Equals(token, "general", StringComparison.OrdinalIgnoreCase);
-    }
+    public bool IsDigit09(string source) => Length == 1 && source[Start] is >= '0' and <= '9';
 
-    public static bool IsDatePart(string token)
-    {
-        return
-            token.StartsWith("y", StringComparison.OrdinalIgnoreCase) ||
-            token.StartsWith("m", StringComparison.OrdinalIgnoreCase) ||
-            token.StartsWith("d", StringComparison.OrdinalIgnoreCase) ||
-            token.StartsWith("s", StringComparison.OrdinalIgnoreCase) ||
-            token.StartsWith("h", StringComparison.OrdinalIgnoreCase) ||
-            (token.StartsWith("g", StringComparison.OrdinalIgnoreCase) && !IsGeneral(token)) ||
-            string.Equals(token, "am/pm", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(token, "a/p", StringComparison.OrdinalIgnoreCase) ||
-            IsDurationPart(token);
-    }
+    public bool IsDigit19(string source) => Length == 1 && source[Start] is >= '1' and <= '9';
 
-    public static bool IsDurationPart(string token)
-    {
-        return
-            token.StartsWith("[h", StringComparison.OrdinalIgnoreCase) ||
-            token.StartsWith("[m", StringComparison.OrdinalIgnoreCase) ||
-            token.StartsWith("[s", StringComparison.OrdinalIgnoreCase);
-    }
+    private bool EqualsIgnoreCase(string source, string value) => Length == value.Length && StartsWithIgnoreCase(source, value);
 
-    public static bool IsDigit09(string token)
+    private bool StartsWithIgnoreCase(string source, string value)
     {
-        return token == "0" || IsDigit19(token);
-    }
-
-    public static bool IsDigit19(string token) => token switch
-    {
-        "1" or "2" or "3" or "4" or "5" or "6" or "7" or "8" or "9" => true,
-        _ => false,
-    };
-    
-    private static bool IsLiteral(string token)
-    {
-        return
+        if (Length < value.Length)
+            return false;
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-            token.StartsWith('_') ||
-            token.StartsWith('\\') ||
-            token.StartsWith('\"') ||
-            token.StartsWith('*') ||
+        return source.AsSpan(Start, value.Length).Equals(value.AsSpan(), StringComparison.OrdinalIgnoreCase);
 #else
-            token.StartsWith("_", StringComparison.Ordinal) ||
-            token.StartsWith("\\", StringComparison.Ordinal) ||
-            token.StartsWith("\"", StringComparison.Ordinal) ||
-            token.StartsWith("*", StringComparison.Ordinal) ||
+        return string.Compare(source, Start, value, 0, value.Length, StringComparison.OrdinalIgnoreCase) == 0;
 #endif
-            token == "," ||
-            token == "!" ||
-            token == "&" ||
-            token == "%" ||
-            token == "+" ||
-            token == "-" ||
-            token == "$" ||
-            token == "€" ||
-            token == "£" ||
-            token == "1" ||
-            token == "2" ||
-            token == "3" ||
-            token == "4" ||
-            token == "5" ||
-            token == "6" ||
-            token == "7" ||
-            token == "8" ||
-            token == "9" ||
-            token == "{" ||
-            token == "}" ||
-            token == "(" ||
-            token == ")" ||
-            token == " ";
     }
 }

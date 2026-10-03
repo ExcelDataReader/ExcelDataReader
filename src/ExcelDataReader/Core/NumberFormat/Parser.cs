@@ -1,54 +1,43 @@
-﻿using System.Globalization;
+using System.Globalization;
 
 namespace ExcelDataReader.Core.NumberFormat;
 
 internal static class Parser
 {
-    public static Section? ParseSection(Tokenizer reader, out bool syntaxError)
+    public static SectionType? ParseSection(Tokenizer reader, List<Token> tokens, out bool syntaxError)
     {
         bool hasDateParts = false;
         bool hasDurationParts = false;
         bool hasGeneralPart = false;
         bool hasTextPart = false;
-        Condition? condition = null;
-        Color? color = null;
-        List<string> tokens = [];
+        tokens.Clear();
+        string source = reader.Source;
 
         syntaxError = false;
-        while (ReadToken(reader, out syntaxError) is { } token)
+        while (ReadToken(reader, out var token))
         {
-            if (token == ";")
+            if (token.IsCharacter(source, ';'))
                 break;
 
-            if (Token.IsDatePart(token))
+            if (token.IsDatePart(source))
             {
-                hasDateParts |= true;
-                hasDurationParts |= Token.IsDurationPart(token);
+                hasDateParts = true;
+                hasDurationParts |= token.IsDurationPart(source);
                 tokens.Add(token);
             }
-            else if (Token.IsGeneral(token))
+            else if (token.IsGeneral(source))
             {
-                hasGeneralPart |= true;
+                hasGeneralPart = true;
                 tokens.Add(token);
             }
-            else if (token == "@")
+            else if (token.IsCharacter(source, '@'))
             {
-                hasTextPart |= true;
+                hasTextPart = true;
                 tokens.Add(token);
             }
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-            else if (token.StartsWith('['))
-#else
-            else if (token.StartsWith("[", StringComparison.Ordinal))
-#endif
+            else if (source[token.Start] == '[')
             {
-                // Does not add to tokens. Absolute/elapsed time tokens
-                // also start with '[', but handled as date part above
-                var expression = token.Substring(1, token.Length - 2);
-                if (TryParseCondition(expression, out var parseCondition))
-                    condition = parseCondition;
-                else if (TryParseColor(expression, out var parseColor))
-                    color = parseColor;
+                ValidateCondition(reader, token.Start, token.Length);
             }
             else
             {
@@ -56,178 +45,91 @@ internal static class Parser
             }
         }
 
-        if (syntaxError || tokens.Count == 0)
-        {
+        if (tokens.Count == 0)
             return null;
-        }
 
-        if (
-            (hasDateParts && (hasGeneralPart || hasTextPart)) ||
+        if ((hasDateParts && (hasGeneralPart || hasTextPart)) ||
             (hasGeneralPart && (hasDateParts || hasTextPart)) ||
             (hasTextPart && (hasGeneralPart || hasDateParts)))
         {
-            // Cannot mix date, general and/or text parts
             syntaxError = true;
             return null;
         }
-
-        SectionType type;
-        FractionSection? fraction = null;
-        ExponentialSection? exponential = null;
-        DecimalSection? number = null;
-        List<string>? generalTextDateDuration = null;
 
         if (hasDateParts)
-        {
-            if (hasDurationParts)
-            {
-                type = SectionType.Duration;
-                generalTextDateDuration = tokens;
-            }
-            else
-            {
-                type = SectionType.Date;
-                ParseDate(tokens, out generalTextDateDuration);
-            }
-        }
-        else if (hasGeneralPart)
-        {
-            type = SectionType.General;
-            generalTextDateDuration = tokens;
-        }
-        else if (hasTextPart)
-        {
-            type = SectionType.Text;
-            generalTextDateDuration = tokens;
-        }
-        else if (FractionSection.TryParse(tokens, out fraction))
-        {
-            type = SectionType.Fraction;
-        }
-        else if (ExponentialSection.TryParse(tokens, out exponential))
-        {
-            type = SectionType.Exponential;
-        }
-        else if (DecimalSection.TryParse(tokens, out number))
-        {
-            type = SectionType.Number;
-        }
-        else
-        {
-            // Unable to parse format string
-            syntaxError = true;
-            return null;
-        }
+            return hasDurationParts ? SectionType.Duration : SectionType.Date;
+        if (hasGeneralPart)
+            return SectionType.General;
+        if (hasTextPart)
+            return SectionType.Text;
+        if (IsFraction(reader, tokens))
+            return SectionType.Fraction;
 
-        return new Section()
-        {
-            Type = type,
-            Color = color,
-            Condition = condition,
-            Fraction = fraction,
-            Exponential = exponential,
-            Number = number,
-            GeneralTextDateDurationParts = generalTextDateDuration
-        };
+        int numberTokens = CountNumberTokens(source, tokens);
+        if (numberTokens > 0 && numberTokens < tokens.Count && tokens[numberTokens].IsExponent(source))
+            return SectionType.Exponential;
+        if (numberTokens == tokens.Count)
+            return SectionType.Number;
+
+        syntaxError = true;
+        return null;
     }
 
-    /// <summary>
-    /// Parses as many placeholders and literals needed to format a number with optional decimals. 
-    /// Returns number of tokens parsed, or 0 if the tokens didn't form a number.
-    /// </summary>
-    internal static int ParseNumberTokens(List<string> tokens, int startPosition, out List<string>? beforeDecimal, out bool decimalSeparator, out List<string>? afterDecimal)
+    private static int CountNumberTokens(string source, List<Token> tokens)
     {
-        beforeDecimal = null;
-        afterDecimal = null;
-        decimalSeparator = false;
-
-        List<string> remainder = [];
-        var index = 0;
-        for (index = 0; index < tokens.Count; ++index)
+        int index = 0;
+        while (index < tokens.Count)
         {
             var token = tokens[index];
-            if (token == "." && beforeDecimal == null)
-            {
-                decimalSeparator = true;
-                beforeDecimal = tokens.GetRange(0, index); // TODO: why not remainder? has only valid tokens...
-
-                remainder = [];
-            }
-            else if (Token.IsNumberLiteral(token))
-            {
-                remainder.Add(token);
-            }
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-            else if (token.StartsWith('['))
-#else
-            else if (token.StartsWith("[", StringComparison.Ordinal))
-#endif
-            {
-                // ignore
-            }
-            else
-            {
+            if (!token.IsNumberLiteral(source) && source[token.Start] != '[')
                 break;
-            }
+            index++;
         }
 
-        if (remainder.Count > 0)
-        {
-            if (beforeDecimal != null)
-            {
-                afterDecimal = remainder;
-            }
-            else
-            {
-                beforeDecimal = remainder;
-            }
-        }
-        
         return index;
     }
 
-    private static void ParseDate(List<string> tokens, out List<string> result)
+    private static bool IsFraction(Tokenizer reader, List<Token> tokens)
     {
-        // if tokens form .0 through .000.., combine to single subsecond token
-        result = [];
-        for (var i = 0; i < tokens.Count; i++)
-        {
-            var token = tokens[i];
-            if (token == ".")
-            {
-                var zeros = 0;
-                while (i + 1 < tokens.Count && tokens[i + 1] == "0")
-                {
-                    i++;
-                    zeros++;
-                }
+        string source = reader.Source;
+        int index = 0;
+        while (index < tokens.Count && !tokens[index].IsCharacter(source, '/'))
+            index++;
+        if (index == tokens.Count)
+            return false;
 
-                if (zeros > 0)
-                    result.Add("." + new string('0', zeros));
-                else
-                    result.Add(".");
-            }
-            else
+        index++;
+        while (index < tokens.Count)
+        {
+            var token = tokens[index];
+            if (token.IsPlaceholder(source))
+                return true;
+            if (token.IsDigit19(source))
             {
-                result.Add(token);
+                int first = index;
+                while (index < tokens.Count && tokens[index].IsDigit09(source))
+                    index++;
+
+                // Constant denominators are validated even though their value is not needed.
+                reader.ParseInt32(tokens, first, index - first);
+                return true;
             }
+
+            index++;
         }
+
+        return false;
     }
 
-    private static string? ReadToken(Tokenizer reader, out bool syntaxError)
+    private static bool ReadToken(Tokenizer reader, out Token token)
     {
-        var offset = reader.Position;
-        if (
-            ReadLiteral(reader) ||
+        int offset = reader.Position;
+        if (ReadLiteral(reader) ||
             reader.ReadEnclosed('[', ']') ||
-
-            // Symbols
-            reader.ReadOneOf("#?,!&%+-$€£0123456789{}():;/.@ ") ||
+            reader.ReadOneOf("#?,!&%+-$\u20AC\u00A30123456789{}():;/.@ ") ||
             reader.ReadString("e+", true) ||
             reader.ReadString("e-", true) ||
             reader.ReadString("General", true) ||
-
-            // Date
             reader.ReadString("am/pm", true) ||
             reader.ReadString("a/p", true) ||
             reader.ReadOneOrMore('y') ||
@@ -243,120 +145,78 @@ internal static class Parser
             reader.ReadOneOrMore('g') ||
             reader.ReadOneOrMore('G'))
         {
-            syntaxError = false;
-            var length = reader.Position - offset;
-            return reader.Substring(offset, length);
+            token = new Token(offset, reader.Position - offset);
+            return true;
         }
 
-        // Treat any unrecognised character as an implicit literal (single-char token).
-        // This matches Excel behaviour: characters that are not format metacharacters
-        // are passed through as literals (e.g. unquoted CJK/Thai characters in
-        // locale-specific built-in format strings such as [$-411]yyyy"年"m"月").
+        // Unrecognized characters remain implicit one-character tokens, not syntax errors.
         if (reader.Position < reader.Length)
         {
-            reader.Advance(1);
-            syntaxError = false;
-            var length = reader.Position - offset;
-            return reader.Substring(offset, length);
+            reader.Advance();
+            token = new Token(offset, reader.Position - offset);
+            return true;
         }
 
-        syntaxError = false;
-        return null;
+        token = default;
+        return false;
     }
 
     private static bool ReadLiteral(Tokenizer reader)
     {
-        if (reader.Peek() == '\\' || reader.Peek() == '*' || reader.Peek() == '_')
+        if (reader.Peek() is '\\' or '*' or '_')
         {
             reader.Advance(2);
             return true;
         }
-        else if (reader.ReadEnclosed('"', '"'))
-        {
-            return true;
-        }
 
-        return false;
+        return reader.ReadEnclosed('"', '"');
     }
 
-    private static bool TryParseCondition(string token, out Condition? result)
+    private static void ValidateCondition(Tokenizer reader, int startIndex, int length)
     {
-        var tokenizer = new Tokenizer(token);
+        // An unmatched '[' was previously passed to Substring with a negative length.
+#if NET8_0_OR_GREATER
+        ArgumentOutOfRangeException.ThrowIfLessThan(length, 2);
+#else
+        if (length < 2)
+            throw new ArgumentOutOfRangeException(nameof(length));
+#endif
 
-        if (tokenizer.ReadString("<=") ||
-            tokenizer.ReadString("<>") ||
-            tokenizer.ReadString("<") ||
-            tokenizer.ReadString(">=") ||
-            tokenizer.ReadString(">") ||
-            tokenizer.ReadString("="))
+        string source = reader.Source;
+        int position = startIndex + 1;
+        int end = startIndex + length - 1;
+        if (position == end || source[position] is not ('<' or '>' or '='))
+            return;
+
+        char first = source[position++];
+        if (position < end && ((first is '<' or '>' && source[position] == '=') || (first == '<' && source[position] == '>')))
+            position++;
+
+        int start = position;
+        if (position < end && source[position] == '-')
+            position++;
+        ReadDigits(source, ref position, end);
+        if (position < end && source[position] == '.')
         {
-            var conditionPosition = tokenizer.Position;
-            var op = tokenizer.Substring(0, conditionPosition);
-
-            if (ReadConditionValue(tokenizer))
-            {
-                var valueString = tokenizer.Substring(conditionPosition, tokenizer.Position - conditionPosition);
-
-                result = new Condition(op, double.Parse(valueString, CultureInfo.InvariantCulture));
-                return true;
-            }
+            position++;
+            ReadDigits(source, ref position, end);
         }
 
-        result = null;
-        return false;
+        if (position + 1 < end && char.ToLower(source[position], CultureInfo.InvariantCulture) == 'e' && source[position + 1] is '+' or '-')
+        {
+            position += 2;
+            int exponentStart = position;
+            ReadDigits(source, ref position, end);
+            if (position == exponentStart)
+                return;
+        }
+
+        reader.ParseDouble(start, position - start);
     }
 
-    private static bool ReadConditionValue(Tokenizer tokenizer)
+    private static void ReadDigits(string source, ref int position, int end)
     {
-        // NFPartCondNum = [ASCII-HYPHEN-MINUS] NFPartIntNum [INTL-CHAR-DECIMAL-SEP NFPartIntNum] [NFPartExponential NFPartIntNum]
-        tokenizer.ReadString("-");
-        while (tokenizer.ReadOneOf("0123456789"))
-        {
-        }
-
-        if (tokenizer.ReadString("."))
-        {
-            while (tokenizer.ReadOneOf("0123456789"))
-            {
-            }
-        }
-
-        if (tokenizer.ReadString("e+", true) || tokenizer.ReadString("e-", true))
-        {
-            if (tokenizer.ReadOneOf("0123456789"))
-            {
-                while (tokenizer.ReadOneOf("0123456789"))
-                {
-                }
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static bool TryParseColor(string token, out Color? color)
-    {
-        // TODO: Color1..59
-        var tokenizer = new Tokenizer(token);
-        if (
-            tokenizer.ReadString("black", true) ||
-            tokenizer.ReadString("blue", true) ||
-            tokenizer.ReadString("cyan", true) ||
-            tokenizer.ReadString("green", true) ||
-            tokenizer.ReadString("magenta", true) ||
-            tokenizer.ReadString("red", true) ||
-            tokenizer.ReadString("white", true) ||
-            tokenizer.ReadString("yellow", true))
-        {
-            color = new Color(tokenizer.Substring(0, tokenizer.Position));
-            return true;
-        }
-
-        color = null;
-        return false;
+        while (position < end && source[position] is >= '0' and <= '9')
+            position++;
     }
 }

@@ -4,6 +4,80 @@ namespace ExcelDataReader.Tests;
 
 public class FormatReaderTest
 {
+    [TestCase("", true, false, false)]
+    [TestCase("0", true, false, false)]
+    [TestCase("[>=100]0.00;[Blue][h]:mm:ss", true, false, true)]
+    [TestCase("yyyy-mm-dd hh:mm:ss.000", true, true, false)]
+    [TestCase("General", true, false, false)]
+    [TestCase("\\A0", true, false, false)]
+    [TestCase("\u03BB0", false, false, false)]
+    [TestCase("0.00", true, false, false)]
+    [TestCase("0.00E+00", true, false, false)]
+    [TestCase("0.00e-00", true, false, false)]
+    [TestCase("E+00", false, false, false)]
+    [TestCase("\"E+\"0.00", true, false, false)]
+    [TestCase("# ?/?", true, false, false)]
+    [TestCase("yyyy;[h]:mm", true, true, true)]
+    [TestCase("yyyy;General@", false, false, false)]
+    [TestCase("[h]:mm;General@", false, false, false)]
+    [TestCase("[>=1.25e+2]0.00", true, false, false)]
+    [TestCase("[<>-0.5]0.00", true, false, false)]
+    [TestCase("[Red]0.00;[blue][h]:mm", true, false, true)]
+    [TestCase("[]0.00", true, false, false)]
+    [TestCase(";yyyy", true, false, false)]
+    [TestCase("0;;yyyy", true, false, false)]
+    [TestCase("0;[];yyyy", true, false, false)]
+    [TestCase("0..0", true, false, false)]
+    [TestCase("\"unterminated", true, true, false)]
+    [TestCase("\\", true, false, false)]
+    [TestCase("*", true, false, false)]
+    [TestCase("_", true, false, false)]
+    [TestCase("/0", true, false, false)]
+    [TestCase("/2147483647", true, false, false)]
+    [TestCase("0/12?0x", true, false, false)]
+    [TestCase("0/1[Red]2", true, false, false)]
+    [TestCase("0/2[>1]147483647", true, false, false)]
+    [TestCase("0/1/2", true, false, false)]
+    [TestCase("0/x", false, false, false)]
+    [TestCase("0E+", true, false, false)]
+    [TestCase("0E+x", true, false, false)]
+    [TestCase("[>1e+]0", true, false, false)]
+    [TestCase("[>1e+2junk]0", true, false, false)]
+    [TestCase("[Redjunk]0", true, false, false)]
+    [TestCase("\uD800", false, false, false)]
+    [TestCase("\"\uD800\"", true, false, false)]
+    public void FormatClassification_PreservesEndOfInputAndSections(string text, bool valid, bool date, bool duration)
+    {
+        var format = new NumberFormatString(text);
+        Assert.That(format.IsValid, Is.EqualTo(valid));
+        Assert.That(format.IsDateTimeFormat, Is.EqualTo(date));
+        Assert.That(format.IsTimeSpanFormat, Is.EqualTo(duration));
+    }
+
+    [TestCase("[>=]0")]
+    [TestCase("[<.]0")]
+    public void EmptyConditionValue_PreservesFormatException(string text)
+    {
+        Assert.Throws<FormatException>(() => new NumberFormatString(text));
+    }
+
+    [TestCase("[")]
+    [TestCase("[unterminated")]
+    public void UnclosedBracketPreservesArgumentOutOfRangeException(string text)
+    {
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => new NumberFormatString(text));
+        Assert.That(exception.ParamName, Is.EqualTo("length"));
+    }
+
+    [TestCase("/2147483648")]
+    [TestCase("0/999999999999999999999999")]
+    [TestCase("0/2[Red]147483648")]
+    [TestCase("0/9[Red]9999999999")]
+    public void ConstantFractionDenominatorPreservesOverflowException(string text)
+    {
+        Assert.Throws<OverflowException>(() => new NumberFormatString(text));
+    }
+
     [Test]
     public void NumberFormatTestIsDateFormatString()
     {

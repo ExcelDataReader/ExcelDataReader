@@ -709,7 +709,8 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             return string.Empty;
         }
 
-        var result = new StringBuilder();
+        string? result = null;
+        StringBuilder? builder = null;
         var depth = reader.Depth;
         while (reader.Read())
         {
@@ -718,11 +719,14 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
             if (reader.NodeType is XmlNodeType.Text or XmlNodeType.CDATA or XmlNodeType.SignificantWhitespace or XmlNodeType.Whitespace)
             {
-                result.Append(reader.Value);
+                if (result == null)
+                    result = reader.Value;
+                else
+                    (builder ??= new StringBuilder(result)).Append(reader.Value);
             }
         }
 
-        return result.ToString();
+        return builder?.ToString() ?? result ?? string.Empty;
     }
 
     private static bool TryParseSpreadsheetDateTime(string value, out SpreadsheetXmlDateTime dateTime)

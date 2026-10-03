@@ -20,6 +20,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\ExcelDataReader\ExcelDataReader.csproj" />
+    <Compile Include="..\ExcelDataReader.Tests\AllocationTestWorkbook.cs" Link="AllocationTestWorkbook.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+    <Reference Include="System.IO.Compression" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\TestData\10x10000.xlsx" />

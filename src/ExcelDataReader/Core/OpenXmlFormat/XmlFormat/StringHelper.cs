@@ -18,17 +18,18 @@ internal static class StringHelper
             return string.Empty;
         }
         
-        StringBuilder sb = new();
+        string? result = null;
+        StringBuilder? sb = null;
         while (!reader.EOF)
         {
             if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
             {
                 // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
-                sb.Append(ReadElementContent(reader));
+                AppendFragment(ReadElementContent(reader), ref result, ref sb);
             }
             else if (reader.IsStartElement(ElementR, nsSpreadsheetMl))
             {
-                ReadRichTextRun(reader, sb, nsSpreadsheetMl);
+                ReadRichTextRun(reader, ref result, ref sb, nsSpreadsheetMl);
             }
             else if (!XmlReaderHelper.SkipContent(reader))
             {
@@ -36,10 +37,21 @@ internal static class StringHelper
             }
         }
 
-        return sb.ToString();
+        return sb?.ToString() ?? result ?? string.Empty;
     }
 
-    private static void ReadRichTextRun(XmlReader reader, StringBuilder sb, string nsSpreadsheetMl)
+    private static void AppendFragment(string fragment, ref string? result, ref StringBuilder? sb)
+    {
+        if (fragment.Length == 0)
+            return;
+
+        if (result == null)
+            result = fragment;
+        else
+            (sb ??= new StringBuilder(result)).Append(fragment);
+    }
+
+    private static void ReadRichTextRun(XmlReader reader, ref string? result, ref StringBuilder? sb, string nsSpreadsheetMl)
     {
         if (!XmlReaderHelper.ReadFirstContent(reader))
         {
@@ -50,7 +62,7 @@ internal static class StringHelper
         {
             if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
             {
-                sb.Append(ReadElementContent(reader));
+                AppendFragment(ReadElementContent(reader), ref result, ref sb);
             }
             else if (!XmlReaderHelper.SkipContent(reader))
             {
