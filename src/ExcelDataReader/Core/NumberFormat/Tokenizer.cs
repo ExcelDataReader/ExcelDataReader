@@ -10,17 +10,43 @@ internal sealed class Tokenizer(string fmt)
 
     public int Length => _formatString.Length;
 
-    public string Substring(int startIndex, int length)
-    {
-        return _formatString.Substring(startIndex, length);
-    }
+    public string Source => _formatString;
 
     public double ParseDouble(int startIndex, int length)
     {
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
         return double.Parse(_formatString.AsSpan(startIndex, length), NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
 #else
-        return double.Parse(Substring(startIndex, length), CultureInfo.InvariantCulture);
+        return double.Parse(_formatString.Substring(startIndex, length), CultureInfo.InvariantCulture);
+#endif
+    }
+
+    public int ParseInt32(List<Token> tokens, int first, int count)
+    {
+        int start = tokens[first].Start;
+        int length = tokens[first + count - 1].Start + 1 - start;
+        if (length == count)
+        {
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            return int.Parse(_formatString.AsSpan(start, length), NumberStyles.Integer, CultureInfo.InvariantCulture);
+#else
+            return int.Parse(_formatString.Substring(start, length), CultureInfo.InvariantCulture);
+#endif
+        }
+
+        // Directives can separate denominator digits. The first digit is nonzero.
+        if (count > 10)
+            throw new OverflowException();
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        Span<char> digits = stackalloc char[10];
+        for (int i = 0; i < count; i++)
+            digits[i] = _formatString[tokens[first + i].Start];
+        return int.Parse(digits[..count], NumberStyles.Integer, CultureInfo.InvariantCulture);
+#else
+        var digits = new char[count];
+        for (int i = 0; i < count; i++)
+            digits[i] = _formatString[tokens[first + i].Start];
+        return int.Parse(new string(digits), CultureInfo.InvariantCulture);
 #endif
     }
 
@@ -113,5 +139,13 @@ internal sealed class Tokenizer(string fmt)
         return 0;
     }
 
-    private bool PeekOneOf(int offset, string s) => s.Any(c => Peek(offset) == c);
+    private bool PeekOneOf(int offset, string s)
+    {
+        int c = Peek(offset);
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        return c >= 0 && s.Contains((char)c);
+#else
+        return c >= 0 && s.IndexOf((char)c) >= 0;
+#endif
+    }
 }

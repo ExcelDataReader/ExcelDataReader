@@ -7,10 +7,16 @@ Both use `MemoryDiagnoser`; workbook generation happens in `GlobalSetup`,
 outside the measured operation. Existing `ReadAllStrings`, `ReadRealWorldFiles`,
 and `SinglePassRead` benchmarks provide whole-file comparisons.
 
+`ParseLongFormats` covers long digit/date patterns, repeated bracket directives,
+and quoted Unicode text. The format parser stores temporary source ranges rather
+than token strings and only produces validity/date/duration classification.
+Modern targets validate numeric slices with spans; older targets retain numeric
+string fallbacks where the corresponding span APIs are unavailable.
+
 Run the allocation benchmarks on net10.0:
 
 ```powershell
-dotnet run --project src\ExcelDataReader.Benchmarks\ExcelDataReader.Benchmarks.csproj -c Release -f net10.0 -- --filter "*ReadTextFragments*" "*ParseCustomFormats*" --exporters json
+dotnet run --project src\ExcelDataReader.Benchmarks\ExcelDataReader.Benchmarks.csproj -c Release -f net10.0 -- --filter "*ReadTextFragments*" "*ParseCustomFormats*" "*ParseLongFormats*" --exporters json
 ```
 
 The net10.0 host uses the library's net8.0 build through normal project-reference

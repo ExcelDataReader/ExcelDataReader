@@ -12,12 +12,13 @@ public class NumberFormatString
     public NumberFormatString(string formatString)
     {
         Tokenizer tokenizer = new(formatString);
+        List<Token> tokens = [];
         var isValid = true;
         bool isDateTimeFormat = false;
         bool isTimeSpanFormat = false;
         while (true)
         {
-            var section = Parser.ParseSection(tokenizer, out var syntaxError);
+            var section = Parser.ParseSection(tokenizer, tokens, out var syntaxError);
 
             if (syntaxError)
                 isValid = false;
@@ -25,8 +26,8 @@ public class NumberFormatString
             if (section == null)
                 break;
 
-            isDateTimeFormat |= section.Type == SectionType.Date;
-            isTimeSpanFormat |= section.Type == SectionType.Duration;
+            isDateTimeFormat |= section == SectionType.Date;
+            isTimeSpanFormat |= section == SectionType.Duration;
         }
 
         IsValid = isValid;
