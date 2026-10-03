@@ -30,6 +30,12 @@ public class ReadEncryptedFiles
     }
 
     [Benchmark]
+    public void OpenReader()
+    {
+        using var reader = ExcelReaderFactory.CreateReader(new MemoryStream(_data, writable: false), _configuration);
+    }
+
+    [Benchmark]
     public int ReadAllValues()
     {
         using var reader = ExcelReaderFactory.CreateReader(new MemoryStream(_data, writable: false), _configuration);
