@@ -1,3 +1,5 @@
+using ExcelDataReader.TestFixtures;
+
 namespace ExcelDataReader.Tests;
 
 [TestFixture]
@@ -6,6 +8,39 @@ public class ExcelSpreadsheetXmlReaderTest : ExcelSpreadsheetContractTestBase
     protected override DateTime Issue82_TodayDate => new(2013, 4, 19);
 
     protected override bool SupportsCodeName => false;
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void DataTextFragments_PreserveContentAndReaderPosition(bool singlePass)
+    {
+        string[] data =
+        [
+            "<Data ss:Type=\"String\">single</Data>",
+            "<Data ss:Type=\"String\"> \t\npreserved\r </Data>",
+            "<Data ss:Type=\"String\">one<![CDATA[ two]]><B> three</B> four</Data>",
+            "<Data ss:Type=\"String\"/>",
+            "<Data ss:Type=\"Number\">12<![CDATA[.5]]></Data>",
+            "<Data ss:Type=\"Boolean\">1</Data>",
+            "<Data ss:Type=\"DateTime\">2026-01-02T03:04:05</Data>",
+            "<Data ss:Type=\"Error\">#DIV/0!</Data>",
+            "<Data ss:Type=\"String\">" + new string('\u03BB', 10000) + "</Data>",
+            "<Data ss:Type=\"String\">last</Data>",
+        ];
+        object[] expected = ["single", " \t\npreserved\n ", "one two three four", string.Empty,
+            12.5D, true, new DateTime(2026, 1, 2, 3, 4, 5), DBNull.Value, new string('\u03BB', 10000), "last"];
+        using var reader = ExcelReaderFactory.CreateReader(
+            new MemoryStream(AllocationTestWorkbook.CreateSpreadsheetXml(data)),
+            new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        foreach (object value in expected)
+        {
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetValue(0), Is.EqualTo(value));
+            Assert.That(reader.GetFieldType(0), Is.EqualTo(value.GetType()));
+            Assert.That(reader.GetCellError(0), Is.EqualTo(value is DBNull ? CellError.DIV0 : (CellError?)null));
+        }
+
+        Assert.That(reader.Read(), Is.False);
+    }
 
     [Test]
     public void ReadSpreadsheetXml_LeadingWhitespaceBeforeDeclaration_IsTolerated()

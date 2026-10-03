@@ -4,6 +4,21 @@ namespace ExcelDataReader.Tests;
 
 public class FormatReaderTest
 {
+    [TestCase("", true, false, false)]
+    [TestCase("0", true, false, false)]
+    [TestCase("[>=100]0.00;[Blue][h]:mm:ss", true, false, true)]
+    [TestCase("yyyy-mm-dd hh:mm:ss.000", true, true, false)]
+    [TestCase("General", true, false, false)]
+    [TestCase("\\A0", true, false, false)]
+    [TestCase("\u03BB0", false, false, false)]
+    public void FormatClassification_PreservesEndOfInputAndSections(string text, bool valid, bool date, bool duration)
+    {
+        var format = new NumberFormatString(text);
+        Assert.That(format.IsValid, Is.EqualTo(valid));
+        Assert.That(format.IsDateTimeFormat, Is.EqualTo(date));
+        Assert.That(format.IsTimeSpanFormat, Is.EqualTo(duration));
+    }
+
     [Test]
     public void NumberFormatTestIsDateFormatString()
     {

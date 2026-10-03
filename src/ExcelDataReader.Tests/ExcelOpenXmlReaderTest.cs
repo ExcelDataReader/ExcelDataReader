@@ -1,4 +1,8 @@
 using System.Data;
+using System.Globalization;
+using System.Security;
+using System.Text.RegularExpressions;
+using ExcelDataReader.TestFixtures;
 
 namespace ExcelDataReader.Tests;
 
@@ -6,6 +10,79 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
 {
     /// <inheritdoc />
     protected override DateTime Issue82_TodayDate => new(2013, 4, 19);
+
+    [TestCase(false, false)]
+    [TestCase(false, true)]
+    [TestCase(true, false)]
+    [TestCase(true, true)]
+    public void TextFragments_PreserveContentAndReaderPosition(bool shared, bool singlePass)
+    {
+        string[] items =
+        [
+            "<t>single</t>",
+            "<t> \t\ntrimmed\r </t>",
+            "<t xml:space=\"preserve\"> \t\npreserved\r </t>",
+            "<t/><t>one</t><t/><t>two</t><t/>",
+            "<r><rPr><b/></rPr><t>first</t></r><rPh><t>ignored</t></rPh><r><t xml:space=\"preserve\"> second</t></r>",
+            "<t>_x00</t><r><t>41_</t></r>",
+            "<t/><r><t/></r>",
+            "<t>" + new string('\u03BB', 10000) + "</t>",
+            "<t>last</t>",
+        ];
+        object[] expected = ["single", "trimmed", " \t\npreserved\n ", "onetwo", "first second", "A",
+            shared ? string.Empty : DBNull.Value, new string('\u03BB', 10000), "last"];
+        using var reader = ExcelReaderFactory.CreateReader(
+            new MemoryStream(AllocationTestWorkbook.CreateXlsx(items, shared)),
+            new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        foreach (object value in expected)
+        {
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetValue(0), Is.EqualTo(value));
+            Assert.That(reader.GetFieldType(0), Is.EqualTo(value.GetType()));
+        }
+
+        Assert.That(reader.Read(), Is.False);
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void EscapeDecoding_MatchesOriginalRegex(bool shared)
+    {
+        string[] seeds =
+        [
+            string.Empty, "ordinary", "_x0000_", "_xD800_", "_xDC00_", "_xFFFF_", "_x0041__x0042_",
+            "_x005F_x0041_", "_x005F__x0041_", "_x00af_", "_X0041_", "_x123_", "_xGGGG_",
+            "_x0041_x0042_", "_x_x0041_", new string('a', 10000) + "_x0041_" + new string('b', 10000),
+        ];
+        var values = new List<string>(seeds);
+        foreach (string left in seeds)
+        {
+            foreach (string right in seeds.Take(15))
+                values.Add(left + right);
+        }
+
+        var random = new Random(741);
+        const string alphabet = "_x0123456789ABCDEFabcdefXYZ";
+        for (int i = 0; i < 1000; i++)
+        {
+            var chars = new char[random.Next(1, 80)];
+            for (int j = 0; j < chars.Length; j++)
+                chars[j] = alphabet[random.Next(alphabet.Length)];
+            values.Add(new string(chars) + seeds[i % seeds.Length]);
+        }
+
+        var regex = new Regex("_x([0-9A-F]{4,4})_");
+        var items = values.Select(value => "<t xml:space=\"preserve\">" + SecurityElement.Escape(value) + "</t>").ToArray();
+        using var reader = ExcelReaderFactory.CreateReader(new MemoryStream(AllocationTestWorkbook.CreateXlsx(items, shared)));
+        foreach (string value in values)
+        {
+            Assert.That(reader.Read(), Is.True);
+            string expected = regex.Replace(value, match => ((char)uint.Parse(match.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString());
+            Assert.That(reader.GetValue(0), Is.EqualTo(value.Length == 0 && !shared ? DBNull.Value : expected), value);
+        }
+
+        Assert.That(reader.Read(), Is.False);
+    }
 
     [Test]
     public void Issue764_AbsoluteWorkbookTarget()

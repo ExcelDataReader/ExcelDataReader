@@ -8,9 +8,9 @@ namespace ExcelDataReader.Core;
 /// <summary>
 /// Helpers class.
 /// </summary>
-internal static partial class Helpers
+internal static class Helpers
 {
-    #if !NET8_0_OR_GREATER
+    #if !(NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER)
     private static readonly Regex EscapeRegexInstance = new("_x([0-9A-F]{4,4})_", RegexOptions.Compiled);
     #endif
 
@@ -30,12 +30,16 @@ internal static partial class Helpers
 
     public static string ConvertEscapeChars(string input)
     {
-        // Fast rejection: the escape pattern always starts with "_x". For typical
-        // spreadsheet strings this short-circuits before the regex engine is entered.
-        if (input.IndexOf("_x", StringComparison.Ordinal) < 0)
+        // Fast rejection: avoid scanning escape candidates for typical spreadsheet strings.
+        int index = input.IndexOf("_x", StringComparison.Ordinal);
+        if (index < 0)
             return input;
 
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        return DecodeEscapeChars(input, index);
+#else
         return EscapeRegex().Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString());
+#endif
     }
 
     public static object ConvertFromOATime(double value, bool date1904)
@@ -62,6 +66,75 @@ internal static partial class Helpers
         return value.Length > 0 && value[0] == start;
 #endif
     }
+
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+    private static string DecodeEscapeChars(string input, int index)
+    {
+        int firstMatch = -1;
+        int matches = 0;
+        while (index >= 0)
+        {
+            bool valid = TryReadEscape(input, index, out _);
+            if (valid)
+            {
+                if (firstMatch < 0)
+                    firstMatch = index;
+                matches++;
+            }
+
+            index = input.IndexOf("_x", index + (valid ? 7 : 2), StringComparison.Ordinal);
+        }
+
+        if (matches == 0)
+            return input;
+
+        return string.Create(input.Length - matches * 6, (Input: input, FirstMatch: firstMatch), static (destination, state) =>
+        {
+            int start = 0;
+            int written = 0;
+            int index = state.FirstMatch;
+            while (index >= 0)
+            {
+                bool valid = TryReadEscape(state.Input, index, out char value);
+                if (valid)
+                {
+                    state.Input.AsSpan(start, index - start).CopyTo(destination[written..]);
+                    written += index - start;
+                    destination[written++] = value;
+                    start = index + 7;
+                }
+
+                index = state.Input.IndexOf("_x", index + (valid ? 7 : 2), StringComparison.Ordinal);
+            }
+
+            state.Input.AsSpan(start).CopyTo(destination[written..]);
+        });
+    }
+
+    private static bool TryReadEscape(string input, int index, out char value)
+    {
+        value = default;
+        if (index > input.Length - 7 || input[index + 6] != '_')
+            return false;
+
+        int code = 0;
+        for (int i = index + 2; i < index + 6; i++)
+        {
+            int digit = input[i] switch
+            {
+                >= '0' and <= '9' => input[i] - '0',
+                >= 'A' and <= 'F' => input[i] - 'A' + 10,
+                _ => -1,
+            };
+            if (digit < 0)
+                return false;
+            code = (code << 4) | digit;
+        }
+
+        value = (char)code;
+        return true;
+    }
+#endif
     
     /// <summary>
     /// Convert a double from Excel to an OA DateTime double. 
@@ -90,10 +163,7 @@ internal static partial class Helpers
         return value is > DateTimeHelper.OADateMinAsDouble and < DateTimeHelper.OADateMaxAsDouble;
     }
     
-#if NET8_0_OR_GREATER
-    [GeneratedRegex("_x([0-9A-F]{4,4})_")]
-    private static partial Regex EscapeRegex();
-#else
+#if !(NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER)
     private static Regex EscapeRegex() => EscapeRegexInstance;
 #endif
 }
