@@ -124,7 +124,7 @@ internal sealed partial class ZipWorker : IDisposable
                 {
                     case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument":
                     case "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument":
-                        return target;
+                        return target == null ? null : ResolvePath(null, target);
                 }
             }
 

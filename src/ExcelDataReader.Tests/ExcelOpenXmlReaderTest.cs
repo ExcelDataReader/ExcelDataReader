@@ -7,6 +7,19 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
     /// <inheritdoc />
     protected override DateTime Issue82_TodayDate => new(2013, 4, 19);
 
+    [Test]
+    public void Issue764_AbsoluteWorkbookTarget()
+    {
+        using var stream = Configuration.GetTestWorkbook("Issue764_AbsoluteWorkbookTarget.xlsx");
+        using var reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+
+        int rowCount = 0;
+        while (reader.Read())
+            rowCount++;
+
+        Assert.That(rowCount, Is.GreaterThan(0));
+    }
+
     /// <summary>
     /// Regression test for https://github.com/ExcelDataReader/ExcelDataReader/issues/741.
     /// The static XmlNameTable in ZipWorker is shared across all XmlReader instances.
