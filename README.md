@@ -149,7 +149,7 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
     // pass used to determine FieldCount and RowCount. When true, RowCount
     // throws InvalidOperationException and FieldCount grows dynamically as
     // rows are read. Default: false
-    // (XLS and XLSX/XLSB only, has no effect on CSV)
+    // (XLS, XLSX/XLSB, and SpreadsheetML only, has no effect on CSV)
     SinglePassMode = false,
 
     // Gets or sets an escape character for CSV quoted fields. When set, this

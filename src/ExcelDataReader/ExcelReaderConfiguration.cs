@@ -48,7 +48,7 @@ public class ExcelReaderConfiguration
     /// <summary>
     /// Gets or sets a value indicating whether to skip the initial full-scan pass used to determine FieldCount and RowCount.
     /// When true, RowCount throws InvalidOperationException and FieldCount reflects the maximum column index seen so far,
-    /// growing dynamically as rows are read. Default: false (XLS and XLSX/XLSB only, has no effect on CSV).
+    /// growing dynamically as rows are read. Default: false (XLS, XLSX/XLSB, and SpreadsheetML only, has no effect on CSV).
     /// </summary>
     public bool SinglePassMode { get; set; }
 

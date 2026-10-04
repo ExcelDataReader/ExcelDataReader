@@ -12,9 +12,8 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     private const string SpreadsheetNamespace = "urn:schemas-microsoft-com:office:spreadsheet";
     private const string ExcelNamespace = "urn:schemas-microsoft-com:office:excel";
 
-    private readonly List<Row> _rows;
-    private readonly Stream? _stream;
-    private readonly IReadOnlyDictionary<string, ExtendedFormat>? _stylesById;
+    private readonly Stream _stream;
+    private readonly IReadOnlyDictionary<string, ExtendedFormat> _stylesById;
     private readonly IReadOnlyDictionary<int, NumberFormatString>? _formats;
     private readonly int _worksheetIndex;
 
@@ -24,16 +23,15 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         string visibleState,
         string? codeName,
         HeaderFooter? headerFooter,
-        List<Row> rows,
         List<Column> columnWidths,
         CellRange[] mergeCells,
         int fieldCount,
         int rowCount,
         CellRange? dimension,
-        Stream? stream = null,
-        IReadOnlyDictionary<string, ExtendedFormat>? stylesById = null,
-        IReadOnlyDictionary<int, NumberFormatString>? formats = null,
-        int worksheetIndex = -1)
+        Stream stream,
+        IReadOnlyDictionary<string, ExtendedFormat> stylesById,
+        IReadOnlyDictionary<int, NumberFormatString>? formats,
+        int worksheetIndex)
     {
         Name = name;
 #pragma warning disable CS8601 // Intentional: CodeName can be null for sheets without x:CodeName, matching the pattern of CsvWorksheet.CodeName
@@ -41,7 +39,6 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 #pragma warning restore CS8601
         VisibleState = visibleState;
         HeaderFooter = headerFooter;
-        _rows = rows;
         ColumnWidths = columnWidths;
         MergeCells = mergeCells;
         FieldCount = fieldCount;
@@ -93,7 +90,6 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 headerFooter,
                 [],
                 [],
-                [],
                 0,
                 0,
                 null,
@@ -117,87 +113,14 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             currentWorksheetIndex++;
             if (currentWorksheetIndex == worksheetIndex)
             {
-                return Parse(workbookReader.ReadSubtree(), stylesById, formats);
+                return Scan(workbookReader.ReadSubtree(), stream, worksheetIndex, stylesById, formats);
             }
         }
 
         throw new XmlException("Invalid SpreadsheetML worksheet.");
     }
 
-    public static SpreadsheetXmlWorksheet Parse(XmlReader worksheetReader, IReadOnlyDictionary<string, ExtendedFormat> stylesById, IReadOnlyDictionary<int, NumberFormatString>? formats = null)
-    {
-        using (worksheetReader)
-        {
-            if (!worksheetReader.Read() || worksheetReader.NodeType != XmlNodeType.Element)
-                throw new XmlException("Invalid SpreadsheetML worksheet.");
-
-            var name = GetSpreadsheetAttribute(worksheetReader, "Name") ?? string.Empty;
-            var visibleState = "visible";
-            string? codeName = null;
-            HeaderFooter? headerFooter = null;
-            var rows = new List<Row>();
-            var columnWidths = new List<Column>();
-            var mergeCells = new List<CellRange>();
-            int maxColumn = -1;
-            int maxRow = -1;
-
-            while (worksheetReader.Read())
-            {
-                if (worksheetReader.NodeType != XmlNodeType.Element)
-                    continue;
-
-                if (worksheetReader.LocalName == "WorksheetOptions" && worksheetReader.NamespaceURI == ExcelNamespace)
-                {
-                    (visibleState, codeName, headerFooter) = ParseWorksheetOptions(worksheetReader.ReadSubtree());
-                }
-                else if (worksheetReader.LocalName == "Table" && worksheetReader.NamespaceURI == SpreadsheetNamespace)
-                {
-                    ParseTable(
-                        worksheetReader.ReadSubtree(),
-                        stylesById,
-                        formats,
-                        rows,
-                        columnWidths,
-                        mergeCells,
-                        ref maxColumn,
-                        ref maxRow);
-                }
-            }
-
-            int fieldCount = maxColumn + 1;
-            int rowCount = maxRow + 1;
-
-            var normalizedRows = NormalizeRows(rows, rowCount);
-            var dimension = fieldCount > 0 && rowCount > 0
-                ? new CellRange(0, 0, fieldCount - 1, rowCount - 1)
-                : null;
-
-            return new SpreadsheetXmlWorksheet(
-                name,
-                visibleState,
-                codeName,
-                headerFooter,
-                normalizedRows,
-                columnWidths,
-                [.. mergeCells],
-                fieldCount,
-                rowCount,
-                dimension);
-        }
-    }
-
-    public IEnumerable<Row> ReadRows()
-    {
-        if (_stream != null && _stylesById != null)
-        {
-            foreach (var row in StreamRows(_stream, _worksheetIndex, _stylesById, _formats))
-                yield return row;
-            yield break;
-        }
-
-        foreach (var row in _rows)
-            yield return row;
-    }
+    public IEnumerable<Row> ReadRows() => StreamRows(_stream, _worksheetIndex, _stylesById, _formats);
 
     internal static (string VisibleState, string? CodeName, HeaderFooter? HeaderFooter) ParseWorksheetOptions(XmlReader worksheetOptionsReader)
     {
@@ -264,6 +187,70 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     internal static string ParseVisibleState(XmlReader worksheetOptionsReader)
         => ParseWorksheetOptions(worksheetOptionsReader).VisibleState;
 
+    private static SpreadsheetXmlWorksheet Scan(
+        XmlReader worksheetReader,
+        Stream stream,
+        int worksheetIndex,
+        IReadOnlyDictionary<string, ExtendedFormat> stylesById,
+        IReadOnlyDictionary<int, NumberFormatString>? formats)
+    {
+        using (worksheetReader)
+        {
+            if (!worksheetReader.Read() || worksheetReader.NodeType != XmlNodeType.Element)
+                throw new XmlException("Invalid SpreadsheetML worksheet.");
+
+            var name = GetSpreadsheetAttribute(worksheetReader, "Name") ?? string.Empty;
+            var visibleState = "visible";
+            string? codeName = null;
+            HeaderFooter? headerFooter = null;
+            var columnWidths = new List<Column>();
+            var mergeCells = new List<CellRange>();
+            int maxColumn = -1;
+            int maxRow = -1;
+
+            while (worksheetReader.Read())
+            {
+                if (worksheetReader.NodeType != XmlNodeType.Element)
+                    continue;
+
+                if (worksheetReader.LocalName == "WorksheetOptions" && worksheetReader.NamespaceURI == ExcelNamespace)
+                {
+                    (visibleState, codeName, headerFooter) = ParseWorksheetOptions(worksheetReader.ReadSubtree());
+                }
+                else if (worksheetReader.LocalName == "Table" && worksheetReader.NamespaceURI == SpreadsheetNamespace)
+                {
+                    ScanTable(
+                        worksheetReader.ReadSubtree(),
+                        columnWidths,
+                        mergeCells,
+                        ref maxColumn,
+                        ref maxRow);
+                }
+            }
+
+            int fieldCount = maxColumn + 1;
+            int rowCount = maxRow + 1;
+            var dimension = fieldCount > 0 && rowCount > 0
+                ? new CellRange(0, 0, fieldCount - 1, rowCount - 1)
+                : null;
+
+            return new SpreadsheetXmlWorksheet(
+                name,
+                visibleState,
+                codeName,
+                headerFooter,
+                columnWidths,
+                [.. mergeCells],
+                fieldCount,
+                rowCount,
+                dimension,
+                stream,
+                stylesById,
+                formats,
+                worksheetIndex);
+        }
+    }
+
     private static IEnumerable<Row> StreamRows(
         Stream stream,
         int worksheetIndex,
@@ -326,10 +313,6 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 yield break;
 
             int currentRowIndex = 0;
-            int maxColumn = -1;
-            int maxRow = -1;
-            var mergeCells = new List<CellRange>();
-
             while (tableReader.Read())
             {
                 if (tableReader.NodeType != XmlNodeType.Element ||
@@ -343,11 +326,11 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                     tableReader.ReadSubtree(),
                     stylesById,
                     formats,
-                    mergeCells,
-                    ref currentRowIndex,
-                    ref maxColumn,
-                    ref maxRow,
+                    currentRowIndex,
                     out var rowSpan);
+
+                if (row.RowIndex < currentRowIndex)
+                    throw new XmlException("SpreadsheetML rows must be in ascending index order.");
 
                 while (row.RowIndex > currentRowIndex)
                 {
@@ -370,10 +353,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         XmlReader rowReader,
         IReadOnlyDictionary<string, ExtendedFormat> stylesById,
         IReadOnlyDictionary<int, NumberFormatString>? formats,
-        List<CellRange> mergeCells,
-        ref int currentRowIndex,
-        ref int maxColumn,
-        ref int maxRow,
+        int currentRowIndex,
         out int rowSpan)
     {
         using (rowReader)
@@ -419,25 +399,17 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 if (hasData || cellError != null || mergeAcross > 0 || mergeDown > 0)
                 {
                     cells.Add(new Cell(currentColumnIndex, value, effectiveStyle, cellError));
-                    maxColumn = Math.Max(maxColumn, currentColumnIndex + mergeAcross);
                 }
-
-                if (mergeAcross > 0 || mergeDown > 0)
-                    mergeCells.Add(new CellRange(currentColumnIndex, currentRowIndex, currentColumnIndex + mergeAcross, currentRowIndex + mergeDown));
 
                 currentColumnIndex += mergeAcross + 1;
             }
 
-            maxRow = Math.Max(maxRow, currentRowIndex);
             return new Row(currentRowIndex, rowHeight, cells);
         }
     }
 
-    private static void ParseTable(
+    private static void ScanTable(
         XmlReader tableReader,
-        IReadOnlyDictionary<string, ExtendedFormat> stylesById,
-        IReadOnlyDictionary<int, NumberFormatString>? formats,
-        List<Row> rows,
         List<Column> columnWidths,
         List<CellRange> mergeCells,
         ref int maxColumn,
@@ -462,12 +434,9 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 }
                 else if (tableReader.LocalName == "Row")
                 {
-                    ParseRow(
-                        tableReader.ReadSubtree(),
-                        stylesById,
-                        formats,
+                    ScanRow(
+                        tableReader,
                         mergeCells,
-                        rows,
                         ref currentRowIndex,
                         ref maxColumn,
                         ref maxRow);
@@ -491,34 +460,26 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         currentColumn += span + 1;
     }
 
-    private static void ParseRow(
+    private static void ScanRow(
         XmlReader rowReader,
-        IReadOnlyDictionary<string, ExtendedFormat> stylesById,
-        IReadOnlyDictionary<int, NumberFormatString>? formats,
         List<CellRange> mergeCells,
-        List<Row> rows,
         ref int currentRowIndex,
         ref int maxColumn,
         ref int maxRow)
     {
-        using (rowReader)
+        int rowIndexFromAttribute = ParseInt(GetSpreadsheetAttribute(rowReader, "Index"), -1);
+        if (rowIndexFromAttribute > 0)
         {
-            if (!rowReader.Read() || rowReader.NodeType != XmlNodeType.Element)
-                return;
+            currentRowIndex = rowIndexFromAttribute - 1;
+        }
 
-            int rowIndexFromAttribute = ParseInt(GetSpreadsheetAttribute(rowReader, "Index"), -1);
-            if (rowIndexFromAttribute > 0)
-            {
-                currentRowIndex = rowIndexFromAttribute - 1;
-            }
+        int rowSpan = Math.Max(0, ParseInt(GetSpreadsheetAttribute(rowReader, "Span")));
+        int currentColumnIndex = 0;
+        int rowDepth = rowReader.Depth;
 
-            bool hidden = ParseBool(GetSpreadsheetAttribute(rowReader, "Hidden"));
-            int rowSpan = Math.Max(0, ParseInt(GetSpreadsheetAttribute(rowReader, "Span")));
-            double rowHeight = hidden ? 0D : ParseDouble(GetSpreadsheetAttribute(rowReader, "Height"), 15D);
-            var cells = new List<Cell>();
-            int currentColumnIndex = 0;
-
-            while (rowReader.Read())
+        if (!rowReader.IsEmptyElement)
+        {
+            while (rowReader.Read() && !(rowReader.NodeType == XmlNodeType.EndElement && rowReader.Depth == rowDepth))
             {
                 if (rowReader.NodeType != XmlNodeType.Element ||
                     rowReader.NamespaceURI != SpreadsheetNamespace ||
@@ -535,18 +496,9 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
                 int mergeAcross = Math.Max(0, ParseInt(GetSpreadsheetAttribute(rowReader, "MergeAcross")));
                 int mergeDown = Math.Max(0, ParseInt(GetSpreadsheetAttribute(rowReader, "MergeDown")));
-                var styleId = GetSpreadsheetAttribute(rowReader, "StyleID");
-                var effectiveStyle = styleId != null && stylesById.TryGetValue(styleId, out var style)
-                    ? style
-                    : GetDefaultStyle(stylesById);
-
-                bool hasData = false;
-                var rawValue = ParseCellValue(rowReader.ReadSubtree(), out var cellError, out hasData);
-                var value = ConvertCellValue(rawValue, effectiveStyle, formats);
-
-                if (hasData || cellError != null || mergeAcross > 0 || mergeDown > 0)
+                bool hasData = ScanCell(rowReader);
+                if (hasData || mergeAcross > 0 || mergeDown > 0)
                 {
-                    cells.Add(new Cell(currentColumnIndex, value, effectiveStyle, cellError));
                     maxColumn = Math.Max(maxColumn, currentColumnIndex + mergeAcross);
                 }
 
@@ -557,16 +509,30 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
                 currentColumnIndex += mergeAcross + 1;
             }
-
-            rows.Add(new Row(currentRowIndex, rowHeight, cells));
-            for (int i = 1; i <= rowSpan; i++)
-            {
-                rows.Add(new Row(currentRowIndex + i, rowHeight, []));
-            }
-
-            maxRow = Math.Max(maxRow, currentRowIndex + rowSpan);
-            currentRowIndex += rowSpan + 1;
         }
+
+        maxRow = Math.Max(maxRow, currentRowIndex + rowSpan);
+        currentRowIndex += rowSpan + 1;
+    }
+
+    private static bool ScanCell(XmlReader cellReader)
+    {
+        if (cellReader.IsEmptyElement)
+            return false;
+
+        int cellDepth = cellReader.Depth;
+        bool hasData = false;
+        while (cellReader.Read() && !(cellReader.NodeType == XmlNodeType.EndElement && cellReader.Depth == cellDepth))
+        {
+            if (cellReader.NodeType == XmlNodeType.Element &&
+                cellReader.NamespaceURI == SpreadsheetNamespace &&
+                cellReader.LocalName == "Data")
+            {
+                hasData = true;
+            }
+        }
+
+        return hasData;
     }
 
     private static object? ConvertCellValue(object? value, ExtendedFormat style, IReadOnlyDictionary<int, NumberFormatString>? formats)
@@ -644,28 +610,6 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             default:
                 return value;
         }
-    }
-
-    private static List<Row> NormalizeRows(List<Row> rows, int rowCount)
-    {
-        if (rows.Count >= rowCount)
-            return rows;
-
-        var rowsByIndex = rows.ToDictionary(r => r.RowIndex);
-        var normalized = new List<Row>(rowCount);
-        for (int i = 0; i < rowCount; i++)
-        {
-            if (rowsByIndex.TryGetValue(i, out var row))
-            {
-                normalized.Add(row);
-            }
-            else
-            {
-                normalized.Add(new Row(i, 15D, []));
-            }
-        }
-
-        return normalized;
     }
 
     private static CellError? ParseCellError(string value) => value switch
