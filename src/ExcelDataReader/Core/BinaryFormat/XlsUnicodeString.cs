@@ -19,6 +19,8 @@ internal sealed class XlsUnicodeString(byte[] bytes, uint offset) : IXlsString
     /// </summary>
     public bool IsMultiByte => (_bytes[_offset + 2] & 0x01) != 0;
 
+    internal long ResidentBytes => 64L + _bytes.Length;
+
     public string GetValue(Encoding encoding)
     {
         if (CharacterCount == 0)
@@ -26,12 +28,7 @@ internal sealed class XlsUnicodeString(byte[] bytes, uint offset) : IXlsString
             return string.Empty;
         }
 
-        int available = _bytes.Length - (int)_offset - 3;
-        int needed = IsMultiByte ? CharacterCount * 2 : CharacterCount;
-        if (available < needed)
-        {
-            throw new ExcelReaderException(Errors.ErrorBiffStringSize);
-        }
+        GetCharacterBytes();
 
         if (IsMultiByte)
         {
@@ -53,5 +50,14 @@ internal sealed class XlsUnicodeString(byte[] bytes, uint offset) : IXlsString
             chars[i] = (char)_bytes[start + i];
         return new string(chars);
 #endif
+    }
+
+    internal ArraySegment<byte> GetCharacterBytes()
+    {
+        int start = (int)_offset + 3;
+        int needed = IsMultiByte ? CharacterCount * 2 : CharacterCount;
+        if (_bytes.Length - start < needed)
+            throw new ExcelReaderException(Errors.ErrorBiffStringSize);
+        return new ArraySegment<byte>(_bytes, start, needed);
     }
 }

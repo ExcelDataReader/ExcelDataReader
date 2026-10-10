@@ -229,17 +229,20 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
                 }
 
             case SharedString:
-                return ReadCell((int)GetDWord(buffer, 8));
+                return ReadCell(null, sharedStringIndex: GetDWord(buffer, 8));
             default:
                 return Record.Default;
         }
 
-        CellRecord ReadCell(object? value, CellError? errorValue = null)
+        CellRecord ReadCell(object? value, CellError? errorValue = null, uint? sharedStringIndex = null)
         {
             int column = (int)GetDWord(buffer, 0);
             uint xfIndex = GetDWord(buffer, 4) & 0xffffff;
 
-            return new CellRecord(column, (int)xfIndex, value, errorValue);
+            var decoded = sharedStringIndex.HasValue
+                ? DecodedCellValue.SharedString(sharedStringIndex.Value)
+                : new DecodedCellValue(value, value is string ? CellValueKind.FormattedString : CellValueKind.Literal);
+            return new CellRecord(column, (int)xfIndex, decoded, errorValue);
         }
     }
 }

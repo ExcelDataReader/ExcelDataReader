@@ -7,6 +7,30 @@ Both use `MemoryDiagnoser`; workbook generation happens in `GlobalSetup`,
 outside the measured operation. Existing `ReadAllStrings`, `ReadRealWorldFiles`,
 and `SinglePassRead` benchmarks provide whole-file comparisons.
 
+`SharedStringStorage` compares Default, below-threshold SpillToDisk, and disk-spilled SST
+storage using generated million-entry workbooks. See [shared string storage
+details and benchmarks](SharedStringStorage.md) for measured memory/throughput
+tradeoffs, corpus generation, and reproduction commands.
+
+`SharedStringConstruction` measures reader creation/disposal without traversal
+for the workbook selected by `EDR_SST_INPUT`. Optional `EDR_SST_LIBRARY` selects
+a preserved baseline library DLL. See the storage document for reproduction
+commands and storage tradeoffs.
+
+`SharedStringTraversal` compares Default, SpillToDisk1 (1 MiB), and SpillToDisk256 (256 MiB) over the existing workbook
+selected by `EDR_SST_INPUT`, including reader creation, complete traversal,
+checksum validation and disposal with SinglePassMode enabled. It is intended
+to expose decoding/repeated-reference costs that construction-only timings miss.
+For the supplied 100k/one-million-entry corpora, SpillToDisk1 forces spill and SpillToDisk256
+stays below threshold. Confirm spill with `--sst-memory`; its forced-GC
+checkpoints measure retention, not throughput.
+
+`--sst-io` diagnoses injected MemoryStream/FileStream construction and lookup
+calls over sequential, reverse-like, random, and hot Unicode references.
+It runs three warmups and five measured repetitions; counts are managed-stream
+calls, not OS I/O. Timing includes output validation and is diagnostic rather
+than a replacement for whole-read BenchmarkDotNet results.
+
 `ParseLongFormats` covers long digit/date patterns, repeated bracket directives,
 and quoted Unicode text. The format parser stores temporary source ranges rather
 than token strings and only produces validity/date/duration classification.

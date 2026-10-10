@@ -1,5 +1,4 @@
 using System.Text;
-using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.BinaryFormat;
 
@@ -320,8 +319,7 @@ internal sealed class XlsWorksheet : IWorksheet
                 {
                     var xfIndex = rkCell.GetXF(j);
                     var effectiveStyle = Workbook.GetEffectiveCellStyle(xfIndex, cell.Format);
-                    var value = TryConvertOADateTime(rkCell.GetValue(j), effectiveStyle.NumberFormatIndex);
-                    cellList.Add(new Cell(j, value, effectiveStyle, null));
+                    cellList.Add(Workbook.CreateCell(j, new DecodedCellValue(rkCell.GetValue(j)), effectiveStyle, null, IsDate1904));
                 }
 
                 break;
@@ -334,47 +332,40 @@ internal sealed class XlsWorksheet : IWorksheet
     private Cell ReadSingleCell(XlsBiffStream biffStream, XlsBiffBlankCell cell, int xfIndex)
     {
         var effectiveStyle = Workbook.GetEffectiveCellStyle(xfIndex, cell.Format);
-        var numberFormatIndex = effectiveStyle.NumberFormatIndex;
-
-        object? value = null;
+        DecodedCellValue value = default;
         CellError? error = null;
         switch (cell.Id)
         {
             case BIFFRECORDTYPE.BOOLERR:
                 if (cell.ReadByte(7) == 0)
-                    value = cell.ReadByte(6) != 0;
+                    value = new DecodedCellValue(cell.ReadByte(6) != 0);
                 else
                     error = (CellError)cell.ReadByte(6);
                 break;
             case BIFFRECORDTYPE.BOOLERR_OLD:
                 if (cell.ReadByte(8) == 0)
-                    value = cell.ReadByte(7) != 0;
+                    value = new DecodedCellValue(cell.ReadByte(7) != 0);
                 else
                     error = (CellError)cell.ReadByte(7);
                 break;
             case BIFFRECORDTYPE.INTEGER:
             case BIFFRECORDTYPE.INTEGER_OLD:
-                value = TryConvertOADateTime(((XlsBiffIntegerCell)cell).Value, numberFormatIndex);
+                value = new DecodedCellValue(((XlsBiffIntegerCell)cell).Value);
                 break;
             case BIFFRECORDTYPE.NUMBER:
             case BIFFRECORDTYPE.NUMBER_OLD:
-                value = TryConvertOADateTime(((XlsBiffNumberCell)cell).Value, numberFormatIndex);
+                value = new DecodedCellValue(((XlsBiffNumberCell)cell).Value);
                 break;
             case BIFFRECORDTYPE.LABEL:
             case BIFFRECORDTYPE.LABEL_V2:
             case BIFFRECORDTYPE.RSTRING:
-                value = GetLabelString((XlsBiffLabelCell)cell, effectiveStyle);
+                value = new DecodedCellValue(GetLabelString((XlsBiffLabelCell)cell, effectiveStyle));
                 break;
             case BIFFRECORDTYPE.LABELSST:
-                if (Workbook.SST == null)
-                {
-                    throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
-                }
-
-                value = Workbook.SST.GetString(((XlsBiffLabelSSTCell)cell).SSTIndex, Encoding);
+                value = DecodedCellValue.SharedString(((XlsBiffLabelSSTCell)cell).SSTIndex);
                 break;
             case BIFFRECORDTYPE.RK:
-                value = TryConvertOADateTime(((XlsBiffRKCell)cell).Value, numberFormatIndex);
+                value = new DecodedCellValue(((XlsBiffRKCell)cell).Value);
                 break;
             case BIFFRECORDTYPE.BLANK:
             case BIFFRECORDTYPE.BLANK_OLD:
@@ -384,11 +375,11 @@ internal sealed class XlsWorksheet : IWorksheet
             case BIFFRECORDTYPE.FORMULA:
             case BIFFRECORDTYPE.FORMULA_V3:
             case BIFFRECORDTYPE.FORMULA_V4:
-                value = TryGetFormulaValue(biffStream, (XlsBiffFormulaCell)cell, effectiveStyle, out error);
+                value = new DecodedCellValue(TryGetFormulaValue(biffStream, (XlsBiffFormulaCell)cell, effectiveStyle, out error));
                 break;
         }
 
-        return new Cell(cell.ColumnIndex, value, effectiveStyle, error);
+        return Workbook.CreateCell(cell.ColumnIndex, value, effectiveStyle, error, IsDate1904);
     }
 
     private string GetLabelString(XlsBiffLabelCell cell, ExtendedFormat effectiveStyle)
@@ -422,7 +413,7 @@ internal sealed class XlsWorksheet : IWorksheet
                 return null;
             case XlsBiffFormulaCell.FormulaValueType.EmptyString: return string.Empty;
             case XlsBiffFormulaCell.FormulaValueType.Number:
-                return TryConvertOADateTime(formulaCell.XNumValue, effectiveStyle.NumberFormatIndex);
+                return formulaCell.XNumValue;
             case XlsBiffFormulaCell.FormulaValueType.String: return TryGetFormulaString(biffStream, effectiveStyle);
 
             // Bad data or new formula value type
@@ -459,34 +450,6 @@ internal sealed class XlsWorksheet : IWorksheet
 
         // Bad data - could not find a string following the formula
         return null;
-    }
-
-    private object TryConvertOADateTime(double value, int numberFormatIndex)
-    {
-        var format = Workbook.GetNumberFormatString(numberFormatIndex, null);
-        if (format != null)
-        {
-            if (format.IsDateTimeFormat)
-                return Helpers.ConvertFromOATime(value, IsDate1904);
-            if (format.IsTimeSpanFormat)
-                return TimeSpan.FromDays(value);
-        }
-
-        return value;
-    }
-
-    private object TryConvertOADateTime(int value, int numberFormatIndex)
-    {
-        var format = Workbook.GetNumberFormatString(numberFormatIndex, null);
-        if (format != null)
-        {
-            if (format.IsDateTimeFormat)
-                return Helpers.ConvertFromOATime(value, IsDate1904);
-            if (format.IsTimeSpanFormat)
-                return TimeSpan.FromDays(value);
-        }
-
-        return value;
     }
 
     /// <summary>

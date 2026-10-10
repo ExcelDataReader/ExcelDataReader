@@ -1176,19 +1176,17 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     }
 
     [Test]
-    public void Issue525_SstMaterializationReturnsCorrectStrings()
+    public void Issue525_SstEagerMaterializationReturnsCorrectStrings()
     {
-        // Verify SST strings are correctly accessible after lazy caching is initialized.
-        // XlsWorkbook.ReadWorkbookGlobals() calls SST.Flush() which allocates the cache array.
         using var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("10x10.xls"));
         reader.Read();
-        Assert.That(reader.GetString(0), Is.EqualTo("col1"));
+        string first = reader.GetString(0);
+        Assert.That(first, Is.EqualTo("col1"));
         Assert.That(reader.GetString(4), Is.EqualTo("col5"));
         Assert.That(reader.IsDBNull(9), Is.True);  // column 9 is empty in first row
         Assert.Throws<InvalidCastException>(() => reader.GetString(9));
 
-        // Repeated lookups of the same SST index must return the same value
-        Assert.That(reader.GetString(0), Is.EqualTo("col1"));
+        Assert.That(reader.GetString(0), Is.SameAs(first));
 
         // Verify subsequent rows also resolve correctly
         reader.Read();

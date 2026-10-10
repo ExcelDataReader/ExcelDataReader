@@ -261,10 +261,17 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         _worksheetIterator = null;
         _rowIterator = null;
         _cachedWorksheetIterator = null;
+        _cachedWorksheets = null;
         RowCells = null;
-        Workbook?.Dispose();
-        Workbook = default;
-        IsClosed = true;
+        try
+        {
+            Workbook?.Dispose();
+        }
+        finally
+        {
+            Workbook = default;
+            IsClosed = true;
+        }
     }
 
     public bool NextResult()

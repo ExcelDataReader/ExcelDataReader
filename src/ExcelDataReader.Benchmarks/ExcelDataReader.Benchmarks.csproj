@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ExcelDataReader\ExcelDataReader.csproj" />
     <Compile Include="..\ExcelDataReader.Tests\AllocationTestWorkbook.cs" Link="AllocationTestWorkbook.cs" />
+    <Compile Include="..\ExcelDataReader.Tests\SharedStringWorkbook.cs" Link="SharedStringWorkbook.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <Reference Include="System.IO.Compression" />
