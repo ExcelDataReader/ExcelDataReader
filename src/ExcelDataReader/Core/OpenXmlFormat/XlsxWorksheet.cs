@@ -1,6 +1,3 @@
-using System.Globalization;
-using System.Xml;
-using ExcelDataReader.Core.NumberFormat;
 using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat;
@@ -161,7 +158,7 @@ internal sealed class XlsxWorksheet : IWorksheet
                 case CellRecord cell when inSheetData:
                     // TODO What if we get a cell without a row?
                     var extendedFormat = Workbook.GetEffectiveCellStyle(cell.XfIndex, 0);
-                    cells.Add(new Cell(cell.ColumnIndex, ConvertCellValue(cell.Value, extendedFormat.NumberFormatIndex), extendedFormat, cell.Error));
+                    cells.Add(Workbook.CreateCell(cell.ColumnIndex, cell.Value, extendedFormat, cell.Error, Workbook.IsDate1904));
                     foundRowOrCell = true;
                     break;
             }
@@ -169,77 +166,5 @@ internal sealed class XlsxWorksheet : IWorksheet
 
         if (foundRowOrCell)
             yield return new Row(rowIndex, height, cells);
-    }
-
-    private static bool TryParseToTimeSpan(string s, out TimeSpan result)
-    {
-        var isIsoFormat = Helpers.StringStartsWith(s, 'P');
-
-        if (!isIsoFormat)
-        {
-            return TimeSpan.TryParse(s, out result);
-        }
-
-        try
-        {
-            result = XmlConvert.ToTimeSpan(s);
-            return true;
-        }
-        catch (FormatException)
-        {
-            result = TimeSpan.Zero;
-            return false;
-        }
-    }
-
-    private object? ConvertCellValue(object? value, int numberFormatIndex)
-    {
-        switch (value)
-        {
-            case int sstIndex:
-                if (sstIndex >= 0 && sstIndex < Workbook.SST.Count)
-                {
-                    return Helpers.ConvertEscapeChars(Workbook.SST[sstIndex]);
-                }
-
-                return null;
-
-            case double number:
-                var format = Workbook.GetNumberFormatString(numberFormatIndex, null);
-                if (format != null)
-                {
-                    if (format.IsDateTimeFormat)
-                        return Helpers.ConvertFromOATime(number, Workbook.IsDate1904);
-                    if (format.IsTimeSpanFormat)
-                        return TimeSpan.FromDays(number);
-                }
-
-                return number;
-
-            case DateTime date:
-                return date;
-
-            case string s:
-                NumberFormatString? numberFormat = Workbook.GetNumberFormatString(numberFormatIndex, null);
-                if (numberFormat?.IsTimeSpanFormat == true && TryParseToTimeSpan(s, out var timeSpan))
-                {
-                    return timeSpan;
-                }
-
-                if (numberFormat?.IsDateTimeFormat == true &&
-                    DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.NoCurrentDateDefault, out DateTime dateTime))
-                {
-                    // NoCurrentDateDefault marks HH:mm:ss values with year 1; an explicit ISO date can also use that year.
-                    if (dateTime.Date == DateTime.MinValue && s.TrimStart().IndexOf(':') == 2)
-                        return Helpers.ConvertFromOATime(dateTime.TimeOfDay.TotalDays, Workbook.IsDate1904);
-
-                    return dateTime;
-                }
-
-                return s;
-
-            default:
-                return value;
-        }
     }
 }

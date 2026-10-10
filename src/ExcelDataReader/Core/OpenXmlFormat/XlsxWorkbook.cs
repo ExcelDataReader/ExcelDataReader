@@ -5,16 +5,29 @@ namespace ExcelDataReader.Core.OpenXmlFormat;
 internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
 {
     private readonly ZipWorker _zipWorker;
+    private readonly AutoSharedStringStore? _stringStore;
            
-    public XlsxWorkbook(ZipWorker zipWorker)
+    public XlsxWorkbook(ZipWorker zipWorker, ExcelReaderConfiguration configuration)
     {
         _zipWorker = zipWorker;
-        ReadWorkbook();
-        ReadSharedStrings();
-        ReadStyles();
+        try
+        {
+            if (configuration.SharedStringStorageMode != SharedStringStorageMode.Default)
+                _stringStore = new AutoSharedStringStore(configuration);
+            ReadWorkbook();
+            ReadSharedStrings();
+            ReadStyles();
+        }
+        catch (Exception exception)
+        {
+            ResourceCleanup.DisposeAll(exception, this);
+            throw;
+        }
     }
 
-    public XlsxSST SST { get; } = [];
+    public SharedStringTable SST { get; } = [];
+
+    public int SharedStringCount => _stringStore?.Count ?? SST.Count;
 
     public bool IsDate1904 { get; private set; }
 
@@ -24,6 +37,8 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
 
     private List<SheetRecord> Sheets { get; } = [];
 
+    public string GetSharedString(int index) => _stringStore?.GetString(index) ?? SST[index];
+
     public IEnumerable<XlsxWorksheet> ReadWorksheets()
     {
         foreach (var sheet in Sheets)
@@ -32,8 +47,12 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
 
     public void Dispose()
     {
-        _zipWorker.Dispose();
+        SST.Clear();
+        ResourceCleanup.DisposeAll(null, _stringStore, _zipWorker);
     }
+
+    protected override string? ResolveSharedString(uint index) =>
+        index < (uint)SharedStringCount ? Helpers.ConvertEscapeChars(GetSharedString((int)index)) : null;
 
     private void ReadWorkbook()
     {
@@ -60,22 +79,8 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>
 
     private void ReadSharedStrings()
     {
-        using var reader = _zipWorker.GetSharedStringsReader();
-        if (reader == null)
-            return;
-
-        while (reader.Read() is { } record)
-        {
-            switch (record)
-            {
-                case SstCountRecord countRecord:
-                    SST.Capacity = countRecord.UniqueCount;
-                    break;
-                case SharedStringRecord pr:
-                    SST.Add(pr.Value);
-                    break;
-            }
-        }
+        _zipWorker.LoadSharedStrings((ISharedStringStore?)_stringStore ?? SST);
+        _stringStore?.Seal();
     }
 
     private void ReadStyles()

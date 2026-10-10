@@ -25,7 +25,7 @@ internal static class StringHelper
             if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
             {
                 // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
-                AppendFragment(ReadElementContent(reader), ref result, ref sb);
+                AppendElement(reader, ref result, ref sb);
             }
             else if (reader.IsStartElement(ElementR, nsSpreadsheetMl))
             {
@@ -51,6 +51,11 @@ internal static class StringHelper
             (sb ??= new StringBuilder(result)).Append(fragment);
     }
 
+    private static void AppendElement(XmlReader reader, ref string? result, ref StringBuilder? sb)
+    {
+        AppendFragment(ReadElementContent(reader), ref result, ref sb);
+    }
+
     private static void ReadRichTextRun(XmlReader reader, ref string? result, ref StringBuilder? sb, string nsSpreadsheetMl)
     {
         if (!XmlReaderHelper.ReadFirstContent(reader))
@@ -62,7 +67,7 @@ internal static class StringHelper
         {
             if (reader.IsStartElement(ElementT, nsSpreadsheetMl))
             {
-                AppendFragment(ReadElementContent(reader), ref result, ref sb);
+                AppendElement(reader, ref result, ref sb);
             }
             else if (!XmlReaderHelper.SkipContent(reader))
             {

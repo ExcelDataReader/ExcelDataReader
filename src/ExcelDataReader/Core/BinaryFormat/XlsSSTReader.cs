@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+using ExcelDataReader.Core;
 
 namespace ExcelDataReader.Core.BinaryFormat;
 
@@ -38,66 +38,52 @@ internal sealed class XlsSSTReader
 
     private bool CurrentIsMultiByte { get; set; }
 
-    public IEnumerable<IXlsString> ReadStringsFromSST(XlsBiffSST sst)
+    public void ReadStringsFromSST(XlsBiffSST sst, ISharedStringSink sink, int maxStrings)
     {
         CurrentRecord = sst;
         CurrentRecordOffset = 4 + 8;
-
-        while (true)
-        {
-            if (!TryReadString(out var result))
-            {
-                yield break;
-            }
-
-            yield return result;
-        }
+        ReadStringsToSink(sink, maxStrings);
     }
 
-    public IEnumerable<IXlsString> ReadStringsFromContinue(XlsBiffContinue sstContinue)
+    public void ReadStringsFromContinue(XlsBiffContinue sstContinue, ISharedStringSink sink, int maxStrings)
     {
         CurrentRecord = sstContinue;
-        CurrentRecordOffset = 4; // +4 skips BIFF header
+        CurrentRecordOffset = 4;
 
         if (sstContinue.Size - CurrentRecordOffset == 0)
-        {
-            yield break;
-        }
+            return;
 
         if (CurrentState == SstState.StringData)
-        {
-            byte b = ReadByte();
-            CurrentIsMultiByte = b != 0;
-        }
+            CurrentIsMultiByte = ReadByte() != 0;
 
-        while (true)
-        {
-            if (!TryReadString(out var result))
-            {
-                yield break;
-            }
-
-            yield return result;
-        }
+        ReadStringsToSink(sink, maxStrings);
     }
 
-    public IXlsString? Flush()
+    public void Flush(ISharedStringSink sink)
     {
         if (CurrentState == SstState.StringTail)
-        {
-            return new XlsUnicodeString(CurrentResult, 0);
-        }
+            AddCurrentStringToSink(sink);
 
-        return null;
+        CurrentResult = [];
     }
 
-    private bool TryReadString([NotNullWhen(true)] out IXlsString? result)
+    private bool TryReadString(ISharedStringSink sink) => TryReadStringCore(sink);
+
+    private void ReadStringsToSink(ISharedStringSink sink, int maxStrings)
+    {
+        int stringsRead = 0;
+        while (stringsRead < maxStrings && TryReadString(sink))
+        {
+            stringsRead++;
+        }
+    }
+
+    private bool TryReadStringCore(ISharedStringSink sink)
     {
         if (CurrentState == SstState.StartStringHeader)
         {
             if (CurrentRecord.Size - CurrentRecordOffset == 0)
             {
-                result = null;
                 return false;
             }
 
@@ -108,7 +94,9 @@ internal sealed class XlsSSTReader
 
             const int XlsUnicodeStringHeaderSize = 3;
 
-            CurrentResult = new byte[XlsUnicodeStringHeaderSize + CurrentRemainingCharacters * 2];
+            int size = XlsUnicodeStringHeaderSize + CurrentRemainingCharacters * 2;
+            if (CurrentResult == null || CurrentResult.Length < size)
+                CurrentResult = new byte[size];
             CurrentResult[0] = (byte)(CurrentRemainingCharacters & 0x00FF);
             CurrentResult[1] = (byte)((CurrentRemainingCharacters & 0xFF00) >> 8);
             CurrentResult[2] = 1; // IsMultiByte = true
@@ -123,7 +111,6 @@ internal sealed class XlsSSTReader
             if (!Advance(CurrentHeaderBytes, out int advanceBytes))
             {
                 CurrentHeaderBytes -= advanceBytes;
-                result = null;
                 return false;
             }
 
@@ -132,7 +119,6 @@ internal sealed class XlsSSTReader
             if (CurrentRecord.Size - CurrentRecordOffset == 0)
             {
                 // End of buffer before string data. Return false in StringData state to ensure reading the multibyte flag in the next record
-                result = null;
                 return false;
             }
         }
@@ -156,7 +142,6 @@ internal sealed class XlsSSTReader
 
             if (CurrentRemainingCharacters > 0 && CurrentRecord.Size - CurrentRecordOffset == 0)
             {
-                result = null;
                 return false;
             }
 
@@ -170,17 +155,24 @@ internal sealed class XlsSSTReader
             // multiple Continue records
             if (!Advance(CurrentTailBytes, out var advanceBytes))
             {
-                result = null;
                 CurrentTailBytes -= advanceBytes;
                 return false;
             }
 
             CurrentState = SstState.StartStringHeader;
-            result = new XlsUnicodeString(CurrentResult, 0);
+            AddCurrentStringToSink(sink);
             return true;
         }
 
         throw new InvalidOperationException("Unexpected state in SST reader");
+    }
+
+    private void AddCurrentStringToSink(ISharedStringSink sink)
+    {
+        int end = 3 + CurrentHeader.CharacterCount * 2;
+        if (CurrentResultOffset < end)
+            Array.Clear(CurrentResult, CurrentResultOffset, end - CurrentResultOffset);
+        sink.AddUtf16(CurrentResult, 3, CurrentHeader.CharacterCount);
     }
 
     private void ReadUnicodeBytes(byte[] dest, int offset, int characterCount, bool isMultiByte)

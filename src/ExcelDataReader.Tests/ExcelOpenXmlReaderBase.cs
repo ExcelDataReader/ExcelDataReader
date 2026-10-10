@@ -7,8 +7,8 @@ public abstract class ExcelOpenXmlReaderBase : ExcelTestBase
     [Test]
     public void Issue525_XlsxSstPreallocationReturnsCorrectStrings()
     {
-        // Verify that pre-allocating XlsxSST based on uniqueCount doesn't break SST string resolution.
-        // XlsxWorkbook.ReadSharedStrings() sets SST.Capacity = uniqueCount from <sst uniqueCount="...">
+        // Verify that pre-allocating the shared string table based on uniqueCount doesn't break resolution.
+        // XlsxWorkbook.ReadSharedStrings() sets SST.Capacity from <sst uniqueCount="...">
         using var reader = OpenReader("10x10");
         reader.Read();
         Assert.That(reader.GetString(0), Is.EqualTo("col1"));
