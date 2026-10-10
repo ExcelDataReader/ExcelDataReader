@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace ExcelDataReader.Core.BinaryFormat;
 
 /// <summary>
@@ -7,13 +5,14 @@ namespace ExcelDataReader.Core.BinaryFormat;
 /// </summary>
 internal sealed class XlsBiffSST : XlsBiffRecord
 {
-    private readonly XlsSSTReader _reader = new();
-    private string?[]? _materializedStrings;
-    private List<IXlsString?> _strings = [];
+    private readonly XlsSSTReader _reader;
+    private readonly ISharedStringStore _store;
 
-    internal XlsBiffSST(byte[] bytes)
+    internal XlsBiffSST(byte[] bytes, ISharedStringStore store)
         : base(bytes)
     {
+        _store = store;
+        _reader = new XlsSSTReader();
         ReadSstStrings();
     }
 
@@ -27,84 +26,42 @@ internal sealed class XlsBiffSST : XlsBiffRecord
     /// </summary>
     public uint UniqueCount => ReadUInt32(0x4);
 
+    private uint StringCount => (uint)_store.Count;
+
+    private int RemainingStringCount
+    {
+        get
+        {
+            uint remaining = UniqueCount > StringCount ? UniqueCount - StringCount : 0;
+            return remaining > int.MaxValue ? int.MaxValue : (int)remaining;
+        }
+    }
+
     /// <summary>
     /// Parses strings out of a Continue record.
     /// </summary>
     public void ReadContinueStrings(XlsBiffContinue sstContinue)
     {
-        if (_strings.Count == UniqueCount)
+        if (StringCount == UniqueCount)
         {
             return;
         }
 
-        foreach (var str in _reader.ReadStringsFromContinue(sstContinue))
-        {
-            _strings.Add(str);
-
-            if (_strings.Count == UniqueCount)
-            {
-                break;
-            }
-        }
+        _reader.ReadStringsFromContinue(sstContinue, _store, RemainingStringCount);
     }
 
-    public void Flush()
-    {
-        var str = _reader.Flush();
-        if (str != null)
-        {
-            _strings.Add(str);
-        }
-
-        _materializedStrings = new string[_strings.Count];
-    }
-
-    /// <summary>
-    /// Returns string at specified index, caching it on first access and releasing the raw byte buffer.
-    /// </summary>
-    /// <param name="sstIndex">Index of string to get.</param>
-    /// <param name="encoding">Workbook encoding.</param>
-    /// <returns>string value if it was found, null otherwise.</returns>
-    public string? GetString(uint sstIndex, Encoding encoding)
-    {
-        if (_materializedStrings == null)
-        {
-            if (sstIndex < _strings.Count)
-                return _strings[(int)sstIndex]?.GetValue(encoding);
-            return null;
-        }
-
-        if (sstIndex >= (uint)_materializedStrings.Length)
-            return null;
-
-        var cached = _materializedStrings[sstIndex];
-        if (cached != null)
-            return cached;
-
-        var s = _strings[(int)sstIndex]?.GetValue(encoding);
-        _materializedStrings[sstIndex] = s;
-        _strings[(int)sstIndex] = null;
-        return s;
-    }
+    public void Flush() => _reader.Flush(_store);
 
     /// <summary>
     /// Parses strings out of this SST record.
     /// </summary>
     private void ReadSstStrings()
     {
-        if (_strings.Count == UniqueCount)
+        if (StringCount == UniqueCount)
         {
             return;
         }
 
-        foreach (var str in _reader.ReadStringsFromSST(this))
-        {
-            _strings.Add(str);
-
-            if (_strings.Count == UniqueCount)
-            {
-                break;
-            }
-        }
+        _reader.ReadStringsFromSST(this, _store, RemainingStringCount);
     }
 }

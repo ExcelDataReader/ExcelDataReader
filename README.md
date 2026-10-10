@@ -163,6 +163,30 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
 
 `CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()`, and `CreateCsvReader()` require seek support during probing and parsing. If the input stream is non-seekable, ExcelDataReader copies it to a `MemoryStream` first.
 
+### Large shared string tables
+
+XLSX, XLSB, and BIFF8 XLS files can contain large shared string tables (SSTs). By default, the entire table is kept in memory. Use `SpillToDisk` to move the table to temporary files when it exceeds a configurable memory threshold:
+
+| `SharedStringStorageMode` | Behavior |
+|---|---|
+| `Default` | Keep the entire shared string table in memory; no temporary SST files. |
+| `SpillToDisk` | Keep the shared string table in memory until it exceeds the configured threshold, then move it to temporary files. |
+
+```c#
+using var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguration
+{
+    SharedStringStorageMode = SharedStringStorageMode.SpillToDisk,
+    SharedStringSpillThreshold = 64L * 1024 * 1024, // bytes; default 64 MiB, minimum 1 MiB
+    SharedStringTemporaryDirectory = null, // system temporary directory by default
+});
+```
+
+Spilling to disk reduces memory used by the shared string table but can make reading slower. The threshold applies separately to each reader and is not a limit on total memory usage, including data accumulated by `AsDataSet()`.
+
+Temporary files require an existing writable directory and sufficient disk space. They contain **plaintext even for password-protected workbooks** and are released by `Close()`/`Dispose()`, independently of `LeaveOpen`. Disk failures propagate without falling back to unbounded RAM.
+
+See [shared string storage details and benchmarks](src/ExcelDataReader.Benchmarks/SharedStringStorage.md) for memory accounting, file handling, and performance measurements.
+
 ### AsDataSet() configuration options
 
 The `AsDataSet()` method accepts an optional configuration object to modify the behavior of the DataSet conversion:

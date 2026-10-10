@@ -348,10 +348,10 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
 
         if (!XmlReaderHelper.ReadFirstContent(Reader))
         {
-            return new CellRecord(columnIndex, xfIndex, null, null);
+            return new CellRecord(columnIndex, xfIndex, default, null);
         }
 
-        object? value = null;
+        DecodedCellValue value = default;
         CellError? error = null;
         while (!Reader.EOF)
         {
@@ -359,13 +359,13 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
             {
                 string rawValue = Reader.ReadElementContentAsString();
                 if (!string.IsNullOrEmpty(rawValue))
-                    ConvertCellValue(rawValue, aT, out value, out error);
+                    value = ConvertCellValue(rawValue, aT, out error);
             }
             else if (Reader.NodeType == XmlNodeType.Element && Reader.LocalName == NIs)
             {
                 string rawValue = StringHelper.ReadStringItem(Reader, nsSpreadsheetMl);
                 if (!string.IsNullOrEmpty(rawValue))
-                    ConvertCellValue(rawValue, aT, out value, out error);
+                    value = ConvertCellValue(rawValue, aT, out error);
             }
             else if (!XmlReaderHelper.SkipContent(Reader))
             {
@@ -375,7 +375,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
 
         return new CellRecord(columnIndex, xfIndex, value, error);
 
-        static void ConvertCellValue(string rawValue, string? aT, out object? value, out CellError? error)
+        static DecodedCellValue ConvertCellValue(string rawValue, string? aT, out CellError? error)
         {
             const NumberStyles style = NumberStyles.Any;
 
@@ -385,42 +385,32 @@ internal sealed class XmlWorksheetReader(XmlReader reader, bool preparing) : Xml
                 case AS: //// if string
                     if (int.TryParse(rawValue, style, CultureInfo.InvariantCulture, out var sstIndex))
                     {
-                        // TODO: Can we get here when the sstIndex is not a valid index in the SST list?
-                        value = sstIndex;
-                        return;
+                        return DecodedCellValue.SharedString(unchecked((uint)sstIndex));
                     }
 
-                    value = rawValue;
-                    return;
+                    return new DecodedCellValue(rawValue, CellValueKind.FormattedString);
                 case NInlineStr: //// if string inline
                 case NStr: //// if cached formula string
-                    value = Helpers.ConvertEscapeChars(rawValue);
-                    return;
+                    return new DecodedCellValue(Helpers.ConvertEscapeChars(rawValue), CellValueKind.FormattedString);
                 case "b": //// boolean
-                    value = rawValue == "1";
-                    return;
+                    return new DecodedCellValue(rawValue == "1");
                 case "d": //// ISO 8601 date
                     if (DateTime.TryParseExact(rawValue, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date))
                     {
-                        value = date;
-                        return;
+                        return new DecodedCellValue(date);
                     }
 
-                    value = rawValue;
-                    return;
+                    return new DecodedCellValue(rawValue, CellValueKind.FormattedString);
                 case "e": //// error
                     error = ConvertError(rawValue);
-                    value = null;
-                    return;
+                    return default;
                 default:
                     if (double.TryParse(rawValue, style, CultureInfo.InvariantCulture, out double number))
                     {
-                        value = number;
-                        return;
+                        return new DecodedCellValue(number);
                     }
 
-                    value = rawValue;
-                    return;
+                    return new DecodedCellValue(rawValue, CellValueKind.FormattedString);
             }
         }
 

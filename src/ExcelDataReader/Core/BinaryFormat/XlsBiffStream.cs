@@ -25,6 +25,7 @@ internal sealed class XlsBiffStream : IDisposable
     // Reused decryption buffers: one 1024-byte encryption block in/out, and the current block key. Allocated on first use.
     private byte[]? _decryptOutputBuffer;
     private byte[]? _blockKeyBuffer;
+    private ISharedStringStore? _sharedStringStore;
 
     public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, BIFFTYPE? defaultType = null, string? password = null, byte[]? secretKey = null, EncryptionInfo? encryption = null)
     {
@@ -115,6 +116,12 @@ internal sealed class XlsBiffStream : IDisposable
     /// Gets or sets the current block number being decrypted with CipherTransform.
     /// </summary>
     public int CipherBlock { get; set; }
+
+    internal ISharedStringStore SharedStringStore
+    {
+        get => _sharedStringStore ??= new SharedStringTable();
+        set => _sharedStringStore = value;
+    }
 
     /// <summary>
     /// Sets stream pointer to the specified offset.
@@ -208,7 +215,7 @@ internal sealed class XlsBiffStream : IDisposable
                 return new XlsBiffInterfaceHdr(bytes);
 
             case BIFFRECORDTYPE.SST:
-                return new XlsBiffSST(bytes);
+                return new XlsBiffSST(bytes, SharedStringStore);
 
             case BIFFRECORDTYPE.DEFAULTROWHEIGHT_V2:
             case BIFFRECORDTYPE.DEFAULTROWHEIGHT:
