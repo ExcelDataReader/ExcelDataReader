@@ -572,7 +572,10 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         {
             while (cellReader.Read())
             {
+                // The subtree reader starts at the Cell (depth 0). Only its own Data
+                // child holds the value; a Comment has a Data element of its own.
                 if (cellReader.NodeType != XmlNodeType.Element ||
+                    cellReader.Depth != 1 ||
                     cellReader.NamespaceURI != SpreadsheetNamespace ||
                     cellReader.LocalName != "Data")
                 {

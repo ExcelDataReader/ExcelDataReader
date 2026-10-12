@@ -159,6 +159,28 @@ public class ExcelSpreadsheetXmlReaderTest : ExcelSpreadsheetContractTestBase
 
     [TestCase(false)]
     [TestCase(true)]
+    public void CellComments_AreNotReadAsCellValues(bool singlePass)
+    {
+        using var reader = CreateReader(
+            """
+            <Worksheet ss:Name="Comments"><Table>
+              <Row>
+                <Cell><Data ss:Type="Number">1</Data></Cell>
+                <Cell><Comment ss:Author="A"><ss:Data xmlns="http://www.w3.org/TR/REC-html40"><B>A:</B> note</ss:Data></Comment></Cell>
+                <Cell><Comment ss:Author="A"><ss:Data xmlns="http://www.w3.org/TR/REC-html40">first</ss:Data></Comment><Data ss:Type="String">value</Data></Cell>
+              </Row>
+            </Table></Worksheet>
+            """,
+            singlePass);
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetValue(0), Is.EqualTo(1D));
+        Assert.That(reader.IsDBNull(1), Is.True);
+        Assert.That(reader.GetValue(2), Is.EqualTo("value"));
+        Assert.That(reader.Read(), Is.False);
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
     public void ResetAndNextResult_ReopenStreamsAfterPartialAndCompleteReads(bool singlePass)
     {
         using var reader = CreateReader(
