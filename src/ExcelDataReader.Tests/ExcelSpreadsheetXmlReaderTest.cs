@@ -168,15 +168,39 @@ public class ExcelSpreadsheetXmlReaderTest : ExcelSpreadsheetContractTestBase
                 <Cell><Data ss:Type="Number">1</Data></Cell>
                 <Cell><Comment ss:Author="A"><ss:Data xmlns="http://www.w3.org/TR/REC-html40"><B>A:</B> note</ss:Data></Comment></Cell>
                 <Cell><Comment ss:Author="A"><ss:Data xmlns="http://www.w3.org/TR/REC-html40">first</ss:Data></Comment><Data ss:Type="String">value</Data></Cell>
+                <Cell ss:Index="99"><Comment ss:Author="A"><ss:Data xmlns="http://www.w3.org/TR/REC-html40">trailing</ss:Data></Comment></Cell>
               </Row>
             </Table></Worksheet>
             """,
             singlePass);
+        if (!singlePass)
+            Assert.That(reader.FieldCount, Is.EqualTo(3));
+
         Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.FieldCount, Is.EqualTo(3));
         Assert.That(reader.GetValue(0), Is.EqualTo(1D));
         Assert.That(reader.IsDBNull(1), Is.True);
         Assert.That(reader.GetValue(2), Is.EqualTo("value"));
         Assert.That(reader.Read(), Is.False);
+    }
+
+    [TestCase("Issue769_TextInA1-CommentInB1.xml", false)]
+    [TestCase("Issue769_TextInA1-CommentInB1.xml", true)]
+    [TestCase("Issue769_CommentAndTextInA1.xml", false)]
+    [TestCase("Issue769_CommentAndTextInA1.xml", true)]
+    public void CellComments_ExcelSavedFiles_OnlyCountCellValues(string name, bool singlePass)
+    {
+        using var reader = ExcelReaderFactory.CreateReader(
+            Configuration.GetTestWorkbook(name),
+            new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        if (!singlePass)
+            Assert.That(reader.FieldCount, Is.EqualTo(1));
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.FieldCount, Is.EqualTo(1));
+        Assert.That(reader.GetValue(0), Is.EqualTo(1D));
+        Assert.That(reader.Read(), Is.False);
+        Assert.That(reader.NextResult(), Is.False);
     }
 
     [TestCase(false)]

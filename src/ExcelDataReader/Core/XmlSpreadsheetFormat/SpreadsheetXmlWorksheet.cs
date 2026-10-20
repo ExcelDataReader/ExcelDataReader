@@ -525,6 +525,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         while (cellReader.Read() && !(cellReader.NodeType == XmlNodeType.EndElement && cellReader.Depth == cellDepth))
         {
             if (cellReader.NodeType == XmlNodeType.Element &&
+                cellReader.Depth == cellDepth + 1 &&
                 cellReader.NamespaceURI == SpreadsheetNamespace &&
                 cellReader.LocalName == "Data")
             {
