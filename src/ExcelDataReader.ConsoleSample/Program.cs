@@ -369,8 +369,8 @@ static string BuildRateStr(long totalCells, long totalMs)
     return cellsPerSec >= 1_000_000
         ? $"  (~{cellsPerSec / 1_000_000:F1}M cells/sec)"
         : cellsPerSec >= 1_000
-        ? $"  (~{cellsPerSec / 1_000:F1}K cells/sec)"
-        : $"  (~{cellsPerSec:F0} cells/sec)";
+            ? $"  (~{cellsPerSec / 1_000:F1}K cells/sec)"
+            : $"  (~{cellsPerSec:F0} cells/sec)";
 }
 
 static void RenderSheets(DataSet ds, OutputFormat output)
