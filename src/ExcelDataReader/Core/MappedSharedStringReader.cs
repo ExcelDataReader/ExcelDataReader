@@ -18,7 +18,7 @@ internal sealed class MappedSharedStringReader : IDisposable
         if (file.Length != length)
             throw new EndOfStreamException("Unexpected length of shared string storage.");
         _length = length;
-        _viewSize = viewSize == 0 ? (IntPtr.Size == 4 ? 8 : 64) * 1024 * 1024 : viewSize;
+        _viewSize = viewSize == 0 ? (AutoSharedStringStore.PointerSize == 4 ? 8 : 64) * 1024 * 1024 : viewSize;
         if (_viewSize <= 0 || _viewSize % 65536 != 0)
             throw new ArgumentOutOfRangeException(nameof(viewSize));
         _mapping = MemoryMappedFile.CreateFromFile(file, null, 0, MemoryMappedFileAccess.Read, HandleInheritability.None, leaveOpen: true);

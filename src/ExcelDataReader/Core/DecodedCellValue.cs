@@ -1,12 +1,5 @@
 namespace ExcelDataReader.Core;
 
-internal enum CellValueKind : byte
-{
-    Literal,
-    SharedString,
-    FormattedString,
-}
-
 /// <summary>
 /// An owned cell value decoded by a format reader, before workbook-dependent conversion.
 /// Shared string references are tagged explicitly so BIFF2 integers remain numeric values.

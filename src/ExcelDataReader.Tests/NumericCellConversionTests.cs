@@ -1,3 +1,5 @@
+using ExcelDataReader.Core;
+
 namespace ExcelDataReader.Tests;
 
 public class NumericCellConversionTests
@@ -6,7 +8,7 @@ public class NumericCellConversionTests
     [TestCase(true)]
     public void NumericValuesPreserveTheirOriginalType(bool date1904)
     {
-        var workbook = new NumericWorkbook();
+        var workbook = new CommonWorkbook();
         Assert.That(workbook.ConvertNumericValue(42, 0, date1904), Is.TypeOf<int>().And.EqualTo(42));
         Assert.That(workbook.ConvertNumericValue(42.5, 0, date1904), Is.TypeOf<double>().And.EqualTo(42.5));
         Assert.That(workbook.ConvertNumericValue(3000000, 14, date1904), Is.TypeOf<int>().And.EqualTo(3000000));
@@ -24,7 +26,7 @@ public class NumericCellConversionTests
     [TestCase(1, true, 1904, 1, 2)]
     public void IntegerAndDoubleDatesUseTheSameEpoch(int serial, bool date1904, int year, int month, int day)
     {
-        var workbook = new NumericWorkbook();
+        var workbook = new CommonWorkbook();
         var expected = new DateTime(year, month, day);
         Assert.That(workbook.ConvertNumericValue(serial, 14, date1904), Is.EqualTo(expected));
         Assert.That(workbook.ConvertNumericValue((double)serial, 14, date1904), Is.EqualTo(expected));
@@ -35,18 +37,18 @@ public class NumericCellConversionTests
     [TestCase(true)]
     public void CustomFormatsOverrideBuiltinsAndDateClassificationPrecedesDuration(bool date1904)
     {
-        var workbook = new NumericWorkbook();
+        var workbook = new CommonWorkbook();
         workbook.AddNumberFormat(14, "[h]:mm");
         workbook.AddNumberFormat(164, "yyyy;[h]:mm");
         Assert.That(workbook.ConvertNumericValue(2, 14, date1904), Is.EqualTo(TimeSpan.FromDays(2)));
         Assert.That(workbook.ConvertNumericValue(-0.5, 14, date1904), Is.EqualTo(TimeSpan.FromHours(-12)));
-        Assert.That(Assert.Throws<System.Reflection.TargetInvocationException>(() => workbook.ConvertNumericValue(double.MaxValue, 14, date1904))!.InnerException, Is.TypeOf<OverflowException>());
-        Assert.That(Assert.Throws<System.Reflection.TargetInvocationException>(() => workbook.ConvertNumericValue(int.MaxValue, 14, date1904))!.InnerException, Is.TypeOf<OverflowException>());
+        Assert.Throws<OverflowException>(() => workbook.ConvertNumericValue(double.MaxValue, 14, date1904));
+        Assert.Throws<OverflowException>(() => workbook.ConvertNumericValue(int.MaxValue, 14, date1904));
         Assert.That(
             workbook.ConvertNumericValue(2, 164, date1904),
             Is.EqualTo(date1904 ? new DateTime(1904, 1, 3) : new DateTime(1900, 1, 2)));
 
-        var numericWorkbook = new NumericWorkbook();
+        var numericWorkbook = new CommonWorkbook();
         numericWorkbook.AddNumberFormat(14, "0.00");
         Assert.That(numericWorkbook.ConvertNumericValue(2, 14, date1904), Is.TypeOf<int>().And.EqualTo(2));
         Assert.That(numericWorkbook.ConvertNumericValue(2.5, 14, date1904), Is.TypeOf<double>().And.EqualTo(2.5));
@@ -99,17 +101,5 @@ public class NumericCellConversionTests
             expectedReader.Reset();
             actualReader.Reset();
         }
-    }
-
-    private sealed class NumericWorkbook
-    {
-        private static readonly Type Type = typeof(ExcelReaderFactory).Assembly.GetType("ExcelDataReader.Core.CommonWorkbook")!;
-        private readonly object _workbook = Activator.CreateInstance(Type)!;
-
-        public object ConvertNumericValue(object value, int formatIndex, bool date1904) =>
-            Type.GetMethod("ConvertNumericValue", [value.GetType(), typeof(int), typeof(bool)])!.Invoke(_workbook, [value, formatIndex, date1904])!;
-
-        public void AddNumberFormat(int index, string format) =>
-            Type.GetMethod("AddNumberFormat")!.Invoke(_workbook, [index, format]);
     }
 }

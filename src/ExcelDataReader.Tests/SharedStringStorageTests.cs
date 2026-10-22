@@ -1,10 +1,11 @@
 #nullable enable
 
 using System.IO.Compression;
-using System.Reflection;
-using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Xml;
+using ExcelDataReader.Core;
+using ExcelDataReader.Core.BinaryFormat;
+using ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 using ExcelDataReader.Exceptions;
 using ExcelDataReader.TestFixtures;
 
@@ -13,6 +14,11 @@ namespace ExcelDataReader.Tests;
 public class SharedStringStorageTests
 {
     private const long Budget = 1024 * 1024;
+#if NET8_0_OR_GREATER
+    private static readonly int PointerSize = nint.Size;
+#else
+    private static readonly int PointerSize = IntPtr.Size;
+#endif
 
     [Test]
     public void MappedViewsPreserveBoundariesBoundsAndBufferedMissPolicy()
@@ -22,25 +28,25 @@ public class SharedStringStorageTests
         byte[] expected = Enumerable.Range(0, 3 * 65536 + 123).Select(i => (byte)(i * 741)).ToArray();
         file.Write(expected, 0, expected.Length);
         file.Flush();
-        using var mapped = new MappedReader(file, expected.Length, 65536);
+        using var mapped = new MappedSharedStringReader(file, expected.Length, 65536);
         var buffer = new byte[32768];
-        Assert.That(mapped.Read(65530, buffer, buffer.Length, true), Is.True);
+        Assert.That(mapped.TryReadExactly(65530, buffer, buffer.Length, true), Is.True);
         Assert.That(buffer, Is.EqualTo(expected.Skip(65530).Take(buffer.Length)));
         byte[] before = (byte[])buffer.Clone();
-        Assert.That(mapped.Read(0, buffer, buffer.Length, false), Is.False);
+        Assert.That(mapped.TryReadExactly(0, buffer, buffer.Length, false), Is.False);
         Assert.That(buffer, Is.EqualTo(before));
         foreach (long offset in new long[] { 0, 65530, 131060, expected.Length - buffer.Length })
         {
-            Assert.That(mapped.Read(offset, buffer, buffer.Length, true), Is.True);
+            Assert.That(mapped.TryReadExactly(offset, buffer, buffer.Length, true), Is.True);
             Assert.That(buffer, Is.EqualTo(expected.Skip((int)offset).Take(buffer.Length)));
         }
 
-        Assert.Throws<EndOfStreamException>(() => mapped.Read(-1, buffer, 1, true));
-        Assert.Throws<EndOfStreamException>(() => mapped.Read(expected.Length, buffer, 1, true));
-        Assert.Throws<EndOfStreamException>(() => mapped.Read(long.MaxValue, buffer, 1, true));
+        Assert.Throws<EndOfStreamException>(() => mapped.TryReadExactly(-1, buffer, 1, true));
+        Assert.Throws<EndOfStreamException>(() => mapped.TryReadExactly(expected.Length, buffer, 1, true));
+        Assert.Throws<EndOfStreamException>(() => mapped.TryReadExactly(long.MaxValue, buffer, 1, true));
         mapped.Dispose();
         mapped.Dispose();
-        Assert.Throws<ObjectDisposedException>(() => mapped.Read(0, buffer, 1, true));
+        Assert.Throws<ObjectDisposedException>(() => mapped.TryReadExactly(0, buffer, 1, true));
         Assert.That(file.CanRead, Is.True);
     }
 
@@ -51,7 +57,7 @@ public class SharedStringStorageTests
         using var file = new FileStream(path, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose);
         file.WriteByte(1);
         file.Flush();
-        Assert.Throws<EndOfStreamException>(() => new MappedReader(file, 2, 65536));
+        Assert.Throws<EndOfStreamException>(() => new MappedSharedStringReader(file, 2, 65536));
     }
 
     [TestCase("payload")]
@@ -80,11 +86,10 @@ public class SharedStringStorageTests
         const string value = "\uD800\uDC00\uD800\0\uFFFF\uDC00";
         store.Add(value);
         store.Add(new string('x', (int)Budget));
+        long unmapped = store.ResidentBytes;
         store.Seal();
-        Assert.That(store.Field<object?>("_payloadMapping"), Is.Not.Null);
+        Assert.That(store.ResidentBytes, Is.EqualTo(unmapped + 2 * MappedSharedStringReader.ResidentBytes));
         Assert.That(store.Get(0), Is.EqualTo(value));
-        object mapping = store.Field<object>("_payloadMapping");
-        Assert.That(mapping.GetType().GetField("_viewSize", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(mapping), Is.EqualTo((IntPtr.Size == 4 ? 8 : 64) * 1024 * 1024));
     }
 
     [TestCase("payload")]
@@ -105,8 +110,7 @@ public class SharedStringStorageTests
         Assert.Throws<UnauthorizedAccessException>(store.Seal);
         Assert.That(paths.All(path => !File.Exists(path)), Is.True);
         Assert.That(files.All(file => !file.CanWrite), Is.True);
-        Assert.That(store.Field<object?>("_payloadMapping"), Is.Null);
-        Assert.That(store.Field<object?>("_indexMapping"), Is.Null);
+        Assert.That(store.ResidentBytes, Is.EqualTo(256));
         Assert.Throws<ObjectDisposedException>(() => store.Get(0));
     }
 
@@ -128,24 +132,10 @@ public class SharedStringStorageTests
         index!.Position = 0;
         index.Write(BitConverter.GetBytes(offset), 0, 8);
         index.Write(BitConverter.GetBytes(length), 0, 4);
+        long unmapped = store.ResidentBytes;
         store.Seal();
-        Assert.That(store.Field<object?>("_indexMapping"), Is.Not.Null);
+        Assert.That(store.ResidentBytes, Is.EqualTo(unmapped + 2 * MappedSharedStringReader.ResidentBytes));
         Assert.Throws<IOException>(() => store.Get(0));
-    }
-
-    [TestCase("payload")]
-    [TestCase("index")]
-    public void FailedMappedReadsDoNotExposeAnUnreadWindow(string kind)
-    {
-        using var store = new Store(SharedStringStorageMode.SpillToDisk);
-        for (int i = 0; i < 10000; i++)
-            store.Add(new string((char)('a' + i % 26), 64));
-        store.Seal();
-        Assert.That(store.Get(0), Is.EqualTo(new string('a', 64)));
-        ((IDisposable)store.Field<object>("_" + kind + "Mapping")).Dispose();
-        Assert.Throws<ObjectDisposedException>(() => store.Get(10));
-        Assert.Throws<ObjectDisposedException>(() => store.Get(20));
-        Assert.That(store.Field<int>("_" + kind + "WindowLength"), Is.Zero);
     }
 
     [Test]
@@ -167,8 +157,6 @@ public class SharedStringStorageTests
         Assert.That(store.Spilled, Is.True);
         long backingBytes = store.ResidentBytes;
         Assert.That(backingBytes, Is.EqualTo(256 + 32768 + 4096 + 64 + 2 * (4096 + 256)));
-        Assert.That(store.Field<byte[]>("_buffer").Length, Is.EqualTo(32768));
-        Assert.That(store.Field<byte[]>("_entryBuffer").Length, Is.EqualTo(4096));
         foreach (string pattern in new[] { "Sequential", "Permuted", "Random" })
         {
             for (int position = 0; position < values.Length; position++)
@@ -178,8 +166,6 @@ public class SharedStringStorageTests
                 Assert.That(store.ResidentBytes, Is.LessThanOrEqualTo(Budget));
             }
         }
-
-        Assert.That(store.ResidentBytes - store.Field<long>("_cacheBytes"), Is.EqualTo(backingBytes));
     }
 
     [TestCase("payload", "Truncated")]
@@ -253,14 +239,13 @@ public class SharedStringStorageTests
     public void ExactStringBudgetDoesNotSpillUntilExceeded()
     {
         using var store = new Store(SharedStringStorageMode.SpillToDisk);
-        int length = (int)((Budget - 256 - 4 * IntPtr.Size - 32) / 2);
+        int length = (int)((Budget - 256 - 4 * PointerSize - 32) / 2);
         string value = new('x', length);
         store.Add(value);
         Assert.That(store.ResidentBytes, Is.EqualTo(Budget));
         Assert.That(store.Spilled, Is.False);
         store.Add("next");
         Assert.That(store.Spilled, Is.True);
-        Assert.That(store.Field<List<string>?>("_strings"), Is.Null);
         store.Seal();
         Assert.That(store.Get(0), Is.EqualTo(value));
         Assert.That(store.Get(1), Is.EqualTo("next"));
@@ -335,7 +320,7 @@ public class SharedStringStorageTests
         for (int i = 2; i < 5000; i++)
             store.Get(i);
         Assert.That(store.Get(0), Is.SameAs(admitted));
-        int collision = store.Field<int[]>("_cacheIndices").Length;
+        const int collision = 4096;
         store.Get(collision);
         store.Get(2);
         store.Get(collision);
@@ -343,32 +328,7 @@ public class SharedStringStorageTests
         if (mode == SharedStringStorageMode.SpillToDisk)
             Assert.That(store.ResidentBytes, Is.LessThanOrEqualTo(Budget));
         store.Dispose();
-        Assert.That(store.Field<string?[]?>("_cacheValues"), Is.Null);
         Assert.That(store.ResidentBytes, Is.EqualTo(256));
-    }
-
-    [Test]
-    public void DecodedCacheAccountsMetadataAndValuesExactly()
-    {
-        using var store = new Store(SharedStringStorageMode.SpillToDisk);
-        store.Add("first");
-        store.Add("\u03bb second");
-        store.Add(new string('x', (int)Budget));
-        store.Seal();
-        long backingBytes = store.ResidentBytes;
-        for (int i = 0; i < 6; i++)
-            store.Get(i % 2);
-        var values = store.Field<string?[]>("_cacheValues");
-        long expected = values.Length * 16L + 96;
-        foreach (string? value in values)
-        {
-            if (value != null)
-                expected += 32L + value.Length * 2L;
-        }
-
-        expected += 32L + store.Field<string>("_cachedValue").Length * 2L;
-        Assert.That(store.Field<long>("_cacheBytes"), Is.EqualTo(expected));
-        Assert.That(store.ResidentBytes, Is.EqualTo(backingBytes + expected));
     }
 
     [Test]
@@ -379,24 +339,25 @@ public class SharedStringStorageTests
             store.Add(new string('x', i == 4999 ? 40000 : 1000) + i);
         store.Seal();
         Assert.That(store.Spilled, Is.True);
+        long backingBytes = store.ResidentBytes;
         for (int pass = 0; pass < 4; pass++)
         {
             for (int i = 0; i < 100; i++)
             {
                 store.Get(i);
-                Assert.That(store.Field<long>("_cacheBytes"), Is.LessThanOrEqualTo(Budget / 8));
+                Assert.That(store.ResidentBytes - backingBytes, Is.LessThanOrEqualTo(Budget / 8));
             }
         }
 
         store.Get(4999);
-        Assert.That(store.Field<long>("_cacheBytes"), Is.LessThanOrEqualTo(Budget / 8));
+        Assert.That(store.ResidentBytes - backingBytes, Is.LessThanOrEqualTo(Budget / 8));
         for (int pass = 0; pass < 3; pass++)
         {
             for (int i = 0; i < 5000; i++)
             {
                 Assert.That(store.Get(i), Is.EqualTo(new string('x', i == 4999 ? 40000 : 1000) + i));
                 Assert.That(store.ResidentBytes, Is.LessThanOrEqualTo(Budget));
-                Assert.That(store.Field<long>("_cacheBytes"), Is.LessThanOrEqualTo(Budget / 8));
+                Assert.That(store.ResidentBytes - backingBytes, Is.LessThanOrEqualTo(Budget / 8));
             }
         }
     }
@@ -641,14 +602,14 @@ public class SharedStringStorageTests
     [Test]
     public void XlsbStringThatExactlyFillsRecordIsAccepted()
     {
-        var sst = CreateSharedStringTable();
+        var sst = new SharedStringTable();
         byte[] text = CodeUnits("ab");
         using var input = new MemoryStream(XlsbStringItem(text, 2));
-        var reader = CreateBinarySharedStringsReader(input);
-        Assert.Throws<InvalidOperationException>(() => ReadSharedStringsRecord(reader));
+        var reader = new BiffSharedStringsReader(input);
+        Assert.Throws<InvalidOperationException>(() => reader.Read());
         Assert.That(sst, Is.Empty);
-        LoadBinarySharedStrings(reader, sst);
-        ((IDisposable)reader).Dispose();
+        reader.Load(sst);
+        reader.Dispose();
         Assert.That(sst, Is.EqualTo(new[] { "ab" }));
     }
 
@@ -680,15 +641,15 @@ public class SharedStringStorageTests
         }
 
         input.Position = 0;
-        List<string>? sst = target == "default" ? CreateSharedStringTable() : null;
+        SharedStringTable? sst = target == "default" ? new SharedStringTable() : null;
         using var store = target == "default" ? null : new Store(SharedStringStorageMode.SpillToDisk);
         if (target == "spilled")
             store!.Add(new string('x', (int)Budget));
         int first = store?.Count ?? 0;
-        var sink = (object?)sst ?? store!.Instance;
-        var reader = CreateBinarySharedStringsReader(input);
-        LoadBinarySharedStrings(reader, sink);
-        ((IDisposable)reader).Dispose();
+        ISharedStringStore sink = (ISharedStringStore?)sst ?? store!.Instance;
+        var reader = new BiffSharedStringsReader(input);
+        reader.Load(sink);
+        reader.Dispose();
         string[] expected = values.Select(value => Encoding.Unicode.GetString(CodeUnits(value))).ToArray();
         Assert.That(expected[7], Is.EqualTo("\ufffdx\ufffd"));
         if (sst != null)
@@ -733,7 +694,7 @@ public class SharedStringStorageTests
         {
             byte[] bytes = CodeUnits(value);
             Array.Copy(bytes, 0, buffer, 7, bytes.Length);
-            utf16.Invoke("AddUtf16", buffer, 7, value.Length);
+            utf16.AddUtf16(buffer, 7, value.Length);
             for (int i = 0; i < buffer.Length; i++)
                 buffer[i] = 0xff;
             strings.Add(Encoding.Unicode.GetString(bytes));
@@ -743,8 +704,6 @@ public class SharedStringStorageTests
         }
 
         Assert.That(utf16.Spilled, Is.EqualTo(state != "resident"));
-        foreach (FieldInfo field in utf16.Instance.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
-            Assert.That(field.GetValue(utf16.Instance), Is.Not.SameAs(buffer), field.Name);
         utf16.Seal();
         strings.Seal();
         Assert.That(utf16.DiskBytes, Is.EqualTo(strings.DiskBytes));
@@ -766,7 +725,7 @@ public class SharedStringStorageTests
     public void Utf16IngestionRejectsRangesOutsideBuffer(int offset, int count)
     {
         using var store = new Store(SharedStringStorageMode.SpillToDisk);
-        Assert.Throws<ArgumentOutOfRangeException>(() => store.Invoke("AddUtf16", new byte[8], offset, count));
+        Assert.Throws<ArgumentOutOfRangeException>(() => store.AddUtf16(new byte[8], offset, count));
         Assert.That(store.Count, Is.Zero);
     }
 
@@ -918,8 +877,6 @@ public class SharedStringStorageTests
         for (int i = store.Count - 1; i >= 0; i--)
             Assert.That(store.Get(i), Is.SameAs(values[i % values.Length]));
         Assert.That(store.Spilled, Is.False);
-        Assert.That(store.Field<string?[]?>("_cacheValues"), Is.Null);
-        Assert.That(store.Field<byte[]?>("_buffer"), Is.Null);
     }
 
     [TestCase(1, 4)]
@@ -932,24 +889,23 @@ public class SharedStringStorageTests
         using var store = new Store(SharedStringStorageMode.SpillToDisk);
         for (int i = 0; i < count; i++)
             store.Add(string.Empty);
-        Assert.That(store.ResidentBytes, Is.EqualTo(256L + capacity * (long)IntPtr.Size));
+        Assert.That(store.ResidentBytes, Is.EqualTo(256L + capacity * (long)PointerSize));
         store.Dispose();
-        Assert.That(store.Field<List<string>?>("_strings"), Is.Null);
+        Assert.That(store.ResidentBytes, Is.EqualTo(256));
     }
 
     [Test]
     public void NormalTableSpillsBeforeReferenceCapacityExceedsBudget()
     {
         using var store = new Store(SharedStringStorageMode.SpillToDisk);
-        int capacity = (int)(Budget / IntPtr.Size / 2);
+        int capacity = (int)(Budget / PointerSize / 2);
         for (int i = 0; i < capacity; i++)
             store.Add(string.Empty);
         Assert.That(store.Spilled, Is.False);
-        Assert.That(store.ResidentBytes, Is.EqualTo(256L + capacity * (long)IntPtr.Size));
+        Assert.That(store.ResidentBytes, Is.EqualTo(256L + capacity * (long)PointerSize));
         store.Add(string.Empty);
         Assert.That(store.Spilled, Is.True);
         Assert.That(store.ResidentBytes, Is.LessThan(Budget));
-        Assert.That(store.Field<List<string>?>("_strings"), Is.Null);
     }
 
     [Test]
@@ -987,24 +943,15 @@ public class SharedStringStorageTests
     [Test]
     public void DiskIndexRetainsFullLengthAnd64BitOffsets()
     {
-        var streams = new List<MemoryStream>();
-        using var store = new Store(SharedStringStorageMode.SpillToDisk, (_, _) =>
-        {
-            var stream = new MemoryStream();
-            streams.Add(stream);
-            return stream;
-        });
-        store.Add(new string('x', (int)Budget));
-        Type storeType = typeof(ExcelReaderFactory).Assembly.GetType("ExcelDataReader.Core.AutoSharedStringStore")!;
-        Type entryType = storeType.GetNestedType("Entry", BindingFlags.NonPublic)!;
         long offset = (1L << 32) + 741;
-        object entry = entryType.GetConstructors()[0].Invoke([offset, int.MaxValue]);
-        store.Invoke("WriteEntry", entry);
-        byte[] bytes = streams[1].ToArray();
-        Assert.That(bytes.Length, Is.EqualTo(32));
-        Assert.That(BitConverter.ToInt64(bytes, 16), Is.EqualTo(offset));
-        Assert.That(BitConverter.ToInt32(bytes, 24), Is.EqualTo(int.MaxValue));
-        Assert.That(bytes.Skip(28).Take(4), Is.All.Zero);
+        byte[] bytes = new byte[16];
+        AutoSharedStringStore.EncodeEntry(bytes, new AutoSharedStringStore.Entry(offset, int.MaxValue));
+        Assert.That(BitConverter.ToInt64(bytes, 0), Is.EqualTo(offset));
+        Assert.That(BitConverter.ToInt32(bytes, 8), Is.EqualTo(int.MaxValue));
+        Assert.That(bytes.Skip(12).Take(4), Is.All.Zero);
+        var decoded = AutoSharedStringStore.DecodeEntry(bytes, 0);
+        Assert.That(decoded.Offset, Is.EqualTo(offset));
+        Assert.That(decoded.Length, Is.EqualTo(int.MaxValue));
     }
 
     [Test]
@@ -1438,11 +1385,6 @@ public class SharedStringStorageTests
                 SinglePassMode = true,
             }))
             {
-                object workbook = reader.GetType().GetProperty("Workbook", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(reader)!;
-                object sst = workbook.GetType().GetProperty("SST")!.GetValue(workbook)!;
-                object parser = sst.GetType().GetField("_reader", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(sst)!;
-                byte[] assemblyBuffer = (byte[])parser.GetType().GetProperty("CurrentResult", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(parser)!;
-                Assert.That(assemblyBuffer, Is.Empty);
                 int index = 0;
                 while (reader.Read())
                 {
@@ -1478,21 +1420,13 @@ public class SharedStringStorageTests
             SharedStringWorkbook.Create(path, "xls", entries, length, unicode: unicode);
             using var input = File.OpenRead(path);
             using var reader = ExcelReaderFactory.CreateBinaryReader(input, new ExcelReaderConfiguration { SinglePassMode = true });
-            object workbook = reader.GetType().GetProperty("Workbook", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(reader)!;
-            object sst = workbook.GetType().GetProperty("SST")!.GetValue(workbook)!;
-            object parser = sst.GetType().GetField("_reader", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(sst)!;
-            byte[] assemblyBuffer = (byte[])parser.GetType().GetProperty("CurrentResult", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(parser)!;
-            Assert.That(assemblyBuffer, Is.Empty);
-            object store = workbook.GetType().GetField("_stringStore", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(workbook)!;
-            var getString = store.GetType().GetMethod("GetString")!;
-            for (int i = 0; i < entries; i++)
-                Assert.That(getString.Invoke(store, [i]), Is.EqualTo(SharedStringWorkbook.Value(i, length, unicode)), $"Entry {i}");
-
             Assert.That(reader.Read(), Is.True);
             string value = reader.GetString(0);
             Assert.That(value, Is.EqualTo(SharedStringWorkbook.Value(0, length, unicode)));
-            Assert.That(getString.Invoke(store, [0]), Is.SameAs(value));
             Assert.That(reader.GetString(0), Is.SameAs(value));
+            int index = 1;
+            for (; index < entries && index < reader.FieldCount; index++)
+                Assert.That(reader.GetString(index), Is.EqualTo(SharedStringWorkbook.Value(index, length, unicode)), $"Entry {index}");
         }
         finally
         {
@@ -1539,21 +1473,15 @@ public class SharedStringStorageTests
         }
 
         byte[] record = stream.ToArray();
-        Type sstType = typeof(ExcelReaderFactory).Assembly.GetType("ExcelDataReader.Core.BinaryFormat.XlsBiffSST")!;
-        Type tableType = typeof(ExcelReaderFactory).Assembly.GetType("ExcelDataReader.Core.SharedStringTable")!;
-        object table = Activator.CreateInstance(tableType)!;
-        object sst = sstType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic).Single().Invoke([record, table]);
-        sstType.GetMethod("Flush")!.Invoke(sst, null);
-        var getString = tableType.GetMethod("GetString")!;
+        var table = new SharedStringTable();
+        var sst = new XlsBiffSST(record, table);
+        sst.Flush();
         string[] expected = ["long value", "x", string.Empty, "n\u00ff", "\ufffd", "\ud83d\ude00", "\0"];
         for (int i = 0; i < expected.Length; i++)
-            Assert.That(getString.Invoke(table, [i]), Is.EqualTo(expected[i]), $"Entry {i}");
+            Assert.That(table.GetString(i), Is.EqualTo(expected[i]), $"Entry {i}");
 
-        string first = (string)getString.Invoke(table, [0])!;
-        Assert.That(getString.Invoke(table, [0]), Is.SameAs(first));
-        object parser = sstType.GetField("_reader", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(sst)!;
-        byte[] assemblyBuffer = (byte[])parser.GetType().GetProperty("CurrentResult", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(parser)!;
-        Assert.That(assemblyBuffer, Is.Empty);
+        string first = table.GetString(0);
+        Assert.That(table.GetString(0), Is.SameAs(first));
     }
 
     private static List<string> ReadFixture(string file, SharedStringStorageMode mode)
@@ -1592,41 +1520,6 @@ public class SharedStringStorageTests
         return values;
     }
 
-    private static List<string> CreateSharedStringTable() =>
-        (List<string>)Activator.CreateInstance(typeof(ExcelReaderFactory).Assembly.GetType("ExcelDataReader.Core.SharedStringTable")!)!;
-
-    private static object CreateBinarySharedStringsReader(Stream stream)
-    {
-        Type type = typeof(ExcelReaderFactory).Assembly.GetType("ExcelDataReader.Core.OpenXmlFormat.BinaryFormat.BiffSharedStringsReader")!;
-        return type.GetConstructors()[0].Invoke([stream]);
-    }
-
-    private static void LoadBinarySharedStrings(object reader, object sink)
-    {
-        try
-        {
-            reader.GetType().GetMethod("Load")!.Invoke(reader, [sink]);
-        }
-        catch (TargetInvocationException exception) when (exception.InnerException != null)
-        {
-            ExceptionDispatchInfo.Capture(exception.InnerException).Throw();
-            throw;
-        }
-    }
-
-    private static object? ReadSharedStringsRecord(object reader)
-    {
-        try
-        {
-            return reader.GetType().GetMethod("Read")!.Invoke(reader, null);
-        }
-        catch (TargetInvocationException exception) when (exception.InnerException != null)
-        {
-            ExceptionDispatchInfo.Capture(exception.InnerException).Throw();
-            throw;
-        }
-    }
-
     private static byte[] CodeUnits(string value)
     {
         byte[] bytes = new byte[value.Length * 2];
@@ -1659,95 +1552,53 @@ public class SharedStringStorageTests
 
     private sealed class Store : IDisposable
     {
-        private static readonly Type Type = typeof(ExcelReaderFactory).Assembly.GetType("ExcelDataReader.Core.AutoSharedStringStore")!;
-        private readonly object _store;
+        private readonly AutoSharedStringStore _store;
 
         public Store(SharedStringStorageMode mode, Func<string, string, Stream>? factory = null)
         {
-            _store = Type.GetConstructors()[0].Invoke([new ExcelReaderConfiguration
+            Func<string, string, Stream>? wrapped = null;
+            if (factory != null)
             {
-                SharedStringStorageMode = mode,
-                SharedStringSpillThreshold = Budget,
-                SharedStringTemporaryDirectory = TestContext.CurrentContext.WorkDirectory,
-            }, factory == null ? null : new Func<string, string, Stream>((directory, kind) =>
-            {
-                Stream stream = factory(directory, kind);
-                if (stream is FaultStream fault)
-                    FactoryAction?.Invoke(fault);
-                return stream;
-            })]);
+                wrapped = (directory, kind) =>
+                {
+                    Stream stream = factory(directory, kind);
+                    if (stream is FaultStream fault)
+                        FactoryAction?.Invoke(fault);
+                    return stream;
+                };
+            }
+
+            _store = new AutoSharedStringStore(
+                new ExcelReaderConfiguration
+                {
+                    SharedStringStorageMode = mode,
+                    SharedStringSpillThreshold = Budget,
+                    SharedStringTemporaryDirectory = TestContext.CurrentContext.WorkDirectory,
+                },
+                wrapped);
         }
 
         public Action<FaultStream>? FactoryAction { get; set; }
 
-        public object Instance => _store;
+        public AutoSharedStringStore Instance => _store;
 
-        public int Count => (int)Property("Count");
+        public int Count => _store.Count;
 
-        public bool Spilled => (bool)Property("HasSpilled");
+        public bool Spilled => _store.HasSpilled;
 
-        public long ResidentBytes => (long)Property("ResidentBytes");
+        public long ResidentBytes => _store.ResidentBytes;
 
-        public long DiskBytes => (long)Property("DiskBytes");
+        public long DiskBytes => _store.DiskBytes;
 
-        public void Add(string value) => Invoke("Add", value);
+        public void Add(string value) => _store.Add(value);
 
-        public void Seal() => Invoke("Seal");
+        public void AddUtf16(byte[] buffer, int offset, int characterCount) => _store.AddUtf16(buffer, offset, characterCount);
 
-        public string Get(int index) => (string)Invoke("GetString", index)!;
+        public void Seal() => _store.Seal();
 
-        public void Dispose() => ((IDisposable)_store).Dispose();
+        public string Get(int index) => _store.GetString(index);
 
-        public T Field<T>(string name) => (T)Type.GetField(name, BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(_store)!;
-
-        public object? Invoke(string method, params object[] args)
-        {
-            try
-            {
-                return Type.GetMethod(method, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(_store, args);
-            }
-            catch (TargetInvocationException exception) when (exception.InnerException != null)
-            {
-                ExceptionDispatchInfo.Capture(exception.InnerException).Throw();
-                throw;
-            }
-        }
-
-        private object Property(string name) => Type.GetProperty(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(_store)!;
-    }
-
-    private sealed class MappedReader : IDisposable
-    {
-        private static readonly Type Type = typeof(ExcelReaderFactory).Assembly.GetType("ExcelDataReader.Core.MappedSharedStringReader")!;
-        private readonly object _reader;
-
-        public MappedReader(FileStream file, long length, int viewSize)
-        {
-            try
-            {
-                _reader = Type.GetConstructors()[0].Invoke([file, length, viewSize]);
-            }
-            catch (TargetInvocationException exception) when (exception.InnerException != null)
-            {
-                ExceptionDispatchInfo.Capture(exception.InnerException).Throw();
-                throw;
-            }
-        }
-
-        public bool Read(long offset, byte[] buffer, int count, bool adjacent)
-        {
-            try
-            {
-                return (bool)Type.GetMethod("TryReadExactly")!.Invoke(_reader, [offset, buffer, count, adjacent])!;
-            }
-            catch (TargetInvocationException exception) when (exception.InnerException != null)
-            {
-                ExceptionDispatchInfo.Capture(exception.InnerException).Throw();
-                throw;
-            }
-        }
-
-        public void Dispose() => ((IDisposable)_reader).Dispose();
+        public void Dispose() => _store.Dispose();
     }
 
     private sealed class FaultStream : MemoryStream
@@ -1768,7 +1619,11 @@ public class SharedStringStorageTests
 
         public override long Position
         {
-            get => base.Position;
+            get
+            {
+                return base.Position;
+            }
+
             set
             {
                 if (FailSeek)

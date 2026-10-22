@@ -7,6 +7,10 @@
     <PackageId>ExcelDataReader</PackageId>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="ExcelDataReader.Tests" Key="0024000004800000940000000602000000240000525341310004000001000100538060393579222a7a66b63ca8c6de7e080e19dfe162b6d37bececabf6e6f4ea1038b2bf30fc17812d528f2652d3bf085e293ec5f0c5aadaafa023bcff134491ffa164055f8302149a195da0fd2ec0ee7c5e706e00d5b8bc8b9f813b18848ddb433b0ae0f96e545c5703077143dccfe5303ba39ac2dc115fa345bdf6248fd8b2" />
+  </ItemGroup>
+
   <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
     <Reference Include="System.IO.Compression" />
   </ItemGroup>

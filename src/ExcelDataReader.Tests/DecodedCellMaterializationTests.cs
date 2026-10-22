@@ -1,3 +1,7 @@
+#nullable enable
+
+using ExcelDataReader.Core;
+
 namespace ExcelDataReader.Tests;
 
 public class DecodedCellMaterializationTests
@@ -161,23 +165,16 @@ public class DecodedCellMaterializationTests
     private static IExcelDataReader Open(string fixture, bool singlePass) =>
         ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook(fixture), new ExcelReaderConfiguration { SinglePassMode = singlePass });
 
-    private static object Materialize(object value, string kind, int formatIndex, bool date1904)
+    private static object? Materialize(object? value, string kind, int formatIndex, bool date1904)
     {
-        var assembly = typeof(ExcelReaderFactory).Assembly;
-        var workbookType = assembly.GetType("ExcelDataReader.Core.CommonWorkbook")!;
-        var valueType = assembly.GetType("ExcelDataReader.Core.DecodedCellValue")!;
-        var kindType = assembly.GetType("ExcelDataReader.Core.CellValueKind")!;
-        var styleType = assembly.GetType("ExcelDataReader.Core.ExtendedFormat")!;
-        var style = Activator.CreateInstance(styleType, [formatIndex])!;
+        var style = new ExtendedFormat(formatIndex);
         var decoded = kind == "SharedString"
-            ? valueType.GetMethod("SharedString")!.Invoke(null, [value])!
-            : Activator.CreateInstance(valueType, [value, Enum.Parse(kindType, kind), 0U])!;
-        var cell = workbookType.GetMethod("CreateCell")!.Invoke(
-            Activator.CreateInstance(workbookType), [7, decoded, style, CellError.DIV0, date1904])!;
-        var cellType = cell.GetType();
-        Assert.That(cellType.GetProperty("ColumnIndex")!.GetValue(cell), Is.EqualTo(7));
-        Assert.That(cellType.GetProperty("EffectiveStyle")!.GetValue(cell), Is.SameAs(style));
-        Assert.That(cellType.GetProperty("Error")!.GetValue(cell), Is.EqualTo(CellError.DIV0));
-        return cellType.GetProperty("Value")!.GetValue(cell);
+            ? DecodedCellValue.SharedString((uint)value!)
+            : new DecodedCellValue(value, (CellValueKind)Enum.Parse(typeof(CellValueKind), kind));
+        var cell = new CommonWorkbook().CreateCell(7, decoded, style, CellError.DIV0, date1904);
+        Assert.That(cell.ColumnIndex, Is.EqualTo(7));
+        Assert.That(cell.EffectiveStyle, Is.SameAs(style));
+        Assert.That(cell.Error, Is.EqualTo(CellError.DIV0));
+        return cell.Value;
     }
 }

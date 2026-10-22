@@ -4,11 +4,18 @@ namespace ExcelDataReader.Core;
 
 internal sealed class AutoSharedStringStore : ISharedStringStore
 {
+#if NET8_0_OR_GREATER
+    internal static readonly int PointerSize = nint.Size;
+#else
+    internal static readonly int PointerSize = IntPtr.Size;
+#endif
+
     private const int ChunkSize = 32768;
     private const int IndexBufferSize = 4096;
     private const int DiskEntrySize = 16;
     private const long FixedBytes = 256;
     private const long DiskBufferBytes = ChunkSize + IndexBufferSize + 64L + 2 * (4096L + 256);
+
     private readonly long _limit;
     private readonly long _cacheLimit;
     private readonly string? _directory;
@@ -131,7 +138,7 @@ internal sealed class AutoSharedStringStore : ISharedStringStore
             int start = ReadWindow(_index!, _indexMapping, _entryBuffer!, offset, DiskEntrySize, (long)Count * DiskEntrySize, adjacent, ref _indexWindowOffset, ref _indexWindowLength);
             _previousIndex = index;
             byte[] indexBuffer = _entryBuffer!;
-            entry = new Entry(ReadInt64(indexBuffer, start), ReadInt32(indexBuffer, start + 8));
+            entry = DecodeEntry(indexBuffer, start);
             long end = checked(entry.Offset + (long)entry.Length * 2);
             if (entry.Offset < 0 || (entry.Offset & 1) != 0 || entry.Length < 0 || end > _length)
                 throw new IOException("Invalid shared string index data.");
@@ -189,17 +196,37 @@ internal sealed class AutoSharedStringStore : ISharedStringStore
         }
     }
 
-    public void Reserve(int capacity)
+    public void Reserve(int count)
     {
         CheckCanAdd();
-        if (_strings == null || capacity <= _strings.Capacity)
+        if (_strings == null || count <= _strings.Capacity)
             return;
-        long growth = (long)(capacity - _strings.Capacity) * IntPtr.Size;
+        long growth = (long)(count - _strings.Capacity) * PointerSize;
         if (checked(_allocatedBytes + growth) > _limit)
             return;
-        _strings.Capacity = capacity;
+        _strings.Capacity = count;
         _allocatedBytes += growth;
     }
+
+    internal static void EncodeEntry(byte[] buffer, Entry entry)
+    {
+        long offset = entry.Offset;
+        for (int i = 0; i < 8; i++)
+        {
+            buffer[i] = (byte)offset;
+            offset >>= 8;
+        }
+
+        int length = entry.Length;
+        for (int i = 8; i < 12; i++)
+        {
+            buffer[i] = (byte)length;
+            length >>= 8;
+        }
+    }
+
+    internal static Entry DecodeEntry(byte[] buffer, int start) =>
+        new(ReadInt64(buffer, start), ReadInt32(buffer, start + 8));
 
     private static long ValueBytes(string value) => StringBytes(value.Length);
 
@@ -283,7 +310,7 @@ internal sealed class AutoSharedStringStore : ISharedStringStore
         if (_strings == null)
             return false;
         capacity = Capacity(_strings.Capacity, Count + 1);
-        growth = checked((long)(capacity - _strings.Capacity) * IntPtr.Size + bytes);
+        growth = checked((long)(capacity - _strings.Capacity) * PointerSize + bytes);
         if (checked(_allocatedBytes + growth) > _limit)
         {
             Spill();
@@ -486,22 +513,8 @@ internal sealed class AutoSharedStringStore : ISharedStringStore
 
     private void WriteEntry(Entry entry)
     {
-        byte[] indexBuffer = _entryBuffer!;
-        long offset = entry.Offset;
-        for (int i = 0; i < 8; i++)
-        {
-            indexBuffer[i] = (byte)offset;
-            offset >>= 8;
-        }
-
-        int length = entry.Length;
-        for (int i = 8; i < 12; i++)
-        {
-            indexBuffer[i] = (byte)length;
-            length >>= 8;
-        }
-
-        _index!.Write(indexBuffer, 0, DiskEntrySize);
+        EncodeEntry(_entryBuffer!, entry);
+        _index!.Write(_entryBuffer!, 0, DiskEntrySize);
     }
 
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
@@ -539,7 +552,7 @@ internal sealed class AutoSharedStringStore : ISharedStringStore
 #endif
     }
 
-    private readonly struct Entry(long offset, int length)
+    internal readonly struct Entry(long offset, int length)
     {
         public long Offset { get; } = offset;
 

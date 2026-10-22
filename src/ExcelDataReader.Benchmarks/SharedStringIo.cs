@@ -38,8 +38,9 @@ internal static class SharedStringIo
         var streams = new Dictionary<string, CountingStream>();
         Func<string, string, Stream> factory = (directory, kind) =>
         {
-            Stream stream = backend == "Memory" ? new MemoryStream() :
-                new FileStream(Path.Combine(directory, "ExcelDataReader-io-" + Guid.NewGuid().ToString("N") + "-" + kind), FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose);
+            Stream stream = backend == "Memory"
+                ? new MemoryStream()
+                : new FileStream(Path.Combine(directory, "ExcelDataReader-io-" + Guid.NewGuid().ToString("N") + "-" + kind), FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose);
             var counted = new CountingStream(stream);
             streams.Add(kind, counted);
             return counted;
@@ -117,7 +118,11 @@ internal static class SharedStringIo
 
         public override long Position
         {
-            get => inner.Position;
+            get
+            {
+                return inner.Position;
+            }
+
             set
             {
                 _seeks++;
