@@ -132,21 +132,22 @@ internal sealed partial class ZipWorker : IDisposable
         }
     }
 
-    /// <summary>
-    /// Gets the shared strings reader.
-    /// </summary>
-    public RecordReader? GetSharedStringsReader()
+    public void LoadSharedStrings(ISharedStringStore store)
     {
         if (FindEntry(_fileSharedStrings) is { } entry)
         {
             if (entry.FullName.EndsWith(".xml", StringComparison.Ordinal))
-                return new XmlSharedStringsReader(XmlReader.Create(entry.Open(), XmlSettings));
-
-            if (entry.FullName.EndsWith(".bin", StringComparison.Ordinal))
-                return new BiffSharedStringsReader(OpenZipEntry(entry));
+            {
+                using var stream = entry.Open();
+                using var reader = new XmlSharedStringsReader(XmlReader.Create(stream, XmlSettings), store);
+                reader.Load();
+            }
+            else if (entry.FullName.EndsWith(".bin", StringComparison.Ordinal))
+            {
+                using var reader = new BiffSharedStringsReader(OpenZipEntry(entry));
+                reader.Load(store);
+            }
         }
-
-        return null;
     }
 
     /// <summary>

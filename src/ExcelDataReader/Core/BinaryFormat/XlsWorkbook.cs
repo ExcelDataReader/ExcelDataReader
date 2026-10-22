@@ -10,34 +10,48 @@ namespace ExcelDataReader.Core.BinaryFormat;
 /// </summary>
 internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
 {
-    internal XlsWorkbook(Stream stream, string? password, Encoding fallbackEncoding)
+    private readonly ISharedStringStore _stringStore = new SharedStringTable();
+
+    internal XlsWorkbook(Stream stream, ExcelReaderConfiguration configuration)
     {
         Stream = stream;
 
-        using var biffStream = new XlsBiffStream(stream, password: password);
+        using var biffStream = new XlsBiffStream(stream, password: configuration.Password);
         if (biffStream.BiffVersion == 0)
             throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
 
         BiffVersion = biffStream.BiffVersion;
         SecretKey = biffStream.SecretKey;
         Encryption = biffStream.Encryption;
-        Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : fallbackEncoding;
+        Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : configuration.FallbackEncoding;
 
-        switch (biffStream.BiffType)
+        try
         {
-            case BIFFTYPE.WorkbookGlobals:
-                ReadWorkbookGlobals(biffStream);
-                break;
-            case BIFFTYPE.Worksheet:
-                // set up 'virtual' bound sheet pointing at this
-                Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
-                break;
-            case BIFFTYPE.MacroSheet:
-                // set up 'virtual' bound sheet pointing at this
-                Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.MacroSheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
-                break;
-            default:
-                throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+            if (BiffVersion == 8 && configuration.SharedStringStorageMode != SharedStringStorageMode.Default)
+                _stringStore = new AutoSharedStringStore(configuration);
+            biffStream.SharedStringStore = _stringStore;
+
+            switch (biffStream.BiffType)
+            {
+                case BIFFTYPE.WorkbookGlobals:
+                    ReadWorkbookGlobals(biffStream);
+                    break;
+                case BIFFTYPE.Worksheet:
+                    // set up 'virtual' bound sheet pointing at this
+                    Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
+                    break;
+                case BIFFTYPE.MacroSheet:
+                    // set up 'virtual' bound sheet pointing at this
+                    Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.MacroSheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
+                    break;
+                default:
+                    throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+            }
+        }
+        catch (Exception exception)
+        {
+            ResourceCleanup.DisposeAll(exception, this);
+            throw;
         }
     }
 
@@ -140,7 +154,7 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
 
     public void Dispose()
     {
-        Stream.Dispose();
+        ResourceCleanup.DisposeAll(null, _stringStore, Stream);
     }
 
     internal void AddXf(XlsBiffXF xf)
@@ -154,6 +168,13 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
         // here to keep the indexes the same.
         ExtendedFormats.Add(extendedFormat);
         CellStyleExtendedFormats.Add(extendedFormat);
+    }
+
+    protected override string? ResolveSharedString(uint index)
+    {
+        if (SST == null)
+            throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
+        return index < (uint)_stringStore.Count ? _stringStore.GetString((int)index) : null;
     }
 
     private void ReadWorkbookGlobals(XlsBiffStream biffStream)
@@ -231,6 +252,7 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
         }
 
         SST?.Flush();
+        _stringStore.Seal();
 
         foreach (var format in formats)
         {
