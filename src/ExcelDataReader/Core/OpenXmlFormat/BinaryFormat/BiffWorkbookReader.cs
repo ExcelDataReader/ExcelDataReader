@@ -21,24 +21,17 @@ internal sealed class BiffWorkbookReader(Stream stream, Dictionary<string, strin
     {
         while (TryReadFrame(out var buffer, out var recordId, out _))
         {
-            try
+            switch (recordId)
             {
-                switch (recordId)
-                {
-                    case WorkbookPr:
-                        sink.SetDate1904((buffer[0] & 0x01) == 1);
-                        break;
-                    case Sheet: // BrtBundleSh
-                        sink.AddSheet(ReadSheet(buffer));
-                        break;
-                    case BrtBookView:
-                        sink.SetActiveSheet((int)GetDWord(buffer, 24));
-                        break;
-                }
-            }
-            finally
-            {
-                ReleaseFrame(buffer);
+                case WorkbookPr:
+                    sink.SetDate1904((buffer[0] & 0x01) == 1);
+                    break;
+                case Sheet: // BrtBundleSh
+                    sink.AddSheet(ReadSheet(buffer));
+                    break;
+                case BrtBookView:
+                    sink.SetActiveSheet((int)GetDWord(buffer, 24));
+                    break;
             }
         }
     }

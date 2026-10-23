@@ -19,7 +19,7 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
     private bool _ended;
     private bool _firstRecord = true;
     private bool _sourceEnded;
-    private XlsWorksheetRecord _pendingRecord;
+    private XlsBiffFrame _pendingFrame;
     private bool _hasPendingRecord;
     private int _pendingColumn;
     private ushort? _ixfe;
@@ -30,7 +30,7 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
     {
         _worksheet = worksheet;
         _decoder = new XlsWorksheetCellDecoder(worksheet);
-        _stream = new XlsBiffStream(worksheet.Stream, (int)worksheet.DataOffset, worksheet.Workbook.BiffVersion, BIFFTYPE.Worksheet, secretKey: worksheet.Workbook.SecretKey, encryption: worksheet.Workbook.Encryption);
+        _stream = XlsBiffStartup.Open(worksheet.Stream, out _, out _, (int)worksheet.DataOffset, worksheet.Workbook.BiffVersion, BIFFTYPE.Worksheet, secretKey: worksheet.Workbook.SecretKey, encryption: worksheet.Workbook.Encryption);
     }
 
     public WorksheetReadStatus Consume<THandler>(ref THandler handler)
@@ -221,38 +221,28 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
 
         _stream.Position = minOffset;
         ushort? ixfe = null;
-        while (_stream.Position <= maxOffset && _stream.ReadWorksheetRecord(out var item))
+        while (_stream.Position <= maxOffset && _stream.ReadFrame(out var frame))
         {
-            try
+            if (frame.IsCell)
             {
-                if (item.IsCell)
+                // The offset map initializes every physical row before this scan.
+                var cells = _block[frame.RowIndex - _blockStart].Cells!;
+                if (frame.Id == BIFFRECORDTYPE.MULRK)
                 {
-                    var frame = item.Cell;
-
-                    // The offset map initializes every physical row before this scan.
-                    var cells = _block[frame.RowIndex - _blockStart].Cells!;
-                    var ownedCell = item.OwnedRecord as XlsBiffBlankCell;
-                    if (frame.Id == BIFFRECORDTYPE.MULRK)
-                    {
-                        var lastColumn = frame.LastColumnIndex;
-                        for (var column = (int)frame.ColumnIndex; column <= lastColumn; column++)
-                            cells.Add(_decoder.Decode(_stream, frame, ownedCell, ixfe, column));
-                    }
-                    else
-                    {
-                        cells.Add(_decoder.Decode(_stream, frame, ownedCell, ixfe, frame.ColumnIndex));
-                    }
-
-                    ixfe = null;
+                    var lastColumn = frame.LastColumnIndex;
+                    for (var column = (int)frame.ColumnIndex; column <= lastColumn; column++)
+                        cells.Add(_decoder.Decode(_stream, frame, ixfe, column));
                 }
-                else if (item.OwnedRecord?.Id == BIFFRECORDTYPE.IXFE)
+                else
                 {
-                    ixfe = item.OwnedRecord.ReadUInt16(0);
+                    cells.Add(_decoder.Decode(_stream, frame, ixfe, frame.ColumnIndex));
                 }
+
+                ixfe = null;
             }
-            finally
+            else if (frame.Id == BIFFRECORDTYPE.IXFE)
             {
-                item.Release();
+                ixfe = frame.ReadUInt16(0);
             }
         }
     }
@@ -303,7 +293,7 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
             if (!_hasPendingRecord && !_sourceEnded)
                 ReadForwardRecord();
 
-            if (_currentRow >= 0 && (_sourceEnded || _pendingRecord.Cell.RowIndex != _currentRow))
+            if (_currentRow >= 0 && (_sourceEnded || _pendingFrame.RowIndex != _currentRow))
             {
                 if (!_rowOpen && !_sourceEnded)
                 {
@@ -329,7 +319,7 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
             if (_sourceEnded)
                 return WorksheetReadStatus.EndOfInput;
 
-            var frame = _pendingRecord.Cell;
+            var frame = _pendingFrame;
             if (_currentRow < 0)
             {
                 if (frame.RowIndex <= _lastCompletedRow)
@@ -338,8 +328,7 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
                 _currentRow = frame.RowIndex;
             }
 
-            var ownedCell = _pendingRecord.OwnedRecord as XlsBiffBlankCell;
-            if (ownedCell is { IsEmpty: true } || (frame.Id == BIFFRECORDTYPE.MULRK && frame.LastColumnIndex < frame.ColumnIndex))
+            if (frame.IsEmptyCell || (frame.Id == BIFFRECORDTYPE.MULRK && frame.LastColumnIndex < frame.ColumnIndex))
             {
                 _ixfe = null;
                 ReleasePendingRecord();
@@ -355,7 +344,7 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
             }
 
             var lastColumn = frame.Id == BIFFRECORDTYPE.MULRK ? frame.LastColumnIndex : frame.ColumnIndex;
-            var cell = _decoder.Decode(_stream, frame, ownedCell, _ixfe, _pendingColumn++);
+            var cell = _decoder.Decode(_stream, frame, _ixfe, _pendingColumn++);
             if (_pendingColumn > lastColumn)
             {
                 _ixfe = null;
@@ -372,39 +361,47 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
 
     private void ReadForwardRecord()
     {
-        while (_stream.ReadWorksheetRecord(out var item))
+        while (_stream.ReadFrame(out var frame))
         {
-            if (item.IsCell)
+            if (frame.IsCell)
             {
                 _firstRecord = false;
-                _pendingRecord = item;
+                _pendingFrame = frame;
                 _hasPendingRecord = true;
-                _pendingColumn = item.Cell.ColumnIndex;
+                _pendingColumn = frame.ColumnIndex;
                 return;
             }
 
-            try
+            if (frame.Id == BIFFRECORDTYPE.EOF || (frame.Id == BIFFRECORDTYPE.BOF && !_firstRecord))
             {
-                var record = item.OwnedRecord;
-                if (record is XlsBiffEof || (record is XlsBiffBOF && !_firstRecord))
+                _sourceEnded = true;
+                return;
+            }
+
+            _firstRecord = false;
+            if (frame.Id is BIFFRECORDTYPE.ROW or BIFFRECORDTYPE.ROW_V2)
+            {
+                double rowHeight;
+                if (frame.Id == BIFFRECORDTYPE.ROW_V2)
                 {
-                    _sourceEnded = true;
-                    return;
+                    var heightBits = frame.ReadUInt16(6);
+                    bool useDefault = (heightBits & 0x8000) != 0;
+                    rowHeight = (useDefault ? _worksheet.DefaultRowHeight : heightBits & 0x7FFFF) / 20.0;
+                }
+                else
+                {
+                    var heightBits = frame.ReadUInt16(6);
+                    var flags = frame.ReadUInt16(12);
+                    bool useDefault = (heightBits & 0x8000) != 0;
+                    int actualHeight = (flags & 0x20) == 0 ? heightBits & 0x7FFFF : 0;
+                    rowHeight = (useDefault ? _worksheet.DefaultRowHeight : actualHeight) / 20.0;
                 }
 
-                _firstRecord = false;
-                if (record is XlsBiffRow row)
-                {
-                    _rowHeights[row.RowIndex] = (row.UseDefaultRowHeight ? _worksheet.DefaultRowHeight : row.RowHeight) / 20.0;
-                }
-                else if (record?.Id == BIFFRECORDTYPE.IXFE)
-                {
-                    _ixfe = record.ReadUInt16(0);
-                }
+                _rowHeights[frame.RowIndex] = rowHeight;
             }
-            finally
+            else if (frame.Id == BIFFRECORDTYPE.IXFE)
             {
-                item.Release();
+                _ixfe = frame.ReadUInt16(0);
             }
         }
 
@@ -416,8 +413,7 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
         if (!_hasPendingRecord)
             return;
 
-        _pendingRecord.Release();
-        _pendingRecord = default;
+        _pendingFrame = default;
         _hasPendingRecord = false;
     }
 

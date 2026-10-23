@@ -24,63 +24,56 @@ internal sealed class BiffStylesReader(Stream stream) : BiffReader(stream)
     {
         while (TryReadFrame(out var buffer, out var recordId, out _))
         {
-            try
+            switch (recordId)
             {
-                switch (recordId)
-                {
-                    case CellXfStart:
-                        _inCellXf = true;
-                        break;
-                    case CellXfEnd:
-                        _inCellXf = false;
-                        break;
-                    case CellStyleXfStart:
-                        _inCellStyleXf = true;
-                        break;
-                    case CellStyleXfEnd:
-                        _inCellStyleXf = false;
-                        break;
-                    case NumberFormatStart:
-                        _inNumberFormat = true;
-                        break;
-                    case NumberFormatEnd:
-                        _inNumberFormat = false;
-                        break;
+                case CellXfStart:
+                    _inCellXf = true;
+                    break;
+                case CellXfEnd:
+                    _inCellXf = false;
+                    break;
+                case CellStyleXfStart:
+                    _inCellStyleXf = true;
+                    break;
+                case CellStyleXfEnd:
+                    _inCellStyleXf = false;
+                    break;
+                case NumberFormatStart:
+                    _inNumberFormat = true;
+                    break;
+                case NumberFormatEnd:
+                    _inNumberFormat = false;
+                    break;
 
-                    case Xf when _inCellXf:
-                    case Xf when _inCellStyleXf:
-                        {
-                            // var flags = buffer[14];
-                            var extendedFormat = new ExtendedFormat(
-                                GetWord(buffer, 0),
-                                GetWord(buffer, 4),
-                                GetWord(buffer, 2),
-                                (buffer[13] & 0x10000) != 0,
-                                (buffer[13] & 0x100000) != 0,
-                                (int)(uint)buffer[11],
-                                (HorizontalAlignment)(buffer[12] & 0b111),
-                                (VerticalAlignment)(buffer[12] >> 3 & 0b111));
+                case Xf when _inCellXf:
+                case Xf when _inCellStyleXf:
+                    {
+                        // var flags = buffer[14];
+                        var extendedFormat = new ExtendedFormat(
+                            GetWord(buffer, 0),
+                            GetWord(buffer, 4),
+                            GetWord(buffer, 2),
+                            (buffer[13] & 0x10000) != 0,
+                            (buffer[13] & 0x100000) != 0,
+                            (int)(uint)buffer[11],
+                            (HorizontalAlignment)(buffer[12] & 0b111),
+                            (VerticalAlignment)(buffer[12] >> 3 & 0b111));
 
-                            if (_inCellXf)
-                                sink.AddExtendedFormat(extendedFormat);
-                            else
-                                sink.AddCellStyleExtendedFormat(extendedFormat);
-                            break;
-                        }
+                        if (_inCellXf)
+                            sink.AddExtendedFormat(extendedFormat);
+                        else
+                            sink.AddCellStyleExtendedFormat(extendedFormat);
+                        break;
+                    }
 
-                    case NumberFormat when _inNumberFormat:
-                        {
-                            // Must be between 1 and 255 characters
-                            int format = GetWord(buffer, 0);
-                            uint length = GetDWord(buffer, 2);
-                            sink.AddNumberFormat(format, GetString(buffer, 2 + 4, length));
-                            break;
-                        }
-                }
-            }
-            finally
-            {
-                ReleaseFrame(buffer);
+                case NumberFormat when _inNumberFormat:
+                    {
+                        // Must be between 1 and 255 characters
+                        int format = GetWord(buffer, 0);
+                        uint length = GetDWord(buffer, 2);
+                        sink.AddNumberFormat(format, GetString(buffer, 2 + 4, length));
+                        break;
+                    }
             }
         }
     }

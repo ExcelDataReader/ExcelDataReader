@@ -611,6 +611,73 @@ public class SharedStringStorageTests
         Assert.That(sst, Is.EqualTo(new[] { "ab" }));
     }
 
+    [Test]
+    public void XlsbRecordLargerThan16MiBDoesNotPreventReadingFollowingRecords()
+    {
+        const int length = 16 * 1024 * 1024 + 1;
+        byte[] following = XlsbStringItem(CodeUnits("ab"), 2);
+        byte[] bytes = new byte[5 + length + following.Length];
+
+        // An unhandled record still has to be consumed without imposing an arbitrary size limit.
+        bytes[0] = 0x7f;
+        bytes[1] = (byte)((length & 0x7f) | 0x80);
+        bytes[2] = (byte)((length >> 7 & 0x7f) | 0x80);
+        bytes[3] = (byte)((length >> 14 & 0x7f) | 0x80);
+        bytes[4] = (byte)(length >> 21);
+        Array.Copy(following, 0, bytes, 5 + length, following.Length);
+
+        using var input = new MemoryStream(bytes);
+        using var reader = new BiffSharedStringsReader(input);
+        var sst = new SharedStringTable();
+        reader.Load(sst);
+
+        Assert.That(sst, Is.EqualTo(new[] { "ab" }));
+    }
+
+    [Test]
+    public void XlsbRecordLengthWithContinuationAfterFourthByteIsRejected()
+    {
+        using var input = new MemoryStream([0x13, 0x80, 0x80, 0x80, 0x80]);
+        using var reader = new BiffSharedStringsReader(input);
+
+        var exception = Assert.Throws<ExcelReaderException>(() => reader.Load(new SharedStringTable()));
+
+        Assert.That(exception!.Message, Is.EqualTo("Invalid BIFF record size."));
+    }
+
+    [Test]
+    public void XlsbRecordWithTruncatedLengthHeaderIsRejected()
+    {
+        using var input = new MemoryStream([0x13, 0x80]);
+        using var reader = new BiffSharedStringsReader(input);
+
+        var exception = Assert.Throws<ExcelReaderException>(() => reader.Load(new SharedStringTable()));
+
+        Assert.That(exception!.Message, Is.EqualTo("Invalid BIFF record size."));
+    }
+
+    [Test]
+    public void XlsbRecordWithoutLengthHeaderIsRejected()
+    {
+        using var input = new MemoryStream([0x13]);
+        using var reader = new BiffSharedStringsReader(input);
+
+        var exception = Assert.Throws<ExcelReaderException>(() => reader.Load(new SharedStringTable()));
+
+        Assert.That(exception!.Message, Is.EqualTo("Invalid BIFF record size."));
+    }
+
+    [Test]
+    public void XlsbRecordWithTruncatedPayloadIsRejected()
+    {
+        using var input = new MemoryStream([0x13, 1]);
+        using var reader = new BiffSharedStringsReader(input);
+
+        var exception = Assert.Throws<ExcelReaderException>(() => reader.Load(new SharedStringTable()));
+
+        Assert.That(exception!.Message, Is.EqualTo("Invalid BIFF record size."));
+    }
+
     [TestCase("default")]
     [TestCase("resident")]
     [TestCase("spilled")]
@@ -1472,8 +1539,9 @@ public class SharedStringStorageTests
 
         byte[] record = stream.ToArray();
         var table = new SharedStringTable();
-        var sst = new XlsBiffSST(record, table);
-        sst.Flush();
+        var parser = new XlsSSTReader();
+        parser.ReadStrings(new XlsBiffFrame(record), 12, false, table, values.Length);
+        parser.Flush(table);
         string[] expected = ["long value", "x", string.Empty, "n\u00ff", "\ufffd", "\ud83d\ude00", "\0"];
         for (int i = 0; i < expected.Length; i++)
             Assert.That(table.GetString(i), Is.EqualTo(expected[i]), $"Entry {i}");

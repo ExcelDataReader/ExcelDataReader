@@ -424,7 +424,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         return Workbook ?? throw new InvalidOperationException("Workbook is not initialized.");
     }
 
-    private struct RowHandler(ExcelDataReader<TWorkbook, TWorksheet> owner) : IWorksheetHandler
+    private readonly struct RowHandler(ExcelDataReader<TWorkbook, TWorksheet> owner) : IWorksheetHandler
     {
         public WorksheetReadControl OnDimension(CellRange range) => WorksheetReadControl.Continue;
 

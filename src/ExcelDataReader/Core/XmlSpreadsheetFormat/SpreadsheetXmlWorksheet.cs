@@ -153,7 +153,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
         public double DefaultRowHeight { get; private set; } = 15D;
 
-        public WorksheetReadControl OnDimension(CellRange range) => WorksheetReadControl.Continue;
+        public readonly WorksheetReadControl OnDimension(CellRange range) => WorksheetReadControl.Continue;
 
         public WorksheetReadControl OnCodeName(string? codeName)
         {
@@ -168,13 +168,13 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             return WorksheetReadControl.Continue;
         }
 
-        public WorksheetReadControl OnColumn(Column column)
+        public readonly WorksheetReadControl OnColumn(Column column)
         {
             ColumnWidths.Add(column);
             return WorksheetReadControl.Continue;
         }
 
-        public WorksheetReadControl OnMergeCell(CellRange range)
+        public readonly WorksheetReadControl OnMergeCell(CellRange range)
         {
             MergeCells.Add(range);
             return WorksheetReadControl.Continue;
@@ -186,7 +186,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             return WorksheetReadControl.Continue;
         }
 
-        public WorksheetReadControl OnSheetDataBegin() => WorksheetReadControl.Continue;
+        public readonly WorksheetReadControl OnSheetDataBegin() => WorksheetReadControl.Continue;
 
         public WorksheetReadControl OnScanResult(int maxRowIndex, int maxColumnIndex)
         {
@@ -195,10 +195,10 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             return WorksheetReadControl.Continue;
         }
 
-        public WorksheetReadControl OnRow(int index, bool hidden, double? height) => WorksheetReadControl.Continue;
+        public readonly WorksheetReadControl OnRow(int index, bool hidden, double? height) => WorksheetReadControl.Continue;
 
-        public WorksheetReadControl OnCell(in Cell cell) => WorksheetReadControl.Continue;
+        public readonly WorksheetReadControl OnCell(in Cell cell) => WorksheetReadControl.Continue;
 
-        public WorksheetReadControl OnRowEnd() => WorksheetReadControl.Continue;
+        public readonly WorksheetReadControl OnRowEnd() => WorksheetReadControl.Continue;
     }
 }

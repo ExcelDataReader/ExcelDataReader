@@ -132,10 +132,16 @@ internal sealed class XmlWorksheetReader(XmlReader reader, WorksheetReadMode mod
                                 _rowIndex++;
 
                             _scanMaxRowIndex = Math.Max(_scanMaxRowIndex, _rowIndex);
+                            int hidden = 0;
+                            double? height = null;
+                            if (mode == WorksheetReadMode.Materialize)
+                            {
 #pragma warning disable CA1806 // Do not ignore method results
-                            int.TryParse(_reader.GetAttribute(AHidden), out int hidden);
+                                int.TryParse(_reader.GetAttribute(AHidden), out hidden);
 #pragma warning restore CA1806 // Do not ignore method results
-                            double? height = double.TryParse(_reader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var ahtValue) ? Math.Abs(ahtValue) : null;
+                                height = double.TryParse(_reader.GetAttribute(AHt), NumberStyles.Any, CultureInfo.InvariantCulture, out var ahtValue) ? Math.Abs(ahtValue) : null;
+                            }
+
                             _pendingRowContents = true;
                             _rowOpen = true;
                             foundRow = true;

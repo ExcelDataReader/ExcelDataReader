@@ -134,13 +134,13 @@ internal sealed class XlsxWorksheet : IWorksheet
             return WorksheetReadControl.Continue;
         }
 
-        public WorksheetReadControl OnColumn(Column column)
+        public readonly WorksheetReadControl OnColumn(Column column)
         {
             ColumnWidths.Add(column);
             return WorksheetReadControl.Continue;
         }
 
-        public WorksheetReadControl OnMergeCell(CellRange range)
+        public readonly WorksheetReadControl OnMergeCell(CellRange range)
         {
             MergeCells.Add(range);
             return WorksheetReadControl.Continue;
@@ -152,7 +152,7 @@ internal sealed class XlsxWorksheet : IWorksheet
             return WorksheetReadControl.Continue;
         }
 
-        public WorksheetReadControl OnSheetDataBegin() =>
+        public readonly WorksheetReadControl OnSheetDataBegin() =>
             pauseAtSheetData ? WorksheetReadControl.Pause : WorksheetReadControl.Continue;
 
         public WorksheetReadControl OnScanResult(int maxRowIndex, int maxColumnIndex)
@@ -162,15 +162,15 @@ internal sealed class XlsxWorksheet : IWorksheet
             return WorksheetReadControl.Continue;
         }
 
-        public WorksheetReadControl OnRow(int index, bool hidden, double? height)
+        public readonly WorksheetReadControl OnRow(int index, bool hidden, double? height)
         {
             RowOrder?.Add(index);
             return WorksheetReadControl.Continue;
         }
 
-        public WorksheetReadControl OnCell(in Cell cell) => WorksheetReadControl.Continue;
+        public readonly WorksheetReadControl OnCell(in Cell cell) => WorksheetReadControl.Continue;
 
-        public WorksheetReadControl OnRowEnd() => WorksheetReadControl.Continue;
+        public readonly WorksheetReadControl OnRowEnd() => WorksheetReadControl.Continue;
     }
 
     private sealed class EmptyReader : IWorksheetReader

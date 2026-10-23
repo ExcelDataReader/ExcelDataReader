@@ -1,14 +1,12 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using ExcelDataReader.Core.OfficeCrypto;
-using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.BinaryFormat;
 
 /// <summary>
-/// Represents a BIFF stream. Every record is read through <see cref="ReadWorksheetRecord"/>:
-/// common cells borrow a reusable buffer and are valid until the next read, while all other
-/// records are owned and released with <see cref="XlsWorksheetRecord.Release"/>.
+/// Represents a BIFF stream. Records borrow a reusable frame and are valid until
+/// the next read.
 /// Reads must stay sequential so the RC4/XOR decryptor remains aligned.
 /// </summary>
 internal sealed class XlsBiffStream : IDisposable
@@ -22,72 +20,20 @@ internal sealed class XlsBiffStream : IDisposable
     private readonly byte[] _headerBuffer = new byte[4];
 
     private readonly byte[] _readAheadBuffer = new byte[ReadAheadSize];
-    private byte[]? _cellBuffer;
+    private BiffFrameBuffer _frameBuffer = new(64);
     private int _readAheadStart;
     private int _readAheadEnd;
 
     // Reused decryption buffers: one 1024-byte encryption block in/out, and the current block key. Allocated on first use.
     private byte[]? _decryptOutputBuffer;
     private byte[]? _blockKeyBuffer;
-    private ISharedStringStore? _sharedStringStore;
 
-    public XlsBiffStream(Stream baseStream, int offset = 0, int explicitVersion = 0, BIFFTYPE? defaultType = null, string? password = null, byte[]? secretKey = null, EncryptionInfo? encryption = null)
+    public XlsBiffStream(Stream baseStream, int offset = 0)
     {
         BaseStream = baseStream;
-        Position = offset;
-
-        var record = ReadNextOwnedRecord();
-        if (record is XlsBiffBOF bof)
-        {
-            BiffVersion = explicitVersion == 0 ? XlsBiffStream.GetBiffVersion(bof) : explicitVersion;
-            BiffType = bof.Type;
-
-            if (secretKey == null)
-                record = ReadNextOwnedRecord();
-        }
-        else if (explicitVersion > 0 && defaultType != null) 
-        {
-            BiffVersion = explicitVersion;
-            BiffType = defaultType.Value;
-        }
-
         CipherBlock = -1;
-        if (secretKey != null)
-        {
-            SecretKey = secretKey;
-            Encryption = encryption ?? throw new ArgumentNullException(nameof(encryption));
-            Cipher = Encryption.CreateCipher();
-        }
-        else
-        {
-            var filePass = record as XlsBiffFilePass;
-            filePass ??= ReadNextOwnedRecord() as XlsBiffFilePass;
-
-            if (filePass != null)
-            {
-                Encryption = filePass.EncryptionInfo;
-
-                if (Encryption.VerifyPassword("VelvetSweatshop"))
-                {
-                    // Magic password used for write-protected workbooks
-                    password = "VelvetSweatshop";
-                }
-                else if (password == null || !Encryption.VerifyPassword(password))
-                {
-                    throw new InvalidPasswordException(Errors.ErrorInvalidPassword);
-                }
-
-                SecretKey = Encryption.GenerateSecretKey(password);
-                Cipher = Encryption.CreateCipher();
-            }
-        }
-
         Position = offset;
     }
-
-    public int BiffVersion { get; }
-
-    public BIFFTYPE BiffType { get; }
 
     /// <summary>
     /// Gets the size of BIFF stream in bytes.
@@ -105,11 +51,11 @@ internal sealed class XlsBiffStream : IDisposable
 
     public Stream BaseStream { get; }
 
-    public byte[]? SecretKey { get; }
+    public byte[]? SecretKey { get; private set; }
 
-    public EncryptionInfo? Encryption { get; }
+    public EncryptionInfo? Encryption { get; private set; }
 
-    public SymmetricAlgorithm? Cipher { get; }
+    public SymmetricAlgorithm? Cipher { get; private set; }
 
     /// <summary>
     /// Gets or sets the ICryptoTransform instance used to decrypt the current block.
@@ -120,16 +66,6 @@ internal sealed class XlsBiffStream : IDisposable
     /// Gets or sets the current block number being decrypted with CipherTransform.
     /// </summary>
     public int CipherBlock { get; set; }
-
-    internal ISharedStringStore SharedStringStore
-    {
-        get => _sharedStringStore ??= new SharedStringTable();
-        set => _sharedStringStore = value;
-    }
-
-    public static bool IsIgnoredMetadataRecord(XlsBiffRecord record) =>
-        record.GetType() == typeof(XlsBiffRecord) &&
-        record.Id is not BIFFRECORDTYPE.WINDOW1 and not BIFFRECORDTYPE.IXFE;
 
     /// <summary>
     /// Sets stream pointer to the specified offset.
@@ -149,62 +85,15 @@ internal sealed class XlsBiffStream : IDisposable
             throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "{0} On offset={1}", Errors.ErrorBiffIlegalAfter, offset));
 
         if (SecretKey != null)
-        { 
+        {
             CreateBlockDecryptor(offset / 1024);
             AlignBlockDecryptor(offset % 1024);
         }
     }
 
-    // A formula's string result follows it in an optional SHAREDFMLA and a STRING record.
-    // Returns the STRING record (owned by the caller) or null when the data does not match.
-    public XlsBiffFormulaString? ReadFormulaStringRecord()
-    {
-        var record = ReadNextOwnedRecord();
-        if (record is { Id: BIFFRECORDTYPE.SHAREDFMLA })
-        {
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-            record.Return();
-#endif
-            record = ReadNextOwnedRecord();
-        }
-
-        if (record is { Id: BIFFRECORDTYPE.STRING })
-            return (XlsBiffFormulaString)record;
-
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        record?.Return();
-#endif
-        return null;
-    }
-
-    // Reads the next record for callers that need a typed record rather than a cell frame.
-    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-    public XlsBiffRecord? ReadNextOwnedRecord() =>
-        ReadWorksheetRecord(out var item) ? item.OwnedRecord : null;
-
-    // Workbook-global records only: returns the next owned record and drops cells
-    // and generic records that metadata consumers never inspect.
-    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-    public XlsBiffRecord? ReadMetadataRecord()
-    {
-        while (ReadWorksheetRecord(out var item))
-        {
-            if (item.IsCell || IsIgnoredMetadataRecord(item.OwnedRecord!))
-            {
-                item.Release();
-                continue;
-            }
-
-            return item.OwnedRecord;
-        }
-
-        return null;
-    }
-
-    // Fixed-layout worksheet cells borrow the reusable buffer. The result distinguishes
-    // cell frames from owned metadata and carries any owned cell record for release.
+    // All consumers must finish reading a frame before requesting the next one.
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    public bool ReadWorksheetRecord(out XlsWorksheetRecord result)
+    public bool ReadFrame(out XlsBiffFrame result)
     {
         result = default;
         int streamSize = Size;
@@ -212,104 +101,30 @@ internal sealed class XlsBiffStream : IDisposable
             return false;
 
         ReadFrameHeader(out var recordOffset, out var id, out var recordSize);
-        if (CanBorrowCell(id, recordSize) && (long)recordOffset + 4 + recordSize <= streamSize)
-        {
-            int size = 4 + recordSize;
-            if (_cellBuffer == null || _cellBuffer.Length < size)
-                _cellBuffer = new byte[Math.Max(64, size)];
-            ReadFramePayload(recordOffset, id, recordSize, _cellBuffer);
-            if (Position > Size)
-                return false;
-            var cell = new XlsCellFrame(_cellBuffer);
-            if (id == BIFFRECORDTYPE.MULRK && cell.LastColumnIndex != cell.ColumnIndex + (recordSize - 6) / 6 - 1)
-            {
-                var bytes = AllocateRecordBuffer(recordSize);
-                Buffer.BlockCopy(_cellBuffer, 0, bytes, 0, size);
-                var record = GetRecord(bytes, id);
-                result = XlsWorksheetRecord.ForCell(new XlsCellFrame(record.Bytes), record);
-            }
-            else
-            {
-                result = XlsWorksheetRecord.ForCell(cell, null);
-            }
-
-            return true;
-        }
-
-        var ownedRecord = ReadOwnedRecord(recordOffset, id, recordSize);
+        int size = 4 + recordSize;
+        byte[] buffer = _frameBuffer.GetBuffer(size);
+        ReadFramePayload(recordOffset, id, recordSize, buffer);
         if (Position <= Size)
         {
-            result = ownedRecord is XlsBiffBlankCell
-                ? XlsWorksheetRecord.ForCell(new XlsCellFrame(ownedRecord.Bytes), ownedRecord)
-                : XlsWorksheetRecord.ForRecord(ownedRecord);
+            result = new XlsBiffFrame(buffer);
             return true;
         }
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        ownedRecord.Return();
-#endif
+
         return false;
     }
 
     public void Dispose()
     {
+        _frameBuffer.Clear();
         CipherTransform?.Dispose();
         Cipher?.Dispose();
     }
 
-    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    private static bool CanBorrowCell(BIFFRECORDTYPE id, ushort size) => id switch
+    internal void InitializeEncryption(byte[]? secretKey, EncryptionInfo? encryption)
     {
-        BIFFRECORDTYPE.NUMBER => size >= 14,
-        BIFFRECORDTYPE.LABELSST or BIFFRECORDTYPE.RK => size >= 10,
-
-        // Reuse only the bounded, ordinary packed-cell layout. Malformed or
-        // oversized packed records retain the original owned-record decoder.
-        BIFFRECORDTYPE.MULRK => size >= 12 && size <= 1542 && (size - 6) % 6 == 0,
-        _ => false,
-    };
-
-    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    private static byte[] AllocateRecordBuffer(ushort recordSize)
-    {
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        // Records at or below SmallRecordPoolThreshold bytes use a plain heap allocation.
-        // ArrayPool.Rent+Return overhead exceeds the benefit for these tiny buffers.
-        // Rented buffers always have Length > SmallRecordPoolThreshold (pool rounds up to
-        // the next power-of-two bucket), so XlsBiffRecord.Return() can tell them apart.
-        var bytes = (4 + recordSize) <= XlsBiffRecord.SmallRecordPoolThreshold
-            ? new byte[4 + recordSize]
-            : System.Buffers.ArrayPool<byte>.Shared.Rent(4 + recordSize);
-#else
-        var bytes = new byte[4 + recordSize];
-#endif
-        return bytes;
-    }
-
-    private static int GetBiffVersion(XlsBiffBOF bof)
-    {
-        switch (bof.Id)
-        {
-            case BIFFRECORDTYPE.BOF_V2:
-                return 2;
-            case BIFFRECORDTYPE.BOF_V3:
-                return 3;
-            case BIFFRECORDTYPE.BOF_V4:
-                return 4;
-            case BIFFRECORDTYPE.BOF:
-                if (bof.Version == 0x200)
-                    return 2;
-                else if (bof.Version == 0x300)
-                    return 3;
-                else if (bof.Version == 0x400)
-                    return 4;
-                else if (bof.Version == 0x500 || bof.Version == 0)
-                    return 5;
-                if (bof.Version == 0x600)
-                    return 8;
-                break;
-        }
-
-        return 0;
+        SecretKey = secretKey;
+        Encryption = encryption;
+        Cipher = encryption?.CreateCipher();
     }
 
     /// <summary>
@@ -341,111 +156,6 @@ internal sealed class XlsBiffStream : IDisposable
         ReadFromReadAhead(bytes, 4, size);
         if (SecretKey != null)
             DecryptRecord(offset, id, bytes, 4 + size);
-    }
-
-    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    private XlsBiffRecord ReadOwnedRecord(int recordOffset, BIFFRECORDTYPE id, ushort recordSize)
-    {
-        var bytes = AllocateRecordBuffer(recordSize);
-        ReadFramePayload(recordOffset, id, recordSize, bytes);
-        return GetRecord(bytes, id);
-    }
-
-    private XlsBiffRecord GetRecord(byte[] bytes, BIFFRECORDTYPE id)
-    {
-        int biffVersion = BiffVersion;
-
-        switch (id)
-        {
-            case BIFFRECORDTYPE.BOF_V2:
-            case BIFFRECORDTYPE.BOF_V3:
-            case BIFFRECORDTYPE.BOF_V4:
-            case BIFFRECORDTYPE.BOF:
-                return new XlsBiffBOF(bytes);
-            case BIFFRECORDTYPE.EOF:
-                return new XlsBiffEof(bytes);
-            case BIFFRECORDTYPE.SST:
-                return new XlsBiffSST(bytes, SharedStringStore);
-
-            case BIFFRECORDTYPE.DEFAULTROWHEIGHT_V2:
-            case BIFFRECORDTYPE.DEFAULTROWHEIGHT:
-                return new XlsBiffDefaultRowHeight(bytes, biffVersion);
-            case BIFFRECORDTYPE.ROW_V2:
-            case BIFFRECORDTYPE.ROW:
-                return new XlsBiffRow(bytes);
-
-            case BIFFRECORDTYPE.BOOLERR:
-            case BIFFRECORDTYPE.BOOLERR_OLD:
-                return new XlsBiffBoolErrCell(bytes);
-            case BIFFRECORDTYPE.BLANK:
-            case BIFFRECORDTYPE.BLANK_OLD:
-                return new XlsBiffBlankCell(bytes);
-            case BIFFRECORDTYPE.MULBLANK:
-                return new XlsBiffBlankCell(bytes);
-            case BIFFRECORDTYPE.LABEL_V2:
-            case BIFFRECORDTYPE.LABEL:
-            case BIFFRECORDTYPE.RSTRING:
-                return new XlsBiffLabelCell(bytes, biffVersion);
-            case BIFFRECORDTYPE.LABELSST:
-                return new XlsBiffLabelSSTCell(bytes);
-            case BIFFRECORDTYPE.INTEGER:
-            case BIFFRECORDTYPE.INTEGER_OLD:
-                return new XlsBiffIntegerCell(bytes);
-            case BIFFRECORDTYPE.NUMBER:
-            case BIFFRECORDTYPE.NUMBER_OLD:
-                return new XlsBiffNumberCell(bytes);
-            case BIFFRECORDTYPE.RK:
-                return new XlsBiffRKCell(bytes);
-            case BIFFRECORDTYPE.MULRK:
-                return new XlsBiffMulRKCell(bytes);
-            case BIFFRECORDTYPE.FORMULA:
-            case BIFFRECORDTYPE.FORMULA_V3:
-            case BIFFRECORDTYPE.FORMULA_V4:
-                return new XlsBiffFormulaCell(bytes, biffVersion);
-            case BIFFRECORDTYPE.FORMAT_V23:
-            case BIFFRECORDTYPE.FORMAT:
-                return new XlsBiffFormatString(bytes, biffVersion);
-            case BIFFRECORDTYPE.STRING:
-            case BIFFRECORDTYPE.STRING_OLD:
-                return new XlsBiffFormulaString(bytes, biffVersion);
-            case BIFFRECORDTYPE.CONTINUE:
-                return new XlsBiffContinue(bytes);
-            case BIFFRECORDTYPE.DIMENSIONS:
-            case BIFFRECORDTYPE.DIMENSIONS_V2 when bytes.Length >= 12:
-                return new XlsBiffDimensions(bytes, biffVersion);
-            case BIFFRECORDTYPE.BOUNDSHEET:
-                return new XlsBiffBoundSheet(bytes, biffVersion);
-            case BIFFRECORDTYPE.WINDOW1:
-                return new XlsBiffRecord(bytes);
-            case BIFFRECORDTYPE.CODEPAGE:
-            case BIFFRECORDTYPE.FNGROUPCOUNT:
-            case BIFFRECORDTYPE.DATE1904:
-            case BIFFRECORDTYPE.BOOKBOOL:
-            case BIFFRECORDTYPE.BACKUP:
-            case BIFFRECORDTYPE.HIDEOBJ:
-            case BIFFRECORDTYPE.USESELFS:
-                return new XlsBiffSimpleValueRecord(bytes);
-            case BIFFRECORDTYPE.FILEPASS:
-                return new XlsBiffFilePass(bytes, biffVersion);
-            case BIFFRECORDTYPE.HEADER:
-            case BIFFRECORDTYPE.FOOTER:
-                return new XlsBiffHeaderFooterString(bytes, biffVersion);
-            case BIFFRECORDTYPE.CODENAME:
-                return new XlsBiffCodeName(bytes);
-            case BIFFRECORDTYPE.XF:
-            case BIFFRECORDTYPE.XF_V2:
-            case BIFFRECORDTYPE.XF_V3:
-            case BIFFRECORDTYPE.XF_V4:
-                return new XlsBiffXF(bytes, biffVersion);
-            case BIFFRECORDTYPE.FONT:
-                return new XlsBiffFont(bytes, biffVersion);
-            case BIFFRECORDTYPE.MERGECELLS:
-                return new XlsBiffMergeCells(bytes);
-            case BIFFRECORDTYPE.COLINFO:
-                return new XlsBiffColInfo(bytes);
-            default:
-                return new XlsBiffRecord(bytes);
-        }
     }
 
     // Serves 'count' bytes into dest[destOffset..], draining the read-ahead buffer first.

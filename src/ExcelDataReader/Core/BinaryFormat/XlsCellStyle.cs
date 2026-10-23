@@ -1,11 +1,12 @@
 ﻿namespace ExcelDataReader.Core.BinaryFormat;
 
-internal sealed class XlsBiffXF : XlsBiffRecord
+internal readonly struct XlsCellStyle
 {
-    internal XlsBiffXF(byte[] bytes, int biffVersion)
-        : base(bytes)
+    internal XlsCellStyle(XlsBiffFrame frame, int biffVersion)
     {
-        switch (Id)
+        byte ReadByte(int offset) => frame.ReadByte(offset);
+        ushort ReadUInt16(int offset) => frame.ReadUInt16(offset);
+        switch (frame.Id)
         {
             case BIFFRECORDTYPE.XF_V2:
                 Font = ReadByte(0);
@@ -13,7 +14,7 @@ internal sealed class XlsBiffXF : XlsBiffRecord
                 IsLocked = (ReadByte(2) & 0x40) != 0;
                 IsHidden = (ReadByte(2) & 0x80) != 0;
                 HorizontalAlignment = (HorizontalAlignment)(ReadByte(3) & 0x07);
-                ParentCellStyleXf = 0xfff;                    
+                ParentCellStyleXf = 0xfff;
                 break;
             case BIFFRECORDTYPE.XF_V3:
                 Font = ReadByte(0);
@@ -67,7 +68,7 @@ internal sealed class XlsBiffXF : XlsBiffRecord
     }
 
     public int Font { get; }
-    
+
     public int Format { get; }
 
     public int ParentCellStyleXf { get; }
@@ -77,10 +78,19 @@ internal sealed class XlsBiffXF : XlsBiffRecord
     public bool IsLocked { get; }
 
     public bool IsHidden { get; }
-    
+
     public int IndentLevel { get; }
 
     public HorizontalAlignment HorizontalAlignment { get; }
 
     public VerticalAlignment VerticalAlignment { get; }
+
+    public void AddTo(IStylesPartSink sink)
+    {
+        var format = new ExtendedFormat(ParentCellStyleXf, Font, Format, IsLocked, IsHidden, IndentLevel, HorizontalAlignment, VerticalAlignment);
+
+        // BIFF uses one XF index space for both cell and cell-style references.
+        sink.AddExtendedFormat(format);
+        sink.AddCellStyleExtendedFormat(format);
+    }
 }

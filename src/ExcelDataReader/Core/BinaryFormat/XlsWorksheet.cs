@@ -9,7 +9,7 @@ internal sealed class XlsWorksheet : IWorksheet
 {
     private readonly XlsWorksheetMetadata _metadata;
 
-    public XlsWorksheet(XlsWorkbook workbook, XlsBiffBoundSheet refSheet, Stream stream, bool singlePassMode = false)
+    public XlsWorksheet(XlsWorkbook workbook, XlsSheetInfo refSheet, Stream stream, bool singlePassMode = false)
     {
         Workbook = workbook;
         Stream = stream;
@@ -17,8 +17,8 @@ internal sealed class XlsWorksheet : IWorksheet
         DataOffset = refSheet.StartOffset;
         VisibleState = refSheet.VisibleState switch
         {
-            XlsBiffBoundSheet.SheetVisibility.Hidden => "hidden",
-            XlsBiffBoundSheet.SheetVisibility.VeryHidden => "veryhidden",
+            XlsSheetInfo.SheetVisibility.Hidden => "hidden",
+            XlsSheetInfo.SheetVisibility.VeryHidden => "veryhidden",
             _ => "visible",
         };
         SinglePassMode = singlePassMode;

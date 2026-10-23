@@ -6,13 +6,9 @@ internal interface IXlsWorkbookPartSink
 {
     Encoding Encoding { get; }
 
-    void AddSheet(XlsBiffBoundSheet sheet);
+    void AddSheet(XlsSheetInfo sheet);
 
-    void AddFont(XlsBiffFont font);
-
-    void AddXf(XlsBiffXF xf);
-
-    void AddNumberFormat(int index, string format);
+    void AddFont(XlsFontInfo font);
 
     void SetCodePage(ushort codePage);
 
@@ -20,5 +16,5 @@ internal interface IXlsWorkbookPartSink
 
     void SetActiveSheet(int activeSheet);
 
-    void SetSharedStringTable(XlsBiffSST sharedStrings);
+    void SetSharedStringTable();
 }
