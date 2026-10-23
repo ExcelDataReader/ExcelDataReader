@@ -11,7 +11,7 @@ public class PerCellRead
 {
     private byte[] _data = [];
 
-    [Params("Number", "Boolean", "Date", "Duration", "Text")]
+    [Params("Number", "Fraction", "Boolean", "Date", "Duration", "Text")]
     public string Values { get; set; } = string.Empty;
 
     [GlobalSetup]
@@ -49,6 +49,7 @@ public class PerCellRead
                         {
                             "Boolean" => (row + column) % 2 == 0 ? "1" : "0",
                             "Text" => "alpha",
+                            "Fraction" => index + ".5",
                             _ => index,
                         };
                         writer.Write("<c r=\"" + reference + "\"" + attributes + "><v>" + value + "</v></c>");
@@ -89,7 +90,7 @@ public class PerCellRead
             {
                 checksum += reader.GetValue(column) switch
                 {
-                    double value when Values == "Number" => (long)value,
+                    double value when Values is "Number" or "Fraction" => (long)value,
                     bool value when Values == "Boolean" => value ? 1 : 0,
                     DateTime when Values == "Date" => 1,
                     TimeSpan value when Values == "Duration" => (long)value.TotalDays,
@@ -97,6 +98,21 @@ public class PerCellRead
                     _ => throw new InvalidOperationException("Unexpected cell type."),
                 };
             }
+        }
+
+        return checksum;
+    }
+
+    [Benchmark]
+    public int ReadStyles()
+    {
+        using var stream = new MemoryStream(_data, writable: false);
+        using var reader = ExcelReaderFactory.CreateReader(stream);
+        int checksum = 0;
+        while (reader.Read())
+        {
+            for (int column = 0; column < reader.FieldCount; column++)
+                checksum += reader.GetCellStyle(column).NumberFormatIndex;
         }
 
         return checksum;

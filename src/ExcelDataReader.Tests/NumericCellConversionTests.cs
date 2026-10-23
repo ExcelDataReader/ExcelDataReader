@@ -1,9 +1,57 @@
+using System.Globalization;
+using System.IO.Compression;
 using ExcelDataReader.Core;
+using ExcelDataReader.TestFixtures;
 
 namespace ExcelDataReader.Tests;
 
 public class NumericCellConversionTests
 {
+    [TestCase("0")]
+    [TestCase("0000000000")]
+    [TestCase("999999999")]
+    [TestCase("2147483647")]
+    [TestCase("2147483648")]
+    [TestCase("1.25")]
+    [TestCase("1e3")]
+    [TestCase("-0")]
+    [TestCase(" +42 ")]
+    [TestCase("1,234")]
+    [TestCase("42.0")]
+    [TestCase("not-number")]
+    public void XmlNumericParsingPreservesGeneralParserResults(string value)
+    {
+        using var reader = OpenXmlCell(value, string.Empty);
+        Assert.That(reader.Read(), Is.True);
+        if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out double expected))
+        {
+            Assert.That(reader.GetValue(0), Is.TypeOf<double>().And.EqualTo(expected));
+            Assert.That(BitConverter.DoubleToInt64Bits(reader.GetDouble(0)), Is.EqualTo(BitConverter.DoubleToInt64Bits(expected)));
+        }
+        else
+        {
+            Assert.That(reader.GetString(0), Is.EqualTo(value));
+        }
+    }
+
+    [TestCase("0")]
+    [TestCase("0000000000")]
+    [TestCase(" +0 ")]
+    [TestCase("0.0")]
+    [TestCase("0e0")]
+    [TestCase("0,000")]
+    [TestCase("-1")]
+    [TestCase("2147483648")]
+    public void XmlSharedStringIndicesPreserveGeneralParserResults(string value)
+    {
+        using var reader = OpenXmlCell(value, "s");
+        Assert.That(reader.Read(), Is.True);
+        if (int.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out int index))
+            Assert.That(reader.GetValue(0), Is.EqualTo(index == 0 ? "shared" : DBNull.Value));
+        else
+            Assert.That(reader.GetString(0), Is.EqualTo(value));
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void NumericValuesPreserveTheirOriginalType(bool date1904)
@@ -101,5 +149,22 @@ public class NumericCellConversionTests
             expectedReader.Reset();
             actualReader.Reset();
         }
+    }
+
+    private static IExcelDataReader OpenXmlCell(string value, string type)
+    {
+        var buffer = new MemoryStream();
+        byte[] template = AllocationTestWorkbook.CreateXlsx(["<t>shared</t>"], true);
+        buffer.Write(template, 0, template.Length);
+        using (var archive = new ZipArchive(buffer, ZipArchiveMode.Update, leaveOpen: true))
+        {
+            archive.GetEntry("xl/worksheets/sheet1.xml")!.Delete();
+            using var writer = new StreamWriter(archive.CreateEntry("xl/worksheets/sheet1.xml").Open());
+            writer.Write("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheetData><row r=\"1\"><c r=\"A1\" t=\"" +
+                type + "\"><v>" + value + "</v></c></row></sheetData></worksheet>");
+        }
+
+        buffer.Position = 0;
+        return ExcelReaderFactory.CreateReader(buffer);
     }
 }
