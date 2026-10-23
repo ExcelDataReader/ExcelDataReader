@@ -5,7 +5,6 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
     private readonly XlsWorksheet _worksheet;
     private readonly XlsBiffStream _stream;
     private readonly XlsWorksheetCellDecoder _decoder;
-    private readonly WorksheetReadMode _mode;
     private readonly List<List<Cell>> _cellListPool = [];
     private readonly Dictionary<int, double> _rowHeights = [];
     private BufferedRow[] _block = [];
@@ -26,14 +25,10 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
     private ushort? _ixfe;
     private int _currentRow = -1;
     private int _lastCompletedRow = -1;
-    private int _maxRow = -1;
-    private int _maxColumn = -1;
-    private bool _scanResultEmitted;
 
-    public XlsWorksheetReader(XlsWorksheet worksheet, WorksheetReadMode mode = WorksheetReadMode.Materialize)
+    public XlsWorksheetReader(XlsWorksheet worksheet)
     {
         _worksheet = worksheet;
-        _mode = mode;
         _decoder = new XlsWorksheetCellDecoder(worksheet);
         _stream = new XlsBiffStream(worksheet.Stream, (int)worksheet.DataOffset, worksheet.Workbook.BiffVersion, BIFFTYPE.Worksheet, secretKey: worksheet.Workbook.SecretKey, encryption: worksheet.Workbook.Encryption);
     }
@@ -52,13 +47,6 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
             var status = _worksheet.SinglePassMode ? ConsumeForward(ref handler) : ConsumeIndexed(ref handler);
             if (status == WorksheetReadStatus.Paused)
                 return status;
-
-            if (_mode == WorksheetReadMode.Scan && !_scanResultEmitted)
-            {
-                _scanResultEmitted = true;
-                if (handler.OnScanResult(_maxRow, _maxColumn) == WorksheetReadControl.Pause)
-                    return WorksheetReadStatus.Paused;
-            }
 
             _ended = true;
             Dispose();
@@ -178,7 +166,6 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
                 if (!_rowOpen)
                 {
                     _rowOpen = true;
-                    _maxRow = Math.Max(_maxRow, _blockStart + _blockIndex);
                     if (handler.OnRow(_blockStart + _blockIndex, row.Height == 0, row.Height) == WorksheetReadControl.Pause)
                         return WorksheetReadStatus.Paused;
                 }
@@ -233,7 +220,6 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
             return;
 
         _stream.Position = minOffset;
-        var materialize = _mode == WorksheetReadMode.Materialize;
         ushort? ixfe = null;
         while (_stream.Position <= maxOffset && _stream.ReadWorksheetRecord(out var item))
         {
@@ -242,25 +228,19 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
                 if (item.IsCell)
                 {
                     var frame = item.Cell;
-                    if (materialize)
+
+                    // The offset map initializes every physical row before this scan.
+                    var cells = _block[frame.RowIndex - _blockStart].Cells!;
+                    var ownedCell = item.OwnedRecord as XlsBiffBlankCell;
+                    if (frame.Id == BIFFRECORDTYPE.MULRK)
                     {
-                        // The offset map initializes every physical row before this scan.
-                        var cells = _block[frame.RowIndex - _blockStart].Cells!;
-                        var ownedCell = item.OwnedRecord as XlsBiffBlankCell;
-                        if (frame.Id == BIFFRECORDTYPE.MULRK)
-                        {
-                            var lastColumn = frame.LastColumnIndex;
-                            for (var column = (int)frame.ColumnIndex; column <= lastColumn; column++)
-                                cells.Add(_decoder.Decode(_stream, frame, ownedCell, ixfe, column));
-                        }
-                        else
-                        {
-                            cells.Add(_decoder.Decode(_stream, frame, ownedCell, ixfe, frame.ColumnIndex));
-                        }
+                        var lastColumn = frame.LastColumnIndex;
+                        for (var column = (int)frame.ColumnIndex; column <= lastColumn; column++)
+                            cells.Add(_decoder.Decode(_stream, frame, ownedCell, ixfe, column));
                     }
                     else
                     {
-                        MeasureCell(frame, item.OwnedRecord as XlsBiffBlankCell);
+                        cells.Add(_decoder.Decode(_stream, frame, ownedCell, ixfe, frame.ColumnIndex));
                     }
 
                     ixfe = null;
@@ -285,17 +265,14 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
             ? offset.RowHeight.Value
             : _worksheet.DefaultRowHeight) / 20.0;
 
-        if (_mode == WorksheetReadMode.Materialize)
+        if (_cellListPool.Count > 0)
         {
-            if (_cellListPool.Count > 0)
-            {
-                row.Cells = _cellListPool[^1];
-                _cellListPool.RemoveAt(_cellListPool.Count - 1);
-            }
-            else
-            {
-                row.Cells = [];
-            }
+            row.Cells = _cellListPool[^1];
+            _cellListPool.RemoveAt(_cellListPool.Count - 1);
+        }
+        else
+        {
+            row.Cells = [];
         }
     }
 
@@ -377,13 +354,6 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
                     return WorksheetReadStatus.Paused;
             }
 
-            if (_mode == WorksheetReadMode.Scan)
-            {
-                _ixfe = null;
-                ReleasePendingRecord();
-                continue;
-            }
-
             var lastColumn = frame.Id == BIFFRECORDTYPE.MULRK ? frame.LastColumnIndex : frame.ColumnIndex;
             var cell = _decoder.Decode(_stream, frame, ownedCell, _ixfe, _pendingColumn++);
             if (_pendingColumn > lastColumn)
@@ -410,7 +380,6 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
                 _pendingRecord = item;
                 _hasPendingRecord = true;
                 _pendingColumn = item.Cell.ColumnIndex;
-                MeasureCell(item.Cell, item.OwnedRecord as XlsBiffBlankCell);
                 return;
             }
 
@@ -440,12 +409,6 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
         }
 
         _sourceEnded = true;
-    }
-
-    private void MeasureCell(XlsCellFrame frame, XlsBiffBlankCell? ownedCell)
-    {
-        _maxRow = Math.Max(_maxRow, frame.RowIndex);
-        _maxColumn = Math.Max(_maxColumn, XlsWorksheetCellDecoder.GetLastDefinedColumn(frame, ownedCell));
     }
 
     private void ReleasePendingRecord()
