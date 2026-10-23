@@ -76,6 +76,8 @@ public class PerCellRead
         };
         if (Read() != expected)
             throw new InvalidOperationException("Unexpected cell values.");
+        if (ReadTyped() != expected || ReadOnly() != 10000)
+            throw new InvalidOperationException("Unexpected typed cell values or row count.");
     }
 
     [Benchmark]
@@ -97,6 +99,63 @@ public class PerCellRead
                     string value when Values == "Text" => value.Length,
                     _ => throw new InvalidOperationException("Unexpected cell type."),
                 };
+            }
+        }
+
+        return checksum;
+    }
+
+    [Benchmark]
+    public int ReadOnly()
+    {
+        using var stream = new MemoryStream(_data, writable: false);
+        using var reader = ExcelReaderFactory.CreateReader(stream);
+        int rows = 0;
+        while (reader.Read())
+            rows++;
+        return rows;
+    }
+
+    [Benchmark]
+    public long ReadTyped()
+    {
+        using var stream = new MemoryStream(_data, writable: false);
+        using var reader = ExcelReaderFactory.CreateReader(stream);
+        long checksum = 0;
+        while (reader.Read())
+        {
+            for (int column = 0; column < reader.FieldCount; column++)
+            {
+                checksum += Values switch
+                {
+                    "Number" or "Fraction" => (long)reader.GetDouble(column),
+                    "Boolean" => reader.GetBoolean(column) ? 1 : 0,
+                    "Date" => reader.GetDateTime(column).Year > 0 ? 1 : 0,
+                    "Duration" => (long)((TimeSpan)reader.GetValue(column)).TotalDays,
+                    "Text" => reader.GetString(column).Length,
+                    _ => throw new InvalidOperationException("Unexpected cell type."),
+                };
+            }
+        }
+
+        return checksum;
+    }
+
+    [Benchmark]
+    public long ReadRepeatedValues()
+    {
+        using var stream = new MemoryStream(_data, writable: false);
+        using var reader = ExcelReaderFactory.CreateReader(stream);
+        long checksum = 0;
+        while (reader.Read())
+        {
+            for (int column = 0; column < reader.FieldCount; column++)
+            {
+                var first = reader.GetValue(column);
+                var second = reader.GetValue(column);
+                if (!Equals(first, second))
+                    throw new InvalidOperationException("Cell value changed between accesses.");
+                checksum++;
             }
         }
 

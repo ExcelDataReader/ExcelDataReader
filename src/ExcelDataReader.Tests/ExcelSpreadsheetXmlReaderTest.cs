@@ -13,6 +13,62 @@ public class ExcelSpreadsheetXmlReaderTest : ExcelSpreadsheetContractTestBase
 
     protected override bool SupportsCodeName => false;
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void StyledValuesPreserveDateEpochsAndParsingFallbacks(bool singlePass)
+    {
+        (string Type, string Text, object Plain, object Duration)[] cases =
+        [
+            ("DateTime", "1900-02-28T12:00:00", new DateTime(1900, 2, 28, 12, 0, 0), TimeSpan.FromDays(59.5)),
+            ("DateTime", "1900-02-29T12:00:00", new DateTime(1900, 2, 28, 12, 0, 0), TimeSpan.FromDays(60.5)),
+            ("DateTime", "1900-03-01T12:00:00", new DateTime(1900, 3, 1, 12, 0, 0), TimeSpan.FromDays(61.5)),
+            ("DateTime", "not-a-date", "not-a-date", "not-a-date"),
+            ("Number", "2.5", 2.5D, TimeSpan.FromDays(2.5)),
+            ("Number", "bad", 0D, TimeSpan.Zero),
+            ("String", "02:30:00", "02:30:00", TimeSpan.FromHours(2.5)),
+            ("String", "not-a-duration", "not-a-duration", "not-a-duration"),
+            ("String", string.Empty, string.Empty, string.Empty),
+            ("Other", "01:00:00", "01:00:00", TimeSpan.FromHours(1)),
+            ("Boolean", "1", true, true),
+            ("Error", "#DIV/0!", DBNull.Value, DBNull.Value),
+        ];
+        var xml = new StringBuilder("""
+            <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+            <Styles><Style ss:ID="plain"><NumberFormat ss:Format="yyyy-mm-dd"/></Style>
+            <Style ss:ID="duration"><NumberFormat ss:Format="[h]:mm:ss"/></Style></Styles>
+            <Worksheet ss:Name="Values"><Table>
+            """);
+        foreach (var item in cases)
+        {
+            xml.Append("<Row>");
+            foreach (string style in new[] { "plain", "duration" })
+                xml.Append("<Cell ss:StyleID=\"").Append(style).Append("\"><Data ss:Type=\"").Append(item.Type).Append("\">").Append(item.Text).Append("</Data></Cell>");
+            xml.Append("</Row>");
+        }
+
+        xml.Append("</Table></Worksheet></Workbook>");
+        using var reader = ExcelReaderFactory.CreateReader(
+            new MemoryStream(Encoding.UTF8.GetBytes(xml.ToString())),
+            new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        for (int pass = 0; pass < 2; pass++)
+        {
+            foreach (var item in cases)
+            {
+                Assert.That(reader.Read(), Is.True);
+                object[] expected = [item.Plain, item.Duration];
+                for (int column = 0; column < expected.Length; column++)
+                {
+                    Assert.That(reader.GetValue(column), Is.EqualTo(expected[column]));
+                    Assert.That(reader.GetFieldType(column), Is.EqualTo(expected[column].GetType()));
+                    Assert.That(reader.GetCellError(column), Is.EqualTo(item.Type == "Error" ? CellError.DIV0 : (CellError?)null));
+                }
+            }
+
+            Assert.That(reader.Read(), Is.False);
+            reader.Reset();
+        }
+    }
+
     [TestCase("ShEeThIdDeN", "hidden")]
     [TestCase("ShEeTvErYhIdDeN", "veryhidden")]
     [TestCase("SheetVisible", "visible")]

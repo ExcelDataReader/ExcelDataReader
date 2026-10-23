@@ -195,7 +195,7 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
                 bool hasData;
                 if (_mode == WorksheetReadMode.Materialize)
                 {
-                    value = ConvertCellValue(ParseCellValue(_reader, out error, out hasData), style, _formats);
+                    value = ParseCellValue(_reader, style, _formats, out error, out hasData);
                 }
                 else
                 {
@@ -433,7 +433,7 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
         return hasData;
     }
 
-    private static object? ConvertCellValue(object? value, ExtendedFormat style, IReadOnlyDictionary<int, NumberFormatString>? formats)
+    private static bool IsDurationStyle(ExtendedFormat style, IReadOnlyDictionary<int, NumberFormatString>? formats)
     {
         if (style.NumberFormatIndex != 0)
         {
@@ -442,21 +442,13 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
 #pragma warning disable CA1305
             fmt ??= BuiltinNumberFormat.GetBuiltinNumberFormat(style.NumberFormatIndex);
 #pragma warning restore CA1305
-            if (fmt?.IsTimeSpanFormat == true)
-            {
-                if (value is double number)
-                    return TimeSpan.FromDays(number);
-                if (value is SpreadsheetXmlDateTime dateTime)
-                    return TimeSpan.FromDays(dateTime.SerialDate);
-                if (value is string text && TimeSpan.TryParse(text, CultureInfo.InvariantCulture, out var timeSpan))
-                    return timeSpan;
-            }
+            return fmt?.IsTimeSpanFormat == true;
         }
 
-        return value is SpreadsheetXmlDateTime date ? date.Value : value;
+        return false;
     }
 
-    private static object? ParseCellValue(XmlReader cellReader, out CellError? cellError, out bool hasData)
+    private static object? ParseCellValue(XmlReader cellReader, ExtendedFormat style, IReadOnlyDictionary<int, NumberFormatString>? formats, out CellError? cellError, out bool hasData)
     {
         cellError = null;
         hasData = false;
@@ -478,7 +470,7 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
             hasData = true;
             var type = GetSpreadsheetAttribute(cellReader, "Type") ?? string.Empty;
             var text = ReadElementText(cellReader);
-            result = ParseDataText(type, text, out cellError);
+            result = ParseDataText(type, text, IsDurationStyle(style, formats), out cellError);
             while (!IsEndElementAt(cellReader, cellDepth) && cellReader.Read())
             {
             }
@@ -489,23 +481,26 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
         return result;
     }
 
-    private static object? ParseDataText(string type, string value, out CellError? cellError)
+    private static object? ParseDataText(string type, string value, bool duration, out CellError? cellError)
     {
         cellError = null;
         switch (type)
         {
             case "Number":
-                return ParseDouble(value, 0D);
+                double number = ParseDouble(value, 0D);
+                return duration ? TimeSpan.FromDays(number) : number;
             case "DateTime":
-                return TryParseSpreadsheetDateTime(value, out var dateTime) ? dateTime : value;
+                if (TryParseSpreadsheetDateTime(value, duration, out var dateTime))
+                    return dateTime;
+                break;
             case "Boolean":
                 return Helpers.BoxBoolean(ParseBool(value));
             case "Error":
                 cellError = ParseCellError(value);
                 return null;
-            default:
-                return value;
         }
+
+        return duration && TimeSpan.TryParse(value, CultureInfo.InvariantCulture, out var timeSpan) ? timeSpan : value;
     }
 
     private static CellError? ParseCellError(string value) => value switch
@@ -557,11 +552,11 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
         return builder?.ToString() ?? result ?? string.Empty;
     }
 
-    private static bool TryParseSpreadsheetDateTime(string value, out SpreadsheetXmlDateTime dateTime)
+    private static bool TryParseSpreadsheetDateTime(string value, bool duration, out object? dateTime)
     {
         if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed))
         {
-            dateTime = new SpreadsheetXmlDateTime(parsed, GetExcelSerialDate(parsed));
+            dateTime = duration ? TimeSpan.FromDays(GetExcelSerialDate(parsed)) : parsed;
             return true;
         }
 
@@ -569,7 +564,9 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
         if (value.StartsWith(fakeLeapDay, StringComparison.Ordinal) &&
             TimeSpan.TryParse(value.Substring(fakeLeapDay.Length).TrimStart('T'), CultureInfo.InvariantCulture, out var time))
         {
-            dateTime = new SpreadsheetXmlDateTime(new DateTime(1900, 2, 28).Add(time), 60D + time.TotalDays);
+            // Validate the DateTime even when returning a duration, as on the ordinary date path.
+            var date = new DateTime(1900, 2, 28).Add(time);
+            dateTime = duration ? TimeSpan.FromDays(60D + time.TotalDays) : date;
             return true;
         }
 
@@ -705,12 +702,5 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
 
         _finished = true;
         return WorksheetReadStatus.EndOfInput;
-    }
-
-    private readonly struct SpreadsheetXmlDateTime(DateTime value, double serialDate)
-    {
-        public DateTime Value { get; } = value;
-
-        public double SerialDate { get; } = serialDate;
     }
 }
