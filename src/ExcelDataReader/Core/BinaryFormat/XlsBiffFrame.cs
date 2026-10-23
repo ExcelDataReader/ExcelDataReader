@@ -104,6 +104,15 @@ internal readonly struct XlsBiffFrame(byte[] bytes)
 
     public short ReadInt16(int offset) => unchecked((short)ReadUInt16(offset));
 
+    public void ReadRowHeight(out bool useDefaultHeight, out int height)
+    {
+        var heightBits = ReadUInt16(6);
+        useDefaultHeight = (heightBits & 0x8000) != 0;
+        height = heightBits & 0x7FFFF;
+        if (Id != BIFFRECORDTYPE.ROW_V2 && (ReadUInt16(12) & 0x20) != 0)
+            height = 0;
+    }
+
     public byte ReadByteAt(int offset)
     {
         EnsureRange(offset, sizeof(byte));

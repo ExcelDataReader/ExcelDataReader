@@ -8,7 +8,7 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
     private readonly List<List<Cell>> _cellListPool = [];
     private readonly Dictionary<int, double> _rowHeights = [];
     private BufferedRow[] _block = [];
-    private int _metadataStage;
+    private MetadataStage _metadataStage;
     private int _metadataIndex;
     private int _blockStart;
     private int _blockCount;
@@ -31,6 +31,18 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
         _worksheet = worksheet;
         _decoder = new XlsWorksheetCellDecoder(worksheet);
         _stream = XlsBiffStartup.Open(worksheet.Stream, out _, out _, (int)worksheet.DataOffset, worksheet.Workbook.BiffVersion, BIFFTYPE.Worksheet, secretKey: worksheet.Workbook.SecretKey, encryption: worksheet.Workbook.Encryption);
+    }
+
+    private enum MetadataStage
+    {
+        Dimension,
+        CodeName,
+        DefaultRowHeight,
+        Columns,
+        MergeCells,
+        HeaderFooter,
+        SheetDataBegin,
+        Complete,
     }
 
     public WorksheetReadStatus Consume<THandler>(ref THandler handler)
@@ -83,26 +95,26 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
     private WorksheetReadControl EmitMetadata<THandler>(ref THandler handler)
         where THandler : struct, IWorksheetHandler
     {
-        while (_metadataStage < 7)
+        while (_metadataStage != MetadataStage.Complete)
         {
             WorksheetReadControl control = WorksheetReadControl.Continue;
             switch (_metadataStage)
             {
-                case 0:
-                    _metadataStage++;
+                case MetadataStage.Dimension:
+                    _metadataStage = MetadataStage.CodeName;
                     if (_worksheet.Dimension is { } dimension)
                         control = handler.OnDimension(dimension);
                     break;
-                case 1:
-                    _metadataStage++;
+                case MetadataStage.CodeName:
+                    _metadataStage = MetadataStage.DefaultRowHeight;
                     if (_worksheet.CodeName != null)
                         control = handler.OnCodeName(_worksheet.CodeName);
                     break;
-                case 2:
-                    _metadataStage++;
+                case MetadataStage.DefaultRowHeight:
+                    _metadataStage = MetadataStage.Columns;
                     control = handler.OnDefaultRowHeight(_worksheet.DefaultRowHeight / 20.0);
                     break;
-                case 3:
+                case MetadataStage.Columns:
                     if (_metadataIndex < _worksheet.ColumnWidths.Count)
                     {
                         var column = _worksheet.ColumnWidths[_metadataIndex++];
@@ -111,11 +123,11 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
                     else
                     {
                         _metadataIndex = 0;
-                        _metadataStage++;
+                        _metadataStage = MetadataStage.MergeCells;
                     }
 
                     break;
-                case 4:
+                case MetadataStage.MergeCells:
                     if (_metadataIndex < _worksheet.MergeCells.Length)
                     {
                         var range = _worksheet.MergeCells[_metadataIndex++];
@@ -124,17 +136,17 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
                     else
                     {
                         _metadataIndex = 0;
-                        _metadataStage++;
+                        _metadataStage = MetadataStage.HeaderFooter;
                     }
 
                     break;
-                case 5:
-                    _metadataStage++;
+                case MetadataStage.HeaderFooter:
+                    _metadataStage = MetadataStage.SheetDataBegin;
                     if (_worksheet.HeaderFooter is { } headerFooter)
                         control = handler.OnHeaderFooter(headerFooter);
                     break;
-                case 6:
-                    _metadataStage++;
+                case MetadataStage.SheetDataBegin:
+                    _metadataStage = MetadataStage.Complete;
                     control = handler.OnSheetDataBegin();
                     break;
             }
@@ -381,23 +393,8 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
             _firstRecord = false;
             if (frame.Id is BIFFRECORDTYPE.ROW or BIFFRECORDTYPE.ROW_V2)
             {
-                double rowHeight;
-                if (frame.Id == BIFFRECORDTYPE.ROW_V2)
-                {
-                    var heightBits = frame.ReadUInt16(6);
-                    bool useDefault = (heightBits & 0x8000) != 0;
-                    rowHeight = (useDefault ? _worksheet.DefaultRowHeight : heightBits & 0x7FFFF) / 20.0;
-                }
-                else
-                {
-                    var heightBits = frame.ReadUInt16(6);
-                    var flags = frame.ReadUInt16(12);
-                    bool useDefault = (heightBits & 0x8000) != 0;
-                    int actualHeight = (flags & 0x20) == 0 ? heightBits & 0x7FFFF : 0;
-                    rowHeight = (useDefault ? _worksheet.DefaultRowHeight : actualHeight) / 20.0;
-                }
-
-                _rowHeights[frame.RowIndex] = rowHeight;
+                frame.ReadRowHeight(out bool useDefaultHeight, out int height);
+                _rowHeights[frame.RowIndex] = (useDefaultHeight ? _worksheet.DefaultRowHeight : height) / 20.0;
             }
             else if (frame.Id == BIFFRECORDTYPE.IXFE)
             {
