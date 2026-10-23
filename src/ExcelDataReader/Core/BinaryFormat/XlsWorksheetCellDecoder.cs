@@ -65,7 +65,7 @@ internal sealed class XlsWorksheetCellDecoder(XlsWorksheet worksheet)
                 return XlsFormulaStringReader.Read(stream, worksheet.Workbook.BiffVersion, GetEncoding(style));
 
             case 0x01:
-                return formulaValueByte3 != 0;
+                return Helpers.BoxBoolean(formulaValueByte3 != 0);
             case 0x02:
                 error = (CellError)formulaValueByte3;
                 return null;

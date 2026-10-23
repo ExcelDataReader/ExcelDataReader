@@ -13,16 +13,16 @@ internal static class ReferenceHelper
     {
         column = 0;
         var position = 0;
-        const int offset = 'A' - 1;
 
         while (position < value.Length)
         {
-            var c = char.ToUpperInvariant(value[position]);
-            if (c is >= 'A' and <= 'Z')
+            var c = value[position];
+            int letter = (c | 0x20) - 'a';
+            if ((uint)letter <= 'z' - 'a')
             {
                 position++;
                 column *= 26;
-                column += c - offset;
+                column += letter + 1;
                 continue;
             }
 
@@ -78,18 +78,18 @@ internal static class ReferenceHelper
     {
         column = 0;
         var position = 0;
-        const int offset = 'A' - 1;
 
         if (value != null)
         {
             while (position < value.Length)
             {
-                var c = char.ToUpperInvariant(value[position]);
-                if (c >= 'A' && c <= 'Z')
+                var c = value[position];
+                int letter = (c | 0x20) - 'a';
+                if ((uint)letter <= 'z' - 'a')
                 {
                     position++;
                     column *= 26;
-                    column += c - offset;
+                    column += letter + 1;
                     continue;
                 }
 
@@ -137,7 +137,7 @@ internal static class ReferenceHelper
         result = (int)r;
         return true;
 
-    Fail:
+        Fail:
         result = 0;
         return false;
     }

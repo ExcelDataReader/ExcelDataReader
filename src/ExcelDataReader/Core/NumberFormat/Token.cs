@@ -46,10 +46,12 @@ internal readonly record struct Token(int Start, int Length)
     {
         if (Length < value.Length)
             return false;
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        return source.AsSpan(Start, value.Length).Equals(value.AsSpan(), StringComparison.OrdinalIgnoreCase);
-#else
-        return string.Compare(source, Start, value, 0, value.Length, StringComparison.OrdinalIgnoreCase) == 0;
-#endif
+        for (int i = 0; i < value.Length; i++)
+        {
+            if (!Helpers.EqualsAsciiIgnoreCase(source[Start + i], value[i]))
+                return false;
+        }
+
+        return true;
     }
 }

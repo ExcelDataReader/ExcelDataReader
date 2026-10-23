@@ -355,10 +355,10 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
                 if (worksheetOptionsReader.LocalName == "Visible")
                 {
                     var visible = worksheetOptionsReader.ReadElementContentAsString();
-                    visibleState = visible.ToLowerInvariant() switch
+                    visibleState = visible switch
                     {
-                        "sheethidden" => "hidden",
-                        "sheetveryhidden" => "veryhidden",
+                        _ when string.Equals(visible, "sheethidden", StringComparison.OrdinalIgnoreCase) => "hidden",
+                        _ when string.Equals(visible, "sheetveryhidden", StringComparison.OrdinalIgnoreCase) => "veryhidden",
                         _ => "visible",
                     };
                 }
@@ -499,7 +499,7 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
             case "DateTime":
                 return TryParseSpreadsheetDateTime(value, out var dateTime) ? dateTime : value;
             case "Boolean":
-                return ParseBool(value);
+                return Helpers.BoxBoolean(ParseBool(value));
             case "Error":
                 cellError = ParseCellError(value);
                 return null;

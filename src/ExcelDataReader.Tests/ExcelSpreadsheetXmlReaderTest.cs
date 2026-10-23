@@ -13,6 +13,27 @@ public class ExcelSpreadsheetXmlReaderTest : ExcelSpreadsheetContractTestBase
 
     protected override bool SupportsCodeName => false;
 
+    [TestCase("ShEeThIdDeN", "hidden")]
+    [TestCase("ShEeTvErYhIdDeN", "veryhidden")]
+    [TestCase("SheetVisible", "visible")]
+    public void MetadataNamesRemainCaseInsensitive(string visibility, string expected)
+    {
+        string xml = """
+            <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+              xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+              xmlns:x="urn:schemas-microsoft-com:office:excel">
+              <Styles><Style ss:ID="mixed"><Alignment ss:Horizontal="cEnTeR" ss:Vertical="tOp"/></Style></Styles>
+              <Worksheet ss:Name="Sheet1"><Table><Row><Cell ss:StyleID="mixed"><Data ss:Type="String">value</Data></Cell></Row></Table>
+              <x:WorksheetOptions><x:Visible>VISIBILITY</x:Visible></x:WorksheetOptions></Worksheet>
+            </Workbook>
+            """;
+        using var reader = ExcelReaderFactory.CreateReader(new MemoryStream(Encoding.UTF8.GetBytes(xml.Replace("VISIBILITY", visibility))));
+        Assert.That(reader.VisibleState, Is.EqualTo(expected));
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetCellStyle(0).HorizontalAlignment, Is.EqualTo(HorizontalAlignment.Center));
+        Assert.That(reader.GetCellStyle(0).VerticalAlignment, Is.EqualTo(VerticalAlignment.Top));
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void DataTextFragments_PreserveContentAndReaderPosition(bool singlePass)

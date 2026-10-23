@@ -95,7 +95,7 @@ internal sealed class Tokenizer(string fmt)
             var c2 = (char)Peek(i);
             if (ignoreCase)
             {
-                if (char.ToLower(c1, CultureInfo.InvariantCulture) != char.ToLower(c2, CultureInfo.InvariantCulture))
+                if (!Helpers.EqualsAsciiIgnoreCase(c1, c2))
                     return false;
             }
             else
@@ -123,20 +123,12 @@ internal sealed class Tokenizer(string fmt)
 
         return false;
     }
-    
-    private int PeekUntil(int startOffset, int until)
-    {
-        int offset = startOffset;
-        while (true)
-        {
-            var c = Peek(offset++);
-            if (c == -1)
-                break;
-            if (c == until)
-                return offset - startOffset;
-        }
 
-        return 0;
+    private int PeekUntil(int startOffset, char until)
+    {
+        int start = Position + startOffset;
+        int end = _formatString.IndexOf(until, start);
+        return end < 0 ? 0 : end - start + 1;
     }
 
     private bool PeekOneOf(int offset, string s)

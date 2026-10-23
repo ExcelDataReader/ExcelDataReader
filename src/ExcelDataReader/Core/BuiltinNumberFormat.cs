@@ -6,101 +6,105 @@ namespace ExcelDataReader.Core;
 
 internal static class BuiltinNumberFormat
 {
-    private static Dictionary<int, NumberFormatString> Formats { get; } = new()
-    {
-        { 0, Number("General") },
-        { 1, Number("0") },
-        { 2, Number("0.00") },
-        { 3, Number("#,##0") },
-        { 4, Number("#,##0.00") },
-        { 5, Number("\"$\"#,##0_);(\"$\"#,##0)") },
-        { 6, Number("\"$\"#,##0_);[Red](\"$\"#,##0)") },
-        { 7, Number("\"$\"#,##0.00_);(\"$\"#,##0.00)") },
-        { 8, Number("\"$\"#,##0.00_);[Red](\"$\"#,##0.00)") },
-        { 9, Number("0%") },
-        { 10, Number("0.00%") },
-        { 11, Number("0.00E+00") },
-        { 12, Number("# ?/?") },
-        { 13, Number("# ??/??") },
-        { 14, Date("d/m/yyyy") },
-        { 15, Date("d-mmm-yy") },
-        { 16, Date("d-mmm") },
-        { 17, Date("mmm-yy") },
-        { 18, Date("h:mm AM/PM") },
-        { 19, Date("h:mm:ss AM/PM") },
-        { 20, Date("h:mm") },
-        { 21, Date("h:mm:ss") },
-        { 22, Date("m/d/yy h:mm") },
+    private static NumberFormatString?[] Formats { get; } =
+    [
+        Number("General"),
+        Number("0"),
+        Number("0.00"),
+        Number("#,##0"),
+        Number("#,##0.00"),
+        Number("\"$\"#,##0_);(\"$\"#,##0)"),
+        Number("\"$\"#,##0_);[Red](\"$\"#,##0)"),
+        Number("\"$\"#,##0.00_);(\"$\"#,##0.00)"),
+        Number("\"$\"#,##0.00_);[Red](\"$\"#,##0.00)"),
+        Number("0%"),
+        Number("0.00%"),
+        Number("0.00E+00"),
+        Number("# ?/?"),
+        Number("# ??/??"),
+        Date("d/m/yyyy"),
+        Date("d-mmm-yy"),
+        Date("d-mmm"),
+        Date("mmm-yy"),
+        Date("h:mm AM/PM"),
+        Date("h:mm:ss AM/PM"),
+        Date("h:mm"),
+        Date("h:mm:ss"),
+        Date("m/d/yy h:mm"),
 
         // 23..26 international/unused
-        { 37, Number("#,##0_);(#,##0)") },
-        { 38, Number("#,##0_);[Red](#,##0)") },
-        { 39, Number("#,##0.00_);(#,##0.00)") },
-        { 40, Number("#,##0.00_);[Red](#,##0.00)") },
-        { 41, Number("_(\"$\"* #,##0_);_(\"$\"* (#,##0);_(\"$\"* \"-\"_);_(@_)") },
-        { 42, Number("_(* #,##0_);_(* (#,##0);_(* \"-\"_);_(@_)") },
-        { 43, Number("_(\"$\"* #,##0.00_);_(\"$\"* (#,##0.00);_(\"$\"* \"-\"??_);_(@_)") },
-        { 44, Number("_(* #,##0.00_);_(* (#,##0.00);_(* \"-\"??_);_(@_)") },
-        { 45, Date("mm:ss") },
-        { 46, Duration("[h]:mm:ss") },
-        { 47, Date("mm:ss.0") },
-        { 48, Number("##0.0E+0") },
-        { 49, Number("@") },
+        null, null, null, null,
 
-        // Locale-specific built-in formats.
         // Indices 27–36 and 50–58 vary by locale (ja-jp, ko-kr, zh-tw, zh-cn) but are
         // always date/time formats. The ja-jp strings are stored as a representative
         // fallback; files from other locales may display differently via GetNumberFormatString()
         // but will still be correctly identified as date/time values.
-        { 27, Date(@"[$-411]ge.m.d") },
-        { 28, Date("[$-411]ggge\"年\"m\"月\"d\"日\"") },
-        { 29, Date("[$-411]ggge\"年\"m\"月\"d\"日\"") },
-        { 30, Date("m/d/yy") },
-        { 31, Date("yyyy\"年\"m\"月\"d\"日\"") },
-        { 32, Date("h\"時\"mm\"分\"") },
-        { 33, Date("h\"時\"mm\"分\"ss\"秒\"") },
-        { 34, Date("yyyy\"年\"m\"月\"") },
-        { 35, Date("m\"月\"d\"日\"") },
-        { 36, Date(@"[$-411]ge.m.d") },
-        { 50, Date(@"[$-411]ge.m.d") },
-        { 51, Date("[$-411]ggge\"年\"m\"月\"d\"日\"") },
-        { 52, Date("yyyy\"年\"m\"月\"") },
-        { 53, Date("m\"月\"d\"日\"") },
-        { 54, Date("[$-411]ggge\"年\"m\"月\"d\"日\"") },
-        { 55, Date("yyyy\"年\"m\"月\"") },
-        { 56, Date("m\"月\"d\"日\"") },
-        { 57, Date(@"[$-411]ge.m.d") },
-        { 58, Date("[$-411]ggge\"年\"m\"月\"d\"日\"") },
+        Date(@"[$-411]ge.m.d"),
+        Date("[$-411]ggge\"年\"m\"月\"d\"日\""),
+        Date("[$-411]ggge\"年\"m\"月\"d\"日\""),
+        Date("m/d/yy"),
+        Date("yyyy\"年\"m\"月\"d\"日\""),
+        Date("h\"時\"mm\"分\""),
+        Date("h\"時\"mm\"分\"ss\"秒\""),
+        Date("yyyy\"年\"m\"月\""),
+        Date("m\"月\"d\"日\""),
+        Date(@"[$-411]ge.m.d"),
+
+        // 37..49
+        Number("#,##0_);(#,##0)"),
+        Number("#,##0_);[Red](#,##0)"),
+        Number("#,##0.00_);(#,##0.00)"),
+        Number("#,##0.00_);[Red](#,##0.00)"),
+        Number("_(\"$\"* #,##0_);_(\"$\"* (#,##0);_(\"$\"* \"-\"_);_(@_)"),
+        Number("_(* #,##0_);_(* (#,##0);_(* \"-\"_);_(@_)"),
+        Number("_(\"$\"* #,##0.00_);_(\"$\"* (#,##0.00);_(\"$\"* \"-\"??_);_(@_)"),
+        Number("_(* #,##0.00_);_(* (#,##0.00);_(* \"-\"??_);_(@_)"),
+        Date("mm:ss"),
+        Duration("[h]:mm:ss"),
+        Date("mm:ss.0"),
+        Number("##0.0E+0"),
+        Number("@"),
+
+        // 50..58 locale-specific date/time formats
+        Date(@"[$-411]ge.m.d"),
+        Date("[$-411]ggge\"年\"m\"月\"d\"日\""),
+        Date("yyyy\"年\"m\"月\""),
+        Date("m\"月\"d\"日\""),
+        Date("[$-411]ggge\"年\"m\"月\"d\"日\""),
+        Date("yyyy\"年\"m\"月\""),
+        Date("m\"月\"d\"日\""),
+        Date(@"[$-411]ge.m.d"),
+        Date("[$-411]ggge\"年\"m\"月\"d\"日\""),
 
         // 59–62 and 67–70 are Thai-digit number formats; 71–81 are Thai date/time formats.
         // ASCII equivalents are used so the format strings parse correctly.
-        { 59, Number("0") },
-        { 60, Number("0.00") },
-        { 61, Number("#,##0") },
-        { 62, Number("#,##0.00") },
-        { 67, Number("0%") },
-        { 68, Number("0.00%") },
-        { 69, Number("# ?/?") },
-        { 70, Number("# ??/??") },
-        { 71, Date("d/m/yyyy") },
-        { 72, Date("d-mmm-yy") },
-        { 73, Date("d-mmm") },
-        { 74, Date("mmm-yy") },
-        { 75, Date("h:mm") },
-        { 76, Date("h:mm:ss") },
-        { 77, Date("d/m/yyyy h:mm") },
-        { 78, Date("mm:ss") },
-        { 79, Duration("[h]:mm:ss") },
-        { 80, Date("mm:ss.0") },
-        { 81, Date("d/m/yyyy") },
-    };
+        Number("0"),
+        Number("0.00"),
+        Number("#,##0"),
+        Number("#,##0.00"),
+
+        // 63..66 unused
+        null, null, null, null,
+        Number("0%"),
+        Number("0.00%"),
+        Number("# ?/?"),
+        Number("# ??/??"),
+        Date("d/m/yyyy"),
+        Date("d-mmm-yy"),
+        Date("d-mmm"),
+        Date("mmm-yy"),
+        Date("h:mm"),
+        Date("h:mm:ss"),
+        Date("d/m/yyyy h:mm"),
+        Date("mm:ss"),
+        Duration("[h]:mm:ss"),
+        Date("mm:ss.0"),
+        Date("d/m/yyyy"),
+    ];
 
     public static NumberFormatString? GetBuiltinNumberFormat(int numFmtId)
     {
-        if (Formats.TryGetValue(numFmtId, out var result))
-            return result;
-
-        return null;
+        return (uint)numFmtId < (uint)Formats.Length ? Formats[numFmtId] : null;
     }
 
     public static NumberFormatString? GetBuiltinNumberFormat(int numFmtId, IFormatProvider provider)
@@ -143,10 +147,7 @@ internal static class BuiltinNumberFormat
             return new NumberFormatString($"{date} {time}", isDateTimeFormat: true, isTimeSpanFormat: false);
         }
 
-        if (Formats.TryGetValue(numFmtId, out var result))
-            return result;
-
-        return null;
+        return (uint)numFmtId < (uint)Formats.Length ? Formats[numFmtId] : null;
     }
 
     private static NumberFormatString Date(string s) => new(s, isDateTimeFormat: true, isTimeSpanFormat: false);

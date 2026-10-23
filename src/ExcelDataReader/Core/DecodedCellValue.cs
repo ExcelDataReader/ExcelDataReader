@@ -7,5 +7,10 @@ namespace ExcelDataReader.Core;
 /// </summary>
 internal readonly record struct DecodedCellValue(object? Value, CellValueKind Kind = CellValueKind.Literal, uint SharedStringIndex = 0)
 {
+    public DecodedCellValue(bool value)
+        : this(Helpers.BoxBoolean(value))
+    {
+    }
+
     public static DecodedCellValue SharedString(uint index) => new(null, CellValueKind.SharedString, index);
 }
