@@ -163,12 +163,6 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
 
 `CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()`, and `CreateCsvReader()` require seek support during probing and parsing. If the input stream is non-seekable, ExcelDataReader copies it to a `MemoryStream` first.
 
-### Streaming implementation
-
-All formats use resumable internal push readers that deliver cells directly to a reusable current-row buffer. Metadata scans skip value materialization; CSV analysis counts fields without building field strings or batches of rows. Workbook, style, and shared-string loaders use specialized sinks with explicit ownership: borrowed parser buffers are valid only during their callbacks, while values returned by the public reader remain owned.
-
-File-specific decoding and ordering remain internal. Normal XLS, XLSX, and XLSB reading may buffer overlapping rows to restore logical row order; pathological overlap can require buffering the entire worksheet. `SinglePassMode` avoids this index and rejects revisits to completed rows. Push consumption does not change shared-string storage, encryption, or the public pull-based `Read()` API.
-
 ### Large shared string tables
 
 XLSX, XLSB, and BIFF8 XLS files can contain large shared string tables (SSTs). By default, the entire table is kept in memory. Use `SpillToDisk` to move the table to temporary files when it exceeds a configurable memory threshold:
@@ -346,11 +340,11 @@ var value = reader.GetDateTime(i); // or (DateTime)reader.GetValue(i)
 
 If the input stream is non-seekable, ExcelDataReader copies it to a `MemoryStream`. When this copy occurs, the source stream is fully consumed regardless of the `LeaveOpen` setting. If you need to reuse the source stream, ensure it is seekable before passing it to `CreateReader()`.
 
-### Streaming row boundaries and ordering
+### Row ordering in XLSX and XLSB files
 
-XLSX and XLSB readers combine consecutive physical fragments with the same row index into one logical output row in both modes. This requires looking ahead to a different row header before returning the completed row. In normal two-pass mode, the preparation scan also identifies worksheet-wide ordering overlaps: reading buffers only those regions, merges nonconsecutive fragments, and returns rows in ascending index order. The last physical cell write wins for repeated columns, and the last fragment supplies row height/hidden metadata. Ordered rows still push directly into the current-row buffer, and existing leading-gap height behavior is preserved.
+By default, XLSX and XLSB readers return rows in ascending row-index order and combine repeated entries for the same row, even when separated by other rows in the file. For duplicate cells, the last value in file order wins; the last entry for a row determines its height and hidden state. Reordering can require additional memory, up to buffering the entire worksheet for severely out-of-order input.
 
-With `SinglePassMode = true`, XLSX and XLSB reject a different row header at or below the last completed row instead of returning another row in encounter order. Use `SinglePassMode = false` for non-sequential input, as with XLS. Reordering works across the whole worksheet, not just a fixed row block; worst-case disorder can require whole-worksheet buffering. ZIP entries are read sequentially without repeated decompression per block or temporary files. Malformed following headers can fail while completing the preceding logical OpenXML row, and initialization scans in normal mode can detect errors before the first `Read()`.
+With `SinglePassMode = true`, consecutive entries for the same row are still combined, but out-of-order rows or revisits to completed rows throw `InvalidOperationException`. Use the default `SinglePassMode = false` when reading files with non-sequential rows.
 
 ### `TransformValue` callback parameter types changed to nullable
 

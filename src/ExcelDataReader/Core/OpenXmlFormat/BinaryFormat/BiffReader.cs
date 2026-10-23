@@ -1,14 +1,20 @@
 using System.Text;
+using ExcelDataReader.Core.BinaryFormat;
+using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 
 internal abstract class BiffReader(Stream stream) : IDisposable
 {
-    private readonly byte[] _buffer = new byte[512];
+    private BiffFrameBuffer _frameBuffer = new(512);
 
     private Stream Stream { get; } = stream ?? throw new ArgumentNullException(nameof(stream));
 
-    public virtual void Dispose() => Stream.Dispose();
+    public virtual void Dispose()
+    {
+        _frameBuffer.Clear();
+        Stream.Dispose();
+    }
 
     protected static uint GetDWord(byte[] buffer, uint offset)
     {
@@ -90,95 +96,60 @@ internal abstract class BiffReader(Stream stream) : IDisposable
         return BitConverter.Int64BitsToDouble(num3);
     }
 
-    // A successful frame is borrowed until ReleaseFrame on pooled targets.
-    // Keep non-pooled framing inlineable without unnecessary cleanup regions.
+    // The returned frame borrows the reusable buffer until the next call.
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     protected bool TryReadFrame(out byte[] buffer, out uint recordId, out uint recordLength)
     {
-        buffer = _buffer;
+        buffer = _frameBuffer.GetBuffer(1);
         recordLength = 0;
-        if (!TryReadVariableValue(out recordId) ||
-            !TryReadVariableValue(out recordLength))
+        if (!TryReadVariableValue(buffer, out recordId))
             return false;
+        if (!TryReadVariableValue(buffer, out recordLength))
+            throw new ExcelReaderException(Errors.ErrorBiffRecordSizeInvalid);
 
-        buffer = GetFrameBuffer(recordLength);
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        try
-        {
-            if (Stream.ReadAtLeast(buffer, 0, (int)recordLength) != recordLength)
-            {
-                ReleaseFrame(buffer);
-                return false;
-            }
+        buffer = _frameBuffer.GetBuffer((int)recordLength);
+        if (Stream.ReadAtLeast(buffer, 0, (int)recordLength) != recordLength)
+            throw new ExcelReaderException(Errors.ErrorBiffRecordSizeInvalid);
 
-            return true;
-        }
-        catch
-        {
-            ReleaseFrame(buffer);
-            throw;
-        }
-#else
-        return Stream.ReadAtLeast(buffer, 0, (int)recordLength) == recordLength;
-#endif
+        return true;
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Instance state is only used on pooled targets.")]
-    protected void ReleaseFrame(byte[] buffer)
-    {
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        if (ReferenceEquals(buffer, _buffer))
-            return;
-
-        System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
-#endif
-    }
-
-    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-    private byte[] GetFrameBuffer(uint recordLength)
-    {
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        return recordLength >= _buffer.Length
-            ? System.Buffers.ArrayPool<byte>.Shared.Rent((int)recordLength)
-            : _buffer;
-#else
-        return recordLength < _buffer.Length ? _buffer : new byte[recordLength];
-#endif
-    }
-
-    private bool TryReadVariableValue(out uint value)
+    private bool TryReadVariableValue(byte[] buffer, out uint value)
     {
         value = 0;
 
-        if (Stream.Read(_buffer, 0, 1) == 0)
+        if (Stream.Read(buffer, 0, 1) == 0)
             return false;
 
-        byte b1 = _buffer[0];
+        byte b1 = buffer[0];
         value = (uint)(b1 & 0x7F);
 
         if ((b1 & 0x80) == 0)
             return true;
 
-        if (Stream.Read(_buffer, 0, 1) == 0)
-            return false;
-        byte b2 = _buffer[0];
+        if (Stream.Read(buffer, 0, 1) == 0)
+            throw new ExcelReaderException(Errors.ErrorBiffRecordSizeInvalid);
+        byte b2 = buffer[0];
         value = ((uint)(b2 & 0x7F) << 7) | value;
 
         if ((b2 & 0x80) == 0)
             return true;
 
-        if (Stream.Read(_buffer, 0, 1) == 0)
-            return false;
-        byte b3 = _buffer[0];
+        if (Stream.Read(buffer, 0, 1) == 0)
+            throw new ExcelReaderException(Errors.ErrorBiffRecordSizeInvalid);
+        byte b3 = buffer[0];
         value = ((uint)(b3 & 0x7F) << 14) | value;
 
         if ((b3 & 0x80) == 0)
             return true;
 
-        if (Stream.Read(_buffer, 0, 1) == 0)
-            return false;
-        byte b4 = _buffer[0];
+        if (Stream.Read(buffer, 0, 1) == 0)
+            throw new ExcelReaderException(Errors.ErrorBiffRecordSizeInvalid);
+        byte b4 = buffer[0];
         value = ((uint)(b4 & 0x7F) << 21) | value;
+
+        if ((b4 & 0x80) != 0)
+            throw new ExcelReaderException(Errors.ErrorBiffRecordSizeInvalid);
 
         return true;
     }

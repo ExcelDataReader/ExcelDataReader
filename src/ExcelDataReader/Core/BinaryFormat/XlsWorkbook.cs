@@ -8,7 +8,7 @@ namespace ExcelDataReader.Core.BinaryFormat;
 /// <summary>
 /// Represents Globals section of workbook.
 /// </summary>
-internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXlsWorkbookPartSink
+internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXlsWorkbookPartSink, IStylesPartSink
 {
     private readonly ISharedStringStore _stringStore = new SharedStringTable();
 
@@ -16,34 +16,33 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXl
     {
         Stream = stream;
 
-        using var biffStream = new XlsBiffStream(stream, password: configuration.Password);
-        if (biffStream.BiffVersion == 0)
+        using var biffStream = XlsBiffStartup.Open(stream, out var version, out var type, password: configuration.Password);
+        if (version == 0)
             throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
 
-        BiffVersion = biffStream.BiffVersion;
+        BiffVersion = version;
         SecretKey = biffStream.SecretKey;
         Encryption = biffStream.Encryption;
-        Encoding = biffStream.BiffVersion == 8 ? Encoding.Unicode : configuration.FallbackEncoding;
+        Encoding = version == 8 ? Encoding.Unicode : configuration.FallbackEncoding;
 
         try
         {
             if (BiffVersion == 8 && configuration.SharedStringStorageMode != SharedStringStorageMode.Default)
                 _stringStore = new AutoSharedStringStore(configuration);
-            biffStream.SharedStringStore = _stringStore;
 
-            switch (biffStream.BiffType)
+            switch (type)
             {
                 case BIFFTYPE.WorkbookGlobals:
-                    new XlsWorkbookPartReader(biffStream, this).Load();
+                    new XlsWorkbookPartReader(biffStream, BiffVersion, this, this, _stringStore).Load();
                     _stringStore.Seal();
                     break;
                 case BIFFTYPE.Worksheet:
                     // set up 'virtual' bound sheet pointing at this
-                    Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.Worksheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
+                    Sheets.Add(new XlsSheetInfo(0, XlsSheetInfo.SheetType.Worksheet, XlsSheetInfo.SheetVisibility.Visible, "Sheet"));
                     break;
                 case BIFFTYPE.MacroSheet:
                     // set up 'virtual' bound sheet pointing at this
-                    Sheets.Add(new XlsBiffBoundSheet(0, XlsBiffBoundSheet.SheetType.MacroSheet, XlsBiffBoundSheet.SheetVisibility.Visible, "Sheet"));
+                    Sheets.Add(new XlsSheetInfo(0, XlsSheetInfo.SheetType.MacroSheet, XlsSheetInfo.SheetVisibility.Visible, "Sheet"));
                     break;
                 default:
                     throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
@@ -68,14 +67,14 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXl
 
     Encoding IXlsWorkbookPartSink.Encoding => Encoding;
 
-    public List<XlsBiffFont> Fonts { get; } = [];
+    public List<XlsFontInfo> Fonts { get; } = [];
 
-    public List<XlsBiffBoundSheet> Sheets { get; } = [];
+    public List<XlsSheetInfo> Sheets { get; } = [];
 
     /// <summary>
-    /// Gets the shared string table of the workbook.
+    /// Gets a value indicating whether a shared string table was found.
     /// </summary>
-    public XlsBiffSST? SST { get; private set; }
+    public bool HasSharedStrings { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether the workbook uses the 1904 date system.
@@ -147,14 +146,16 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXl
         ResourceCleanup.DisposeAll(null, _stringStore, Stream);
     }
 
-    void IXlsWorkbookPartSink.AddSheet(XlsBiffBoundSheet sheet) => Sheets.Add(sheet);
+    void IXlsWorkbookPartSink.AddSheet(XlsSheetInfo sheet) => Sheets.Add(sheet);
 
-    void IXlsWorkbookPartSink.AddFont(XlsBiffFont font) => Fonts.Add(font);
+    void IXlsWorkbookPartSink.AddFont(XlsFontInfo font) => Fonts.Add(font);
 
-    void IXlsWorkbookPartSink.AddXf(XlsBiffXF xf) => AddXf(xf);
+    void IStylesPartSink.AddNumberFormat(int formatIndexInFile, string formatString) =>
+        Formats.Add(formatIndexInFile, new NumberFormatString(formatString));
 
-    void IXlsWorkbookPartSink.AddNumberFormat(int index, string format) =>
-        Formats.Add(index, new NumberFormatString(format));
+    void IStylesPartSink.AddExtendedFormat(ExtendedFormat format) => ExtendedFormats.Add(format);
+
+    void IStylesPartSink.AddCellStyleExtendedFormat(ExtendedFormat format) => CellStyleExtendedFormats.Add(format);
 
     void IXlsWorkbookPartSink.SetCodePage(ushort codePage) =>
         Encoding = EncodingHelper.GetEncoding(codePage) ?? Encoding;
@@ -163,24 +164,11 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXl
 
     void IXlsWorkbookPartSink.SetActiveSheet(int activeSheet) => ActiveSheet = activeSheet;
 
-    void IXlsWorkbookPartSink.SetSharedStringTable(XlsBiffSST sharedStrings) => SST = sharedStrings;
-
-    internal void AddXf(XlsBiffXF xf)
-    {
-        var extendedFormat = new ExtendedFormat(xf.ParentCellStyleXf, xf.Font, xf.Format, xf.IsLocked, xf.IsHidden, xf.IndentLevel, xf.HorizontalAlignment, xf.VerticalAlignment);
-
-        // The workbook holds two kinds of XF records: Cell XFs, and Cell Style XFs.
-        // In the binary XLS format, both kinds of XF records are saved in a single list,
-        // whereas the XLSX format has two separate lists - like the CommonWorkbook internals.
-        // The Cell XFs hold indexes into the Cell Style XF list, so adding the XF in both lists 
-        // here to keep the indexes the same.
-        ExtendedFormats.Add(extendedFormat);
-        CellStyleExtendedFormats.Add(extendedFormat);
-    }
+    void IXlsWorkbookPartSink.SetSharedStringTable() => HasSharedStrings = true;
 
     protected override string? ResolveSharedString(uint index)
     {
-        if (SST == null)
+        if (!HasSharedStrings)
             throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
         return index < (uint)_stringStore.Count ? _stringStore.GetString((int)index) : null;
     }

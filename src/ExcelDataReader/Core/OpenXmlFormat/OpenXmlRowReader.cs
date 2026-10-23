@@ -2,6 +2,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat;
 
 internal sealed class OpenXmlRowReader(IWorksheetReader reader, double defaultRowHeight, OpenXmlRowOrder.Region[] regions) : IWorksheetReader
 {
+    private readonly double _defaultRowHeight = defaultRowHeight;
     private int _rowIndex;
     private int _physicalRowIndex;
     private bool _hidden;
@@ -86,7 +87,7 @@ internal sealed class OpenXmlRowReader(IWorksheetReader reader, double defaultRo
                     _rowIndex = _physicalRowIndex;
                     _pendingHeader = false;
                     _rowOpen = true;
-                    if (handler.OnRow(_rowIndex, _hidden, _height ?? defaultRowHeight) == WorksheetReadControl.Pause)
+                    if (handler.OnRow(_rowIndex, _hidden, _height ?? _defaultRowHeight) == WorksheetReadControl.Pause)
                         return WorksheetReadStatus.Paused;
                 }
             }
@@ -178,7 +179,7 @@ internal sealed class OpenXmlRowReader(IWorksheetReader reader, double defaultRo
             {
                 _flushStage = FlushStage.Cells;
                 _flushCell = row.First;
-                if (handler.OnRow(row.Index, row.Hidden, row.Height ?? defaultRowHeight) == WorksheetReadControl.Pause)
+                if (handler.OnRow(row.Index, row.Hidden, row.Height ?? _defaultRowHeight) == WorksheetReadControl.Pause)
                     return WorksheetReadControl.Pause;
             }
 
@@ -237,6 +238,11 @@ internal sealed class OpenXmlRowReader(IWorksheetReader reader, double defaultRo
             owner._physicalRowIndex = index;
             owner._hidden = hidden;
             owner._height = height;
+            if (!owner._buffering && owner._rowOpen && owner._rowIndex == index)
+            {
+                return Handler.OnRow(index, hidden, height ?? owner._defaultRowHeight);
+            }
+
             owner._pendingHeader = true;
             return WorksheetReadControl.Pause;
         }
@@ -250,6 +256,6 @@ internal sealed class OpenXmlRowReader(IWorksheetReader reader, double defaultRo
             return WorksheetReadControl.Continue;
         }
 
-        public WorksheetReadControl OnRowEnd() => WorksheetReadControl.Continue;
+        public readonly WorksheetReadControl OnRowEnd() => WorksheetReadControl.Continue;
     }
 }

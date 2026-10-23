@@ -94,6 +94,9 @@ public class OpenXmlRowConsumptionTests
     [TestCase(new[] { 0, 100000, 200000, 300000, 150000, 400000 }, new[] { 2, 4 })]
     [TestCase(new[] { 8, 6, 4, 2, 0 }, new[] { 0, 4 })]
     [TestCase(new[] { 0, 9, 6, 3, 12 }, new[] { 1, 3 })]
+    [TestCase(new[] { 0, 0, 2, 2, 1, 1, 1, 3 }, new[] { 2, 6 })]
+    [TestCase(new[] { 0, 0, 1, 1, 2, 2, 1, 1, 3, 3 }, new[] { 2, 7 })]
+    [TestCase(new[] { 0, 0, 3, 3, 2, 2, 1, 1, 4, 4 }, new[] { 2, 7 })]
     public void OrderIndexFindsOnlySafeOverlappingRegions(int[] rows, int[] boundaries)
     {
         var order = new OpenXmlRowOrder();
@@ -103,8 +106,9 @@ public class OpenXmlRowConsumptionTests
         Assert.That(order.Build().SelectMany(region => new[] { region.Start, region.End }), Is.EqualTo(boundaries));
     }
 
-    [Test]
-    public void CompressedRunsPreserveOverlapBoundariesForMixedStridesAndFragments()
+    [TestCase(false)]
+    [TestCase(true)]
+    public void CompressedRunsPreserveOverlapBoundariesForMixedStridesAndFragments(bool repeatedGroups)
     {
         var random = new Random(741);
         for (int sample = 0; sample < 40; sample++)
@@ -116,7 +120,11 @@ public class OpenXmlRowConsumptionTests
                 int step = random.Next(-5, 6);
                 int count = random.Next(1, 16);
                 for (int i = 0; i < count; i++)
-                    rows.Add(first + i * step);
+                {
+                    int fragments = repeatedGroups ? random.Next(1, 5) : 1;
+                    for (int fragment = 0; fragment < fragments; fragment++)
+                        rows.Add(first + i * step);
+                }
             }
 
             List<OpenXmlRowOrder.Region> expected = [];

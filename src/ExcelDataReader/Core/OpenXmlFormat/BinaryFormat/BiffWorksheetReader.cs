@@ -70,52 +70,41 @@ internal sealed class BiffWorksheetReader(Stream stream, WorksheetReadMode mode,
             }
 
             WorksheetReadControl control = WorksheetReadControl.Continue;
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-            try
-#endif
+            if (recordId == SheetDataBegin)
             {
-                if (recordId == SheetDataBegin)
-                {
-                    _inSheetData = true;
-                    control = handler.OnSheetDataBegin();
-                }
-                else if (recordId == SheetDataEnd)
-                {
-                    bool scanCompleted = _inSheetData && mode == WorksheetReadMode.Scan;
-                    _inSheetData = false;
-                    if (scanCompleted)
-                        control = handler.OnScanResult(_scanMaxRowIndex, _scanMaxColumnIndex);
-                }
-                else if (_inSheetData)
-                {
-                    if (mode == WorksheetReadMode.Scan)
-                        ScanRecord(buffer, recordId);
+                _inSheetData = true;
+                control = handler.OnSheetDataBegin();
+            }
+            else if (recordId == SheetDataEnd)
+            {
+                bool scanCompleted = _inSheetData && mode == WorksheetReadMode.Scan;
+                _inSheetData = false;
+                if (scanCompleted)
+                    control = handler.OnScanResult(_scanMaxRowIndex, _scanMaxColumnIndex);
+            }
+            else if (_inSheetData)
+            {
+                if (mode == WorksheetReadMode.Scan)
+                    ScanRecord(buffer, recordId);
 
-                    if (recordId == Row)
-                    {
-                        _rowOpen = true;
-                        byte flags = buffer[11];
-                        double? height = (flags & 0b100000) != 0 ? GetWord(buffer, 8) / 20.0 : null;
-                        control = handler.OnRow(GetInt32(buffer, 0), (flags & 0b10000) != 0, height);
-                    }
-                    else if (mode == WorksheetReadMode.Materialize && !ConsumeCell(buffer, recordId, ref handler, out control))
-                    {
-                        ReadMetadata(buffer, recordId, ref handler, out control);
-                    }
-                }
-                else if (!ReadMetadata(buffer, recordId, ref handler, out control))
+                if (recordId == Row)
                 {
-                    // Preserve validation of stray cell records outside sheetData.
-                    var ignoringHandler = default(IgnoringHandler);
-                    ConsumeCell(buffer, recordId, ref ignoringHandler, out _);
+                    _rowOpen = true;
+                    byte flags = buffer[11];
+                    double? height = (flags & 0b100000) != 0 ? GetWord(buffer, 8) / 20.0 : null;
+                    control = handler.OnRow(GetInt32(buffer, 0), (flags & 0b10000) != 0, height);
+                }
+                else if (mode == WorksheetReadMode.Materialize && !ConsumeCell(buffer, recordId, ref handler, out control))
+                {
+                    ReadMetadata(buffer, recordId, ref handler, out control);
                 }
             }
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-            finally
+            else if (!ReadMetadata(buffer, recordId, ref handler, out control))
             {
-                ReleaseFrame(buffer);
+                // Preserve validation of stray cell records outside sheetData.
+                var ignoringHandler = default(IgnoringHandler);
+                ConsumeCell(buffer, recordId, ref ignoringHandler, out _);
             }
-#endif
 
             if (control == WorksheetReadControl.Pause)
                 return WorksheetReadStatus.Paused;
@@ -126,12 +115,7 @@ internal sealed class BiffWorksheetReader(Stream stream, WorksheetReadMode mode,
 
     public override void Dispose()
     {
-        if (_pendingBuffer != null)
-        {
-            ReleaseFrame(_pendingBuffer);
-            _pendingBuffer = null;
-        }
-
+        _pendingBuffer = null;
         base.Dispose();
     }
 
@@ -284,7 +268,7 @@ internal sealed class BiffWorksheetReader(Stream stream, WorksheetReadMode mode,
         }
     }
 
-    private struct IgnoringHandler : IWorksheetHandler
+    private readonly struct IgnoringHandler : IWorksheetHandler
     {
         public WorksheetReadControl OnDimension(CellRange range) => WorksheetReadControl.Continue;
 

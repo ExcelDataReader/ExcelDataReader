@@ -74,7 +74,7 @@ public class WorksheetConsumptionTests
     }
 
     [Test]
-    public void XlsMetadataReadSkipsGenericRecordsAndPreservesUsedGenericRecords()
+    public void XlsTransportFramesPreserveGenericRecordsAndTheirPayloads()
     {
         using var buffer = new MemoryStream();
         using (var writer = new BinaryWriter(buffer, Encoding.Unicode, leaveOpen: true))
@@ -96,10 +96,271 @@ public class WorksheetConsumptionTests
         }
 
         using var biffStream = new XlsBiffStream(new MemoryStream(buffer.ToArray()));
-        Assert.That(biffStream.ReadMetadataRecord(), Is.TypeOf<XlsBiffBOF>());
-        Assert.That(biffStream.ReadMetadataRecord()!.Id, Is.EqualTo(BIFFRECORDTYPE.WINDOW1));
-        Assert.That(biffStream.ReadMetadataRecord()!.Id, Is.EqualTo(BIFFRECORDTYPE.IXFE));
-        Assert.That(biffStream.ReadMetadataRecord(), Is.Null);
+        List<BIFFRECORDTYPE> ids = [];
+        List<ushort> values = [];
+        while (biffStream.ReadFrame(out var frame))
+        {
+            ids.Add(frame.Id);
+            values.Add(frame.ReadUInt16(frame.Id == BIFFRECORDTYPE.WINDOW1 ? 10 : 0));
+        }
+
+        Assert.That(ids, Is.EqualTo(new BIFFRECORDTYPE[] { BIFFRECORDTYPE.BOF, (BIFFRECORDTYPE)0x00F0, BIFFRECORDTYPE.WINDOW1, BIFFRECORDTYPE.IXFE, (BIFFRECORDTYPE)0x00F1 }));
+        Assert.That(values, Is.EqualTo(new ushort[] { 0x600, 123, 1, 7, 456 }));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void XlsMetadataOwnsStringsUntilTheLaterCodePageAndNextSheetReads(bool singlePass)
+    {
+        using var buffer = new MemoryStream();
+        using (var writer = new BinaryWriter(buffer, Encoding.Unicode, leaveOpen: true))
+        {
+            WriteBof(5);
+            long sheetRecord = buffer.Position;
+            XlsRecord(writer, 0x85, data =>
+            {
+                data.Write(0);
+                data.Write((ushort)0);
+                data.Write((byte)1);
+                data.Write((byte)0xe9);
+            });
+            XlsRecord(writer, 0x41e, data =>
+            {
+                data.Write((ushort)164);
+                data.Write((byte)1);
+                data.Write((byte)0xe9);
+            });
+            XlsRecord(writer, 0x31, data =>
+            {
+                data.Write(new byte[12]);
+                data.Write((byte)204);
+                data.Write((byte)0);
+                data.Write((byte)1);
+                data.Write((byte)0xe9);
+            });
+            XlsRecord(writer, 0xe0, data =>
+            {
+                data.Write((ushort)0);
+                data.Write((ushort)164);
+                data.Write(new byte[16]);
+            });
+            XlsRecord(writer, 0x42, data => data.Write((ushort)1251));
+            XlsRecord(writer, 0x3d, data =>
+            {
+                data.Write(new byte[10]);
+                data.Write((ushort)2);
+            });
+            XlsRecord(writer, 0xa, _ => { });
+            long sheetStart = buffer.Position;
+            buffer.Position = sheetRecord + 4;
+            writer.Write((uint)sheetStart);
+            buffer.Position = sheetStart;
+            WriteBof(0x10);
+            foreach (ushort id in new ushort[] { 0x14, 0x15 })
+            {
+                XlsRecord(writer, id, data =>
+                {
+                    data.Write((byte)1);
+                    data.Write((byte)0xe8);
+                });
+            }
+
+            XlsRecord(writer, 0x42, data => data.Write((ushort)1251));
+            XlsRecord(writer, 0xf0, data => data.Write(new byte[48]));
+            XlsRecord(writer, 0x204, data =>
+            {
+                data.Write((ushort)0);
+                data.Write((ushort)0);
+                data.Write((ushort)0);
+                data.Write((ushort)1);
+                data.Write((byte)0xe9);
+            });
+            XlsRecord(writer, 0xa, _ => { });
+
+            void WriteBof(ushort type) => XlsRecord(writer, 0x809, data =>
+            {
+                data.Write((ushort)0x500);
+                data.Write(type);
+                data.Write(new byte[12]);
+            });
+        }
+
+        using var reader = ExcelReaderFactory.CreateBinaryReader(new MemoryStream(buffer.ToArray()), new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        for (int pass = 0; pass < 2; pass++)
+        {
+            Assert.That(reader.Name, Is.EqualTo("\u0439"));
+            Assert.That(reader.ActiveSheet, Is.EqualTo(2));
+            Assert.That(reader.HeaderFooter.OddHeader, Is.EqualTo("\u0438"));
+            Assert.That(reader.HeaderFooter.OddFooter, Is.EqualTo("\u0438"));
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetString(0), Is.EqualTo("\u0439"));
+            Assert.That(reader.GetNumberFormatString(0), Is.EqualTo("\u0439"));
+            Assert.That(reader.Read(), Is.False);
+            Assert.That(reader.Name, Is.EqualTo("\u0439"));
+            Assert.That(reader.HeaderFooter.OddHeader, Is.EqualTo("\u0438"));
+            reader.Reset();
+        }
+    }
+
+    [TestCase(1)]
+    [TestCase(2)]
+    [TestCase(3)]
+    [TestCase(4)]
+    [TestCase(5)]
+    [TestCase(6)]
+    [TestCase(8)]
+    public void XlsSstContinuesSplitHeadersCharactersAndRichTextTailsWithoutRetainingFrames(int headerSplit)
+    {
+        byte[] header = [3, 0, 0x0c, 2, 0, 3, 0, 0, 0];
+        using var buffer = new MemoryStream();
+        using (var writer = new BinaryWriter(buffer, Encoding.Unicode, leaveOpen: true))
+        {
+            XlsRecord(writer, 0x809, data =>
+            {
+                data.Write((ushort)0x600);
+                data.Write((ushort)0x10);
+                data.Write(new byte[12]);
+            });
+            XlsRecord(writer, 0xfc, data =>
+            {
+                data.Write(2U);
+                data.Write(2U);
+                data.Write(header, 0, headerSplit);
+            });
+            XlsRecord(writer, 0x3c, data =>
+            {
+                data.Write(header, headerSplit, header.Length - headerSplit);
+                data.Write((byte)'A');
+            });
+            XlsRecord(writer, 0x3c, data =>
+            {
+                data.Write((byte)1);
+                data.Write((ushort)'\u03bb');
+                data.Write((ushort)'B');
+                data.Write(new byte[1]);
+            });
+            XlsRecord(writer, 0x3c, data =>
+            {
+                data.Write(new byte[10]);
+                data.Write((ushort)4);
+                data.Write((byte)0);
+                data.Write(Encoding.ASCII.GetBytes("tail"));
+            });
+            XlsRecord(writer, 0xf0, data => data.Write(new byte[48]));
+        }
+
+        var strings = new SharedStringTable();
+        var parser = new XlsSSTReader();
+        using var transport = new XlsBiffStream(new MemoryStream(buffer.ToArray()));
+        while (transport.ReadFrame(out var frame))
+        {
+            if (frame.Id == BIFFRECORDTYPE.SST)
+                parser.ReadStrings(frame, 12, false, strings, 2);
+            else if (frame.Id == BIFFRECORDTYPE.CONTINUE)
+                parser.ReadStrings(frame, 4, true, strings, 2 - strings.Count);
+        }
+
+        parser.Flush(strings);
+        Assert.That(strings, Is.EqualTo(new[] { "A\u03bbB", "tail" }));
+    }
+
+    [TestCase(2, false)]
+    [TestCase(3, false)]
+    [TestCase(5, true)]
+    public void XlsLegacyFormulaStringContinuesRawCharacterBytesAndPreservesLookahead(int version, bool unicode)
+    {
+        Encoding encoding = unicode ? Encoding.Unicode : Encoding.GetEncoding(1251);
+        byte[] characters = encoding.GetBytes("A\u0439BC");
+        int split = characters.Length / 2 - 1;
+        using var buffer = new MemoryStream();
+        using (var writer = new BinaryWriter(buffer, Encoding.Unicode, leaveOpen: true))
+        {
+            XlsRecord(writer, 0x809, data =>
+            {
+                data.Write((ushort)(version == 5 ? 0x500 : version * 0x100));
+                data.Write((ushort)0x10);
+                data.Write(new byte[12]);
+            });
+            XlsRecord(writer, version == 2 ? (ushort)7 : (ushort)0x207, data =>
+            {
+                if (version == 2)
+                    data.Write((byte)4);
+                else
+                    data.Write((ushort)4);
+                data.Write(characters, 0, split);
+            });
+            XlsRecord(writer, 0x3c, data => data.Write(characters, split, characters.Length - split));
+            XlsRecord(writer, 0xf0, data => data.Write((ushort)123));
+        }
+
+        using var transport = new XlsBiffStream(new MemoryStream(buffer.ToArray()));
+        Assert.That(transport.ReadFrame(out _), Is.True);
+        string value = XlsFormulaStringReader.Read(transport, version, encoding);
+        Assert.That(transport.ReadFrame(out var next), Is.True);
+        Assert.That(next.Id, Is.EqualTo((BIFFRECORDTYPE)0xf0));
+        Assert.That(next.ReadUInt16(0), Is.EqualTo(123));
+        Assert.That(value, Is.EqualTo("A\u0439BC"));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void XlsFormulaStringContinuesWithEncodingChangesAndLeavesTheNextCellReadable(bool singlePass)
+    {
+        using var buffer = new MemoryStream();
+        using (var writer = new BinaryWriter(buffer, Encoding.Unicode, leaveOpen: true))
+        {
+            XlsRecord(writer, 0x809, data =>
+            {
+                data.Write((ushort)0x600);
+                data.Write((ushort)0x10);
+                data.Write(new byte[12]);
+            });
+            XlsRecord(writer, 6, data =>
+            {
+                data.Write(new byte[12]);
+                data.Write((ushort)0xffff);
+                data.Write(new byte[8]);
+            });
+            XlsRecord(writer, 0x4bc, data => data.Write(new byte[10]));
+            XlsRecord(writer, 0x207, data =>
+            {
+                data.Write((ushort)4);
+                data.Write((byte)0);
+                data.Write((byte)'A');
+            });
+            XlsRecord(writer, 0x3c, data =>
+            {
+                data.Write((byte)1);
+                data.Write((ushort)'\u03bb');
+            });
+            XlsRecord(writer, 0x3c, data =>
+            {
+                data.Write((byte)0);
+                data.Write((byte)'B');
+                data.Write((byte)'C');
+            });
+            XlsRecord(writer, 0x203, data =>
+            {
+                data.Write((ushort)1);
+                data.Write((ushort)0);
+                data.Write((ushort)0);
+                data.Write(7.0);
+            });
+            XlsRecord(writer, 0xa, _ => { });
+        }
+
+        using var reader = ExcelReaderFactory.CreateBinaryReader(new MemoryStream(buffer.ToArray()), new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        for (int pass = 0; pass < 2; pass++)
+        {
+            Assert.That(reader.Read(), Is.True);
+            string value = reader.GetString(0);
+            Assert.That(value, Is.EqualTo("A\u03bbBC"));
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetDouble(0), Is.EqualTo(7));
+            Assert.That(value, Is.EqualTo("A\u03bbBC"));
+            Assert.That(reader.Read(), Is.False);
+            reader.Reset();
+        }
     }
 
     [TestCase("xml")]
@@ -117,7 +378,7 @@ public class WorksheetConsumptionTests
 
     [TestCase(false)]
     [TestCase(true)]
-    public void XlsWorksheetTransportBorrowsCommonCellsWithoutRecordWrappers(bool malformedPackedRange)
+    public void XlsWorksheetTransportBorrowsAllRecordsThroughOneFrame(bool malformedPackedRange)
     {
         var type = typeof(ExcelReaderFactory).Assembly.GetType("ExcelDataReader.Core.BinaryFormat.XlsBiffStream")!;
         byte[] bytes = XlsWorkbook(false);
@@ -134,52 +395,45 @@ public class WorksheetConsumptionTests
         }
 
         using var source = new MemoryStream(bytes);
-        using var transport = (IDisposable)type.GetConstructors().Single().Invoke([source, 0, 0, null, null, null, null]);
-        var read = type.GetMethod("ReadWorksheetRecord")!;
-        var bufferField = type.GetField("_cellBuffer", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        using var transport = (IDisposable)type.GetConstructors().Single().Invoke([source, 0]);
+        var read = type.GetMethod("ReadFrame")!;
+        var bufferField = type.GetField("_frameBuffer", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var getBuffer = bufferField.FieldType.GetMethod("GetBuffer")!;
         object[] arguments = [null];
         byte[] borrowed = null;
-        int cells = 0;
-        int formulas = 0;
+        int cellRecords = 0;
         int packedRecords = 0;
-        int ownedCells = 0;
+        ushort packedLastColumn = 0;
+        int recordCount = 0;
         while ((bool)read.Invoke(transport, arguments)!)
         {
             object result = arguments[0]!;
             Type resultType = result.GetType();
+            Assert.That(resultType.Name, Is.EqualTo("XlsBiffFrame"));
+            Assert.That(resultType.GetProperty("OwnedRecord"), Is.Null);
             bool isCell = (bool)resultType.GetProperty("IsCell")!.GetValue(result)!;
-            var ownedRecord = resultType.GetProperty("OwnedRecord")!.GetValue(result);
-            if (ownedRecord is { } record)
+            recordCount++;
+            var current = (byte[])getBuffer.Invoke(bufferField.GetValue(transport), [1])!;
+            if (borrowed != null)
             {
-                Assert.That(record.GetType().Name, Is.Not.EqualTo("XlsBiffNumberCell"));
-                if (record.GetType().Name == "XlsBiffMulRKCell")
-                {
-                    Assert.That(isCell, Is.True);
-                    packedRecords++;
-                    ownedCells++;
-                }
-
-                if (record.GetType().Name == "XlsBiffFormulaCell")
-                {
-                    Assert.That(isCell, Is.True);
-                    formulas++;
-                    ownedCells++;
-                }
+                Assert.That(current, Is.SameAs(borrowed));
             }
-            else if (isCell)
+
+            borrowed = current;
+            if (isCell)
+                cellRecords++;
+
+            if ((ushort)resultType.GetProperty("Id")!.GetValue(result)! == 0x00BD)
             {
-                byte[] current = (byte[])bufferField.GetValue(transport)!;
-                if (borrowed != null)
-                    Assert.That(current, Is.SameAs(borrowed));
-                borrowed = current;
-                cells++;
+                packedRecords++;
+                packedLastColumn = (ushort)resultType.GetProperty("LastColumnIndex")!.GetValue(result)!;
             }
         }
 
-        Assert.That(cells, Is.EqualTo(malformedPackedRange ? 37 : 38));
-        Assert.That(packedRecords, Is.EqualTo(malformedPackedRange ? 1 : 0));
-        Assert.That(formulas, Is.EqualTo(1));
-        Assert.That(ownedCells, Is.EqualTo(malformedPackedRange ? 2 : 1));
+        Assert.That(recordCount, Is.GreaterThan(cellRecords));
+        Assert.That(cellRecords, Is.EqualTo(40));
+        Assert.That(packedRecords, Is.EqualTo(1));
+        Assert.That(packedLastColumn, Is.EqualTo(malformedPackedRange ? 42 : 1));
         Assert.That(read.Invoke(transport, arguments), Is.False);
         Assert.That(source.CanRead, Is.True);
     }

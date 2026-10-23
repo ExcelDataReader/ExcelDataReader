@@ -1,34 +1,37 @@
 namespace ExcelDataReader.Core.BinaryFormat;
 
-internal sealed class XlsWorkbookPartReader(XlsBiffStream biffStream, IXlsWorkbookPartSink sink)
+internal sealed class XlsWorkbookPartReader(XlsBiffStream biffStream, int biffVersion, IXlsWorkbookPartSink sink, IStylesPartSink styles, ISharedStringStore stringStore)
 {
     public void Load()
     {
-        Dictionary<int, XlsBiffFormatString> formats = [];
-        XlsBiffSST? sharedStrings = null;
+        Dictionary<int, XlsStringData> formats = [];
+        XlsSSTReader? sharedStrings = null;
+        uint uniqueCount = 0;
 
-        while (biffStream.ReadMetadataRecord() is { } record && record is not XlsBiffEof)
+        while (biffStream.ReadFrame(out var frame) && frame.Id != BIFFRECORDTYPE.EOF)
         {
-            switch (record)
+            switch (frame.Id)
             {
-                case XlsBiffBoundSheet sheet:
-                    if (sheet.Type == XlsBiffBoundSheet.SheetType.Worksheet)
+                case BIFFRECORDTYPE.BOUNDSHEET:
+                    var sheet = new XlsSheetInfo(frame, biffVersion);
+                    if (sheet.Type == XlsSheetInfo.SheetType.Worksheet)
                         sink.AddSheet(sheet);
                     break;
-                case XlsBiffSimpleValueRecord codePage when record.Id == BIFFRECORDTYPE.CODEPAGE:
-                    sink.SetCodePage(codePage.Value);
+                case BIFFRECORDTYPE.CODEPAGE:
+                    sink.SetCodePage(frame.ReadUInt16(0));
                     break;
-                case XlsBiffSimpleValueRecord is1904 when record.Id == BIFFRECORDTYPE.DATE1904:
-                    sink.SetDate1904(is1904.Value == 1);
+                case BIFFRECORDTYPE.DATE1904:
+                    sink.SetDate1904(frame.ReadUInt16(0) == 1);
                     break;
-                case XlsBiffFont font:
-                    sink.AddFont(font);
+                case BIFFRECORDTYPE.FONT:
+                    sink.AddFont(new XlsFontInfo(frame, biffVersion));
                     break;
-                case XlsBiffFormatString format23 when record.Id == BIFFRECORDTYPE.FORMAT_V23:
-                    formats.Add((ushort)formats.Count, format23);
+                case BIFFRECORDTYPE.FORMAT_V23:
+                    formats.Add((ushort)formats.Count, ReadFormat(frame, biffVersion));
                     break;
-                case XlsBiffFormatString format when record.Id == BIFFRECORDTYPE.FORMAT:
-                    int index = format.Index;
+                case BIFFRECORDTYPE.FORMAT:
+                    int index = frame.ReadUInt16(0);
+                    var format = ReadFormat(frame, biffVersion);
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
                     formats.TryAdd(index, format);
 #else
@@ -36,26 +39,45 @@ internal sealed class XlsWorkbookPartReader(XlsBiffStream biffStream, IXlsWorkbo
                         formats.Add(index, format);
 #endif
                     break;
-                case XlsBiffXF xf:
-                    sink.AddXf(xf);
+                case BIFFRECORDTYPE.XF:
+                case BIFFRECORDTYPE.XF_V2:
+                case BIFFRECORDTYPE.XF_V3:
+                case BIFFRECORDTYPE.XF_V4:
+                    new XlsCellStyle(frame, biffVersion).AddTo(styles);
                     break;
-                case XlsBiffSST sst:
-                    sharedStrings = sst;
-                    sink.SetSharedStringTable(sst);
+                case BIFFRECORDTYPE.SST:
+                    uniqueCount = frame.ReadUInt32(4);
+                    sharedStrings = new XlsSSTReader();
+                    sink.SetSharedStringTable();
+                    sharedStrings.ReadStrings(frame, 12, false, stringStore, RemainingStrings());
                     break;
-                case XlsBiffContinue continuation:
-                    sharedStrings?.ReadContinueStrings(continuation);
+                case BIFFRECORDTYPE.CONTINUE:
+                    if ((uint)stringStore.Count < uniqueCount)
+                        sharedStrings?.ReadStrings(frame, 4, true, stringStore, RemainingStrings());
                     break;
-                case { Id: BIFFRECORDTYPE.WINDOW1 }:
-                    sink.SetActiveSheet(record.ReadInt16(10));
+                case BIFFRECORDTYPE.WINDOW1:
+                    sink.SetActiveSheet(frame.ReadInt16(10));
                     break;
             }
         }
 
-        sharedStrings?.Flush();
+        sharedStrings?.Flush(stringStore);
 
         // Decode after the scan because the workbook code page may follow FORMAT records.
         foreach (var format in formats)
-            sink.AddNumberFormat(format.Key, format.Value.GetValue(sink.Encoding));
+            styles.AddNumberFormat(format.Key, format.Value.GetValue(sink.Encoding));
+
+        int RemainingStrings() => (int)Math.Min(int.MaxValue, uniqueCount > (uint)stringStore.Count ? uniqueCount - (uint)stringStore.Count : 0);
+    }
+
+    internal static XlsStringData ReadFormat(XlsBiffFrame frame, int version)
+    {
+        if (frame.Id == BIFFRECORDTYPE.FORMAT_V23)
+            return XlsStringData.Read(frame, 4, true, false);
+        if (version is >= 2 and <= 5)
+            return XlsStringData.Read(frame, 6, true, false);
+        if (version == 8)
+            return XlsStringData.Read(frame, 6, false, true);
+        throw new ArgumentException("Unexpected BIFF version " + version, nameof(version));
     }
 }
