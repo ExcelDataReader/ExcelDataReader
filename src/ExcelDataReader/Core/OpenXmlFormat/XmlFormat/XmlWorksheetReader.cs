@@ -116,7 +116,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, WorksheetReadMode mod
                     {
                         _rowOpen = false;
                         _pendingRowAdvance = true;
-                        if (mode == WorksheetReadMode.Materialize && handler.OnRowEnd() == WorksheetReadControl.Pause)
+                        if (handler.OnRowEnd() == WorksheetReadControl.Pause)
                             return WorksheetReadStatus.Paused;
                         continue;
                     }
@@ -139,7 +139,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, WorksheetReadMode mod
                             _pendingRowContents = true;
                             _rowOpen = true;
                             foundRow = true;
-                            if (mode == WorksheetReadMode.Materialize && handler.OnRow(_rowIndex, hidden != 0, height) == WorksheetReadControl.Pause)
+                            if (handler.OnRow(_rowIndex, hidden != 0, height) == WorksheetReadControl.Pause)
                                 return WorksheetReadStatus.Paused;
 
                             break;

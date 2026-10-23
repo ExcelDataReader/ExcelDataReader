@@ -97,7 +97,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
 
                 if (worksheetReader.LocalName == "WorksheetOptions" && worksheetReader.NamespaceURI == ExcelNamespace)
                 {
-                    (visibleState, codeName, headerFooter) = SpreadsheetXmlWorksheet.ParseWorksheetOptions(worksheetReader.ReadSubtree());
+                    (visibleState, codeName, headerFooter) = SpreadsheetXmlWorksheetReader.ParseWorksheetOptions(worksheetReader.ReadSubtree());
                     continue;
                 }
 

@@ -37,7 +37,7 @@ public class WorksheetConsumptionTests
                 events = ReadCallbacks(CreateXmlCallbackReader(preparing: true));
                 Assert.That(events, Is.EqualTo(new[]
                 {
-                    "code", "height", "dimension", "column", "merge", "header", "begin", "scan",
+                    "code", "height", "dimension", "column", "merge", "header", "begin", "row:0", "row:2", "scan",
                 }));
                 break;
             case "xlsb":
@@ -52,7 +52,7 @@ public class WorksheetConsumptionTests
                 events = ReadCallbacks(CreateXlsbCallbackReader(preparing: true));
                 Assert.That(events, Is.EqualTo(new[]
                 {
-                    "dimension", "column", "merge", "begin", "scan",
+                    "dimension", "column", "merge", "begin", "row:0", "row:2", "scan",
                 }));
                 break;
             default:
@@ -390,11 +390,23 @@ public class WorksheetConsumptionTests
 
     [TestCase(false)]
     [TestCase(true)]
-    public void XmlOutOfOrderHeadersKeepExistingRowAssembly(bool singlePass)
+    public void XmlOutOfOrderHeadersRequireIndexedReading(bool singlePass)
     {
         using var reader = ExcelReaderFactory.CreateReader(
             new MemoryStream(XmlWorkbook("<row r=\"3\"><c><v>3</v></c></row><row r=\"1\"><c><v>1</v></c></row>")),
             new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        if (!singlePass)
+        {
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetDouble(0), Is.EqualTo(1));
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.IsDBNull(0), Is.True);
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetDouble(0), Is.EqualTo(3));
+            Assert.That(reader.Read(), Is.False);
+            return;
+        }
+
         Assert.That(reader.Read(), Is.True);
         Assert.That(reader.RowHeight, Is.Zero);
         Assert.That(reader.FieldCount, Is.EqualTo(singlePass ? 0 : 1));
@@ -403,9 +415,140 @@ public class WorksheetConsumptionTests
         Assert.That(reader.FieldCount, Is.EqualTo(singlePass ? 0 : 1));
         Assert.That(reader.Read(), Is.True);
         Assert.That(reader.GetDouble(0), Is.EqualTo(3));
-        Assert.That(reader.Read(), Is.True);
-        Assert.That(reader.GetDouble(0), Is.EqualTo(1));
+        Assert.That(Assert.Throws<InvalidOperationException>(() => reader.Read())!.Message, Does.Contain("SinglePassMode = false"));
+    }
+
+    [TestCase("xlsx", false)]
+    [TestCase("xlsb", false)]
+    [TestCase("xlsx", true)]
+    [TestCase("xlsb", true)]
+    public void OpenXmlIndexedReadingMergesWorksheetWideOverlaps(string format, bool distantRevisit)
+    {
+        int[] order = distantRevisit
+            ? [.. Enumerable.Range(0, 70), 0, 1, 75]
+            : [0, 3, 1, 4, 2, 5, 7, 6, 8];
+        var rows = order.Select((index, ordinal) => new OrderingRow(index, ordinal % 2, ordinal + 0.25, 20 + ordinal, ordinal % 7 == 0)).ToArray();
+        rows = [.. rows, new OrderingRow(order.Max() + 3, 0, null, 42, false)];
+        using var stream = new MemoryStream(OrderingWorkbook(format, rows));
+        using (var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguration { LeaveOpen = true }))
+        {
+            Assert.That(reader.RowCount, Is.EqualTo(rows.Max(row => row.Index) + 1));
+            Assert.That(reader.FieldCount, Is.EqualTo(2));
+            Assert.That(reader.Read(), Is.True);
+            reader.Reset();
+            for (int pass = 0; pass < 2; pass++)
+            {
+                for (int index = 0; index < reader.RowCount; index++)
+                {
+                    Assert.That(reader.Read(), Is.True, $"row {index}");
+                    var fragments = rows.Where(row => row.Index == index).ToArray();
+                    double height = fragments.Length == 0 ? 15 : fragments.Last().Hidden ? 0 : fragments.Last().Height;
+                    Assert.That(reader.RowHeight, Is.EqualTo(height), $"row {index}");
+                    for (int column = 0; column < 2; column++)
+                    {
+                        var writes = fragments.Where(row => row.Column == column && row.Value.HasValue).ToArray();
+                        Assert.That(reader.GetValue(column), Is.EqualTo(writes.Length == 0 ? DBNull.Value : (object)writes.Last().Value!.Value), $"row {index}, column {column}");
+                    }
+                }
+
+                Assert.That(reader.Read(), Is.False);
+                Assert.That(reader.Read(), Is.False);
+                reader.Reset();
+            }
+        }
+
+        Assert.That(stream.CanRead, Is.True);
+    }
+
+    [TestCase("xlsx")]
+    [TestCase("xlsb")]
+    public void OpenXmlSinglePassMergesCurrentFragmentsButRejectsCompletedRowRevisits(string format)
+    {
+        OrderingRow[] rows =
+        [
+            new(0, 0, 1, 24, false),
+            new(0, 1, 2, 9, false),
+            new(40, 0, 3, 15, false),
+            new(0, 0, 4, 15, false),
+        ];
+        using var reader = ExcelReaderFactory.CreateReader(new MemoryStream(OrderingWorkbook(format, rows)), new ExcelReaderConfiguration { SinglePassMode = true });
+        for (int pass = 0; pass < 2; pass++)
+        {
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetDouble(0), Is.EqualTo(1));
+            Assert.That(reader.GetDouble(1), Is.EqualTo(2));
+            Assert.That(reader.RowHeight, Is.EqualTo(9));
+            for (int index = 1; index <= 40; index++)
+                Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetDouble(0), Is.EqualTo(3));
+            Assert.That(Assert.Throws<InvalidOperationException>(() => reader.Read())!.Message, Does.Contain("SinglePassMode = false"));
+            reader.Reset();
+        }
+    }
+
+    [TestCase("xlsx")]
+    [TestCase("xlsb")]
+    public void OpenXmlReorderedLeadingGapsRetainHeights(string format)
+    {
+        OrderingRow[] rows = [new(4, 0, 4, 24, false), new(2, 0, 2, 18, false)];
+        using var reader = ExcelReaderFactory.CreateReader(new MemoryStream(OrderingWorkbook(format, rows)));
+        double[] heights = [0, 15, 18, 15, 24];
+        for (int index = 0; index < heights.Length; index++)
+        {
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.RowHeight, Is.EqualTo(heights[index]));
+            if (index is 2 or 4)
+                Assert.That(reader.GetDouble(0), Is.EqualTo(index));
+            else
+                Assert.That(reader.IsDBNull(0), Is.True);
+        }
+
         Assert.That(reader.Read(), Is.False);
+    }
+
+    [Test]
+    public void XmlOrderingScanResolvesImplicitIndices()
+    {
+        const string rows = """
+            <row r="3"><c><v>3</v></c></row>
+            <row><c><v>4</v></c></row>
+            <row r="1"><c><v>1</v></c></row>
+            <row><c><v>2</v></c></row>
+            """;
+        using var reader = ExcelReaderFactory.CreateReader(new MemoryStream(XmlWorkbook(rows)));
+        for (int index = 1; index <= 4; index++)
+        {
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetDouble(0), Is.EqualTo(index));
+        }
+
+        Assert.That(reader.Read(), Is.False);
+    }
+
+    [Test]
+    public void ReorderedBinaryRowsRetainOwnedValuesAndErrors()
+    {
+        string text = new('\u03bb', 2000);
+        using var reader = ExcelReaderFactory.CreateReader(new MemoryStream(BinaryWorkbook(text, "later", reverseRows: true)));
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(4), Is.EqualTo("later"));
+        Assert.That(reader.RowHeight, Is.Zero);
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.IsDBNull(4), Is.True);
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetDouble(1), Is.EqualTo(42));
+        Assert.That(reader.GetBoolean(2), Is.True);
+        Assert.That(reader.GetDouble(3), Is.EqualTo(1.25));
+        string owned = reader.GetString(4);
+        Assert.That(owned, Is.EqualTo(text));
+        Assert.That(reader.GetString(5), Is.EqualTo("shared"));
+        Assert.That(reader.GetCellError(6), Is.EqualTo(CellError.DIV0));
+        Assert.That(reader.IsDBNull(6), Is.True);
+        Assert.That(reader.GetString(7), Is.EqualTo("cached"));
+        Assert.That(reader.GetString(8), Is.EqualTo("rich"));
+        Assert.That(reader.Read(), Is.False);
+        reader.Reset();
+        Assert.That(owned, Is.EqualTo(text));
     }
 
     [TestCase(false)]
@@ -715,6 +858,50 @@ public class WorksheetConsumptionTests
         return new BiffWorksheetReader(new MemoryStream(buffer.ToArray()), preparing ? WorksheetReadMode.Scan : WorksheetReadMode.Materialize, new CommonWorkbook());
     }
 
+    private static byte[] OrderingWorkbook(string format, OrderingRow[] rows)
+    {
+        if (format == "xlsx")
+        {
+            var xml = new StringBuilder();
+            foreach (var row in rows)
+            {
+                xml.Append(FormattableString.Invariant($"<row r=\"{row.Index + 1}\" ht=\"{row.Height}\" hidden=\"{(row.Hidden ? 1 : 0)}\">"));
+                if (row.Value is { } value)
+                    xml.Append(FormattableString.Invariant($"<c r=\"{(char)('A' + row.Column)}{row.Index + 1}\"><v>{value}</v></c>"));
+                xml.Append("</row>");
+            }
+
+            return XmlWorkbook(xml.ToString());
+        }
+
+        using var buffer = new MemoryStream();
+        byte[] data = BinaryWorkbook("first", "second");
+        buffer.Write(data, 0, data.Length);
+        using (var archive = new ZipArchive(buffer, ZipArchiveMode.Update, leaveOpen: true))
+        {
+            archive.GetEntry("xl/worksheets/sheet1.bin")!.Delete();
+            using var writer = new BinaryWriter(archive.CreateEntry("xl/worksheets/sheet1.bin").Open());
+            Record(writer, 0x91, _ => { });
+            foreach (var row in rows)
+            {
+                Record(writer, 0, header =>
+                {
+                    header.Write(row.Index);
+                    header.Write(0);
+                    header.Write((ushort)(row.Height * 20));
+                    header.Write((byte)0);
+                    header.Write((byte)(0b100000 | (row.Hidden ? 0b10000 : 0)));
+                });
+                if (row.Value is { } value)
+                    Cell(writer, 5, row.Column, cell => cell.Write(value));
+            }
+
+            Record(writer, 0x92, _ => { });
+        }
+
+        return buffer.ToArray();
+    }
+
     private static byte[] XmlWorkbook(string rows, bool strict = false, string properties = "")
     {
         using var buffer = new MemoryStream();
@@ -812,7 +999,7 @@ public class WorksheetConsumptionTests
         writer.Write(buffer.ToArray());
     }
 
-    private static byte[] BinaryWorkbook(string first, string second, bool malformedSecond = false, bool omitSheetDataBegin = false)
+    private static byte[] BinaryWorkbook(string first, string second, bool malformedSecond = false, bool omitSheetDataBegin = false, bool reverseRows = false)
     {
         using var buffer = new MemoryStream();
         using (var archive = new ZipArchive(buffer, ZipArchiveMode.Create, leaveOpen: true))
@@ -856,7 +1043,7 @@ public class WorksheetConsumptionTests
             {
                 if (!omitSheetDataBegin)
                     Record(writer, 0x91, _ => { });
-                Record(writer, 0, data => RowHeader(data, 0, 0b100000));
+                Record(writer, 0, data => RowHeader(data, reverseRows ? 2 : 0, 0b100000));
                 Cell(writer, 1, 0, _ => { });
                 Cell(writer, 2, 1, data => data.Write((42 << 2) | 2));
                 Cell(writer, 4, 2, data => data.Write((byte)1));
@@ -870,7 +1057,7 @@ public class WorksheetConsumptionTests
                     data.Write((byte)0);
                     WideString(data, "rich");
                 });
-                Record(writer, 0, data => RowHeader(data, 2, 0b110000));
+                Record(writer, 0, data => RowHeader(data, reverseRows ? 0 : 2, 0b110000));
                 Cell(writer, 6, 4, data =>
                 {
                     data.Write(malformedSecond ? int.MaxValue : second.Length);
@@ -931,6 +1118,19 @@ public class WorksheetConsumptionTests
     {
         using var writer = new StreamWriter(archive.CreateEntry(name).Open(), new UTF8Encoding(false));
         writer.Write(text);
+    }
+
+    private readonly struct OrderingRow(int index, int column, double? value, double height, bool hidden)
+    {
+        public int Index { get; } = index;
+
+        public int Column { get; } = column;
+
+        public double? Value { get; } = value;
+
+        public double Height { get; } = height;
+
+        public bool Hidden { get; } = hidden;
     }
 
     private struct CallbackRecorder(List<string> events) : IWorksheetHandler

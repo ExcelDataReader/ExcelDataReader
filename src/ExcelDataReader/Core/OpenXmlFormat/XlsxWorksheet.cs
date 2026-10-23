@@ -4,6 +4,8 @@ namespace ExcelDataReader.Core.OpenXmlFormat;
 
 internal sealed class XlsxWorksheet : IWorksheet
 {
+    private readonly OpenXmlRowOrder.Region[] _orderRegions = [];
+
     public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, SheetRecord refSheet, bool singlePassMode = false)
     {
         Document = document;
@@ -28,9 +30,6 @@ internal sealed class XlsxWorksheet : IWorksheet
             return;
         }
 
-        int rowIndexMaximum = int.MinValue;
-        int columnIndexMaximum = int.MinValue;
-
         var metadata = new MetadataConsumer(singlePassMode);
         if (singlePassMode)
         {
@@ -49,18 +48,16 @@ internal sealed class XlsxWorksheet : IWorksheet
         CodeName = metadata.CodeName;
         HeaderFooter = metadata.HeaderFooter;
         DefaultRowHeight = metadata.DefaultRowHeight;
-        rowIndexMaximum = metadata.MaxRowIndex;
-        columnIndexMaximum = metadata.MaxColumnIndex;
-
+        _orderRegions = metadata.RowOrder?.Build() ?? [];
         if (singlePassMode)
         {
             // In single-pass mode FieldCount comes from the dimension hint only (may be 0 if absent)
-            FieldCount = columnIndexMaximum != int.MinValue ? columnIndexMaximum + 1 : 0;
+            FieldCount = metadata.MaxColumnIndex != int.MinValue ? metadata.MaxColumnIndex + 1 : 0;
         }
-        else if (rowIndexMaximum != int.MinValue && columnIndexMaximum != int.MinValue)
+        else if (metadata.MaxRowIndex != int.MinValue && metadata.MaxColumnIndex != int.MinValue)
         {
-            FieldCount = columnIndexMaximum + 1;
-            RowCount = rowIndexMaximum + 1;
+            FieldCount = metadata.MaxColumnIndex + 1;
+            RowCount = metadata.MaxRowIndex + 1;
         }
     }
 
@@ -68,7 +65,7 @@ internal sealed class XlsxWorksheet : IWorksheet
 
     public int RowCount { get; }
 
-    public CellRange? Dimension { get; private set; }
+    public CellRange? Dimension { get; }
 
     public string Name { get; }
 
@@ -84,7 +81,7 @@ internal sealed class XlsxWorksheet : IWorksheet
 
     public double DefaultRowHeight { get; }
 
-    private string? Path { get; set; }
+    private string? Path { get; }
 
     private ZipWorker Document { get; }
 
@@ -93,12 +90,14 @@ internal sealed class XlsxWorksheet : IWorksheet
     public IWorksheetReader OpenReader() =>
         Path is { Length: > 0 } worksheetPath
             ? Document.GetWorksheetReader(worksheetPath, WorksheetReadMode.Materialize, Workbook) is { } reader
-                ? new OpenXmlRowReader(reader, DefaultRowHeight)
+                ? new OpenXmlRowReader(reader, DefaultRowHeight, _orderRegions)
                 : EmptyReader.Instance
             : EmptyReader.Instance;
 
     private struct MetadataConsumer(bool pauseAtSheetData) : IWorksheetHandler
     {
+        public OpenXmlRowOrder? RowOrder { get; } = pauseAtSheetData ? null : new();
+
         public List<Column> ColumnWidths { get; } = [];
 
         public List<CellRange> MergeCells { get; } = [];
@@ -163,7 +162,11 @@ internal sealed class XlsxWorksheet : IWorksheet
             return WorksheetReadControl.Continue;
         }
 
-        public WorksheetReadControl OnRow(int index, bool hidden, double? height) => WorksheetReadControl.Continue;
+        public WorksheetReadControl OnRow(int index, bool hidden, double? height)
+        {
+            RowOrder?.Add(index);
+            return WorksheetReadControl.Continue;
+        }
 
         public WorksheetReadControl OnCell(in Cell cell) => WorksheetReadControl.Continue;
 

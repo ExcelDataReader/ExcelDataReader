@@ -167,7 +167,7 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
 
 All formats use resumable internal push readers that deliver cells directly to a reusable current-row buffer. Metadata scans skip value materialization; CSV analysis counts fields without building field strings or batches of rows. Workbook, style, and shared-string loaders use specialized sinks with explicit ownership: borrowed parser buffers are valid only during their callbacks, while values returned by the public reader remain owned.
 
-File-specific decoding and ordering remain internal. In particular, normal XLS reading may buffer overlapping row blocks to restore logical row order; pathological overlap can require buffering the entire worksheet. `SinglePassMode` avoids this index and rejects cells for rows already returned. Push consumption does not change shared-string storage, encryption, or the public pull-based `Read()` API.
+File-specific decoding and ordering remain internal. Normal XLS, XLSX, and XLSB reading may buffer overlapping rows to restore logical row order; pathological overlap can require buffering the entire worksheet. `SinglePassMode` avoids this index and rejects revisits to completed rows. Push consumption does not change shared-string storage, encryption, or the public pull-based `Read()` API.
 
 ### Large shared string tables
 
@@ -348,9 +348,9 @@ If the input stream is non-seekable, ExcelDataReader copies it to a `MemoryStrea
 
 ### Streaming row boundaries and ordering
 
-OpenXML readers combine consecutive physical row elements with the same row index into one logical output row. This requires looking ahead to a different row header before returning the completed row. If a previously returned row index appears again, its cells are returned as another output row in encounter order; earlier output is not modified or reordered. Existing leading-gap height behavior is preserved.
+XLSX and XLSB readers combine consecutive physical fragments with the same row index into one logical output row in both modes. This requires looking ahead to a different row header before returning the completed row. In normal two-pass mode, the preparation scan also identifies worksheet-wide ordering overlaps: reading buffers only those regions, merges nonconsecutive fragments, and returns rows in ascending index order. The last physical cell write wins for repeated columns, and the last fragment supplies row height/hidden metadata. Ordered rows still push directly into the current-row buffer, and existing leading-gap height behavior is preserved.
 
-Normal indexed XLS reading still supports cells stored out of row order; single-pass XLS rejects cells for rows already returned. Malformed following headers can fail while completing the preceding logical OpenXML row, and initialization scans in normal mode can detect errors before the first `Read()`.
+With `SinglePassMode = true`, XLSX and XLSB reject a different row header at or below the last completed row instead of returning another row in encounter order. Use `SinglePassMode = false` for non-sequential input, as with XLS. Reordering works across the whole worksheet, not just a fixed row block; worst-case disorder can require whole-worksheet buffering. ZIP entries are read sequentially without repeated decompression per block or temporary files. Malformed following headers can fail while completing the preceding logical OpenXML row, and initialization scans in normal mode can detect errors before the first `Read()`.
 
 ### `TransformValue` callback parameter types changed to nullable
 

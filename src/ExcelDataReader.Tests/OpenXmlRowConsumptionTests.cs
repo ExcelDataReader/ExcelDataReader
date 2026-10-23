@@ -35,35 +35,109 @@ public class OpenXmlRowConsumptionTests
         }
     }
 
-    [Test]
-    public void FragmentAndDescendingHeadersResumeExactlyOnceAtEveryCallback()
+    [TestCase(false)]
+    [TestCase(true)]
+    public void FragmentsResumeExactlyOnceAtEveryCallback(bool reorder)
     {
-        const string xml = """
+        string xml = $$"""
             <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>
               <row r="1" ht="24"><c><v>1</v></c></row>
               <row r="1" ht="9"><c r="B1"><v>2</v></c></row>
               <row r="2"><c><v>3</v></c></row>
-              <row r="1"><c><v>4</v></c></row>
-              <row r="1"><c><v>5</v></c></row>
+              <row r="{{(reorder ? 1 : 2)}}"><c><v>4</v></c></row>
+              <row r="{{(reorder ? 1 : 2)}}"><c><v>5</v></c></row>
             </sheetData></worksheet>
             """;
         using var parser = new XmlWorksheetReader(XmlReader.Create(new StringReader(xml)), WorksheetReadMode.Materialize, new CommonWorkbook());
-        using var reader = new OpenXmlRowReader(parser, 15);
+        var order = new OpenXmlRowOrder();
+        foreach (int index in new[] { 0, 0, 1, reorder ? 0 : 1, reorder ? 0 : 1 })
+            order.Add(index);
+        using var reader = new OpenXmlRowReader(parser, 15, order.Build());
         List<string> events = [];
         var handler = new PausingHandler(events);
         int pauses = 0;
         while (reader.Consume(ref handler) == WorksheetReadStatus.Paused)
             pauses++;
 
-        Assert.That(events, Is.EqualTo(new[]
+        string[] expected;
+        if (reorder)
         {
-            "row:0:24", "cell:0:1", "row:0:9", "cell:1:2", "end",
-            "row:1:15", "cell:0:3", "end",
-            "row:2:15", "cell:0:4", "end",
-            "row:3:15", "cell:0:5", "end",
-        }));
+            expected =
+            [
+                "row:0:15", "cell:0:1", "cell:1:2", "cell:0:4", "cell:0:5", "end",
+                "row:1:15", "cell:0:3", "end",
+            ];
+        }
+        else
+        {
+            expected =
+            [
+                "row:0:24", "cell:0:1", "row:0:9", "cell:1:2", "end",
+                "row:1:15", "cell:0:3", "row:1:15", "cell:0:4", "row:1:15", "cell:0:5", "end",
+            ];
+        }
+
+        Assert.That(events, Is.EqualTo(expected));
         Assert.That(pauses, Is.EqualTo(events.Count));
         Assert.That(reader.Consume(ref handler), Is.EqualTo(WorksheetReadStatus.EndOfInput));
+    }
+
+    [TestCase(new[] { 0, 0, 1, 2 }, new int[0])]
+    [TestCase(new[] { 2, 0 }, new[] { 0, 1 })]
+    [TestCase(new[] { 0, 2, 1, 3 }, new[] { 1, 2 })]
+    [TestCase(new[] { 0, 1, 0 }, new[] { 0, 2 })]
+    [TestCase(new[] { 0, 2, 1, 5, 4, 6 }, new[] { 1, 2, 3, 4 })]
+    [TestCase(new[] { 0, 3, 1, 4, 2, 5 }, new[] { 1, 4 })]
+    [TestCase(new[] { 0, 3, 1, 4, 0, 5 }, new[] { 0, 4 })]
+    [TestCase(new[] { 0, 2, 4, 6, 3, 8 }, new[] { 2, 4 })]
+    [TestCase(new[] { 1, 1, 1, 4, 4, 2, 2, 5 }, new[] { 3, 6 })]
+    [TestCase(new[] { 0, 100000, 200000, 300000, 150000, 400000 }, new[] { 2, 4 })]
+    [TestCase(new[] { 8, 6, 4, 2, 0 }, new[] { 0, 4 })]
+    [TestCase(new[] { 0, 9, 6, 3, 12 }, new[] { 1, 3 })]
+    public void OrderIndexFindsOnlySafeOverlappingRegions(int[] rows, int[] boundaries)
+    {
+        var order = new OpenXmlRowOrder();
+        foreach (int row in rows)
+            order.Add(row);
+
+        Assert.That(order.Build().SelectMany(region => new[] { region.Start, region.End }), Is.EqualTo(boundaries));
+    }
+
+    [Test]
+    public void CompressedRunsPreserveOverlapBoundariesForMixedStridesAndFragments()
+    {
+        var random = new Random(741);
+        for (int sample = 0; sample < 40; sample++)
+        {
+            List<int> rows = [];
+            for (int run = 0; run < 10; run++)
+            {
+                int first = random.Next(500);
+                int step = random.Next(-5, 6);
+                int count = random.Next(1, 16);
+                for (int i = 0; i < count; i++)
+                    rows.Add(first + i * step);
+            }
+
+            List<OpenXmlRowOrder.Region> expected = [];
+            int start = 0;
+            for (int end = 0; end < rows.Count; end++)
+            {
+                if (end + 1 < rows.Count && rows.Take(end + 1).Max() >= rows.Skip(end + 1).Min())
+                    continue;
+
+                var segment = rows.Skip(start).Take(end - start + 1).ToArray();
+                if (!segment.SequenceEqual(segment.OrderBy(index => index)))
+                    expected.Add(new(start, end));
+                start = end + 1;
+            }
+
+            var order = new OpenXmlRowOrder();
+            foreach (int row in rows)
+                order.Add(row);
+
+            Assert.That(order.Build(), Is.EqualTo(expected), $"sample {sample}");
+        }
     }
 
     private struct PausingHandler(List<string> events) : IWorksheetHandler

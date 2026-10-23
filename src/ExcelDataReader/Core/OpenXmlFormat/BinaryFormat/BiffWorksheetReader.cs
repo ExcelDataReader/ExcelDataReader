@@ -27,7 +27,6 @@ internal sealed class BiffWorksheetReader(Stream stream, WorksheetReadMode mode,
 
     private int _scanMaxRowIndex = int.MinValue;
     private int _scanMaxColumnIndex = int.MinValue;
-    private bool _inPreparingScan;
     private bool _inSheetData;
     private bool _rowOpen;
     private byte[]? _pendingBuffer;
@@ -77,25 +76,21 @@ internal sealed class BiffWorksheetReader(Stream stream, WorksheetReadMode mode,
             {
                 if (recordId == SheetDataBegin)
                 {
-                    _inPreparingScan = mode == WorksheetReadMode.Scan;
-                    _inSheetData = mode == WorksheetReadMode.Materialize;
+                    _inSheetData = true;
                     control = handler.OnSheetDataBegin();
                 }
                 else if (recordId == SheetDataEnd)
                 {
+                    bool scanCompleted = _inSheetData && mode == WorksheetReadMode.Scan;
                     _inSheetData = false;
-                    if (_inPreparingScan)
-                    {
-                        _inPreparingScan = false;
+                    if (scanCompleted)
                         control = handler.OnScanResult(_scanMaxRowIndex, _scanMaxColumnIndex);
-                    }
-                }
-                else if (_inPreparingScan)
-                {
-                    ScanRecord(buffer, recordId);
                 }
                 else if (_inSheetData)
                 {
+                    if (mode == WorksheetReadMode.Scan)
+                        ScanRecord(buffer, recordId);
+
                     if (recordId == Row)
                     {
                         _rowOpen = true;
@@ -103,7 +98,7 @@ internal sealed class BiffWorksheetReader(Stream stream, WorksheetReadMode mode,
                         double? height = (flags & 0b100000) != 0 ? GetWord(buffer, 8) / 20.0 : null;
                         control = handler.OnRow(GetInt32(buffer, 0), (flags & 0b10000) != 0, height);
                     }
-                    else if (!ConsumeCell(buffer, recordId, ref handler, out control))
+                    else if (mode == WorksheetReadMode.Materialize && !ConsumeCell(buffer, recordId, ref handler, out control))
                     {
                         ReadMetadata(buffer, recordId, ref handler, out control);
                     }
