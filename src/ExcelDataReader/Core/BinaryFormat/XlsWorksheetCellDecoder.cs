@@ -123,7 +123,9 @@ internal sealed class XlsWorksheetCellDecoder(XlsWorksheet worksheet)
             if (multiByte)
                 return Encoding.Unicode.GetString(frame.Bytes, start, byteCount);
 
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+#if NET8_0_OR_GREATER
+            return Encoding.Latin1.GetString(frame.Bytes.AsSpan(start, characterCount));
+#elif NETSTANDARD2_1_OR_GREATER
             return string.Create(characterCount, (Bytes: frame.Bytes, Start: start), static (span, state) =>
             {
                 for (int i = 0; i < span.Length; i++)

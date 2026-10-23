@@ -51,6 +51,13 @@ internal sealed class StandardEncryptedPackageStream : Stream
         return GetBaseStream().Read(buffer, offset, count);
     }
 
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+    public override int Read(Span<byte> buffer)
+    {
+        return GetBaseStream().Read(buffer);
+    }
+#endif
+
     public override long Seek(long offset, SeekOrigin origin)
     {
         return GetBaseStream().Seek(offset, origin);

@@ -77,6 +77,9 @@ internal sealed class CompoundStream : Stream
 
     public override int Read(byte[] buffer, int offset, int count)
     {
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        return Read(buffer.AsSpan(offset, count));
+#else
         int index = 0;
         while (index < count && Position < Length)
         {
@@ -93,7 +96,30 @@ internal sealed class CompoundStream : Stream
         }
 
         return index;
+#endif
     }
+
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+    public override int Read(Span<byte> buffer)
+    {
+        int index = 0;
+        while (index < buffer.Length && Position < Length)
+        {
+            if (SectorOffset == _sectorBufferValidLength)
+            {
+                ReadSector();
+                SectorOffset = 0;
+            }
+
+            var chunkSize = Math.Min(buffer.Length - index, _sectorBufferValidLength - SectorOffset);
+            _sectorBuffer.AsSpan(SectorOffset, chunkSize).CopyTo(buffer[index..]);
+            index += chunkSize;
+            SectorOffset += chunkSize;
+        }
+
+        return index;
+    }
+#endif
 
     public override long Seek(long offset, SeekOrigin origin)
     {

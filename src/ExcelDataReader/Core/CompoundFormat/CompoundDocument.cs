@@ -1,4 +1,7 @@
 ﻿using System.Text;
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+using System.Buffers.Binary;
+#endif
 using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.CompoundFormat;
@@ -23,8 +26,8 @@ internal sealed class CompoundDocument
         MiniSectorTable = ReadSectorTable(reader, miniChain);
 
         var directoryChain = GetSectorChain(Header.RootDirectoryEntryStart, SectorTable);
-        var bytes = ReadStream(stream, directoryChain, directoryChain.Count * Header.SectorSize);
-        ReadDirectoryEntries(bytes);
+        using var directoryStream = new CompoundStream(this, stream, directoryChain, directoryChain.Count * Header.SectorSize, true);
+        ReadDirectoryEntries(directoryStream);
     }
 
     internal CompoundHeader Header { get; }
@@ -103,25 +106,29 @@ internal sealed class CompoundDocument
         return bytes;
     }
 
-    internal byte[] ReadStream(Stream stream, List<uint> sectors, int length)
-    {
-        using var cfb = new CompoundStream(this, stream, sectors, length, true);
-        var bytes = new byte[length];
-        cfb.ReadAtLeast(bytes, 0, length);
-        return bytes;
-    }
-
     private static CompoundHeader ReadHeader(BinaryReader reader)
     {
         var result = new CompoundHeader();
         result.Signature = reader.ReadUInt64();
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        Span<byte> guid = stackalloc byte[16];
+        if (reader.BaseStream.ReadAtLeast(guid) != guid.Length)
+            throw new EndOfStreamException();
+        result.ClassId = new Guid(guid);
+#else
         result.ClassId = new Guid(reader.ReadBytes(16));
+#endif
         result.Version = reader.ReadUInt16();
         result.DllVersion = reader.ReadUInt16();
         result.ByteOrder = reader.ReadUInt16();
         result.SectorSizeInPot = reader.ReadUInt16();
         result.MiniSectorSizeInPot = reader.ReadUInt16();
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        reader.ReadUInt32(); // skip 6 unused bytes
+        reader.ReadUInt16();
+#else
         reader.ReadBytes(6); // skip 6 unused bytes
+#endif
         result.DirectorySectorCount = reader.ReadInt32();
         result.FatSectorCount = reader.ReadInt32();
         result.RootDirectoryEntryStart = reader.ReadUInt32();
@@ -161,19 +168,32 @@ internal sealed class CompoundDocument
         return (uint)FATMARKERS.FAT_EndOfChain;
     }
 
-    private void ReadDirectoryEntries(byte[] bytes)
+    private static DateTime ReadFileTime(long d)
+    {
+        if (d < 0 || d > SafeFileTimeMaxDate)
+        {
+            d = 0;
+        }
+
+        return DateTime.FromFileTime(d);
+    }
+
+    private void ReadDirectoryEntries(Stream stream)
     {
         try
         {
             Entries = [];
-            using var stream = new MemoryStream(bytes);
-            using var reader = new BinaryReader(stream);
-            RootEntry = ReadDirectoryEntry(reader);
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            Span<byte> entryBuffer = stackalloc byte[128];
+#else
+            var entryBuffer = new byte[128];
+#endif
+            RootEntry = ReadDirectoryEntry(stream, entryBuffer);
             Entries.Add(RootEntry);
 
             while (stream.Position < stream.Length)
             {
-                var entry = ReadDirectoryEntry(reader);
+                var entry = ReadDirectoryEntry(stream, entryBuffer);
                 Entries.Add(entry);
             }
         }
@@ -183,44 +203,78 @@ internal sealed class CompoundDocument
         }
     }
 
-    private CompoundDirectoryEntry ReadDirectoryEntry(BinaryReader reader)
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+    private CompoundDirectoryEntry ReadDirectoryEntry(Stream stream, Span<byte> buffer)
     {
+        if (stream.ReadAtLeast(buffer) != buffer.Length)
+            throw new EndOfStreamException();
+
         var result = new CompoundDirectoryEntry();
-        var name = reader.ReadBytes(64);
-        var nameLength = reader.ReadUInt16();
+        var nameLength = BinaryPrimitives.ReadUInt16LittleEndian(buffer[64..]);
 
         if (nameLength > 0)
         {
             nameLength = Math.Min((ushort)64, nameLength);
-            result.EntryName = Encoding.Unicode.GetString(name, 0, nameLength).TrimEnd('\0');
+            result.EntryName = Encoding.Unicode.GetString(buffer[..nameLength]).TrimEnd('\0');
         }
 
-        result.EntryType = (STGTY)reader.ReadByte();
-        result.EntryColor = (DECOLOR)reader.ReadByte();
-        result.LeftSiblingSid = reader.ReadUInt32();
-        result.RightSiblingSid = reader.ReadUInt32();
-        result.ChildSid = reader.ReadUInt32();
-        result.ClassId = new Guid(reader.ReadBytes(16));
-        result.UserFlags = reader.ReadUInt32();
-        result.CreationTime = ReadFileTime(reader);
-        result.LastWriteTime = ReadFileTime(reader);
-        result.StreamFirstSector = reader.ReadUInt32();
-        result.StreamSize = reader.ReadUInt32();
-        result.PropType = reader.ReadUInt32();
+        result.EntryType = (STGTY)buffer[66];
+        result.EntryColor = (DECOLOR)buffer[67];
+        result.LeftSiblingSid = BinaryPrimitives.ReadUInt32LittleEndian(buffer[68..]);
+        result.RightSiblingSid = BinaryPrimitives.ReadUInt32LittleEndian(buffer[72..]);
+        result.ChildSid = BinaryPrimitives.ReadUInt32LittleEndian(buffer[76..]);
+        result.ClassId = new Guid(buffer.Slice(80, 16));
+        result.UserFlags = BinaryPrimitives.ReadUInt32LittleEndian(buffer[96..]);
+        result.CreationTime = ReadFileTime(BinaryPrimitives.ReadInt64LittleEndian(buffer[100..]));
+        result.LastWriteTime = ReadFileTime(BinaryPrimitives.ReadInt64LittleEndian(buffer[108..]));
+        result.StreamFirstSector = BinaryPrimitives.ReadUInt32LittleEndian(buffer[116..]);
+        result.StreamSize = BinaryPrimitives.ReadUInt32LittleEndian(buffer[120..]);
+        result.PropType = BinaryPrimitives.ReadUInt32LittleEndian(buffer[124..]);
         result.IsEntryMiniStream = result.StreamSize < Header.MiniStreamCutoff;
         return result;
-
-        static DateTime ReadFileTime(BinaryReader reader)
-        {
-            var d = reader.ReadInt64();
-            if (d < 0 || d > SafeFileTimeMaxDate)
-            {
-                d = 0;
-            }
-
-            return DateTime.FromFileTime(d);
-        }
     }
+#else
+    private CompoundDirectoryEntry ReadDirectoryEntry(Stream stream, byte[] buffer)
+    {
+        if (stream.ReadAtLeast(buffer, 0, buffer.Length) != buffer.Length)
+            throw new EndOfStreamException();
+
+        var result = new CompoundDirectoryEntry();
+        var nameLength = BitConverter.ToUInt16(buffer, 64);
+
+        if (nameLength > 0)
+        {
+            nameLength = Math.Min((ushort)64, nameLength);
+            result.EntryName = Encoding.Unicode.GetString(buffer, 0, nameLength).TrimEnd('\0');
+        }
+
+        result.EntryType = (STGTY)buffer[66];
+        result.EntryColor = (DECOLOR)buffer[67];
+        result.LeftSiblingSid = BitConverter.ToUInt32(buffer, 68);
+        result.RightSiblingSid = BitConverter.ToUInt32(buffer, 72);
+        result.ChildSid = BitConverter.ToUInt32(buffer, 76);
+        result.ClassId = new Guid(
+            BitConverter.ToInt32(buffer, 80),
+            BitConverter.ToInt16(buffer, 84),
+            BitConverter.ToInt16(buffer, 86),
+            buffer[88],
+            buffer[89],
+            buffer[90],
+            buffer[91],
+            buffer[92],
+            buffer[93],
+            buffer[94],
+            buffer[95]);
+        result.UserFlags = BitConverter.ToUInt32(buffer, 96);
+        result.CreationTime = ReadFileTime(BitConverter.ToInt64(buffer, 100));
+        result.LastWriteTime = ReadFileTime(BitConverter.ToInt64(buffer, 108));
+        result.StreamFirstSector = BitConverter.ToUInt32(buffer, 116);
+        result.StreamSize = BitConverter.ToUInt32(buffer, 120);
+        result.PropType = BitConverter.ToUInt32(buffer, 124);
+        result.IsEntryMiniStream = result.StreamSize < Header.MiniStreamCutoff;
+        return result;
+    }
+#endif
 
     /// <summary>
     /// The header contains the first 109 DIF entries. If there are any more, read from a separate stream.
@@ -236,11 +290,10 @@ internal sealed class CompoundDocument
                 var difSector = Header.DifFirstSector;
                 for (var i = 0; i < Header.DifSectorCount; ++i)
                 {
-                    var difContent = ReadSectorAsUInt32s(reader, difSector);
-                    difSectorChain.AddRange(difContent.GetRange(0, difContent.Count - 1));
+                    ReadSectorAsUInt32s(reader, difSector, difSectorChain, Header.SectorSize / 4 - 1);
 
                     // The DIFAT sectors are linked together by the "Next DIFAT Sector Location" in each DIFAT sector:
-                    difSector = difContent[difContent.Count - 1];
+                    difSector = reader.ReadUInt32();
                 }
             }
             catch (EndOfStreamException ex)
@@ -265,8 +318,7 @@ internal sealed class CompoundDocument
         {
             foreach (var sector in chain)
             {
-                var result = ReadSectorAsUInt32s(reader, sector);
-                sectorTable.AddRange(result);
+                ReadSectorAsUInt32s(reader, sector, sectorTable, Header.SectorSize / 4);
             }
         }
         catch (EndOfStreamException ex)
@@ -279,16 +331,13 @@ internal sealed class CompoundDocument
         return sectorTable;
     }
 
-    private List<uint> ReadSectorAsUInt32s(BinaryReader reader, uint sector)
+    private void ReadSectorAsUInt32s(BinaryReader reader, uint sector, List<uint> destination, int count)
     {
-        var result = new List<uint>(Header.SectorSize / 4);
         reader.BaseStream.Seek(GetSectorOffset(sector), SeekOrigin.Begin);
-        for (var i = 0; i < Header.SectorSize / 4; ++i)
+        for (var i = 0; i < count; ++i)
         {
             var value = reader.ReadUInt32();
-            result.Add(value);
+            destination.Add(value);
         }
-
-        return result;
     }
 }

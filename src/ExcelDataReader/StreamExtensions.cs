@@ -2,6 +2,27 @@ namespace ExcelDataReader;
 
 internal static class StreamExtensions
 {
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+    public static int ReadAtLeast(this Stream stream, Span<byte> buffer)
+    {
+#if NET8_0_OR_GREATER
+        return stream.ReadAtLeast(buffer, buffer.Length, throwOnEndOfStream: false);
+#else
+        int totalRead = 0;
+        while (totalRead < buffer.Length)
+        {
+            int read = stream.Read(buffer[totalRead..]);
+            if (read == 0)
+                break;
+
+            totalRead += read;
+        }
+
+        return totalRead;
+#endif
+    }
+#endif
+
     public static int ReadAtLeast(this Stream stream, byte[] buffer, int offset, int minimumBytes)
     {
 #if NET8_0_OR_GREATER
