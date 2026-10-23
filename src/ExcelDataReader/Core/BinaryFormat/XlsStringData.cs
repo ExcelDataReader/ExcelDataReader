@@ -36,10 +36,20 @@ internal sealed class XlsStringData
             if (multiByte)
                 return new XlsStringData(Encoding.Unicode.GetString(frame.Bytes, offset, byteCount));
 
+#if NET8_0_OR_GREATER
+            return new XlsStringData(Encoding.Latin1.GetString(frame.Bytes.AsSpan(offset, count)));
+#elif NETSTANDARD2_1_OR_GREATER
+            return new XlsStringData(string.Create(count, (frame.Bytes, Offset: offset), static (destination, state) =>
+            {
+                for (int i = 0; i < destination.Length; i++)
+                    destination[i] = (char)state.Bytes[state.Offset + i];
+            }));
+#else
             var characters = new char[count];
             for (int i = 0; i < count; i++)
                 characters[i] = (char)frame.Bytes[offset + i];
             return new XlsStringData(new string(characters));
+#endif
         }
 
         int available = Math.Min(count * 2, frame.RecordSize + 4 - offset);

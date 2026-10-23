@@ -16,6 +16,10 @@ internal sealed class LeaveOpenStream(Stream baseStream) : Stream
 
     public override int Read(byte[] buffer, int offset, int count) => baseStream.Read(buffer, offset, count);
 
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+    public override int Read(Span<byte> buffer) => baseStream.Read(buffer);
+#endif
+
     public override long Seek(long offset, SeekOrigin origin) => baseStream.Seek(offset, origin);
 
     public override void SetLength(long value) => baseStream.SetLength(value);
