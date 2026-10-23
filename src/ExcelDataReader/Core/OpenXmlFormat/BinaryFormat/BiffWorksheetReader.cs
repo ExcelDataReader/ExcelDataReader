@@ -1,8 +1,6 @@
-﻿using ExcelDataReader.Core.OpenXmlFormat.Records;
-
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 
-internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffReader(stream)
+internal sealed class BiffWorksheetReader(Stream stream, WorksheetReadMode mode, CommonWorkbook workbook, bool date1904 = false) : BiffReader(stream), IWorksheetReader
 {
     private const uint Row = 0x00;
     private const uint Blank = 0x01;
@@ -18,135 +16,174 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
     private const uint FormulaError = 0x0b;
 
     private const uint BrtCellRString = 0x3E;
-
-    // private const uint WorksheetBegin = 0x81;
-    // private const uint WorksheetEnd = 0x82;
     private const uint SheetDataBegin = 0x91;
     private const uint SheetDataEnd = 0x92;
     private const uint SheetPr = 0x93;
-    private const uint SheetDim = 0x94; // BrtWsDim - worksheet dimensions
+    private const uint SheetDim = 0x94;
     private const uint SheetFormatPr = 0x1E5;
-
-    // private const uint ColumnsBegin = 0x186;
-    private const uint Column = 0x3C; // column info
-
-    // private const uint ColumnsEnd = 0x187;
+    private const uint Column = 0x3C;
     private const uint HeaderFooter = 0x1DF;
-
-    // private const uint MergeCellsBegin = 177;
-    // private const uint MergeCellsEnd = 178;
     private const uint MergeCell = 176;
 
-    // State for pre-scan mode: track max indices while suppressing per-cell record allocations
     private int _scanMaxRowIndex = int.MinValue;
     private int _scanMaxColumnIndex = int.MinValue;
     private bool _inPreparingScan;
+    private bool _inSheetData;
+    private bool _rowOpen;
+    private byte[]? _pendingBuffer;
+    private uint _pendingRecordId;
+    private bool _endOfInput;
 
-    protected override Record ReadOverride(byte[] buffer, uint recordId, uint recordLength)
+    public WorksheetReadStatus Consume<THandler>(ref THandler handler)
+        where THandler : struct, IWorksheetHandler
+    {
+        while (!_endOfInput)
+        {
+            byte[] buffer;
+            uint recordId;
+            if (_pendingBuffer != null)
+            {
+                buffer = _pendingBuffer;
+                recordId = _pendingRecordId;
+                _pendingBuffer = null;
+            }
+            else if (!TryReadFrame(out buffer, out recordId, out _))
+            {
+                _endOfInput = true;
+                if (_rowOpen)
+                {
+                    _rowOpen = false;
+                    if (handler.OnRowEnd() == WorksheetReadControl.Pause)
+                        return WorksheetReadStatus.Paused;
+                }
+
+                break;
+            }
+
+            if (_rowOpen && recordId is Row or SheetDataEnd)
+            {
+                _pendingBuffer = buffer;
+                _pendingRecordId = recordId;
+                _rowOpen = false;
+                if (handler.OnRowEnd() == WorksheetReadControl.Pause)
+                    return WorksheetReadStatus.Paused;
+                continue;
+            }
+
+            WorksheetReadControl control = WorksheetReadControl.Continue;
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            try
+#endif
+            {
+                if (recordId == SheetDataBegin)
+                {
+                    _inPreparingScan = mode == WorksheetReadMode.Scan;
+                    _inSheetData = mode == WorksheetReadMode.Materialize;
+                    control = handler.OnSheetDataBegin();
+                }
+                else if (recordId == SheetDataEnd)
+                {
+                    _inSheetData = false;
+                    if (_inPreparingScan)
+                    {
+                        _inPreparingScan = false;
+                        control = handler.OnScanResult(_scanMaxRowIndex, _scanMaxColumnIndex);
+                    }
+                }
+                else if (_inPreparingScan)
+                {
+                    ScanRecord(buffer, recordId);
+                }
+                else if (_inSheetData)
+                {
+                    if (recordId == Row)
+                    {
+                        _rowOpen = true;
+                        byte flags = buffer[11];
+                        double? height = (flags & 0b100000) != 0 ? GetWord(buffer, 8) / 20.0 : null;
+                        control = handler.OnRow(GetInt32(buffer, 0), (flags & 0b10000) != 0, height);
+                    }
+                    else if (!ConsumeCell(buffer, recordId, ref handler, out control))
+                    {
+                        ReadMetadata(buffer, recordId, ref handler, out control);
+                    }
+                }
+                else if (!ReadMetadata(buffer, recordId, ref handler, out control))
+                {
+                    // Preserve validation of stray cell records outside sheetData.
+                    var ignoringHandler = default(IgnoringHandler);
+                    ConsumeCell(buffer, recordId, ref ignoringHandler, out _);
+                }
+            }
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            finally
+            {
+                ReleaseFrame(buffer);
+            }
+#endif
+
+            if (control == WorksheetReadControl.Pause)
+                return WorksheetReadStatus.Paused;
+        }
+
+        return WorksheetReadStatus.EndOfInput;
+    }
+
+    public override void Dispose()
+    {
+        if (_pendingBuffer != null)
+        {
+            ReleaseFrame(_pendingBuffer);
+            _pendingBuffer = null;
+        }
+
+        base.Dispose();
+    }
+
+    private static bool ReadMetadata<THandler>(byte[] buffer, uint recordId, ref THandler handler, out WorksheetReadControl control)
+        where THandler : struct, IWorksheetHandler
     {
         switch (recordId)
         {
-            case SheetDataBegin:
-                if (preparing)
+            case SheetPr:
                 {
-                    _inPreparingScan = true;
-                    return Record.Default; // suppress SheetDataBeginRecord; ScanResultRecord comes at SheetDataEnd
-                }
-
-                return new SheetDataBeginRecord();
-            case SheetDataEnd:
-                if (_inPreparingScan)
-                {
-                    _inPreparingScan = false;
-                    return new ScanResultRecord(_scanMaxRowIndex, _scanMaxColumnIndex);
-                }
-
-                return new SheetDataEndRecord();
-            case Row when _inPreparingScan:
-                {
-                    int rowIndex = GetInt32(buffer, 0);
-                    if (rowIndex > _scanMaxRowIndex)
-                    {
-                        _scanMaxRowIndex = rowIndex;
-                    }
-
-                    return Record.Default;
-                }
-
-            // Blank cells have null value and null error — not counted toward column maximum
-            case Blank when _inPreparingScan:
-                return Record.Default;
-
-            // All other cell types have a non-null value or non-null error — counted toward column maximum
-            case Number when _inPreparingScan:
-            case Float when _inPreparingScan:
-            case String when _inPreparingScan:
-            case SharedString when _inPreparingScan:
-            case FormulaNumber when _inPreparingScan:
-            case FormulaString when _inPreparingScan:
-            case FormulaBool when _inPreparingScan:
-            case BrtCellRString when _inPreparingScan:
-            case Bool when _inPreparingScan:
-            case BoolError when _inPreparingScan:
-            case FormulaError when _inPreparingScan:
-                {
-                    int column = (int)GetDWord(buffer, 0);
-                    if (column > _scanMaxColumnIndex)
-                    {
-                        _scanMaxColumnIndex = column;
-                    }
-
-                    return Record.Default;
-                }
-
-            case SheetPr: // BrtWsProp
-                {
-                    // Must be between 0 and 31 characters
+                    // Must be between 0 and 31 characters.
                     uint length = GetDWord(buffer, 19);
-
-                    // To behave the same as when reading an xml based file. 
-                    // GetAttribute returns null both if the attribute is missing
-                    // or if it is empty.
-                    string? codeName = length == 0 ? null : GetString(buffer, 19 + 4, length);
-                    return new SheetPrRecord(codeName);
+                    string? codeName = length == 0 ? null : GetString(buffer, 23, length);
+                    control = handler.OnCodeName(codeName);
+                    return true;
                 }
 
-            case SheetDim: // BrtWsDim - worksheet dimensions (rwFirst, rwLast, colFirst, colLast)
+            case SheetDim:
                 {
-                    int dimFromRow = GetInt32(buffer, 0);
-                    int dimToRow = GetInt32(buffer, 4);
-                    int dimFromColumn = GetInt32(buffer, 8);
-                    int dimToColumn = GetInt32(buffer, 12);
-                    return new SheetDimRecord(new CellRange(dimFromColumn, dimFromRow, dimToColumn, dimToRow));
+                    int fromRow = GetInt32(buffer, 0);
+                    int toRow = GetInt32(buffer, 4);
+                    int fromColumn = GetInt32(buffer, 8);
+                    int toColumn = GetInt32(buffer, 12);
+                    control = handler.OnDimension(new CellRange(fromColumn, fromRow, toColumn, toRow));
+                    return true;
                 }
 
-            case SheetFormatPr: // BrtWsFmtInfo 
+            case SheetFormatPr:
                 {
-                    // TODO Default column width
-                    var unsynced = (buffer[8] & 0b1000) != 0;
-                    uint? defaultHeight = null;
-                    if (unsynced)
-                        defaultHeight = GetWord(buffer, 6);
-                    return new SheetFormatPrRecord(defaultHeight);
+                    double? defaultHeight = (buffer[8] & 0b1000) != 0 ? GetWord(buffer, 6) : null;
+                    control = handler.OnDefaultRowHeight(defaultHeight);
+                    return true;
                 }
 
-            case Column: // BrtColInfo 
+            case Column:
                 {
                     int minimum = GetInt32(buffer, 0);
                     int maximum = GetInt32(buffer, 4);
                     byte flags = buffer[16];
-                    bool hidden = (flags & 0b1) != 0;
-                    bool unsynced = (flags & 0b10) != 0;
-
-                    double? width = null;
-                    if (unsynced)
-                        width = GetDWord(buffer, 8) / 256.0;
-                    return new ColumnRecord(new Column(minimum, maximum, hidden, width));
+                    double? width = (flags & 0b10) != 0 ? GetDWord(buffer, 8) / 256.0 : null;
+                    control = handler.OnColumn(new Column(minimum, maximum, (flags & 0b1) != 0, width));
+                    return true;
                 }
 
-            case HeaderFooter: // BrtBeginHeaderFooter 
+            case HeaderFooter:
                 {
-                    var flags = buffer[0];
+                    byte flags = buffer[0];
                     bool differentOddEven = (flags & 1) != 0;
                     bool differentFirst = (flags & 0b10) != 0;
                     uint offset = 2;
@@ -156,7 +193,7 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
                     var footerEven = GetNullableString(buffer, ref offset);
                     var headerFirst = GetNullableString(buffer, ref offset);
                     var footerFirst = GetNullableString(buffer, ref offset);
-                    return new HeaderFooterRecord(new HeaderFooter(differentFirst, differentOddEven)
+                    var value = new HeaderFooter(differentFirst, differentOddEven)
                     {
                         FirstHeader = headerFirst,
                         FirstFooter = footerFirst,
@@ -164,85 +201,116 @@ internal sealed class BiffWorksheetReader(Stream stream, bool preparing) : BiffR
                         OddFooter = footer,
                         EvenHeader = headerEven,
                         EvenFooter = footerEven,
-                    });
+                    };
+                    control = handler.OnHeaderFooter(value);
+                    return true;
                 }
 
             case MergeCell:
-                int fromRow = GetInt32(buffer, 0);
-                int toRow = GetInt32(buffer, 4);
-                int fromColumn = GetInt32(buffer, 8);
-                int toColumn = GetInt32(buffer, 12);
-                return new MergeCellRecord(new CellRange(fromColumn, fromRow, toColumn, toRow));
-            case Row: // BrtRowHdr 
                 {
-                    int rowIndex = GetInt32(buffer, 0);
-                    byte flags = buffer[11];
-                    bool hidden = (flags & 0b10000) != 0;
-                    bool unsynced = (flags & 0b100000) != 0;
-
-                    double? height = null;
-                    if (unsynced)
-                        height = GetWord(buffer, 8) / 20.0; // Where does 20 come from?
-
-                    // TODO: Default format ?
-                    return new RowHeaderRecord(rowIndex, hidden, height);
+                    int fromRow = GetInt32(buffer, 0);
+                    int toRow = GetInt32(buffer, 4);
+                    int fromColumn = GetInt32(buffer, 8);
+                    int toColumn = GetInt32(buffer, 12);
+                    control = handler.OnMergeCell(new CellRange(fromColumn, fromRow, toColumn, toRow));
+                    return true;
                 }
 
+            default:
+                control = WorksheetReadControl.Continue;
+                return false;
+        }
+    }
+
+    private bool ConsumeCell<THandler>(byte[] buffer, uint recordId, ref THandler handler, out WorksheetReadControl control)
+        where THandler : struct, IWorksheetHandler
+    {
+        control = WorksheetReadControl.Continue;
+        DecodedCellValue value = default;
+        CellError? error = null;
+        switch (recordId)
+        {
             case Blank:
-                return ReadCell(null);
+                break;
             case BoolError:
             case FormulaError:
-                return ReadCell(null, (CellError)buffer[8]);
-
-            // Possibly we could do even better if we just read the
-            // length and column index instead but this is a simpler change.
-            case Number when preparing:
-            case FormulaNumber when preparing:
-            case Float when preparing:
-            case String when preparing:
-            case FormulaString when preparing:
-            case BrtCellRString when preparing:
-            case SharedString when preparing:
-                return ReadCell(string.Empty);
-
+                error = (CellError)buffer[8];
+                break;
             case Number:
-                return ReadCell(GetRkNumber(buffer, 8));
+                value = new DecodedCellValue(GetRkNumber(buffer, 8));
+                break;
             case Bool:
             case FormulaBool:
-                return ReadCell(buffer[8] == 1);
+                value = new DecodedCellValue(buffer[8] == 1);
+                break;
             case FormulaNumber:
             case Float:
-                return ReadCell(GetDouble(buffer, 8));
+                value = new DecodedCellValue(GetDouble(buffer, 8));
+                break;
             case String:
             case FormulaString:
-                {
-                    // Must be less than 32768 characters
-                    var length = GetDWord(buffer, 8);
-                    return ReadCell(GetString(buffer, 8 + 4, length));
-                }
-
+                value = new DecodedCellValue(GetString(buffer, 12, GetDWord(buffer, 8)), CellValueKind.FormattedString);
+                break;
             case BrtCellRString:
-                {
-                    // The number of Unicode characters MUST be less than or equal to 0x7FFF         
-                    var length = GetDWord(buffer, 9);
-                    return ReadCell(GetString(buffer, 9 + 4, length));
-                }
-
+                value = new DecodedCellValue(GetString(buffer, 13, GetDWord(buffer, 9)), CellValueKind.FormattedString);
+                break;
             case SharedString:
-                return ReadCell(null, sharedStringIndex: GetDWord(buffer, 8));
+                value = DecodedCellValue.SharedString(GetDWord(buffer, 8));
+                break;
             default:
-                return Record.Default;
+                return false;
         }
 
-        CellRecord ReadCell(object? value, CellError? errorValue = null, uint? sharedStringIndex = null)
+        int style = (int)(GetDWord(buffer, 4) & 0xffffff);
+        var cell = workbook.CreateCell((int)GetDWord(buffer, 0), value, workbook.GetEffectiveCellStyle(style, 0), error, date1904);
+        control = handler.OnCell(in cell);
+        return true;
+    }
+
+    private void ScanRecord(byte[] buffer, uint recordId)
+    {
+        if (recordId == Row)
+        {
+            int rowIndex = GetInt32(buffer, 0);
+            if (rowIndex > _scanMaxRowIndex)
+                _scanMaxRowIndex = rowIndex;
+
+            return;
+        }
+
+        if (recordId is Blank)
+            return;
+
+        if (recordId is Number or Float or String or SharedString or FormulaNumber or FormulaString or FormulaBool or BrtCellRString or Bool or BoolError or FormulaError)
         {
             int column = (int)GetDWord(buffer, 0);
-            uint xfIndex = GetDWord(buffer, 4) & 0xffffff;
-
-            var decoded = sharedStringIndex.HasValue
-                ? DecodedCellValue.SharedString(sharedStringIndex.Value)
-                : new DecodedCellValue(value, value is string ? CellValueKind.FormattedString : CellValueKind.Literal);
-            return new CellRecord(column, (int)xfIndex, decoded, errorValue);
+            if (column > _scanMaxColumnIndex)
+                _scanMaxColumnIndex = column;
         }
+    }
+
+    private struct IgnoringHandler : IWorksheetHandler
+    {
+        public WorksheetReadControl OnDimension(CellRange range) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnCodeName(string? codeName) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnDefaultRowHeight(double? height) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnColumn(Column column) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnMergeCell(CellRange range) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnHeaderFooter(HeaderFooter headerFooter) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnSheetDataBegin() => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnScanResult(int maxRowIndex, int maxColumnIndex) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnRow(int index, bool hidden, double? height) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnCell(in Cell cell) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnRowEnd() => WorksheetReadControl.Continue;
     }
 }

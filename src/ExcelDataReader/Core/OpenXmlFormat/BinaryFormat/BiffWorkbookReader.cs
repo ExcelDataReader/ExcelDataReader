@@ -17,37 +17,50 @@ internal sealed class BiffWorkbookReader(Stream stream, Dictionary<string, strin
         VeryHidden = 0x2
     }
 
-    protected override Record ReadOverride(byte[] buffer, uint recordId, uint recordLength)
+    public void Load(IWorkbookPartSink sink)
     {
-        switch (recordId)
+        while (TryReadFrame(out var buffer, out var recordId, out _))
         {
-            case WorkbookPr:
-                return new WorkbookPrRecord((buffer[0] & 0x01) == 1);
-            case Sheet: // BrtBundleSh
-                var state = (SheetVisibility)GetDWord(buffer, 0) switch
+            try
+            {
+                switch (recordId)
                 {
-                    SheetVisibility.Hidden => "hidden",
-                    SheetVisibility.VeryHidden => "veryhidden",
-                    _ => "visible"
-                };
-
-                uint id = GetDWord(buffer, 4);
-
-                uint offset = 8;
-                string? rid = GetNullableString(buffer, ref offset);
-
-                // Must be between 1 and 31 characters
-                uint nameLength = GetDWord(buffer, offset);
-                string name = GetString(buffer, offset + 4, nameLength);
-
-                return new SheetRecord(name, id, rid, state, rid != null && _worksheetRels.TryGetValue(rid, out var path) ? path : null);
-
-            case BrtBookView:                 
-                int activeSheet = (int)GetDWord(buffer, 24);
-                return new WorkbookActRecord(activeSheet);
-
-            default:
-                return Record.Default;
+                    case WorkbookPr:
+                        sink.SetDate1904((buffer[0] & 0x01) == 1);
+                        break;
+                    case Sheet: // BrtBundleSh
+                        sink.AddSheet(ReadSheet(buffer));
+                        break;
+                    case BrtBookView:
+                        sink.SetActiveSheet((int)GetDWord(buffer, 24));
+                        break;
+                }
+            }
+            finally
+            {
+                ReleaseFrame(buffer);
+            }
         }
+    }
+
+    private SheetRecord ReadSheet(byte[] buffer)
+    {
+        var state = (SheetVisibility)GetDWord(buffer, 0) switch
+        {
+            SheetVisibility.Hidden => "hidden",
+            SheetVisibility.VeryHidden => "veryhidden",
+            _ => "visible"
+        };
+
+        uint id = GetDWord(buffer, 4);
+
+        uint offset = 8;
+        string? rid = GetNullableString(buffer, ref offset);
+
+        // Must be between 1 and 31 characters
+        uint nameLength = GetDWord(buffer, offset);
+        string name = GetString(buffer, offset + 4, nameLength);
+
+        return new SheetRecord(name, id, rid, state, rid != null && _worksheetRels.TryGetValue(rid, out var path) ? path : null);
     }
 }

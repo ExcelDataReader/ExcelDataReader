@@ -18,6 +18,13 @@ internal sealed partial class ZipWorker : IDisposable
         IgnoreWhitespace = true,
     };
 
+    private static readonly XmlReaderSettings WorksheetXmlSettings = new()
+    {
+        IgnoreComments = true,
+        IgnoreWhitespace = true,
+        CloseInput = true,
+    };
+
     private readonly Dictionary<string, ZipArchiveEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> _worksheetRels = [];
 
@@ -150,40 +157,48 @@ internal sealed partial class ZipWorker : IDisposable
         }
     }
 
-    /// <summary>
-    /// Gets the styles reader.
-    /// </summary>
-    public RecordReader? GetStylesReader()
+    public void LoadStyles(IStylesPartSink sink)
     {
-        if (FindEntry(_fileStyles) is { } entry)
+        if (FindEntry(_fileStyles) is not { } entry)
+            return;
+
+        if (entry.FullName.EndsWith(".xml", StringComparison.Ordinal))
         {
-            if (entry.FullName.EndsWith(".xml", StringComparison.Ordinal))
-                return new XmlStylesReader(XmlReader.Create(entry.Open(), XmlSettings));
-
-            if (entry.FullName.EndsWith(".bin", StringComparison.Ordinal))
-                return new BiffStylesReader(OpenZipEntry(entry));
+            using var stream = entry.Open();
+            using var xml = XmlReader.Create(stream, XmlSettings);
+            new XmlStylesReader(xml).Load(sink);
         }
-
-        return null;
+        else if (entry.FullName.EndsWith(".bin", StringComparison.Ordinal))
+        {
+            using var reader = new BiffStylesReader(OpenZipEntry(entry));
+            reader.Load(sink);
+        }
     }
 
-    /// <summary>
-    /// Gets the workbook reader.
-    /// </summary>
-    public RecordReader? GetWorkbookReader()
+    public void LoadWorkbook(IWorkbookPartSink sink)
     {
         if (FindEntry(_fileWorkbook) is { } entry)
-        { 
+        {
             if (entry.FullName.EndsWith(".xml", StringComparison.Ordinal))
-                return new XmlWorkbookReader(XmlReader.Create(entry.Open(), XmlSettings), _worksheetRels);
-            else if (entry.FullName.EndsWith(".bin", StringComparison.Ordinal))
-                return new BiffWorkbookReader(OpenZipEntry(entry), _worksheetRels);
+            {
+                using var stream = entry.Open();
+                using var xml = XmlReader.Create(stream, XmlSettings);
+                new XmlWorkbookReader(xml, _worksheetRels).Load(sink);
+                return;
+            }
+
+            if (entry.FullName.EndsWith(".bin", StringComparison.Ordinal))
+            {
+                using var reader = new BiffWorkbookReader(OpenZipEntry(entry), _worksheetRels);
+                reader.Load(sink);
+                return;
+            }
         }
 
         throw new Exceptions.HeaderException(Errors.ErrorZipNoOpenXml);
     }
 
-    public RecordReader? GetWorksheetReader(string sheetPath, bool preparing)
+    public IWorksheetReader? GetWorksheetReader(string sheetPath, WorksheetReadMode mode, XlsxWorkbook workbook)
     {
         // its possible sheetPath starts with /xl. in this case trim the /
         // see the test "Issue_11522_OpenXml"
@@ -195,8 +210,8 @@ internal sealed partial class ZipWorker : IDisposable
         {
             return Path.GetExtension(sheetPath) switch
             {
-                ".xml" => new XmlWorksheetReader(XmlReader.Create(OpenZipEntry(zipEntry), XmlSettings), preparing),
-                ".bin" => new BiffWorksheetReader(OpenZipEntry(zipEntry), preparing),
+                ".xml" => CreateXmlWorksheetReader(zipEntry, mode, workbook),
+                ".bin" => new BiffWorksheetReader(OpenZipEntry(zipEntry), mode, workbook, workbook.IsDate1904),
                 _ => null,
             };
         }
@@ -211,6 +226,22 @@ internal sealed partial class ZipWorker : IDisposable
     // reduces that to ~100 Inflater interactions. The guard previously excluded net462; removing it
     // gives the same benefit to net462 consumers of xlsb/xlsx files.
     private static BufferedStream OpenZipEntry(ZipArchiveEntry zipEntry) => new(zipEntry.Open());
+
+    private static XmlWorksheetReader CreateXmlWorksheetReader(ZipArchiveEntry zipEntry, WorksheetReadMode mode, XlsxWorkbook workbook)
+    {
+        var stream = OpenZipEntry(zipEntry);
+        XmlReader? reader = null;
+        try
+        {
+            reader = XmlReader.Create(stream, WorksheetXmlSettings);
+            return new XmlWorksheetReader(reader, mode, workbook, workbook.IsDate1904);
+        }
+        catch (Exception exception)
+        {
+            ResourceCleanup.DisposeAll(exception, reader, stream);
+            throw;
+        }
+    }
 
     private ZipArchiveEntry? FindEntry(string? name)
     {

@@ -20,8 +20,8 @@ internal sealed class XlsxWorksheet : IWorksheet
             return;
         }
 
-        using var sheetStream = Document.GetWorksheetReader(worksheetPath, !singlePassMode);
-        
+        using var sheetStream = Document.GetWorksheetReader(worksheetPath, singlePassMode ? WorksheetReadMode.Materialize : WorksheetReadMode.Scan, workbook);
+
         if (sheetStream == null)
         {
             ColumnWidths = [];
@@ -31,48 +31,26 @@ internal sealed class XlsxWorksheet : IWorksheet
         int rowIndexMaximum = int.MinValue;
         int columnIndexMaximum = int.MinValue;
 
-        List<Column> columnWidths = [];
-        List<CellRange> cellRanges = [];
-
-        bool stop = false;
-
-        while (!stop && sheetStream.Read() is { } record)
+        var metadata = new MetadataConsumer(singlePassMode);
+        if (singlePassMode)
         {
-            switch (record)
+            sheetStream.Consume(ref metadata);
+        }
+        else
+        {
+            while (sheetStream.Consume(ref metadata) == WorksheetReadStatus.Paused)
             {
-                case SheetDimRecord dimRecord:
-                    Dimension = dimRecord.Range;
-                    break;
-                case SheetDataBeginRecord _ when singlePassMode:
-                    // In single-pass mode stop before reading cells; ReadRows() will be the only pass
-                    stop = true;
-                    break;
-                case ScanResultRecord scan:
-                    // Multi-pass: sheetData was scanned without allocating per-cell records
-                    rowIndexMaximum = Math.Max(rowIndexMaximum, scan.MaxRowIndex);
-                    columnIndexMaximum = Math.Max(columnIndexMaximum, scan.MaxColumnIndex);
-                    break;
-                case ColumnRecord column:
-                    columnWidths.Add(column.Column);
-                    break;
-                case SheetFormatPrRecord sheetFormatProperties:
-                    if (sheetFormatProperties.DefaultRowHeight != null)
-                        DefaultRowHeight = sheetFormatProperties.DefaultRowHeight.Value;
-                    break;
-                case SheetPrRecord sheetProperties:
-                    CodeName = sheetProperties.CodeName;
-                    break;
-                case MergeCellRecord mergeCell:
-                    cellRanges.Add(mergeCell.Range);
-                    break;
-                case HeaderFooterRecord headerFooter:
-                    HeaderFooter = headerFooter.HeaderFooter;
-                    break;
             }
         }
 
-        ColumnWidths = columnWidths;
-        MergeCells = [.. cellRanges];
+        ColumnWidths = metadata.ColumnWidths;
+        MergeCells = [.. metadata.MergeCells];
+        Dimension = metadata.Dimension;
+        CodeName = metadata.CodeName;
+        HeaderFooter = metadata.HeaderFooter;
+        DefaultRowHeight = metadata.DefaultRowHeight;
+        rowIndexMaximum = metadata.MaxRowIndex;
+        columnIndexMaximum = metadata.MaxColumnIndex;
 
         if (singlePassMode)
         {
@@ -104,67 +82,103 @@ internal sealed class XlsxWorksheet : IWorksheet
 
     public List<Column> ColumnWidths { get; }
 
-    private string? Path { get; set; }
+    public double DefaultRowHeight { get; }
 
-    private double DefaultRowHeight { get; }
+    private string? Path { get; set; }
 
     private ZipWorker Document { get; }
 
     private XlsxWorkbook Workbook { get; }
 
-    public IEnumerable<Row> ReadRows()
+    public IWorksheetReader OpenReader() =>
+        Path is { Length: > 0 } worksheetPath
+            ? Document.GetWorksheetReader(worksheetPath, WorksheetReadMode.Materialize, Workbook) is { } reader
+                ? new OpenXmlRowReader(reader, DefaultRowHeight)
+                : EmptyReader.Instance
+            : EmptyReader.Instance;
+
+    private struct MetadataConsumer(bool pauseAtSheetData) : IWorksheetHandler
     {
-        if (Path is not { Length: > 0 } worksheetPath)
-            yield break;
+        public List<Column> ColumnWidths { get; } = [];
 
-        using var sheetStream = Document.GetWorksheetReader(worksheetPath, false);
-        if (sheetStream == null)
-            yield break;
+        public List<CellRange> MergeCells { get; } = [];
 
-        var rowIndex = 0;
-        List<Cell> cells = [];
-        bool foundRowOrCell = false;
-        double height = 0;
+        public CellRange? Dimension { get; private set; }
 
-        bool inSheetData = false;
-        while (sheetStream.Read() is { } record)
+        public string? CodeName { get; private set; }
+
+        public HeaderFooter? HeaderFooter { get; private set; }
+
+        public double DefaultRowHeight { get; private set; } = 15;
+
+        public int MaxRowIndex { get; private set; } = int.MinValue;
+
+        public int MaxColumnIndex { get; private set; } = int.MinValue;
+
+        public WorksheetReadControl OnDimension(CellRange range)
         {
-            switch (record)
-            {
-                case SheetDataBeginRecord _:
-                    inSheetData = true;
-                    break;
-                case SheetDataEndRecord _:
-                    inSheetData = false;
-                    break;
-                case RowHeaderRecord row when inSheetData:
-                    foundRowOrCell = true;
-
-                    int currentRowIndex = row.RowIndex;
-                    if (rowIndex != currentRowIndex)
-                    {
-                        yield return new Row(rowIndex++, height, cells);
-                        cells.Clear();
-                    }
-
-                    for (; rowIndex < currentRowIndex; rowIndex++)
-                    {
-                        yield return new Row(rowIndex, DefaultRowHeight, cells);
-                    }
-
-                    height = row.Hidden ? 0 : row.Height ?? DefaultRowHeight;
-
-                    break;
-                case CellRecord cell when inSheetData:
-                    // TODO What if we get a cell without a row?
-                    var extendedFormat = Workbook.GetEffectiveCellStyle(cell.XfIndex, 0);
-                    cells.Add(Workbook.CreateCell(cell.ColumnIndex, cell.Value, extendedFormat, cell.Error, Workbook.IsDate1904));
-                    foundRowOrCell = true;
-                    break;
-            }
+            Dimension = range;
+            return WorksheetReadControl.Continue;
         }
 
-        if (foundRowOrCell)
-            yield return new Row(rowIndex, height, cells);
+        public WorksheetReadControl OnCodeName(string? codeName)
+        {
+            CodeName = codeName;
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnDefaultRowHeight(double? height)
+        {
+            if (height != null)
+                DefaultRowHeight = height.Value;
+
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnColumn(Column column)
+        {
+            ColumnWidths.Add(column);
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnMergeCell(CellRange range)
+        {
+            MergeCells.Add(range);
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnHeaderFooter(HeaderFooter headerFooter)
+        {
+            HeaderFooter = headerFooter;
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnSheetDataBegin() =>
+            pauseAtSheetData ? WorksheetReadControl.Pause : WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnScanResult(int maxRowIndex, int maxColumnIndex)
+        {
+            MaxRowIndex = Math.Max(MaxRowIndex, maxRowIndex);
+            MaxColumnIndex = Math.Max(MaxColumnIndex, maxColumnIndex);
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnRow(int index, bool hidden, double? height) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnCell(in Cell cell) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnRowEnd() => WorksheetReadControl.Continue;
+    }
+
+    private sealed class EmptyReader : IWorksheetReader
+    {
+        internal static readonly EmptyReader Instance = new();
+
+        public WorksheetReadStatus Consume<THandler>(ref THandler handler)
+            where THandler : struct, IWorksheetHandler => WorksheetReadStatus.EndOfInput;
+
+        public void Dispose()
+        {
+        }
     }
 }

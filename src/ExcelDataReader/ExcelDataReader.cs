@@ -1,13 +1,11 @@
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
-#if NET8_0_OR_GREATER
-#endif
 using ExcelDataReader.Core;
 
 namespace ExcelDataReader;
 
 /// <summary>
-/// A generic implementation of the IExcelDataReader interface using IWorkbook/IWorksheet to enumerate data.
+/// A generic implementation of IExcelDataReader using worksheet push consumption.
 /// </summary>
 /// <typeparam name="TWorkbook">A type implementing IWorkbook.</typeparam>
 /// <typeparam name="TWorksheet">A type implementing IWorksheet.</typeparam>
@@ -16,11 +14,16 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     where TWorksheet : IWorksheet
 {
     private IEnumerator<TWorksheet>? _worksheetIterator;
-    private IEnumerator<Row>? _rowIterator;
+    private IWorksheetReader? _rowReader;
     private IEnumerator<TWorksheet>? _cachedWorksheetIterator;
     private List<TWorksheet>? _cachedWorksheets;
     private int _idx;
     private bool _singlePassMode;
+    private int _nextRowIndex;
+    private int _pendingRowIndex = -1;
+    private double _pendingRowHeight;
+    private double _rowHeight;
+    private bool _rowReady;
 
     ~ExcelDataReader()
     {
@@ -60,7 +63,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     public int RecordsAffected => throw new NotSupportedException();
 
-    public double RowHeight => _rowIterator?.Current.Height ?? 0;
+    public double RowHeight => _rowHeight;
 
     protected bool SinglePassMode { set => _singlePassMode = value; }
 
@@ -122,7 +125,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     {
         if (RowCells == null)
             throw new InvalidOperationException("No data exists for the row/column.");
-        
+
         return RowCells[i]?.Value ?? DBNull.Value;
     }
 
@@ -139,7 +142,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
         return readingLenth;
     }
-           
+
     public bool IsDBNull(int i) => GetValue(i) is DBNull;
 
     public string? GetNumberFormatString(int i)
@@ -218,18 +221,18 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     {
         if (RowCells == null)
             throw new InvalidOperationException("No data exists for the row/column.");
-        
+
         return RowCells[i]?.Error;
     }
 
     /// <inheritdoc />
     public void Reset()
     {
+        _rowReader?.Dispose();
         _worksheetIterator?.Dispose();
-        _rowIterator?.Dispose();
 
         _worksheetIterator = null;
-        _rowIterator = null;
+        _rowReader = null;
 
         _idx = 0;
 
@@ -245,7 +248,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
                 return;
             }
 
-            _rowIterator = _worksheetIterator.Current.ReadRows().GetEnumerator();
+            _rowReader = _worksheetIterator.Current.OpenReader();
         }
     }
 
@@ -254,15 +257,15 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         if (IsClosed)
             return;
 
+        _rowReader?.Dispose();
         _worksheetIterator?.Dispose();
-        _rowIterator?.Dispose();
         _cachedWorksheetIterator?.Dispose();
 
         _worksheetIterator = null;
-        _rowIterator = null;
+        _rowReader = null;
         _cachedWorksheetIterator = null;
         _cachedWorksheets = null;
-        RowCells = null;
+        ResetSheetData();
         try
         {
             Workbook?.Dispose();
@@ -283,8 +286,8 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
         ResetSheetData();
 
-        _rowIterator?.Dispose();
-        _rowIterator = null;
+        _rowReader?.Dispose();
+        _rowReader = null;
 
         if (!_worksheetIterator.MoveNext())
         {
@@ -293,7 +296,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
             return false;
         }
 
-        _rowIterator = _worksheetIterator.Current.ReadRows().GetEnumerator();
+        _rowReader = _worksheetIterator.Current.OpenReader();
 
         _idx++;
 
@@ -302,21 +305,45 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     public bool Read()
     {
-        if (_worksheetIterator == null || _rowIterator == null)
+        if (_worksheetIterator == null || _rowReader == null)
         {
             return false;
         }
 
-        if (!_rowIterator.MoveNext())
+        if (_pendingRowIndex >= 0)
         {
-            _rowIterator.Dispose();
-            _rowIterator = null;
-            return false;
+            ClearRow();
+            if (_pendingRowIndex > _nextRowIndex)
+                return ReadGapRow();
+            _rowHeight = _pendingRowHeight;
         }
 
-        ReadCurrentRow();
+        _rowReady = false;
+        var handler = new RowHandler(this);
+        WorksheetReadStatus status;
+        try
+        {
+            status = _rowReader.Consume(ref handler);
+        }
+        catch (Exception exception)
+        {
+            var failedReader = _rowReader;
+            _rowReader = null;
+            ResourceCleanup.DisposeAll(exception, failedReader);
+            throw;
+        }
 
-        return true;
+        if (_rowReady)
+            return true;
+        if (_pendingRowIndex > _nextRowIndex)
+            return ReadGapRow();
+        if (status != WorksheetReadStatus.EndOfInput)
+            throw new InvalidOperationException("Worksheet paused without completing a row.");
+
+        _rowReader.Dispose();
+        _rowReader = null;
+        _rowHeight = 0;
+        return false;
     }
 
     public void Dispose()
@@ -373,40 +400,91 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     private void ResetSheetData()
     {
         RowCells = null;
+        _nextRowIndex = 0;
+        _pendingRowIndex = -1;
+        _rowHeight = 0;
+        _rowReady = false;
     }
 
-    private void ReadCurrentRow()
+    private void ClearRow()
     {
         RowCells ??= new Cell?[FieldCount];
-
         Array.Clear(RowCells, 0, RowCells.Length);
+    }
 
-        var rowIterator = _rowIterator;
-        if (rowIterator == null)
-            throw new InvalidOperationException("No data exists for the row/column.");
-
-        foreach (var cell in rowIterator.Current.Cells)
-        {
-            if (cell.ColumnIndex >= RowCells.Length)
-            {
-                if (_singlePassMode)
-                {
-                    var resized = RowCells;
-                    Array.Resize(ref resized, cell.ColumnIndex + 1);
-                    RowCells = resized;
-                }
-                else
-                {
-                    continue;
-                }
-            }
-
-            RowCells[cell.ColumnIndex] = cell;
-        }
+    private bool ReadGapRow()
+    {
+        _rowHeight = _worksheetIterator!.Current.DefaultRowHeight;
+        _nextRowIndex++;
+        return true;
     }
 
     private TWorkbook GetWorkbook()
     {
         return Workbook ?? throw new InvalidOperationException("Workbook is not initialized.");
+    }
+
+    private struct RowHandler(ExcelDataReader<TWorkbook, TWorksheet> owner) : IWorksheetHandler
+    {
+        public WorksheetReadControl OnDimension(CellRange range) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnCodeName(string? codeName) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnDefaultRowHeight(double? height) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnColumn(Column column) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnMergeCell(CellRange range) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnHeaderFooter(HeaderFooter headerFooter) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnSheetDataBegin() => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnScanResult(int maxRowIndex, int maxColumnIndex) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnRow(int index, bool hidden, double? height)
+        {
+            if (index < owner._nextRowIndex)
+                throw new InvalidOperationException("Worksheet rows must be in ascending index order.");
+
+            if (owner._pendingRowIndex == index)
+            {
+                owner._rowHeight = hidden ? 0 : height ?? owner._worksheetIterator!.Current.DefaultRowHeight;
+                return WorksheetReadControl.Continue;
+            }
+
+            owner._pendingRowIndex = index;
+            owner._pendingRowHeight = hidden ? 0 : height ?? owner._worksheetIterator!.Current.DefaultRowHeight;
+            owner.ClearRow();
+            if (index > owner._nextRowIndex)
+                return WorksheetReadControl.Pause;
+
+            owner._rowHeight = owner._pendingRowHeight;
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnCell(in Cell cell)
+        {
+            var cells = owner.RowCells!;
+            if (cell.ColumnIndex >= cells.Length)
+            {
+                if (!owner._singlePassMode)
+                    return WorksheetReadControl.Continue;
+
+                Array.Resize(ref cells, cell.ColumnIndex + 1);
+                owner.RowCells = cells;
+            }
+
+            cells[cell.ColumnIndex] = cell;
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnRowEnd()
+        {
+            owner._nextRowIndex = owner._pendingRowIndex + 1;
+            owner._pendingRowIndex = -1;
+            owner._rowReady = true;
+            return WorksheetReadControl.Pause;
+        }
     }
 }

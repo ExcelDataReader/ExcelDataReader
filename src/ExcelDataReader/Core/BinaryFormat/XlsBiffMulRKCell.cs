@@ -15,7 +15,7 @@ internal sealed class XlsBiffMulRKCell : XlsBiffBlankCell
     /// <summary>
     /// Gets the zero-based index of last described column.
     /// </summary>
-    public ushort LastColumnIndex => ReadUInt16(RecordSize - 2);
+    public ushort LastColumnIndex => new XlsCellFrame(Bytes).LastColumnIndex;
 
     /// <summary>
     /// Returns format for specified column.
@@ -24,10 +24,7 @@ internal sealed class XlsBiffMulRKCell : XlsBiffBlankCell
     /// <returns>The format.</returns>
     public ushort GetXF(ushort columnIdx)
     {
-        int ofs = 4 + 6 * (columnIdx - ColumnIndex);
-        if (ofs > RecordSize - 2)
-            return 0;
-        return ReadUInt16(ofs);
+        return new XlsCellFrame(Bytes).GetMultiCellStyle(columnIdx);
     }
 
     /// <summary>
@@ -37,9 +34,6 @@ internal sealed class XlsBiffMulRKCell : XlsBiffBlankCell
     /// <returns>The value.</returns>
     public double GetValue(ushort columnIdx)
     {
-        int ofs = 6 + 6 * (columnIdx - ColumnIndex);
-        if (ofs > RecordSize)
-            return 0;
-        return XlsBiffRKCell.NumFromRK(ReadUInt32(ofs));
+        return new XlsCellFrame(Bytes).GetMultiCellValue(columnIdx);
     }
 }
