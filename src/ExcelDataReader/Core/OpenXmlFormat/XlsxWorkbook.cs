@@ -62,7 +62,7 @@ internal sealed class XlsxWorkbook : CommonWorkbook, IWorkbook<XlsxWorksheet>, I
     void IStylesPartSink.AddNumberFormat(int formatIndexInFile, string formatString) => AddNumberFormat(formatIndexInFile, formatString);
 
     protected override string? ResolveSharedString(uint index) =>
-        index < (uint)SharedStringCount ? Helpers.ConvertEscapeChars(GetSharedString((int)index)) : null;
+        index < (uint)SharedStringCount ? GetSharedString((int)index) : null;
 
     private void ReadWorkbook() => _zipWorker.LoadWorkbook(this);
 

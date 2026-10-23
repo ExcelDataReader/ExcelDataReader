@@ -1113,6 +1113,7 @@ public class SharedStringStorageTests
         Assert.That(store.ResidentBytes, Is.LessThanOrEqualTo(Budget));
     }
 
+    [TestCase(SharedStringStorageMode.Default)]
     [TestCase(SharedStringStorageMode.SpillToDisk)]
     public void SharedXmlParsingAndEscapesAreUnchanged(SharedStringStorageMode mode)
     {
@@ -1124,6 +1125,39 @@ public class SharedStringStorageTests
         {
             Assert.That(reader.Read(), Is.True);
             Assert.That(reader.GetString(0), Is.EqualTo(expected));
+        }
+    }
+
+    [TestCase(SharedStringStorageMode.Default)]
+    [TestCase(SharedStringStorageMode.SpillToDisk)]
+    public void SharedEscapesAreDecodedOnceBeforeStorage(SharedStringStorageMode mode)
+    {
+        const string escaped = "_x005F_x0041__x0000__xD800__x00af_";
+        const string expected = "_x0041_\0\uD800_x00af_";
+        byte[] records = XlsbStringItem(CodeUnits(escaped), escaped.Length)
+            .Concat(XlsbStringItem(CodeUnits("_x0042_"), 7)).ToArray();
+        using (var stream = new MemoryStream(records))
+        using (var reader = new BiffSharedStringsReader(stream))
+        using (ISharedStringStore store = mode == SharedStringStorageMode.Default
+            ? new SharedStringTable()
+            : new AutoSharedStringStore(new ExcelReaderConfiguration { SharedStringStorageMode = mode, SharedStringSpillThreshold = Budget }))
+        {
+            reader.Load(store);
+            store.Add(new string('x', (int)Budget));
+            store.Seal();
+            Assert.That(store.GetString(0), Is.EqualTo(expected));
+            Assert.That(store.GetString(1), Is.EqualTo("B"));
+            Assert.That(store.GetString(0), Is.EqualTo(expected));
+        }
+
+        using var xmlReader = ExcelReaderFactory.CreateReader(
+            new MemoryStream(AllocationTestWorkbook.CreateXlsx(["<t>" + escaped + "</t>", "<t>" + new string('x', (int)Budget) + "</t>"], true)),
+            new ExcelReaderConfiguration { SharedStringStorageMode = mode, SharedStringSpillThreshold = Budget });
+        for (int pass = 0; pass < 2; pass++)
+        {
+            Assert.That(xmlReader.Read(), Is.True);
+            Assert.That(xmlReader.GetString(0), Is.EqualTo(expected));
+            xmlReader.Reset();
         }
     }
 

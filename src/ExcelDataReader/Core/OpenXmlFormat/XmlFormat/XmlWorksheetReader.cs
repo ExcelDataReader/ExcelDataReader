@@ -180,7 +180,8 @@ internal sealed class XmlWorksheetReader(XmlReader reader, WorksheetReadMode mod
         switch (cellType)
         {
             case AS:
-                if (int.TryParse(rawValue, style, CultureInfo.InvariantCulture, out var sstIndex))
+                if (TryParseUnsignedInt(rawValue, out var sstIndex) ||
+                    int.TryParse(rawValue, style, CultureInfo.InvariantCulture, out sstIndex))
                     return DecodedCellValue.SharedString(unchecked((uint)sstIndex));
 
                 return new DecodedCellValue(rawValue, CellValueKind.FormattedString);
@@ -198,11 +199,32 @@ internal sealed class XmlWorksheetReader(XmlReader reader, WorksheetReadMode mod
                 error = ConvertError(rawValue);
                 return default;
             default:
+                if (TryParseUnsignedInt(rawValue, out int integer))
+                    return new DecodedCellValue((double)integer);
                 if (double.TryParse(rawValue, style, CultureInfo.InvariantCulture, out double number))
                     return new DecodedCellValue(number);
 
                 return new DecodedCellValue(rawValue, CellValueKind.FormattedString);
         }
+    }
+
+    private static bool TryParseUnsignedInt(string value, out int result)
+    {
+        result = 0;
+
+        // Nine digits always fit; longer or non-decimal inputs use the general parser.
+        if (value.Length == 0 || value.Length > 9)
+            return false;
+
+        foreach (char c in value)
+        {
+            uint digit = (uint)(c - '0');
+            if (digit > 9)
+                return false;
+            result = result * 10 + (int)digit;
+        }
+
+        return true;
     }
 
     private static CellError? ConvertError(string value) => value switch

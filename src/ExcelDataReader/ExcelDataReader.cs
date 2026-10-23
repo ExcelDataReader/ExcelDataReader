@@ -201,20 +201,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         if (RowCells == null)
             throw new InvalidOperationException("No data exists for the row/column.");
 
-        var result = new CellStyle();
-        if (RowCells[i]?.EffectiveStyle is not { } effectiveStyle)
-        {
-            return result;
-        }
-
-        result.FontIndex = effectiveStyle.FontIndex;
-        result.NumberFormatIndex = effectiveStyle.NumberFormatIndex;
-        result.IndentLevel = effectiveStyle.IndentLevel;
-        result.HorizontalAlignment = effectiveStyle.HorizontalAlignment;
-        result.VerticalAlignment = effectiveStyle.VerticalAlignment;
-        result.Hidden = effectiveStyle.Hidden;
-        result.Locked = effectiveStyle.Locked;
-        return result;
+        return (RowCells[i]?.EffectiveStyle ?? ExtendedFormat.Zero).CellStyle;
     }
 
     public CellError? GetCellError(int i)

@@ -8,6 +8,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 internal sealed class BiffSharedStringsReader(Stream stream) : BiffReader(stream)
 {
     private const int StringItem = 0x13;
+    private char[]? _characters;
 
     public void Load(ISharedStringStore store)
     {
@@ -24,7 +25,32 @@ internal sealed class BiffSharedStringsReader(Stream stream) : BiffReader(stream
             uint length = GetDWord(buffer, 1);
             if (length > (recordLength - (1 + 4)) / 2)
                 throw new ExcelReaderException(Errors.ErrorBiffStringSize);
-            store.AddUtf16(buffer, 1 + 4, (int)length);
+            AddString(store, buffer, 1 + 4, (int)length);
         }
+    }
+
+    private void AddString(ISharedStringStore store, byte[] buffer, int offset, int length)
+    {
+        for (int i = 0; i + 1 < length; i++)
+        {
+            int position = offset + i * 2;
+            if (buffer[position] != '_' || buffer[position + 1] != 0 ||
+                buffer[position + 2] != 'x' || buffer[position + 3] != 0)
+            {
+                continue;
+            }
+
+            // Preserve raw UTF-16 code units, including unpaired surrogates, for disk storage.
+            var characters = _characters;
+            if (characters == null || characters.Length < length)
+                _characters = characters = new char[length];
+            for (int j = 0; j < length; j++)
+                characters[j] = (char)(buffer[offset + j * 2] | buffer[offset + j * 2 + 1] << 8);
+            string value = new(characters, 0, length);
+            store.Add(Helpers.ConvertEscapeChars(value));
+            return;
+        }
+
+        store.AddUtf16(buffer, offset, length);
     }
 }

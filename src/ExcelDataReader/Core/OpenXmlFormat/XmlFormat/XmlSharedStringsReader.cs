@@ -31,7 +31,7 @@ internal sealed class XmlSharedStringsReader(XmlReader reader, ISharedStringStor
         {
             if (Reader.NodeType == XmlNodeType.Element && Reader.LocalName == ElementStringItem)
             {
-                Store.Add(StringHelper.ReadStringItem(Reader, ProperNamespaces.NsSpreadsheetMl));
+                Store.Add(Helpers.ConvertEscapeChars(StringHelper.ReadStringItem(Reader, ProperNamespaces.NsSpreadsheetMl)));
             }
             else if (!XmlReaderHelper.SkipContent(Reader))
             {

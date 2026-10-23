@@ -2,6 +2,8 @@ namespace ExcelDataReader.Core;
 
 internal sealed class ExtendedFormat
 {
+    private CellStyle? _cellStyle;
+
     public ExtendedFormat(int numberFormatIndex)
     {
         NumberFormatIndex = numberFormatIndex;
@@ -24,6 +26,8 @@ internal sealed class ExtendedFormat
     }
 
     public static ExtendedFormat Zero { get; } = new();
+
+    public CellStyle CellStyle => _cellStyle ??= new CellStyle(this);
 
     /// <summary>
     /// Gets the to the parent Cell Style CF record with overrides for this XF. Only used with Cell XFs.

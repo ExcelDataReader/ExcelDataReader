@@ -87,42 +87,60 @@ public enum VerticalAlignment
 }
 
 /// <summary>
-/// Holds style information for a cell.
+/// Holds immutable style information for a cell.
 /// </summary>
 public class CellStyle
 {
     /// <summary>
+    /// Initializes a new instance of the <see cref="CellStyle"/> class with default values.
+    /// </summary>
+    public CellStyle()
+    {
+    }
+
+    internal CellStyle(Core.ExtendedFormat format)
+    {
+        FontIndex = format.FontIndex;
+        NumberFormatIndex = format.NumberFormatIndex;
+        IndentLevel = format.IndentLevel;
+        HorizontalAlignment = format.HorizontalAlignment;
+        VerticalAlignment = format.VerticalAlignment;
+        Hidden = format.Hidden;
+        Locked = format.Locked;
+    }
+
+    /// <summary>
     /// Gets the font index.
     /// </summary>
-    public int FontIndex { get; internal set; }
+    public int FontIndex { get; }
 
     /// <summary>
     /// Gets the number format index.
     /// </summary>
-    public int NumberFormatIndex { get; internal set; }
+    public int NumberFormatIndex { get; }
 
     /// <summary>
     /// Gets the indent level.
     /// </summary>
-    public int IndentLevel { get; internal set; }
+    public int IndentLevel { get; }
 
     /// <summary>
     /// Gets the horizontal alignment.
     /// </summary>
-    public HorizontalAlignment HorizontalAlignment { get; internal set; }
+    public HorizontalAlignment HorizontalAlignment { get; }
 
     /// <summary>
     /// Gets the vertical alignment.
     /// </summary>
-    public VerticalAlignment VerticalAlignment { get; internal set; }
+    public VerticalAlignment VerticalAlignment { get; }
 
     /// <summary>
     /// Gets a value indicating whether the cell is hidden.
     /// </summary>
-    public bool Hidden { get; internal set; }
+    public bool Hidden { get; }
 
     /// <summary>
     /// Gets a value indicating whether the cell is locked.
     /// </summary>
-    public bool Locked { get; internal set; }
+    public bool Locked { get; }
 }

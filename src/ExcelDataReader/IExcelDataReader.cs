@@ -109,7 +109,7 @@ public interface IExcelDataReader : IDataReader
     /// Gets the cell style.
     /// </summary>
     /// <param name="i">The index of the column to find.</param>
-    /// <returns>The cell style.</returns>
+    /// <returns>The immutable cell style, which may be shared by multiple cells.</returns>
     CellStyle GetCellStyle(int i);
 
     /// <summary>
