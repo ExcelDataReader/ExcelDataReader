@@ -58,6 +58,9 @@ internal sealed class OpenXmlRowOrder
             suffixMinimum[i] = minimum;
         }
 
+        // A boundary is safe only when the prefix maximum is strictly below the
+        // remaining suffix minimum. This keeps unseen lower rows and later equal
+        // fragments inside the same region until they can all be emitted in order.
         List<Region> regions = [];
         int maximum = int.MinValue;
         int start = 0;
@@ -101,6 +104,8 @@ internal sealed class OpenXmlRowOrder
 
     internal readonly record struct Region(int Start, int End);
 
+    // Count counts logical row groups, not fragments. Ordinal and OrdinalStep
+    // locate those groups in the physical fragment stream, including repetitions.
     private readonly record struct Run(int First, int Ordinal, int Step, int OrdinalStep, int Count)
     {
         public int Last => (int)(First + (Count - 1L) * Step);

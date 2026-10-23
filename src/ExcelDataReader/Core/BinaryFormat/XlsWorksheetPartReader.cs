@@ -82,22 +82,7 @@ internal sealed class XlsWorksheetPartReader(
                 }
 
                 var rowIndex = frame.RowIndex;
-                bool useDefaultRowHeight;
-                int rowHeight;
-                if (frame.Id == BIFFRECORDTYPE.ROW_V2)
-                {
-                    var heightBits = frame.ReadUInt16(6);
-                    useDefaultRowHeight = (heightBits & 0x8000) != 0;
-                    rowHeight = heightBits & 0x7FFFF;
-                }
-                else
-                {
-                    var heightBits = frame.ReadUInt16(6);
-                    var flags = frame.ReadUInt16(12);
-                    useDefaultRowHeight = (heightBits & 0x8000) != 0;
-                    rowHeight = (flags & 0x20) == 0 ? heightBits & 0x7FFFF : 0;
-                }
-
+                frame.ReadRowHeight(out bool useDefaultRowHeight, out int rowHeight);
                 SetMinMaxRow(metadata, rowIndex, useDefaultRowHeight, rowHeight);
                 maxRowCountFromRowRecord = Math.Max(maxRowCountFromRowRecord, rowIndex + 1);
                 continue;
