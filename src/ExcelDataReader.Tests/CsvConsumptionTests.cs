@@ -6,6 +6,77 @@ namespace ExcelDataReader.Tests;
 
 public class CsvConsumptionTests
 {
+    [TestCase(',', '"', '\\', true)]
+    [TestCase('\t', '"', '"', true)]
+    [TestCase('|', null, null, false)]
+    [TestCase(',', '\r', '\n', true)]
+    public void RunScanningMatchesCharacterSizedBuffers(char separator, char? quote, char? escape, bool trim)
+    {
+        var random = new Random(4721);
+        const string alphabet = "ab \t,\"|\\\r\né終";
+        for (int sample = 0; sample < 40; sample++)
+        {
+            var text = new char[random.Next(50, 2500)];
+            for (int i = 0; i < text.Length; i++)
+                text[i] = alphabet[random.Next(alphabet.Length)];
+            byte[] bytes = Encoding.UTF8.GetBytes(text);
+            foreach (var mode in new[] { WorksheetReadMode.Materialize, WorksheetReadMode.Scan })
+            {
+                var expected = Parse(1, mode);
+                Assert.That(Parse(1024, mode), Is.EqualTo(expected), $"Sample {sample}, mode {mode}");
+            }
+
+            List<string> Parse(int bufferSize, WorksheetReadMode mode)
+            {
+                var parser = new CsvParser(separator, Encoding.UTF8, quote, trim, escape, mode);
+                var handler = new ParserHandler(pause: true);
+                for (int start = 0; start < bytes.Length; start += bufferSize)
+                {
+                    int offset = start;
+                    int count = Math.Min(bufferSize, bytes.Length - start);
+                    while (parser.ParseBuffer(bytes, ref offset, ref count, ref handler) == WorksheetReadStatus.Paused)
+                    {
+                    }
+                }
+
+                while (parser.Flush(ref handler) == WorksheetReadStatus.Paused)
+                {
+                }
+
+                return handler.Events;
+            }
+        }
+    }
+
+    [TestCase(1)]
+    [TestCase(7)]
+    [TestCase(1024)]
+    public void RunsPreserveTrailingWhitespaceAcrossBuffersAndQuotedTransitions(int bufferSize)
+    {
+        string padding = new(' ', 1100);
+        string text = "\"a  \"" + padding + ",\"b\" \tX \t,\"c\t \",d\t \r\n";
+        byte[] bytes = Encoding.UTF8.GetBytes(text);
+        var parser = new CsvParser(',', Encoding.UTF8, '"');
+        var handler = new ParserHandler(pause: true);
+        for (int start = 0; start < bytes.Length; start += bufferSize)
+        {
+            int offset = start;
+            int count = Math.Min(bufferSize, bytes.Length - start);
+            while (parser.ParseBuffer(bytes, ref offset, ref count, ref handler) == WorksheetReadStatus.Paused)
+            {
+            }
+        }
+
+        while (parser.Flush(ref handler) == WorksheetReadStatus.Paused)
+        {
+        }
+
+        Assert.That(handler.Events, Is.EqualTo(new[]
+        {
+            "row:0", "field:0:a  ", "field:1:b \tX", "field:2:c\t ", "field:3:d", "end:4:False:False",
+        }));
+    }
+
     [TestCase(1)]
     [TestCase(2)]
     [TestCase(7)]

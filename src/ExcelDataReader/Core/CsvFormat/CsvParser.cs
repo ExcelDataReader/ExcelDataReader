@@ -146,6 +146,61 @@ internal sealed class CsvParser
         return WorksheetReadControl.Continue;
     }
 
+    private void ParseRun(bool quoted)
+    {
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        var remaining = _chars.AsSpan(_charOffset, _charCount - _charOffset);
+        int end;
+        if (!quoted)
+        {
+            end = remaining.IndexOfAny(_separator, '\r', '\n');
+        }
+        else
+        {
+            end = _quoteChar.HasValue
+                ? _escapeChar.HasValue ? remaining.IndexOfAny(_quoteChar.Value, _escapeChar.Value) : remaining.IndexOf(_quoteChar.Value)
+                : _escapeChar.HasValue ? remaining.IndexOf(_escapeChar.Value) : -1;
+        }
+
+        int length = end < 0 ? remaining.Length : end;
+#else
+        int end = _charOffset;
+        while (end < _charCount)
+        {
+            char c = _chars[end];
+            if (quoted ? c == _quoteChar || c == _escapeChar : c == _separator || c is '\r' or '\n')
+                break;
+            end++;
+        }
+
+        int length = end - _charOffset;
+#endif
+        if (!quoted)
+        {
+            if (_trimWhiteSpace)
+            {
+                int last = length - 1;
+                while (last >= 0 && IsWhitespace(_chars[_charOffset + last]))
+                    last--;
+                _trailingWhitespace = last < 0 ? _trailingWhitespace + length : length - last - 1;
+            }
+            else
+            {
+                _trailingWhitespace = 0;
+            }
+        }
+
+        _valueLength += length;
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        _value?.Append(remaining[..length]);
+#else
+        _value?.Append(_chars, _charOffset, length);
+#endif
+
+        // ParseBuffer advances past the final character after ParseChar returns.
+        _charOffset += length - 1;
+    }
+
     private bool ParseChar(char c)
     {
         switch (_state)
@@ -174,18 +229,32 @@ internal sealed class CsvParser
                 }
                 else
                 {
-                    _trailingWhitespace = _trimWhiteSpace && IsWhitespace(c) ? _trailingWhitespace + 1 : 0;
-                    Append(c);
+                    ParseRun(quoted: false);
                 }
 
                 return true;
             case CsvState.QuotedValue:
                 if (c == _quoteChar)
+                {
                     _state = CsvState.QuotedValueQuote;
+                }
                 else if (c == _escapeChar)
+                {
                     _state = CsvState.QuotedValueEscape;
+                }
                 else
+                {
+                    // Dense escaping has no useful text runs; leave it on the scalar path.
+                    if (_charOffset + 1 < _charCount &&
+                        _chars[_charOffset + 1] != _quoteChar && _chars[_charOffset + 1] != _escapeChar)
+                    {
+                        ParseRun(quoted: true);
+                        return true;
+                    }
+
                     Append(c);
+                }
+
                 return true;
             case CsvState.QuotedValueEscape:
                 Append(c);
