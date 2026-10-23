@@ -17,7 +17,6 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     private readonly IReadOnlyDictionary<int, NumberFormatString>? _formats;
     private readonly int _worksheetIndex;
 
-#pragma warning disable CS8618 // CodeName is intentionally nullable (null for sheets without x:CodeName), matching CsvWorksheet pattern
     private SpreadsheetXmlWorksheet(
         string name,
         string visibleState,
@@ -28,15 +27,14 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         int fieldCount,
         int rowCount,
         CellRange? dimension,
+        double defaultRowHeight,
         Stream stream,
         IReadOnlyDictionary<string, ExtendedFormat> stylesById,
         IReadOnlyDictionary<int, NumberFormatString>? formats,
         int worksheetIndex)
     {
         Name = name;
-#pragma warning disable CS8601 // Intentional: CodeName can be null for sheets without x:CodeName, matching the pattern of CsvWorksheet.CodeName
         CodeName = codeName;
-#pragma warning restore CS8601
         VisibleState = visibleState;
         HeaderFooter = headerFooter;
         ColumnWidths = columnWidths;
@@ -44,16 +42,16 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         FieldCount = fieldCount;
         RowCount = rowCount;
         Dimension = dimension;
+        DefaultRowHeight = defaultRowHeight;
         _stream = stream;
         _stylesById = stylesById;
         _formats = formats;
         _worksheetIndex = worksheetIndex;
     }
-#pragma warning restore CS8618
 
     public string Name { get; }
 
-    public string CodeName { get; }
+    public string? CodeName { get; }
 
     public string VisibleState { get; }
 
@@ -68,6 +66,8 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     public CellRange[] MergeCells { get; }
 
     public List<Column> ColumnWidths { get; }
+
+    public double DefaultRowHeight { get; }
 
     public static SpreadsheetXmlWorksheet Create(
         Stream stream,
@@ -93,34 +93,47 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 0,
                 0,
                 null,
+                15D,
                 stream,
                 stylesById,
                 formats,
                 worksheetIndex);
         }
 
-        using var workbookReader = CreateXmlReaderAtStart(stream, tolerateLeadingWhitespace: true);
-        int currentWorksheetIndex = -1;
-        while (workbookReader.Read())
+        var metadata = new MetadataSink(name, visibleState, codeName, headerFooter);
+        using (var reader = new SpreadsheetXmlWorksheetReader(
+            stream, worksheetIndex, stylesById, formats, WorksheetReadMode.Scan))
         {
-            if (workbookReader.NodeType != XmlNodeType.Element ||
-                workbookReader.LocalName != "Worksheet" ||
-                workbookReader.NamespaceURI != SpreadsheetNamespace)
+            while (reader.Consume(ref metadata) == WorksheetReadStatus.Paused)
             {
-                continue;
-            }
-
-            currentWorksheetIndex++;
-            if (currentWorksheetIndex == worksheetIndex)
-            {
-                return Scan(workbookReader.ReadSubtree(), stream, worksheetIndex, stylesById, formats);
             }
         }
 
-        throw new XmlException("Invalid SpreadsheetML worksheet.");
+        int fieldCount = metadata.MaxColumnIndex + 1;
+        int rowCount = metadata.MaxRowIndex + 1;
+        var dimension = fieldCount > 0 && rowCount > 0
+            ? new CellRange(0, 0, fieldCount - 1, rowCount - 1)
+            : null;
+
+        return new SpreadsheetXmlWorksheet(
+            metadata.Name,
+            metadata.VisibleState,
+            metadata.CodeName,
+            metadata.HeaderFooter,
+            metadata.ColumnWidths,
+            [.. metadata.MergeCells],
+            fieldCount,
+            rowCount,
+            dimension,
+            metadata.DefaultRowHeight,
+            stream,
+            stylesById,
+            formats,
+            worksheetIndex);
     }
 
-    public IEnumerable<Row> ReadRows() => StreamRows(_stream, _worksheetIndex, _stylesById, _formats);
+    public IWorksheetReader OpenReader()
+        => new SpreadsheetXmlWorksheetReader(_stream, _worksheetIndex, _stylesById, _formats, WorksheetReadMode.Materialize);
 
     internal static (string VisibleState, string? CodeName, HeaderFooter? HeaderFooter) ParseWorksheetOptions(XmlReader worksheetOptionsReader)
     {
@@ -169,8 +182,6 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                     continue;
                 }
 
-                // ReadElementContentAsString/Skip already advanced past the end tag.
-                // If the reader is now at another element, handle it without calling Read() first.
                 if (worksheetOptionsReader.NodeType == XmlNodeType.Element)
                     goto ReadCurrentNode;
             }
@@ -179,341 +190,28 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         var headerFooter = headerData != null || footerData != null
             ? new HeaderFooter(NormalizeHeaderFooter(footerData), NormalizeHeaderFooter(headerData))
             : null;
-
         return (visibleState, codeName, headerFooter);
     }
 
-    // Keep for callers that only need the visible state (e.g. workbook-level scan).
     internal static string ParseVisibleState(XmlReader worksheetOptionsReader)
         => ParseWorksheetOptions(worksheetOptionsReader).VisibleState;
 
-    private static SpreadsheetXmlWorksheet Scan(
-        XmlReader worksheetReader,
-        Stream stream,
-        int worksheetIndex,
-        IReadOnlyDictionary<string, ExtendedFormat> stylesById,
-        IReadOnlyDictionary<int, NumberFormatString>? formats)
+    private static int ReadIndex(XmlReader reader, int current)
     {
-        using (worksheetReader)
-        {
-            if (!worksheetReader.Read() || worksheetReader.NodeType != XmlNodeType.Element)
-                throw new XmlException("Invalid SpreadsheetML worksheet.");
-
-            var name = GetSpreadsheetAttribute(worksheetReader, "Name") ?? string.Empty;
-            var visibleState = "visible";
-            string? codeName = null;
-            HeaderFooter? headerFooter = null;
-            var columnWidths = new List<Column>();
-            var mergeCells = new List<CellRange>();
-            int maxColumn = -1;
-            int maxRow = -1;
-
-            while (worksheetReader.Read())
-            {
-                if (worksheetReader.NodeType != XmlNodeType.Element)
-                    continue;
-
-                if (worksheetReader.LocalName == "WorksheetOptions" && worksheetReader.NamespaceURI == ExcelNamespace)
-                {
-                    (visibleState, codeName, headerFooter) = ParseWorksheetOptions(worksheetReader.ReadSubtree());
-                }
-                else if (worksheetReader.LocalName == "Table" && worksheetReader.NamespaceURI == SpreadsheetNamespace)
-                {
-                    ScanTable(
-                        worksheetReader.ReadSubtree(),
-                        columnWidths,
-                        mergeCells,
-                        ref maxColumn,
-                        ref maxRow);
-                }
-            }
-
-            int fieldCount = maxColumn + 1;
-            int rowCount = maxRow + 1;
-            var dimension = fieldCount > 0 && rowCount > 0
-                ? new CellRange(0, 0, fieldCount - 1, rowCount - 1)
-                : null;
-
-            return new SpreadsheetXmlWorksheet(
-                name,
-                visibleState,
-                codeName,
-                headerFooter,
-                columnWidths,
-                [.. mergeCells],
-                fieldCount,
-                rowCount,
-                dimension,
-                stream,
-                stylesById,
-                formats,
-                worksheetIndex);
-        }
+        int index = ParseInt(GetSpreadsheetAttribute(reader, "Index"), -1);
+        return index > 0 ? index - 1 : current;
     }
 
-    private static IEnumerable<Row> StreamRows(
-        Stream stream,
-        int worksheetIndex,
-        IReadOnlyDictionary<string, ExtendedFormat> stylesById,
-        IReadOnlyDictionary<int, NumberFormatString>? formats)
-    {
-        using var workbookReader = CreateXmlReaderAtStart(stream, tolerateLeadingWhitespace: true);
-        int currentWorksheetIndex = -1;
-        while (workbookReader.Read())
-        {
-            if (workbookReader.NodeType != XmlNodeType.Element ||
-                workbookReader.LocalName != "Worksheet" ||
-                workbookReader.NamespaceURI != SpreadsheetNamespace)
-            {
-                continue;
-            }
+    private static int ReadCount(XmlReader reader, string attribute)
+        => Math.Max(0, ParseInt(GetSpreadsheetAttribute(reader, attribute)));
 
-            currentWorksheetIndex++;
-            if (currentWorksheetIndex != worksheetIndex)
-                continue;
+    private static bool IsCellElement(XmlReader reader)
+        => reader.NodeType == XmlNodeType.Element &&
+            reader.NamespaceURI == SpreadsheetNamespace &&
+            reader.LocalName == "Cell";
 
-            foreach (var row in StreamRowsFromWorksheet(workbookReader.ReadSubtree(), stylesById, formats))
-                yield return row;
-            yield break;
-        }
-    }
-
-    private static IEnumerable<Row> StreamRowsFromWorksheet(
-        XmlReader worksheetReader,
-        IReadOnlyDictionary<string, ExtendedFormat> stylesById,
-        IReadOnlyDictionary<int, NumberFormatString>? formats)
-    {
-        using (worksheetReader)
-        {
-            if (!worksheetReader.Read() || worksheetReader.NodeType != XmlNodeType.Element)
-                throw new XmlException("Invalid SpreadsheetML worksheet.");
-
-            while (worksheetReader.Read())
-            {
-                if (worksheetReader.NodeType == XmlNodeType.Element &&
-                    worksheetReader.LocalName == "Table" &&
-                    worksheetReader.NamespaceURI == SpreadsheetNamespace)
-                {
-                    foreach (var row in StreamRowsFromTable(worksheetReader.ReadSubtree(), stylesById, formats))
-                        yield return row;
-                    yield break;
-                }
-            }
-        }
-    }
-
-    private static IEnumerable<Row> StreamRowsFromTable(
-        XmlReader tableReader,
-        IReadOnlyDictionary<string, ExtendedFormat> stylesById,
-        IReadOnlyDictionary<int, NumberFormatString>? formats)
-    {
-        using (tableReader)
-        {
-            if (!tableReader.Read() || tableReader.NodeType != XmlNodeType.Element)
-                yield break;
-
-            int currentRowIndex = 0;
-            while (tableReader.Read())
-            {
-                if (tableReader.NodeType != XmlNodeType.Element ||
-                    tableReader.NamespaceURI != SpreadsheetNamespace ||
-                    tableReader.LocalName != "Row")
-                {
-                    continue;
-                }
-
-                var row = ParseRowForStreaming(
-                    tableReader.ReadSubtree(),
-                    stylesById,
-                    formats,
-                    currentRowIndex,
-                    out var rowSpan);
-
-                if (row.RowIndex < currentRowIndex)
-                    throw new XmlException("SpreadsheetML rows must be in ascending index order.");
-
-                while (row.RowIndex > currentRowIndex)
-                {
-                    yield return new Row(currentRowIndex, 15D, []);
-                    currentRowIndex++;
-                }
-
-                yield return row;
-                for (int i = 1; i <= rowSpan; i++)
-                {
-                    yield return new Row(row.RowIndex + i, row.Height, []);
-                }
-
-                currentRowIndex = row.RowIndex + rowSpan + 1;
-            }
-        }
-    }
-
-    private static Row ParseRowForStreaming(
-        XmlReader rowReader,
-        IReadOnlyDictionary<string, ExtendedFormat> stylesById,
-        IReadOnlyDictionary<int, NumberFormatString>? formats,
-        int currentRowIndex,
-        out int rowSpan)
-    {
-        using (rowReader)
-        {
-            rowSpan = 0;
-            if (!rowReader.Read() || rowReader.NodeType != XmlNodeType.Element)
-                return new Row(currentRowIndex, 15D, []);
-
-            int rowIndexFromAttribute = ParseInt(GetSpreadsheetAttribute(rowReader, "Index"), -1);
-            if (rowIndexFromAttribute > 0)
-                currentRowIndex = rowIndexFromAttribute - 1;
-
-            bool hidden = ParseBool(GetSpreadsheetAttribute(rowReader, "Hidden"));
-            rowSpan = Math.Max(0, ParseInt(GetSpreadsheetAttribute(rowReader, "Span")));
-            double rowHeight = hidden ? 0D : ParseDouble(GetSpreadsheetAttribute(rowReader, "Height"), 15D);
-            var cells = new List<Cell>();
-            int currentColumnIndex = 0;
-
-            while (rowReader.Read())
-            {
-                if (rowReader.NodeType != XmlNodeType.Element ||
-                    rowReader.NamespaceURI != SpreadsheetNamespace ||
-                    rowReader.LocalName != "Cell")
-                {
-                    continue;
-                }
-
-                int columnIndexFromAttribute = ParseInt(GetSpreadsheetAttribute(rowReader, "Index"), -1);
-                if (columnIndexFromAttribute > 0)
-                    currentColumnIndex = columnIndexFromAttribute - 1;
-
-                int mergeAcross = Math.Max(0, ParseInt(GetSpreadsheetAttribute(rowReader, "MergeAcross")));
-                int mergeDown = Math.Max(0, ParseInt(GetSpreadsheetAttribute(rowReader, "MergeDown")));
-                var styleId = GetSpreadsheetAttribute(rowReader, "StyleID");
-                var effectiveStyle = styleId != null && stylesById.TryGetValue(styleId, out var style)
-                    ? style
-                    : GetDefaultStyle(stylesById);
-
-                bool hasData = false;
-                var rawValue = ParseCellValue(rowReader.ReadSubtree(), out var cellError, out hasData);
-                var value = ConvertCellValue(rawValue, effectiveStyle, formats);
-
-                if (hasData || cellError != null || mergeAcross > 0 || mergeDown > 0)
-                {
-                    cells.Add(new Cell(currentColumnIndex, value, effectiveStyle, cellError));
-                }
-
-                currentColumnIndex += mergeAcross + 1;
-            }
-
-            return new Row(currentRowIndex, rowHeight, cells);
-        }
-    }
-
-    private static void ScanTable(
-        XmlReader tableReader,
-        List<Column> columnWidths,
-        List<CellRange> mergeCells,
-        ref int maxColumn,
-        ref int maxRow)
-    {
-        using (tableReader)
-        {
-            if (!tableReader.Read() || tableReader.NodeType != XmlNodeType.Element)
-                return;
-
-            int currentRowIndex = 0;
-            int currentColumnDefinition = 0;
-
-            while (tableReader.Read())
-            {
-                if (tableReader.NodeType != XmlNodeType.Element || tableReader.NamespaceURI != SpreadsheetNamespace)
-                    continue;
-
-                if (tableReader.LocalName == "Column")
-                {
-                    ParseColumn(tableReader, columnWidths, ref currentColumnDefinition);
-                }
-                else if (tableReader.LocalName == "Row")
-                {
-                    ScanRow(
-                        tableReader,
-                        mergeCells,
-                        ref currentRowIndex,
-                        ref maxColumn,
-                        ref maxRow);
-                }
-            }
-        }
-    }
-
-    private static void ParseColumn(XmlReader columnReader, List<Column> columnWidths, ref int currentColumn)
-    {
-        int columnIndexFromAttribute = ParseInt(GetSpreadsheetAttribute(columnReader, "Index"), -1);
-        if (columnIndexFromAttribute > 0)
-        {
-            currentColumn = columnIndexFromAttribute - 1;
-        }
-
-        int span = Math.Max(0, ParseInt(GetSpreadsheetAttribute(columnReader, "Span")));
-        bool hidden = ParseBool(GetSpreadsheetAttribute(columnReader, "Hidden"));
-        double? width = ParseColumnWidth(GetSpreadsheetAttribute(columnReader, "Width"));
-        columnWidths.Add(new Column(currentColumn, currentColumn + span, hidden, width));
-        currentColumn += span + 1;
-    }
-
-    private static void ScanRow(
-        XmlReader rowReader,
-        List<CellRange> mergeCells,
-        ref int currentRowIndex,
-        ref int maxColumn,
-        ref int maxRow)
-    {
-        int rowIndexFromAttribute = ParseInt(GetSpreadsheetAttribute(rowReader, "Index"), -1);
-        if (rowIndexFromAttribute > 0)
-        {
-            currentRowIndex = rowIndexFromAttribute - 1;
-        }
-
-        int rowSpan = Math.Max(0, ParseInt(GetSpreadsheetAttribute(rowReader, "Span")));
-        int currentColumnIndex = 0;
-        int rowDepth = rowReader.Depth;
-
-        if (!rowReader.IsEmptyElement)
-        {
-            while (rowReader.Read() && !(rowReader.NodeType == XmlNodeType.EndElement && rowReader.Depth == rowDepth))
-            {
-                if (rowReader.NodeType != XmlNodeType.Element ||
-                    rowReader.NamespaceURI != SpreadsheetNamespace ||
-                    rowReader.LocalName != "Cell")
-                {
-                    continue;
-                }
-
-                int columnIndexFromAttribute = ParseInt(GetSpreadsheetAttribute(rowReader, "Index"), -1);
-                if (columnIndexFromAttribute > 0)
-                {
-                    currentColumnIndex = columnIndexFromAttribute - 1;
-                }
-
-                int mergeAcross = Math.Max(0, ParseInt(GetSpreadsheetAttribute(rowReader, "MergeAcross")));
-                int mergeDown = Math.Max(0, ParseInt(GetSpreadsheetAttribute(rowReader, "MergeDown")));
-                bool hasData = ScanCell(rowReader);
-                if (hasData || mergeAcross > 0 || mergeDown > 0)
-                {
-                    maxColumn = Math.Max(maxColumn, currentColumnIndex + mergeAcross);
-                }
-
-                if (mergeAcross > 0 || mergeDown > 0)
-                {
-                    mergeCells.Add(new CellRange(currentColumnIndex, currentRowIndex, currentColumnIndex + mergeAcross, currentRowIndex + mergeDown));
-                }
-
-                currentColumnIndex += mergeAcross + 1;
-            }
-        }
-
-        maxRow = Math.Max(maxRow, currentRowIndex + rowSpan);
-        currentRowIndex += rowSpan + 1;
-    }
+    private static bool IsEndElementAt(XmlReader reader, int depth)
+        => reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth;
 
     private static bool ScanCell(XmlReader cellReader)
     {
@@ -522,7 +220,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
         int cellDepth = cellReader.Depth;
         bool hasData = false;
-        while (cellReader.Read() && !(cellReader.NodeType == XmlNodeType.EndElement && cellReader.Depth == cellDepth))
+        while (cellReader.Read() && !IsEndElementAt(cellReader, cellDepth))
         {
             if (cellReader.NodeType == XmlNodeType.Element &&
                 cellReader.Depth == cellDepth + 1 &&
@@ -542,56 +240,54 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         {
             NumberFormatString? fmt = null;
             formats?.TryGetValue(style.NumberFormatIndex, out fmt);
-#pragma warning disable CA1305 // Intentional: locale-independent check for IsTimeSpanFormat
+#pragma warning disable CA1305
             fmt ??= BuiltinNumberFormat.GetBuiltinNumberFormat(style.NumberFormatIndex);
 #pragma warning restore CA1305
             if (fmt?.IsTimeSpanFormat == true)
             {
                 if (value is double number)
                     return TimeSpan.FromDays(number);
-
                 if (value is SpreadsheetXmlDateTime dateTime)
                     return TimeSpan.FromDays(dateTime.SerialDate);
-
                 if (value is string text && TimeSpan.TryParse(text, CultureInfo.InvariantCulture, out var timeSpan))
                     return timeSpan;
             }
         }
 
-        if (value is SpreadsheetXmlDateTime date)
-            return date.Value;
-
-        return value;
+        return value is SpreadsheetXmlDateTime date ? date.Value : value;
     }
 
     private static object? ParseCellValue(XmlReader cellReader, out CellError? cellError, out bool hasData)
     {
         cellError = null;
         hasData = false;
+        if (cellReader.IsEmptyElement)
+            return null;
 
-        using (cellReader)
+        int cellDepth = cellReader.Depth;
+        object? result = null;
+        while (cellReader.Read() && !IsEndElementAt(cellReader, cellDepth))
         {
-            while (cellReader.Read())
+            if (cellReader.NodeType != XmlNodeType.Element ||
+                cellReader.Depth != cellDepth + 1 ||
+                cellReader.NamespaceURI != SpreadsheetNamespace ||
+                cellReader.LocalName != "Data")
             {
-                // The subtree reader starts at the Cell (depth 0). Only its own Data
-                // child holds the value; a Comment has a Data element of its own.
-                if (cellReader.NodeType != XmlNodeType.Element ||
-                    cellReader.Depth != 1 ||
-                    cellReader.NamespaceURI != SpreadsheetNamespace ||
-                    cellReader.LocalName != "Data")
-                {
-                    continue;
-                }
-
-                hasData = true;
-                var type = GetSpreadsheetAttribute(cellReader, "Type") ?? string.Empty;
-                var text = ReadElementText(cellReader);
-
-                return ParseDataText(type, text, out cellError);
+                continue;
             }
+
+            hasData = true;
+            var type = GetSpreadsheetAttribute(cellReader, "Type") ?? string.Empty;
+            var text = ReadElementText(cellReader);
+            result = ParseDataText(type, text, out cellError);
+            while (!IsEndElementAt(cellReader, cellDepth) && cellReader.Read())
+            {
+            }
+
+            break;
         }
 
-        return null;
+        return result;
     }
 
     private static object? ParseDataText(string type, string value, out CellError? cellError)
@@ -602,15 +298,12 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             case "Number":
                 return ParseDouble(value, 0D);
             case "DateTime":
-                if (TryParseSpreadsheetDateTime(value, out var dateTime))
-                    return dateTime;
-                return value;
+                return TryParseSpreadsheetDateTime(value, out var dateTime) ? dateTime : value;
             case "Boolean":
                 return ParseBool(value);
             case "Error":
                 cellError = ParseCellError(value);
                 return null;
-            case "String":
             default:
                 return value;
         }
@@ -630,10 +323,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     };
 
     private static string? NormalizeHeaderFooter(string? value)
-        => value?
-            .Replace("&V", "&L")
-            .Replace("&H", "&R")
-            .Replace("&S", "&P");
+        => value?.Replace("&V", "&L").Replace("&H", "&R").Replace("&S", "&P");
 
     private static ExtendedFormat GetDefaultStyle(IReadOnlyDictionary<string, ExtendedFormat> stylesById)
         => stylesById.TryGetValue("Default", out var defaultStyle) ? defaultStyle : ExtendedFormat.Zero;
@@ -641,11 +331,6 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     private static double? ParseColumnWidth(string? value)
     {
         var width = ParseNullableDouble(value);
-        if (width == null)
-            return null;
-
-        // SpreadsheetML stores column widths in points. The reader exposes the
-        // Excel character-width unit used by the binary and OpenXml readers.
         return width / 5.25D;
     }
 
@@ -659,12 +344,11 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
         string? result = null;
         StringBuilder? builder = null;
-        var depth = reader.Depth;
+        int depth = reader.Depth;
         while (reader.Read())
         {
             if (reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth)
                 break;
-
             if (reader.NodeType is XmlNodeType.Text or XmlNodeType.CDATA or XmlNodeType.SignificantWhitespace or XmlNodeType.Whitespace)
             {
                 if (result == null)
@@ -714,15 +398,13 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
                 SkipLeadingAsciiWhitespace(stream);
         }
 
-        var settings = new XmlReaderSettings
+        return XmlReader.Create(stream, new XmlReaderSettings
         {
             DtdProcessing = DtdProcessing.Prohibit,
             IgnoreComments = true,
             IgnoreWhitespace = false,
             CloseInput = false,
-        };
-
-        return XmlReader.Create(stream, settings);
+        });
     }
 
     private static void SkipLeadingAsciiWhitespace(Stream stream)
@@ -732,7 +414,6 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             int value = stream.ReadByte();
             if (value < 0)
                 return;
-
             if (!IsAsciiWhitespace((byte)value))
             {
                 stream.Seek(-1, SeekOrigin.Current);
@@ -764,5 +445,466 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         public DateTime Value { get; } = value;
 
         public double SerialDate { get; } = serialDate;
+    }
+
+    private struct MetadataSink(
+        string name,
+        string visibleState,
+        string? codeName,
+        HeaderFooter? headerFooter) : IWorksheetHandler
+    {
+        public string Name { get; } = name;
+        public string VisibleState { get; private set; } = visibleState;
+        public string? CodeName { get; private set; } = codeName;
+        public HeaderFooter? HeaderFooter { get; private set; } = headerFooter;
+        public List<Column> ColumnWidths { get; } = [];
+        public List<CellRange> MergeCells { get; } = [];
+        public int MaxRowIndex { get; private set; } = -1;
+        public int MaxColumnIndex { get; private set; } = -1;
+        public double DefaultRowHeight { get; private set; } = 15D;
+
+        public WorksheetReadControl OnDimension(CellRange range) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnCodeName(string? codeName)
+        {
+            CodeName = codeName;
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnDefaultRowHeight(double? height)
+        {
+            if (height.HasValue)
+                DefaultRowHeight = height.Value;
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnColumn(Column column)
+        {
+            ColumnWidths.Add(column);
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnMergeCell(CellRange range)
+        {
+            MergeCells.Add(range);
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnHeaderFooter(HeaderFooter headerFooter)
+        {
+            HeaderFooter = headerFooter;
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnSheetDataBegin() => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnScanResult(int maxRowIndex, int maxColumnIndex)
+        {
+            MaxRowIndex = Math.Max(MaxRowIndex, maxRowIndex);
+            MaxColumnIndex = Math.Max(MaxColumnIndex, maxColumnIndex);
+            return WorksheetReadControl.Continue;
+        }
+
+        public WorksheetReadControl OnRow(int index, bool hidden, double? height) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnCell(in Cell cell) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnRowEnd() => WorksheetReadControl.Continue;
+    }
+
+    private sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
+    {
+        private readonly XmlReader _reader;
+        private readonly int _worksheetIndex;
+        private readonly IReadOnlyDictionary<string, ExtendedFormat> _stylesById;
+        private readonly IReadOnlyDictionary<int, NumberFormatString>? _formats;
+        private readonly WorksheetReadMode _mode;
+
+        private bool _worksheetFound;
+        private bool _tableFound;
+        private bool _finished;
+        private bool _inputEnded;
+        private bool _scanResultSent;
+        private bool _defaultRowHeightSent;
+        private bool _dimensionSent;
+        private bool _optionCodeNamePending;
+        private bool _optionHeaderFooterPending;
+        private int _seenWorksheetIndex = -1;
+        private int _worksheetDepth = -1;
+        private int _tableDepth = -1;
+        private int _rowDepth = -1;
+        private int _currentRowIndex;
+        private int _currentRowSpan;
+        private int _currentRowSpanOffset;
+        private int _currentColumnIndex;
+        private bool _currentRowHidden;
+        private double? _currentRowHeight;
+        private double _currentRowEffectiveHeight;
+        private bool _rowOpen;
+        private bool _rowEmpty;
+        private bool _physicalRowPending;
+        private int _physicalRowIndex;
+        private int _physicalRowSpan;
+        private bool _physicalRowHidden;
+        private double? _physicalRowHeight;
+        private bool _spanBeginPending;
+        private bool _rowEndPending;
+        private bool _tableBeginSent;
+        private bool _mergePending;
+        private bool _cellPending;
+        private CellRange? _pendingMerge;
+        private Cell _pendingCell;
+        private string? _pendingCodeName;
+        private HeaderFooter? _pendingHeaderFooter;
+        private int _nextLogicalRow;
+        private int _maxRowIndex = -1;
+        private int _maxColumnIndex = -1;
+        private int _columnDefinitionIndex;
+        private bool _disposed;
+
+        public SpreadsheetXmlWorksheetReader(
+            Stream stream,
+            int worksheetIndex,
+            IReadOnlyDictionary<string, ExtendedFormat> stylesById,
+            IReadOnlyDictionary<int, NumberFormatString>? formats,
+            WorksheetReadMode mode)
+        {
+            _worksheetIndex = worksheetIndex;
+            _stylesById = stylesById;
+            _formats = formats;
+            _mode = mode;
+            _reader = CreateXmlReaderAtStart(stream, tolerateLeadingWhitespace: true);
+        }
+
+        public WorksheetReadStatus Consume<THandler>(ref THandler handler)
+            where THandler : struct, IWorksheetHandler
+        {
+            if (_finished)
+                return WorksheetReadStatus.EndOfInput;
+            if (_inputEnded)
+                return Finish(ref handler);
+
+            while (true)
+            {
+                if (!_defaultRowHeightSent)
+                {
+                    _defaultRowHeightSent = true;
+                    if (handler.OnDefaultRowHeight(15D) == WorksheetReadControl.Pause)
+                        return WorksheetReadStatus.Paused;
+                }
+
+                if (_optionCodeNamePending)
+                {
+                    _optionCodeNamePending = false;
+                    if (handler.OnCodeName(_pendingCodeName) == WorksheetReadControl.Pause)
+                        return WorksheetReadStatus.Paused;
+                    continue;
+                }
+
+                if (_optionHeaderFooterPending)
+                {
+                    _optionHeaderFooterPending = false;
+                    if (_pendingHeaderFooter != null && handler.OnHeaderFooter(_pendingHeaderFooter) == WorksheetReadControl.Pause)
+                        return WorksheetReadStatus.Paused;
+                    continue;
+                }
+
+                if (_mergePending)
+                {
+                    _mergePending = false;
+                    if (handler.OnMergeCell(_pendingMerge!) == WorksheetReadControl.Pause)
+                        return WorksheetReadStatus.Paused;
+                    continue;
+                }
+
+                if (_cellPending)
+                {
+                    _cellPending = false;
+                    if (handler.OnCell(in _pendingCell) == WorksheetReadControl.Pause)
+                        return WorksheetReadStatus.Paused;
+                    continue;
+                }
+
+                if (_spanBeginPending)
+                {
+                    _spanBeginPending = false;
+                    _currentRowIndex++;
+                    _currentRowSpanOffset++;
+                    _currentRowHeight = _currentRowEffectiveHeight;
+                    _rowOpen = true;
+                    _rowEmpty = true;
+                    if (EmitRowBegin(ref handler))
+                        return WorksheetReadStatus.Paused;
+                    continue;
+                }
+
+                if (_rowEndPending)
+                {
+                    _rowEndPending = false;
+                    bool hasSpannedRows = _mode == WorksheetReadMode.Materialize &&
+                        _currentRowSpanOffset < _currentRowSpan;
+                    if (hasSpannedRows)
+                    {
+                        _spanBeginPending = true;
+                    }
+                    else
+                    {
+                        _rowOpen = false;
+                        _nextLogicalRow = _mode == WorksheetReadMode.Scan
+                            ? _currentRowIndex + _currentRowSpan + 1
+                            : _currentRowIndex + 1;
+                    }
+
+                    if (_mode == WorksheetReadMode.Materialize && handler.OnRowEnd() == WorksheetReadControl.Pause)
+                        return WorksheetReadStatus.Paused;
+                    continue;
+                }
+
+                if (_rowOpen)
+                {
+                    if (_rowEmpty)
+                    {
+                        _rowEmpty = false;
+                        _rowEndPending = true;
+                        continue;
+                    }
+
+                    if (!_reader.Read())
+                    {
+                        _rowOpen = false;
+                        continue;
+                    }
+
+                    if (_reader.NodeType == XmlNodeType.EndElement && _reader.Depth == _rowDepth)
+                    {
+                        _rowEndPending = true;
+                        continue;
+                    }
+
+                    if (!IsCellElement(_reader))
+                        continue;
+
+                    _currentColumnIndex = ReadIndex(_reader, _currentColumnIndex);
+                    int mergeAcross = ReadCount(_reader, "MergeAcross");
+                    int mergeDown = ReadCount(_reader, "MergeDown");
+                    var styleId = GetSpreadsheetAttribute(_reader, "StyleID");
+                    var style = styleId != null && _stylesById.TryGetValue(styleId, out var foundStyle)
+                        ? foundStyle
+                        : GetDefaultStyle(_stylesById);
+
+                    object? value = null;
+                    CellError? error = null;
+                    bool hasData;
+                    if (_mode == WorksheetReadMode.Materialize)
+                    {
+                        value = ConvertCellValue(ParseCellValue(_reader, out error, out hasData), style, _formats);
+                    }
+                    else
+                    {
+                        hasData = ScanCell(_reader);
+                    }
+
+                    if (hasData || error != null || mergeAcross > 0 || mergeDown > 0)
+                    {
+                        _maxColumnIndex = Math.Max(_maxColumnIndex, _currentColumnIndex + mergeAcross);
+                        if (mergeAcross > 0 || mergeDown > 0)
+                        {
+                            _pendingMerge = new CellRange(
+                                _currentColumnIndex,
+                                _currentRowIndex,
+                                _currentColumnIndex + mergeAcross,
+                                _currentRowIndex + mergeDown);
+                            _mergePending = true;
+                        }
+
+                        if (_mode == WorksheetReadMode.Materialize)
+                        {
+                            _pendingCell = new Cell(_currentColumnIndex, value, style, error);
+                            _cellPending = true;
+                        }
+                    }
+
+                    _currentColumnIndex += mergeAcross + 1;
+                    continue;
+                }
+
+                if (_physicalRowPending)
+                {
+                    _physicalRowPending = false;
+                    if (_mode == WorksheetReadMode.Materialize && _physicalRowIndex < _nextLogicalRow)
+                        throw new XmlException("SpreadsheetML rows must be in ascending index order.");
+
+                    BeginPhysicalRow();
+                    if (EmitRowBegin(ref handler))
+                        return WorksheetReadStatus.Paused;
+                    continue;
+                }
+
+                if (!_worksheetFound)
+                {
+                    if (!FindWorksheet())
+                        return Finish(ref handler);
+                    if (_inputEnded)
+                        return Finish(ref handler);
+                }
+
+                if (!_reader.Read())
+                    return Finish(ref handler);
+
+                if (!_tableFound)
+                {
+                    if (_reader.NodeType == XmlNodeType.Element &&
+                        _reader.Depth == _worksheetDepth + 1 &&
+                        _reader.LocalName == "WorksheetOptions" &&
+                        _reader.NamespaceURI == ExcelNamespace)
+                    {
+                        var (visible, codeName, headerFooter) = ParseWorksheetOptions(_reader.ReadSubtree());
+                        _ = visible;
+                        _pendingCodeName = codeName;
+                        _pendingHeaderFooter = headerFooter;
+                        _optionCodeNamePending = true;
+                        _optionHeaderFooterPending = headerFooter != null;
+                        continue;
+                    }
+
+                    if (_reader.NodeType == XmlNodeType.Element &&
+                        _reader.Depth == _worksheetDepth + 1 &&
+                        _reader.LocalName == "Table" &&
+                        _reader.NamespaceURI == SpreadsheetNamespace)
+                    {
+                        _tableFound = true;
+                        _tableDepth = _reader.Depth;
+                        if (_reader.IsEmptyElement)
+                            _tableFound = false;
+                        continue;
+                    }
+
+                    if (_reader.NodeType == XmlNodeType.EndElement && _reader.Depth == _worksheetDepth)
+                        return Finish(ref handler);
+                    continue;
+                }
+
+                if (_reader.NodeType == XmlNodeType.EndElement && _reader.Depth == _tableDepth)
+                {
+                    _tableFound = false;
+                    continue;
+                }
+
+                if (_reader.NodeType != XmlNodeType.Element || _reader.Depth != _tableDepth + 1 ||
+                    _reader.NamespaceURI != SpreadsheetNamespace)
+                {
+                    continue;
+                }
+
+                if (_reader.LocalName == "Column")
+                {
+                    _columnDefinitionIndex = ReadIndex(_reader, _columnDefinitionIndex);
+                    int span = ReadCount(_reader, "Span");
+                    bool hidden = ParseBool(GetSpreadsheetAttribute(_reader, "Hidden"));
+                    double? width = ParseColumnWidth(GetSpreadsheetAttribute(_reader, "Width"));
+                    var column = new Column(_columnDefinitionIndex, _columnDefinitionIndex + span, hidden, width);
+                    _columnDefinitionIndex += span + 1;
+                    if (handler.OnColumn(column) == WorksheetReadControl.Pause)
+                        return WorksheetReadStatus.Paused;
+                    continue;
+                }
+
+                if (_reader.LocalName == "Row")
+                {
+                    _physicalRowIndex = ReadIndex(_reader, _nextLogicalRow);
+                    _physicalRowSpan = ReadCount(_reader, "Span");
+                    _physicalRowHidden = ParseBool(GetSpreadsheetAttribute(_reader, "Hidden"));
+                    _physicalRowHeight = ParseNullableDouble(GetSpreadsheetAttribute(_reader, "Height"));
+                    _physicalRowPending = true;
+                    if (!_tableBeginSent)
+                    {
+                        _tableBeginSent = true;
+                        if (handler.OnSheetDataBegin() == WorksheetReadControl.Pause)
+                            return WorksheetReadStatus.Paused;
+                    }
+
+                    continue;
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+            _disposed = true;
+            _reader.Dispose();
+        }
+
+        private bool FindWorksheet()
+        {
+            while (_reader.Read())
+            {
+                if (_reader.NodeType == XmlNodeType.Element &&
+                    _reader.LocalName == "Worksheet" &&
+                    _reader.NamespaceURI == SpreadsheetNamespace)
+                {
+                    _seenWorksheetIndex++;
+                    if (_seenWorksheetIndex == _worksheetIndex)
+                    {
+                        _worksheetFound = true;
+                        _worksheetDepth = _reader.Depth;
+                        _inputEnded = _reader.IsEmptyElement;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private void BeginPhysicalRow()
+        {
+            _currentRowIndex = _physicalRowIndex;
+            _currentRowSpan = _physicalRowSpan;
+            _currentRowSpanOffset = 0;
+            _currentRowHidden = _physicalRowHidden;
+            _currentRowHeight = _physicalRowHeight;
+            _currentRowEffectiveHeight = _physicalRowHidden ? 0D : _physicalRowHeight ?? 15D;
+            _currentColumnIndex = 0;
+            _rowDepth = _reader.Depth;
+            _rowEmpty = _reader.IsEmptyElement;
+            _rowOpen = true;
+            _maxRowIndex = Math.Max(_maxRowIndex, _currentRowIndex + _currentRowSpan);
+        }
+
+        private bool EmitRowBegin<THandler>(ref THandler handler)
+            where THandler : struct, IWorksheetHandler
+        {
+            if (_mode != WorksheetReadMode.Materialize)
+                return false;
+
+            return handler.OnRow(_currentRowIndex, _currentRowHidden, _currentRowHeight) == WorksheetReadControl.Pause;
+        }
+
+        private WorksheetReadStatus Finish<THandler>(ref THandler handler)
+            where THandler : struct, IWorksheetHandler
+        {
+            _inputEnded = true;
+            if (!_scanResultSent)
+            {
+                if (!_dimensionSent)
+                {
+                    _dimensionSent = true;
+                    if (_maxRowIndex >= 0 && _maxColumnIndex >= 0 &&
+                        handler.OnDimension(new CellRange(0, 0, _maxColumnIndex, _maxRowIndex)) == WorksheetReadControl.Pause)
+                    {
+                        return WorksheetReadStatus.Paused;
+                    }
+                }
+
+                _scanResultSent = true;
+                if (handler.OnScanResult(_maxRowIndex, _maxColumnIndex) == WorksheetReadControl.Pause)
+                    return WorksheetReadStatus.Paused;
+            }
+
+            _finished = true;
+            return WorksheetReadStatus.EndOfInput;
+        }
     }
 }

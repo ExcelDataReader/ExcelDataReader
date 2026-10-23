@@ -6,7 +6,10 @@ using ExcelDataReader.Exceptions;
 namespace ExcelDataReader.Core.BinaryFormat;
 
 /// <summary>
-/// Represents a BIFF stream.
+/// Represents a BIFF stream. Every record is read through <see cref="ReadWorksheetRecord"/>:
+/// common cells borrow a reusable buffer and are valid until the next read, while all other
+/// records are owned and released with <see cref="XlsWorksheetRecord.Release"/>.
+/// Reads must stay sequential so the RC4/XOR decryptor remains aligned.
 /// </summary>
 internal sealed class XlsBiffStream : IDisposable
 {
@@ -19,6 +22,7 @@ internal sealed class XlsBiffStream : IDisposable
     private readonly byte[] _headerBuffer = new byte[4];
 
     private readonly byte[] _readAheadBuffer = new byte[ReadAheadSize];
+    private byte[]? _cellBuffer;
     private int _readAheadStart;
     private int _readAheadEnd;
 
@@ -32,14 +36,14 @@ internal sealed class XlsBiffStream : IDisposable
         BaseStream = baseStream;
         Position = offset;
 
-        var record = Read();
+        var record = ReadNextOwnedRecord();
         if (record is XlsBiffBOF bof)
         {
             BiffVersion = explicitVersion == 0 ? XlsBiffStream.GetBiffVersion(bof) : explicitVersion;
             BiffType = bof.Type;
 
             if (secretKey == null)
-                record = Read();
+                record = ReadNextOwnedRecord();
         }
         else if (explicitVersion > 0 && defaultType != null) 
         {
@@ -57,7 +61,7 @@ internal sealed class XlsBiffStream : IDisposable
         else
         {
             var filePass = record as XlsBiffFilePass;
-            filePass ??= Read() as XlsBiffFilePass;
+            filePass ??= ReadNextOwnedRecord() as XlsBiffFilePass;
 
             if (filePass != null)
             {
@@ -123,6 +127,10 @@ internal sealed class XlsBiffStream : IDisposable
         set => _sharedStringStore = value;
     }
 
+    public static bool IsIgnoredMetadataRecord(XlsBiffRecord record) =>
+        record.GetType() == typeof(XlsBiffRecord) &&
+        record.Id is not BIFFRECORDTYPE.WINDOW1 and not BIFFRECORDTYPE.IXFE;
+
     /// <summary>
     /// Sets stream pointer to the specified offset.
     /// </summary>
@@ -147,42 +155,122 @@ internal sealed class XlsBiffStream : IDisposable
         }
     }
 
-    /// <summary>
-    /// Reads record under cursor and advances cursor position to next record.
-    /// </summary>
-    /// <returns>The record -or- null.</returns>
-    public XlsBiffRecord? Read()
+    // A formula's string result follows it in an optional SHAREDFMLA and a STRING record.
+    // Returns the STRING record (owned by the caller) or null when the data does not match.
+    public XlsBiffFormulaString? ReadFormulaStringRecord()
     {
-        // Minimum record size is 4
-        if ((uint)Position + 4 >= Size)
-            return null;
-
-        var record = GetRecord(BaseStream);
-
-        if (Position > Size)
+        var record = ReadNextOwnedRecord();
+        if (record is { Id: BIFFRECORDTYPE.SHAREDFMLA })
         {
-            record = null;
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+            record.Return();
+#endif
+            record = ReadNextOwnedRecord();
         }
 
-        return record;
+        if (record is { Id: BIFFRECORDTYPE.STRING })
+            return (XlsBiffFormulaString)record;
+
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        record?.Return();
+#endif
+        return null;
     }
 
-    /// <summary>
-    /// Returns record at specified offset.
-    /// </summary>
-    /// <param name="stream">The stream.</param>
-    /// <returns>The record -or- null.</returns>
-    public XlsBiffRecord? GetRecord(Stream stream)
+    // Reads the next record for callers that need a typed record rather than a cell frame.
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    public XlsBiffRecord? ReadNextOwnedRecord() =>
+        ReadWorksheetRecord(out var item) ? item.OwnedRecord : null;
+
+    // Workbook-global records only: returns the next owned record and drops cells
+    // and generic records that metadata consumers never inspect.
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    public XlsBiffRecord? ReadMetadataRecord()
     {
-        // Capture the logical record start before consuming header bytes from the read-ahead
-        // buffer; this is the value DecryptRecord() needs for its block-number calculation.
-        var recordOffset = Position;
-        ReadFromReadAhead(_headerBuffer, 0, 4);
+        while (ReadWorksheetRecord(out var item))
+        {
+            if (item.IsCell || IsIgnoredMetadataRecord(item.OwnedRecord!))
+            {
+                item.Release();
+                continue;
+            }
 
-        // Does this work on a big endian system?
-        var id = (BIFFRECORDTYPE)BitConverter.ToUInt16(_headerBuffer, 0);
-        ushort recordSize = BitConverter.ToUInt16(_headerBuffer, 2);
+            return item.OwnedRecord;
+        }
 
+        return null;
+    }
+
+    // Fixed-layout worksheet cells borrow the reusable buffer. The result distinguishes
+    // cell frames from owned metadata and carries any owned cell record for release.
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public bool ReadWorksheetRecord(out XlsWorksheetRecord result)
+    {
+        result = default;
+        int streamSize = Size;
+        if ((uint)Position + 4 >= streamSize)
+            return false;
+
+        ReadFrameHeader(out var recordOffset, out var id, out var recordSize);
+        if (CanBorrowCell(id, recordSize) && (long)recordOffset + 4 + recordSize <= streamSize)
+        {
+            int size = 4 + recordSize;
+            if (_cellBuffer == null || _cellBuffer.Length < size)
+                _cellBuffer = new byte[Math.Max(64, size)];
+            ReadFramePayload(recordOffset, id, recordSize, _cellBuffer);
+            if (Position > Size)
+                return false;
+            var cell = new XlsCellFrame(_cellBuffer);
+            if (id == BIFFRECORDTYPE.MULRK && cell.LastColumnIndex != cell.ColumnIndex + (recordSize - 6) / 6 - 1)
+            {
+                var bytes = AllocateRecordBuffer(recordSize);
+                Buffer.BlockCopy(_cellBuffer, 0, bytes, 0, size);
+                var record = GetRecord(bytes, id);
+                result = XlsWorksheetRecord.ForCell(new XlsCellFrame(record.Bytes), record);
+            }
+            else
+            {
+                result = XlsWorksheetRecord.ForCell(cell, null);
+            }
+
+            return true;
+        }
+
+        var ownedRecord = ReadOwnedRecord(recordOffset, id, recordSize);
+        if (Position <= Size)
+        {
+            result = ownedRecord is XlsBiffBlankCell
+                ? XlsWorksheetRecord.ForCell(new XlsCellFrame(ownedRecord.Bytes), ownedRecord)
+                : XlsWorksheetRecord.ForRecord(ownedRecord);
+            return true;
+        }
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        ownedRecord.Return();
+#endif
+        return false;
+    }
+
+    public void Dispose()
+    {
+        CipherTransform?.Dispose();
+        Cipher?.Dispose();
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    private static bool CanBorrowCell(BIFFRECORDTYPE id, ushort size) => id switch
+    {
+        BIFFRECORDTYPE.NUMBER => size >= 14,
+        BIFFRECORDTYPE.LABELSST or BIFFRECORDTYPE.RK => size >= 10,
+
+        // Reuse only the bounded, ordinary packed-cell layout. Malformed or
+        // oversized packed records retain the original owned-record decoder.
+        BIFFRECORDTYPE.MULRK => size >= 12 && size <= 1542 && (size - 6) % 6 == 0,
+        _ => false,
+    };
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    private static byte[] AllocateRecordBuffer(ushort recordSize)
+    {
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
         // Records at or below SmallRecordPoolThreshold bytes use a plain heap allocation.
         // ArrayPool.Rent+Return overhead exceeds the benefit for these tiny buffers.
@@ -194,12 +282,77 @@ internal sealed class XlsBiffStream : IDisposable
 #else
         var bytes = new byte[4 + recordSize];
 #endif
-        Array.Copy(_headerBuffer, bytes, 4);
-        ReadFromReadAhead(bytes, 4, recordSize);
-        
-        if (SecretKey != null)
-            DecryptRecord(recordOffset, id, bytes, 4 + recordSize);
+        return bytes;
+    }
 
+    private static int GetBiffVersion(XlsBiffBOF bof)
+    {
+        switch (bof.Id)
+        {
+            case BIFFRECORDTYPE.BOF_V2:
+                return 2;
+            case BIFFRECORDTYPE.BOF_V3:
+                return 3;
+            case BIFFRECORDTYPE.BOF_V4:
+                return 4;
+            case BIFFRECORDTYPE.BOF:
+                if (bof.Version == 0x200)
+                    return 2;
+                else if (bof.Version == 0x300)
+                    return 3;
+                else if (bof.Version == 0x400)
+                    return 4;
+                else if (bof.Version == 0x500 || bof.Version == 0)
+                    return 5;
+                if (bof.Version == 0x600)
+                    return 8;
+                break;
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Decrypts <paramref name="count"/> bytes starting at <paramref name="inputOffset"/>. The BIFF RC4 and XOR
+    /// transforms are stream ciphers that process any count in TransformBlock, so call them directly instead of
+    /// allocating a CryptoStream per chunk.
+    /// </summary>
+    private static void Transform(ICryptoTransform transform, byte[] input, int inputOffset, int count, byte[] output)
+    {
+        if (transform is RC4Managed.RC4Transform or XorManaged.XorTransform)
+            transform.TransformBlock(input, inputOffset, count, output, 0);
+        else
+            CryptoHelpers.DecryptBytes(transform, input, inputOffset, count, output);
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    private void ReadFrameHeader(out int offset, out BIFFRECORDTYPE id, out ushort size)
+    {
+        offset = Position;
+        ReadFromReadAhead(_headerBuffer, 0, 4);
+        id = (BIFFRECORDTYPE)BitConverter.ToUInt16(_headerBuffer, 0);
+        size = BitConverter.ToUInt16(_headerBuffer, 2);
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    private void ReadFramePayload(int offset, BIFFRECORDTYPE id, ushort size, byte[] bytes)
+    {
+        Array.Copy(_headerBuffer, bytes, 4);
+        ReadFromReadAhead(bytes, 4, size);
+        if (SecretKey != null)
+            DecryptRecord(offset, id, bytes, 4 + size);
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    private XlsBiffRecord ReadOwnedRecord(int recordOffset, BIFFRECORDTYPE id, ushort recordSize)
+    {
+        var bytes = AllocateRecordBuffer(recordSize);
+        ReadFramePayload(recordOffset, id, recordSize, bytes);
+        return GetRecord(bytes, id);
+    }
+
+    private XlsBiffRecord GetRecord(byte[] bytes, BIFFRECORDTYPE id)
+    {
         int biffVersion = BiffVersion;
 
         switch (id)
@@ -211,9 +364,6 @@ internal sealed class XlsBiffStream : IDisposable
                 return new XlsBiffBOF(bytes);
             case BIFFRECORDTYPE.EOF:
                 return new XlsBiffEof(bytes);
-            case BIFFRECORDTYPE.INTERFACEHDR:
-                return new XlsBiffInterfaceHdr(bytes);
-
             case BIFFRECORDTYPE.SST:
                 return new XlsBiffSST(bytes, SharedStringStore);
 
@@ -296,52 +446,6 @@ internal sealed class XlsBiffStream : IDisposable
             default:
                 return new XlsBiffRecord(bytes);
         }
-    }
-
-    public void Dispose()
-    {
-        CipherTransform?.Dispose();
-        Cipher?.Dispose();
-    }
-
-    private static int GetBiffVersion(XlsBiffBOF bof)
-    {
-        switch (bof.Id)
-        {
-            case BIFFRECORDTYPE.BOF_V2:
-                return 2;
-            case BIFFRECORDTYPE.BOF_V3:
-                return 3;
-            case BIFFRECORDTYPE.BOF_V4:
-                return 4;
-            case BIFFRECORDTYPE.BOF:
-                if (bof.Version == 0x200)
-                    return 2;
-                else if (bof.Version == 0x300)
-                    return 3;
-                else if (bof.Version == 0x400)
-                    return 4;
-                else if (bof.Version == 0x500 || bof.Version == 0)
-                    return 5;
-                if (bof.Version == 0x600)
-                    return 8;
-                break;
-        }
-
-        return 0;
-    }
-
-    /// <summary>
-    /// Decrypts <paramref name="count"/> bytes starting at <paramref name="inputOffset"/>. The BIFF RC4 and XOR
-    /// transforms are stream ciphers that process any count in TransformBlock, so call them directly instead of
-    /// allocating a CryptoStream per chunk.
-    /// </summary>
-    private static void Transform(ICryptoTransform transform, byte[] input, int inputOffset, int count, byte[] output)
-    {
-        if (transform is RC4Managed.RC4Transform or XorManaged.XorTransform)
-            transform.TransformBlock(input, inputOffset, count, output, 0);
-        else
-            CryptoHelpers.DecryptBytes(transform, input, inputOffset, count, output);
     }
 
     // Serves 'count' bytes into dest[destOffset..], draining the read-ahead buffer first.

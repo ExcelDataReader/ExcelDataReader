@@ -1,44 +1,14 @@
 using System.Text;
 
-using ExcelDataReader.Core.OpenXmlFormat.Records;
-
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 
-internal abstract class BiffReader(Stream stream) : RecordReader
+internal abstract class BiffReader(Stream stream) : IDisposable
 {
     private readonly byte[] _buffer = new byte[512];
 
     private Stream Stream { get; } = stream ?? throw new ArgumentNullException(nameof(stream));
 
-    public override Record? Read()
-    {
-        if (!TryReadVariableValue(out var recordId) ||
-            !TryReadVariableValue(out var recordLength))
-            return null;
-
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        bool rented = recordLength >= _buffer.Length;
-        byte[] buffer = rented
-            ? System.Buffers.ArrayPool<byte>.Shared.Rent((int)recordLength)
-            : _buffer;
-#else
-        byte[] buffer = recordLength < _buffer.Length ? _buffer : new byte[recordLength];
-#endif
-        try
-        {
-            if (Stream.ReadAtLeast(buffer, 0, (int)recordLength) != recordLength)
-                return null;
-
-            return ReadOverride(buffer, recordId, recordLength);
-        }
-        finally
-        {
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-            if (rented)
-                System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
-#endif
-        }
-    }
+    public virtual void Dispose() => Stream.Dispose();
 
     protected static uint GetDWord(byte[] buffer, uint offset)
     {
@@ -120,13 +90,60 @@ internal abstract class BiffReader(Stream stream) : RecordReader
         return BitConverter.Int64BitsToDouble(num3);
     }
 
-    protected abstract Record ReadOverride(byte[] buffer, uint recordId, uint recordLength);
-
-    /// <inheritdoc />
-    protected override void Dispose(bool disposing)
+    // A successful frame is borrowed until ReleaseFrame on pooled targets.
+    // Keep non-pooled framing inlineable without unnecessary cleanup regions.
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    protected bool TryReadFrame(out byte[] buffer, out uint recordId, out uint recordLength)
     {
-        if (disposing)
-            Stream.Dispose();
+        buffer = _buffer;
+        recordLength = 0;
+        if (!TryReadVariableValue(out recordId) ||
+            !TryReadVariableValue(out recordLength))
+            return false;
+
+        buffer = GetFrameBuffer(recordLength);
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        try
+        {
+            if (Stream.ReadAtLeast(buffer, 0, (int)recordLength) != recordLength)
+            {
+                ReleaseFrame(buffer);
+                return false;
+            }
+
+            return true;
+        }
+        catch
+        {
+            ReleaseFrame(buffer);
+            throw;
+        }
+#else
+        return Stream.ReadAtLeast(buffer, 0, (int)recordLength) == recordLength;
+#endif
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Instance state is only used on pooled targets.")]
+    protected void ReleaseFrame(byte[] buffer)
+    {
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        if (ReferenceEquals(buffer, _buffer))
+            return;
+
+        System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+#endif
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    private byte[] GetFrameBuffer(uint recordLength)
+    {
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        return recordLength >= _buffer.Length
+            ? System.Buffers.ArrayPool<byte>.Shared.Rent((int)recordLength)
+            : _buffer;
+#else
+        return recordLength < _buffer.Length ? _buffer : new byte[recordLength];
+#endif
     }
 
     private bool TryReadVariableValue(out uint value)
@@ -164,5 +181,5 @@ internal abstract class BiffReader(Stream stream) : RecordReader
         value = ((uint)(b4 & 0x7F) << 21) | value;
 
         return true;
-    }        
+    }
 }

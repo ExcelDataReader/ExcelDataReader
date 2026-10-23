@@ -1,7 +1,7 @@
 ﻿namespace ExcelDataReader.Core;
 
 /// <summary>
-/// The common worksheet interface between the binary and OpenXml formats.
+/// Common worksheet metadata and push-reader creation across supported formats.
 /// </summary>
 internal interface IWorksheet
 {
@@ -23,5 +23,7 @@ internal interface IWorksheet
 
     List<Column> ColumnWidths { get; }
 
-    IEnumerable<Row> ReadRows();
+    double DefaultRowHeight { get; }
+
+    IWorksheetReader OpenReader();
 }

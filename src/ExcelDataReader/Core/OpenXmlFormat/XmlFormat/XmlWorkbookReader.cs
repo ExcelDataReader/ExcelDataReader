@@ -1,11 +1,11 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Xml;
 
 using ExcelDataReader.Core.OpenXmlFormat.Records;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
-internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, string> worksheetsRels) : XmlRecordReader(reader)
+internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, string> worksheetsRels)
 {
     private const string ElementWorkbook = "workbook";
     private const string ElementWorkbookProperties = "workbookPr";
@@ -18,91 +18,82 @@ internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, str
     private const string AttributeRelationshipId = "id";
 
     private readonly Dictionary<string, string> _worksheetsRels = worksheetsRels;
+    private readonly XmlProperNamespaces _properNamespaces = new(reader.IsStartElement() && reader.NamespaceURI == XmlNamespaces.StrictNsSpreadsheetMl);
 
-    protected override IEnumerable<Record> ReadOverride()
+    public void Load(IWorkbookPartSink sink)
     {
-        if (!CheckStartElementAndApplyNamespaces(ElementWorkbook))
+        if (!reader.IsStartElement(ElementWorkbook, _properNamespaces.NsSpreadsheetMl))
         {
-            yield break;
+            return;
         }
 
-        if (!XmlReaderHelper.ReadFirstContent(Reader))
+        if (!XmlReaderHelper.ReadFirstContent(reader))
         {
-            yield break;
+            return;
         }
 
-        while (!Reader.EOF)
+        while (!reader.EOF)
         {
-            if (Reader.IsStartElement(ElementWorkbookProperties, ProperNamespaces.NsSpreadsheetMl))
+            if (reader.IsStartElement(ElementWorkbookProperties, _properNamespaces.NsSpreadsheetMl))
             {
                 // Workbook VBA CodeName: reader.GetAttribute("codeName");
-                bool date1904 = Reader.GetAttribute("date1904") is "1" or "true";
-                yield return new WorkbookPrRecord(date1904);
-                Reader.Skip();
+                bool date1904 = reader.GetAttribute("date1904") is "1" or "true";
+                sink.SetDate1904(date1904);
+                reader.Skip();
             }
-            else if (Reader.IsStartElement(ElementSheets, ProperNamespaces.NsSpreadsheetMl))
+            else if (reader.IsStartElement(ElementSheets, _properNamespaces.NsSpreadsheetMl))
             {
-                if (!XmlReaderHelper.ReadFirstContent(Reader))
+                if (!XmlReaderHelper.ReadFirstContent(reader))
                 {
                     continue;
                 }
 
-                while (!Reader.EOF)
+                while (!reader.EOF)
                 {
-                    if (Reader.IsStartElement(ElementSheet, ProperNamespaces.NsSpreadsheetMl))
+                    if (reader.IsStartElement(ElementSheet, _properNamespaces.NsSpreadsheetMl))
                     {
-                        var rid = Reader.GetAttribute(AttributeRelationshipId, ProperNamespaces.NsDocumentRelationship);
-                        var sheetId = Reader.GetAttribute(AttributeSheetId);
-                        yield return new SheetRecord(
-                            Reader.GetAttribute(AttributeName),
+                        var rid = reader.GetAttribute(AttributeRelationshipId, _properNamespaces.NsDocumentRelationship);
+                        var sheetId = reader.GetAttribute(AttributeSheetId);
+                        sink.AddSheet(new SheetRecord(
+                            reader.GetAttribute(AttributeName),
                             uint.TryParse(sheetId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedSheetId) ? parsedSheetId : 0,
                             rid,
-                            Reader.GetAttribute(AttributeVisibleState),
-                            rid != null && _worksheetsRels.TryGetValue(rid, out var path) ? path : null);
-                        Reader.Skip();
+                            reader.GetAttribute(AttributeVisibleState),
+                            rid != null && _worksheetsRels.TryGetValue(rid, out var path) ? path : null));
+                        reader.Skip();
                     }
-                    else if (!XmlReaderHelper.SkipContent(Reader))
+                    else if (!XmlReaderHelper.SkipContent(reader))
                     {
                         break;
                     }
                 }
             }
-            else if (Reader.IsStartElement("bookViews", ProperNamespaces.NsSpreadsheetMl))
+            else if (reader.IsStartElement("bookViews", _properNamespaces.NsSpreadsheetMl))
             {
-                if (!XmlReaderHelper.ReadFirstContent(Reader))
+                if (!XmlReaderHelper.ReadFirstContent(reader))
                 {
                     continue;
                 }
 
-                while (!Reader.EOF)
+                while (!reader.EOF)
                 {
-                    if (Reader.IsStartElement("workbookView", ProperNamespaces.NsSpreadsheetMl))
+                    if (reader.IsStartElement("workbookView", _properNamespaces.NsSpreadsheetMl))
                     {
-                        string? activeTab = Reader.GetAttribute("activeTab");
+                        string? activeTab = reader.GetAttribute("activeTab");
                         int activeTabInt = int.TryParse(activeTab, out var result) ? result : 0;
-                        yield return new WorkbookActRecord(activeTabInt);
-                        Reader.Skip();
+                        sink.SetActiveSheet(activeTabInt);
+                        reader.Skip();
                     }
-                    else if (!XmlReaderHelper.SkipContent(Reader))
+                    else if (!XmlReaderHelper.SkipContent(reader))
                     {
                         break;
                     }
                 }
             }
-            else if (!XmlReaderHelper.SkipContent(Reader))
+            else if (!XmlReaderHelper.SkipContent(reader))
             {
-                yield break;
+                return;
             }
         }
-    }
-
-    private bool CheckStartElementAndApplyNamespaces(string element)
-    {
-        if (Reader.IsStartElement(element, ProperNamespaces.NsSpreadsheetMl))
-        {
-            return true;
-        }
-
-        return false;
     }
 }

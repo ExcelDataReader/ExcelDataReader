@@ -29,7 +29,7 @@ internal static class CsvAnalyzer
         {
             separatorInfos[i] = new SeparatorInfo
             {
-                Buffer = new CsvParser(separators[i], autodetectEncoding, quoteChar, trimWhiteSpace, escapeChar)
+                Buffer = new CsvParser(separators[i], autodetectEncoding, quoteChar, trimWhiteSpace, escapeChar, WorksheetReadMode.Scan)
             };
         }
 
@@ -113,17 +113,10 @@ internal static class CsvAnalyzer
         {
             SeparatorInfo separatorInfo = separatorInfos[i];
 
-            separatorInfo.Buffer.ParseBuffer(bytes, offset, count, out var rows);
-
-            foreach (var row in rows)
-            {
-                // Ignore empty rows
-                if (row.Count == 1 && row[0].Length == 0)
-                    continue;
-                separatorInfo.MaxFieldCount = Math.Max(separatorInfo.MaxFieldCount, row.Count);
-                separatorInfo.SumFieldCount += row.Count;
-                separatorInfo.RowCount++;
-            }
+            int candidateOffset = offset;
+            int candidateCount = count;
+            var handler = new CountingHandler(separatorInfo);
+            separatorInfo.Buffer.ParseBuffer(bytes, ref candidateOffset, ref candidateCount, ref handler);
         }
     }
 
@@ -133,14 +126,8 @@ internal static class CsvAnalyzer
         {
             SeparatorInfo separatorInfo = separatorInfos[i];
 
-            separatorInfo.Buffer.Flush(out var rows);
-
-            foreach (var row in rows)
-            {
-                separatorInfo.MaxFieldCount = Math.Max(separatorInfo.MaxFieldCount, row.Count);
-                separatorInfo.SumFieldCount += row.Count;
-                separatorInfo.RowCount++;
-            }
+            var handler = new CountingHandler(separatorInfo);
+            separatorInfo.Buffer.Flush(ref handler);
         }
     }
 
@@ -179,6 +166,26 @@ internal static class CsvAnalyzer
 
         bomLength = i;
         return true;
+    }
+
+    private readonly struct CountingHandler(SeparatorInfo info) : ICsvHandler
+    {
+        public WorksheetReadControl OnRow(int index) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnField(int index, string value) => WorksheetReadControl.Continue;
+
+        public WorksheetReadControl OnRowEnd(int fieldCount, bool empty, bool flushing)
+        {
+            // Buffered empty rows are ignored, but an empty row produced by EOF flushing is counted.
+            if (!empty || flushing)
+            {
+                info.MaxFieldCount = Math.Max(info.MaxFieldCount, fieldCount);
+                info.SumFieldCount += fieldCount;
+                info.RowCount++;
+            }
+
+            return WorksheetReadControl.Continue;
+        }
     }
 
     private sealed class SeparatorInfo

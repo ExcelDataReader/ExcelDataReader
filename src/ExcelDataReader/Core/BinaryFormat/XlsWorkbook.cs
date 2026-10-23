@@ -8,7 +8,7 @@ namespace ExcelDataReader.Core.BinaryFormat;
 /// <summary>
 /// Represents Globals section of workbook.
 /// </summary>
-internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
+internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXlsWorkbookPartSink
 {
     private readonly ISharedStringStore _stringStore = new SharedStringTable();
 
@@ -34,7 +34,8 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
             switch (biffStream.BiffType)
             {
                 case BIFFTYPE.WorkbookGlobals:
-                    ReadWorkbookGlobals(biffStream);
+                    new XlsWorkbookPartReader(biffStream, this).Load();
+                    _stringStore.Seal();
                     break;
                 case BIFFTYPE.Worksheet:
                     // set up 'virtual' bound sheet pointing at this
@@ -65,31 +66,20 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
 
     public Encoding Encoding { get; private set; }
 
-    public XlsBiffInterfaceHdr? InterfaceHdr { get; set; }
-
-    public XlsBiffRecord? Mms { get; set; }
-
-    public XlsBiffRecord? WriteAccess { get; set; }
-
-    public XlsBiffSimpleValueRecord? CodePage { get; set; }
-
-    public XlsBiffRecord? Dsf { get; set; }
-
-    public XlsBiffRecord? Country { get; set; }
-
-    public XlsBiffSimpleValueRecord? Backup { get; set; }
+    Encoding IXlsWorkbookPartSink.Encoding => Encoding;
 
     public List<XlsBiffFont> Fonts { get; } = [];
 
     public List<XlsBiffBoundSheet> Sheets { get; } = [];
 
     /// <summary>
-    /// Gets or sets the Shared String Table of workbook.
+    /// Gets the shared string table of the workbook.
     /// </summary>
-    public XlsBiffSST? SST { get; set; }
+    public XlsBiffSST? SST { get; private set; }
 
-    public XlsBiffRecord? ExtSST { get; set; }
-
+    /// <summary>
+    /// Gets a value indicating whether the workbook uses the 1904 date system.
+    /// </summary>
     public bool IsDate1904 { get; private set; }
 
     public int ResultsCount => Sheets.Count;
@@ -157,6 +147,24 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
         ResourceCleanup.DisposeAll(null, _stringStore, Stream);
     }
 
+    void IXlsWorkbookPartSink.AddSheet(XlsBiffBoundSheet sheet) => Sheets.Add(sheet);
+
+    void IXlsWorkbookPartSink.AddFont(XlsBiffFont font) => Fonts.Add(font);
+
+    void IXlsWorkbookPartSink.AddXf(XlsBiffXF xf) => AddXf(xf);
+
+    void IXlsWorkbookPartSink.AddNumberFormat(int index, string format) =>
+        Formats.Add(index, new NumberFormatString(format));
+
+    void IXlsWorkbookPartSink.SetCodePage(ushort codePage) =>
+        Encoding = EncodingHelper.GetEncoding(codePage) ?? Encoding;
+
+    void IXlsWorkbookPartSink.SetDate1904(bool date1904) => IsDate1904 = date1904;
+
+    void IXlsWorkbookPartSink.SetActiveSheet(int activeSheet) => ActiveSheet = activeSheet;
+
+    void IXlsWorkbookPartSink.SetSharedStringTable(XlsBiffSST sharedStrings) => SST = sharedStrings;
+
     internal void AddXf(XlsBiffXF xf)
     {
         var extendedFormat = new ExtendedFormat(xf.ParentCellStyleXf, xf.Font, xf.Format, xf.IsLocked, xf.IsHidden, xf.IndentLevel, xf.HorizontalAlignment, xf.VerticalAlignment);
@@ -175,90 +183,5 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>
         if (SST == null)
             throw new ExcelReaderException(Errors.ErrorWorkbookGlobalsInvalidData);
         return index < (uint)_stringStore.Count ? _stringStore.GetString((int)index) : null;
-    }
-
-    private void ReadWorkbookGlobals(XlsBiffStream biffStream)
-    {
-        Dictionary<int, XlsBiffFormatString> formats = [];
-
-        while (biffStream.Read() is { } rec && rec is not XlsBiffEof)
-        {
-            switch (rec)
-            {
-                case XlsBiffInterfaceHdr hdr:
-                    InterfaceHdr = hdr;
-                    break;
-                case XlsBiffBoundSheet sheet:
-                    if (sheet.Type != XlsBiffBoundSheet.SheetType.Worksheet)
-                        break;
-                    Sheets.Add(sheet);
-                    break;
-                case XlsBiffSimpleValueRecord codePage when rec.Id == BIFFRECORDTYPE.CODEPAGE:
-                    // [MS-XLS 2.4.52 CodePage] An unsigned integer that specifies the workbook�s code page.The value MUST be one
-                    // of the code page values specified in [CODEPG] or the special value 1200, which means that the
-                    // workbook is Unicode.
-                    CodePage = codePage;
-                    Encoding = EncodingHelper.GetEncoding(CodePage.Value) ?? Encoding;
-                    break;
-                case XlsBiffSimpleValueRecord is1904 when rec.Id == BIFFRECORDTYPE.DATE1904:
-                    IsDate1904 = is1904.Value == 1;
-                    break;
-                case XlsBiffFont font:
-                    Fonts.Add(font);
-                    break;
-                case XlsBiffFormatString format23 when rec.Id == BIFFRECORDTYPE.FORMAT_V23:
-                    formats.Add((ushort)formats.Count, format23);
-                    break;
-                case XlsBiffFormatString fmt when rec.Id == BIFFRECORDTYPE.FORMAT:
-                    var index = fmt.Index;
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-                    formats.TryAdd(index, fmt);
-#else
-                    if (!formats.ContainsKey(index))
-                        formats.Add(index, fmt);
-#endif
-                    break;
-                case XlsBiffXF xf:
-                    AddXf(xf);
-                    break;
-                case XlsBiffSST sst:
-                    SST = sst;
-                    break;
-                case XlsBiffContinue sstContinue:
-                    SST?.ReadContinueStrings(sstContinue);
-                    break;
-                case { Id: BIFFRECORDTYPE.MMS } _:
-                    Mms = rec;
-                    break;
-                case { Id: BIFFRECORDTYPE.COUNTRY }:
-                    Country = rec;
-                    break;
-                case { Id: BIFFRECORDTYPE.EXTSST }:
-                    ExtSST = rec;
-                    break;
-
-                case { Id: BIFFRECORDTYPE.WINDOW1 }:
-                    ActiveSheet = rec.ReadInt16(10);
-                    break;
-
-                // case BIFFRECORDTYPE.PROTECT:
-                // case BIFFRECORDTYPE.PROT4REVPASSWORD:
-                    // IsProtected
-                    // break;
-                // case BIFFRECORDTYPE.PASSWORD:
-                default:
-                    break;
-            }
-        }
-
-        SST?.Flush();
-        _stringStore.Seal();
-
-        foreach (var format in formats)
-        {
-            // We don't decode the value until here in-case there are format records before the 
-            // codepage record. 
-            Formats.Add(format.Key, new NumberFormatString(format.Value.GetValue(Encoding)));
-        }
     }
 }

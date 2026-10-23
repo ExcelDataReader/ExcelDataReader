@@ -1,4 +1,3 @@
-using ExcelDataReader.Core.OpenXmlFormat.Records;
 using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
@@ -10,42 +9,29 @@ internal sealed class BiffSharedStringsReader(Stream stream) : BiffReader(stream
 {
     private const int StringItem = 0x13;
 
-    private ISharedStringStore? _store;
-
     public void Load(ISharedStringStore store)
     {
-        _store = store ?? throw new ArgumentNullException(nameof(store));
-        try
+        _ = store ?? throw new ArgumentNullException(nameof(store));
+
+        while (TryReadFrame(out var buffer, out var recordId, out var recordLength))
         {
-            while (base.Read() != null)
+            try
             {
-            }
-        }
-        finally
-        {
-            _store = null;
-        }
-    }
+                if (recordId != StringItem)
+                    continue;
 
-    public override Record? Read() =>
-        throw new InvalidOperationException("XLSB shared strings are loaded synchronously.");
-
-    protected override Record ReadOverride(byte[] buffer, uint recordId, uint recordLength)
-    {
-        switch (recordId)
-        {
-            case StringItem:
                 // Flags byte, character count and UTF-16 text; trailing rich text and phonetic data are ignored.
                 if (recordLength < 1 + 4)
                     throw new ExcelReaderException(Errors.ErrorBiffStringSize);
                 uint length = GetDWord(buffer, 1);
                 if (length > (recordLength - (1 + 4)) / 2)
                     throw new ExcelReaderException(Errors.ErrorBiffStringSize);
-                (_store ?? throw new InvalidOperationException("Shared strings are not being loaded."))
-                    .AddUtf16(buffer, 1 + 4, (int)length);
-                break;
+                store.AddUtf16(buffer, 1 + 4, (int)length);
+            }
+            finally
+            {
+                ReleaseFrame(buffer);
+            }
         }
-
-        return Record.Default;
     }
 }

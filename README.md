@@ -163,6 +163,12 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
 
 `CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()`, and `CreateCsvReader()` require seek support during probing and parsing. If the input stream is non-seekable, ExcelDataReader copies it to a `MemoryStream` first.
 
+### Streaming implementation
+
+All formats use resumable internal push readers that deliver cells directly to a reusable current-row buffer. Metadata scans skip value materialization; CSV analysis counts fields without building field strings or batches of rows. Workbook, style, and shared-string loaders use specialized sinks with explicit ownership: borrowed parser buffers are valid only during their callbacks, while values returned by the public reader remain owned.
+
+File-specific decoding and ordering remain internal. In particular, normal XLS reading may buffer overlapping row blocks to restore logical row order; pathological overlap can require buffering the entire worksheet. `SinglePassMode` avoids this index and rejects cells for rows already returned. Push consumption does not change shared-string storage, encryption, or the public pull-based `Read()` API.
+
 ### Large shared string tables
 
 XLSX, XLSB, and BIFF8 XLS files can contain large shared string tables (SSTs). By default, the entire table is kept in memory. Use `SpillToDisk` to move the table to temporary files when it exceeds a configurable memory threshold:
@@ -339,6 +345,12 @@ var value = reader.GetDateTime(i); // or (DateTime)reader.GetValue(i)
 ### Non-seekable streams are consumed even when `LeaveOpen = true`
 
 If the input stream is non-seekable, ExcelDataReader copies it to a `MemoryStream`. When this copy occurs, the source stream is fully consumed regardless of the `LeaveOpen` setting. If you need to reuse the source stream, ensure it is seekable before passing it to `CreateReader()`.
+
+### Streaming row boundaries and ordering
+
+OpenXML readers combine consecutive physical row elements with the same row index into one logical output row. This requires looking ahead to a different row header before returning the completed row. If a previously returned row index appears again, its cells are returned as another output row in encounter order; earlier output is not modified or reordered. Existing leading-gap height behavior is preserved.
+
+Normal indexed XLS reading still supports cells stored out of row order; single-pass XLS rejects cells for rows already returned. Malformed following headers can fail while completing the preceding logical OpenXML row, and initialization scans in normal mode can detect errors before the first `Read()`.
 
 ### `TransformValue` callback parameter types changed to nullable
 

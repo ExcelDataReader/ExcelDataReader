@@ -10,7 +10,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
     private const string SpreadsheetNamespace = "urn:schemas-microsoft-com:office:spreadsheet";
     private const string ExcelNamespace = "urn:schemas-microsoft-com:office:excel";
 
-    private readonly List<(string Name, string VisibleState, string? CodeName, HeaderFooter? HeaderFooter, int ExpandedColumnCount)> _worksheets = [];
+    private readonly WorkbookDescriptorSink _workbookSink = new();
     private readonly Dictionary<string, ExtendedFormat> _stylesById = new(StringComparer.Ordinal)
     {
         ["Default"] = ExtendedFormat.Zero,
@@ -24,9 +24,9 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
         ParseWorkbook(stream);
     }
 
-    public int ResultsCount => _worksheets.Count;
+    public int ResultsCount => _workbookSink.Worksheets.Count;
 
-    public int ActiveSheet { get; private set; }
+    public int ActiveSheet => _workbookSink.ActiveSheet;
 
     public static bool IsSpreadsheetXmlStream(Stream stream)
     {
@@ -59,16 +59,16 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
 
     public IEnumerable<SpreadsheetXmlWorksheet> ReadWorksheets()
     {
-        for (int i = 0; i < _worksheets.Count; i++)
+        for (int i = 0; i < _workbookSink.Worksheets.Count; i++)
         {
             yield return SpreadsheetXmlWorksheet.Create(
                 _stream,
                 i,
-                _worksheets[i].Name,
-                _worksheets[i].VisibleState,
-                _worksheets[i].CodeName,
-                _worksheets[i].HeaderFooter,
-                _worksheets[i].ExpandedColumnCount,
+                _workbookSink.Worksheets[i].Name,
+                _workbookSink.Worksheets[i].VisibleState,
+                _workbookSink.Worksheets[i].CodeName,
+                _workbookSink.Worksheets[i].HeaderFooter,
+                _workbookSink.Worksheets[i].ExpandedColumnCount,
                 _stylesById,
                 Formats,
                 SinglePassMode);
@@ -233,15 +233,14 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
 
             if (workbookReader.LocalName == "Worksheet" && workbookReader.NamespaceURI == SpreadsheetNamespace)
             {
-                _worksheets.Add(ParseWorksheetDescriptor(workbookReader.ReadSubtree(), workbookReader));
+                _workbookSink.AddWorksheet(ParseWorksheetDescriptor(workbookReader.ReadSubtree(), workbookReader));
             }
         }
     }
 
     private void ParseStyles(XmlReader stylesReader, Dictionary<string, ExtendedFormat> stylesById)
     {
-        var numberFormatIndices = new Dictionary<string, int>(StringComparer.Ordinal);
-        int nextCustomNumberFormat = 164;
+        var sink = new StylesSink(this, stylesById);
 
         using (stylesReader)
         {
@@ -254,86 +253,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
                     continue;
                 }
 
-                var styleId = GetSpreadsheetAttribute(stylesReader, "ID") ?? string.Empty;
-                if (styleId.Length == 0)
-                {
-                    SkipElement(stylesReader);
-                    continue;
-                }
-
-                int numberFormatIndex = 0;
-                var horizontalAlignment = HorizontalAlignment.General;
-                var verticalAlignment = VerticalAlignment.Bottom;
-                bool hidden = false;
-                bool locked = true;
-
-                ParseStyleContents(
-                    stylesReader.ReadSubtree(),
-                    ref numberFormatIndex,
-                    ref horizontalAlignment,
-                    ref verticalAlignment,
-                    ref hidden,
-                    ref locked,
-                    ref nextCustomNumberFormat,
-                    numberFormatIndices);
-
-                stylesById[styleId] = new ExtendedFormat(
-                    parentCellStyleXf: 0,
-                    fontIndex: 0,
-                    numberFormatIndex,
-                    locked,
-                    hidden,
-                    indentLevel: 0,
-                    horizontalAlignment,
-                    verticalAlignment);
-            }
-        }
-    }
-
-    private void ParseStyleContents(
-        XmlReader styleReader,
-        ref int numberFormatIndex,
-        ref HorizontalAlignment horizontalAlignment,
-        ref VerticalAlignment verticalAlignment,
-        ref bool hidden,
-        ref bool locked,
-        ref int nextCustomNumberFormat,
-        Dictionary<string, int> numberFormatIndices)
-    {
-        using (styleReader)
-        {
-            while (styleReader.Read())
-            {
-                if (styleReader.NodeType != XmlNodeType.Element || styleReader.NamespaceURI != SpreadsheetNamespace)
-                    continue;
-
-                if (styleReader.LocalName == "NumberFormat")
-                {
-                    var numberFormat = GetSpreadsheetAttribute(styleReader, "Format") ?? string.Empty;
-                    if (numberFormat.Length > 0)
-                    {
-                        if (numberFormatIndices.TryGetValue(numberFormat, out var existingIndex))
-                        {
-                            numberFormatIndex = existingIndex;
-                        }
-                        else
-                        {
-                            numberFormatIndex = nextCustomNumberFormat++;
-                            numberFormatIndices[numberFormat] = numberFormatIndex;
-                            AddNumberFormat(numberFormatIndex, numberFormat);
-                        }
-                    }
-                }
-                else if (styleReader.LocalName == "Alignment")
-                {
-                    horizontalAlignment = ParseHorizontalAlignment(GetSpreadsheetAttribute(styleReader, "Horizontal"));
-                    verticalAlignment = ParseVerticalAlignment(GetSpreadsheetAttribute(styleReader, "Vertical"));
-                }
-                else if (styleReader.LocalName == "Protection")
-                {
-                    hidden = ParseBool(GetSpreadsheetAttribute(styleReader, "Hidden"));
-                    locked = !string.Equals(GetSpreadsheetAttribute(styleReader, "Protected"), "0", StringComparison.OrdinalIgnoreCase);
-                }
+                sink.AddStyle(stylesReader);
             }
         }
     }
@@ -351,10 +271,108 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
                     var text = workbookOptionsReader.ReadElementContentAsString();
                     if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var activeSheet))
                     {
-                        ActiveSheet = activeSheet;
+                        _workbookSink.SetActiveSheet(activeSheet);
                     }
 
                     return;
+                }
+            }
+        }
+    }
+
+    private sealed class WorkbookDescriptorSink
+    {
+        public List<(string Name, string VisibleState, string? CodeName, HeaderFooter? HeaderFooter, int ExpandedColumnCount)> Worksheets { get; } = [];
+
+        public int ActiveSheet { get; private set; }
+
+        public void AddWorksheet((string Name, string VisibleState, string? CodeName, HeaderFooter? HeaderFooter, int ExpandedColumnCount) worksheet)
+            => Worksheets.Add(worksheet);
+
+        public void SetActiveSheet(int activeSheet)
+            => ActiveSheet = activeSheet;
+    }
+
+    private sealed class StylesSink(SpreadsheetXmlWorkbook workbook, Dictionary<string, ExtendedFormat> stylesById)
+    {
+        private readonly Dictionary<string, int> _numberFormatIndices = new(StringComparer.Ordinal);
+        private int _nextCustomNumberFormat = 164;
+
+        public void AddStyle(XmlReader styleReader)
+        {
+            var styleId = GetSpreadsheetAttribute(styleReader, "ID") ?? string.Empty;
+            if (styleId.Length == 0)
+            {
+                SkipElement(styleReader);
+                return;
+            }
+
+            int numberFormatIndex = 0;
+            var horizontalAlignment = HorizontalAlignment.General;
+            var verticalAlignment = VerticalAlignment.Bottom;
+            bool hidden = false;
+            bool locked = true;
+            ParseStyleContents(
+                styleReader.ReadSubtree(),
+                ref numberFormatIndex,
+                ref horizontalAlignment,
+                ref verticalAlignment,
+                ref hidden,
+                ref locked);
+
+            stylesById[styleId] = new ExtendedFormat(
+                parentCellStyleXf: 0,
+                fontIndex: 0,
+                numberFormatIndex,
+                locked,
+                hidden,
+                indentLevel: 0,
+                horizontalAlignment,
+                verticalAlignment);
+        }
+
+        private void ParseStyleContents(
+            XmlReader styleReader,
+            ref int numberFormatIndex,
+            ref HorizontalAlignment horizontalAlignment,
+            ref VerticalAlignment verticalAlignment,
+            ref bool hidden,
+            ref bool locked)
+        {
+            using (styleReader)
+            {
+                while (styleReader.Read())
+                {
+                    if (styleReader.NodeType != XmlNodeType.Element || styleReader.NamespaceURI != SpreadsheetNamespace)
+                        continue;
+
+                    if (styleReader.LocalName == "NumberFormat")
+                    {
+                        var numberFormat = GetSpreadsheetAttribute(styleReader, "Format") ?? string.Empty;
+                        if (numberFormat.Length == 0)
+                            continue;
+
+                        if (_numberFormatIndices.TryGetValue(numberFormat, out var existingIndex))
+                        {
+                            numberFormatIndex = existingIndex;
+                        }
+                        else
+                        {
+                            numberFormatIndex = _nextCustomNumberFormat++;
+                            _numberFormatIndices[numberFormat] = numberFormatIndex;
+                            workbook.AddNumberFormat(numberFormatIndex, numberFormat);
+                        }
+                    }
+                    else if (styleReader.LocalName == "Alignment")
+                    {
+                        horizontalAlignment = ParseHorizontalAlignment(GetSpreadsheetAttribute(styleReader, "Horizontal"));
+                        verticalAlignment = ParseVerticalAlignment(GetSpreadsheetAttribute(styleReader, "Vertical"));
+                    }
+                    else if (styleReader.LocalName == "Protection")
+                    {
+                        hidden = ParseBool(GetSpreadsheetAttribute(styleReader, "Hidden"));
+                        locked = !string.Equals(GetSpreadsheetAttribute(styleReader, "Protected"), "0", StringComparison.OrdinalIgnoreCase);
+                    }
                 }
             }
         }

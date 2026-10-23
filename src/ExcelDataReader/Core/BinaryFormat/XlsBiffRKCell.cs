@@ -15,7 +15,7 @@ internal sealed class XlsBiffRKCell : XlsBiffBlankCell
     /// <summary>
     /// Gets the value of this cell.
     /// </summary>
-    public double Value => NumFromRK(ReadUInt32(0x6));
+    public double Value => new XlsCellFrame(Bytes).RkValue;
 
     /// <summary>
     /// Decodes RK-encoded number.

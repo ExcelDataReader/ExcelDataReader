@@ -606,8 +606,6 @@ public class SharedStringStorageTests
         byte[] text = CodeUnits("ab");
         using var input = new MemoryStream(XlsbStringItem(text, 2));
         var reader = new BiffSharedStringsReader(input);
-        Assert.Throws<InvalidOperationException>(() => reader.Read());
-        Assert.That(sst, Is.Empty);
         reader.Load(sst);
         reader.Dispose();
         Assert.That(sst, Is.EqualTo(new[] { "ab" }));
