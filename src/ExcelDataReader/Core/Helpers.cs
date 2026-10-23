@@ -10,11 +10,21 @@ namespace ExcelDataReader.Core;
 /// </summary>
 internal static class Helpers
 {
-    #if !(NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER)
+#if !(NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER)
     private static readonly Regex EscapeRegexInstance = new("_x([0-9A-F]{4,4})_", RegexOptions.Compiled);
-    #endif
+#endif
 
     private static readonly char[] SingleByteEncodingHelper = ['a'];
+    private static readonly object True = true;
+    private static readonly object False = false;
+
+    public static object BoxBoolean(bool value) => value ? True : False;
+
+    public static bool EqualsAsciiIgnoreCase(char left, char right)
+    {
+        int folded = left | 0x20;
+        return left == right || ((uint)(folded - 'a') <= 'z' - 'a' && folded == (right | 0x20));
+    }
 
     /// <summary>
     /// Determines whether the encoding is single byte or not.
@@ -135,7 +145,7 @@ internal static class Helpers
         return true;
     }
 #endif
-    
+
     /// <summary>
     /// Convert a double from Excel to an OA DateTime double. 
     /// The returned value is normalized to the '1900' date mode and adjusted for the 1900 leap year bug.
@@ -162,7 +172,7 @@ internal static class Helpers
     {
         return value is > DateTimeHelper.OADateMinAsDouble and < DateTimeHelper.OADateMaxAsDouble;
     }
-    
+
 #if !(NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER)
     private static Regex EscapeRegex() => EscapeRegexInstance;
 #endif

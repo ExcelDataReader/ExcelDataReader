@@ -173,23 +173,23 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
     private static bool ParseBool(string? value)
         => value == "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
 
-    private static HorizontalAlignment ParseHorizontalAlignment(string? value) => value?.ToLowerInvariant() switch
+    private static HorizontalAlignment ParseHorizontalAlignment(string? value) => value switch
     {
-        "left" => HorizontalAlignment.Left,
-        "center" => HorizontalAlignment.Center,
-        "right" => HorizontalAlignment.Right,
-        "justify" => HorizontalAlignment.Justified,
-        "distributed" => HorizontalAlignment.Distributed,
+        _ when string.Equals(value, "left", StringComparison.OrdinalIgnoreCase) => HorizontalAlignment.Left,
+        _ when string.Equals(value, "center", StringComparison.OrdinalIgnoreCase) => HorizontalAlignment.Center,
+        _ when string.Equals(value, "right", StringComparison.OrdinalIgnoreCase) => HorizontalAlignment.Right,
+        _ when string.Equals(value, "justify", StringComparison.OrdinalIgnoreCase) => HorizontalAlignment.Justified,
+        _ when string.Equals(value, "distributed", StringComparison.OrdinalIgnoreCase) => HorizontalAlignment.Distributed,
         _ => HorizontalAlignment.General,
     };
 
-    private static VerticalAlignment ParseVerticalAlignment(string? value) => value?.ToLowerInvariant() switch
+    private static VerticalAlignment ParseVerticalAlignment(string? value) => value switch
     {
-        "top" => VerticalAlignment.Top,
-        "center" => VerticalAlignment.Center,
-        "bottom" => VerticalAlignment.Bottom,
-        "justify" => VerticalAlignment.Justify,
-        "distributed" => VerticalAlignment.Distributed,
+        _ when string.Equals(value, "top", StringComparison.OrdinalIgnoreCase) => VerticalAlignment.Top,
+        _ when string.Equals(value, "center", StringComparison.OrdinalIgnoreCase) => VerticalAlignment.Center,
+        _ when string.Equals(value, "bottom", StringComparison.OrdinalIgnoreCase) => VerticalAlignment.Bottom,
+        _ when string.Equals(value, "justify", StringComparison.OrdinalIgnoreCase) => VerticalAlignment.Justify,
+        _ when string.Equals(value, "distributed", StringComparison.OrdinalIgnoreCase) => VerticalAlignment.Distributed,
         _ => VerticalAlignment.Bottom,
     };
 

@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace ExcelDataReader.Core.NumberFormat;
 
 internal static class Parser
@@ -202,7 +200,7 @@ internal static class Parser
             ReadDigits(source, ref position, end);
         }
 
-        if (position + 1 < end && char.ToLower(source[position], CultureInfo.InvariantCulture) == 'e' && source[position + 1] is '+' or '-')
+        if (position + 1 < end && source[position] is 'e' or 'E' && source[position + 1] is '+' or '-')
         {
             position += 2;
             int exponentStart = position;

@@ -1,9 +1,50 @@
+using System.Globalization;
+using ExcelDataReader.Core;
 using ExcelDataReader.Core.NumberFormat;
 
 namespace ExcelDataReader.Tests;
 
 public class FormatReaderTest
 {
+    [TestCase("gEnErAl", "General", true)]
+    [TestCase("AM/pm", "am/pm", true)]
+    [TestCase("E+", "e+", true)]
+    [TestCase("\u017F", "s", false)]
+    [TestCase("\u212A", "k", false)]
+    [TestCase("{", "[", false)]
+    public void TokenizerMatchesAsciiCaseOnly(string source, string keyword, bool expected)
+    {
+        var tokenizer = new Tokenizer(source);
+        Assert.That(tokenizer.ReadString(keyword, true), Is.EqualTo(expected));
+        Assert.That(tokenizer.Position, Is.EqualTo(expected ? keyword.Length : 0));
+    }
+
+    [TestCase("S", true)]
+    [TestCase("s", true)]
+    [TestCase("\u017F", false)]
+    [TestCase("[S]", true)]
+    [TestCase("[\u017F]", false)]
+    public void DateTokensMatchAsciiCaseOnly(string source, bool expected)
+    {
+        var token = new Token(0, source.Length);
+        Assert.That(token.IsDatePart(source), Is.EqualTo(expected));
+    }
+
+    [TestCase(int.MinValue)]
+    [TestCase(-1)]
+    [TestCase(23)]
+    [TestCase(26)]
+    [TestCase(63)]
+    [TestCase(66)]
+    [TestCase(82)]
+    [TestCase(164)]
+    [TestCase(int.MaxValue)]
+    public void MissingBuiltinFormatReturnsNull(int index)
+    {
+        Assert.That(BuiltinNumberFormat.GetBuiltinNumberFormat(index), Is.Null);
+        Assert.That(BuiltinNumberFormat.GetBuiltinNumberFormat(index, CultureInfo.InvariantCulture), Is.Null);
+    }
+
     [TestCase("", true, false, false)]
     [TestCase("0", true, false, false)]
     [TestCase("[>=100]0.00;[Blue][h]:mm:ss", true, false, true)]
