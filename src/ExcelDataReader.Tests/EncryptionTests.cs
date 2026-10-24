@@ -1,5 +1,6 @@
 #nullable enable
 
+using ExcelDataReader.Core;
 using ExcelDataReader.Core.CompoundFormat;
 using ExcelDataReader.Core.OfficeCrypto;
 
@@ -7,6 +8,90 @@ namespace ExcelDataReader.Tests;
 
 public class EncryptionTests
 {
+    [TestCase(false)]
+    [TestCase(true)]
+    public void DecryptionOnlyAlgorithmsRejectEncryptionAndKeyGeneration(bool xor)
+    {
+        using System.Security.Cryptography.SymmetricAlgorithm algorithm = xor ? new XorManaged() : new RC4Managed();
+
+        Assert.Throws<NotSupportedException>(() => algorithm.CreateEncryptor(new byte[16], null));
+        Assert.Throws<NotSupportedException>(algorithm.GenerateIV);
+        Assert.Throws<NotSupportedException>(algorithm.GenerateKey);
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void ReadOnlyCompoundAndAgileStreamsRejectWriting(bool decrypt)
+    {
+        using var source = Configuration.GetTestWorkbook("agile_AES128_SHA1_CBC_pwd_password.xlsx");
+        var document = new CompoundDocument(source);
+        var package = document.FindEntry("EncryptedPackage")!;
+        using var input = new CompoundStream(document, source, package.StreamFirstSector, (int)package.StreamSize, package.IsEntryMiniStream, true);
+        Stream stream = input;
+        if (decrypt)
+        {
+            var info = document.FindEntry("EncryptionInfo")!;
+            var encryption = EncryptionInfo.Create(document.ReadStream(source, info.StreamFirstSector, (int)info.StreamSize, info.IsEntryMiniStream));
+            stream = encryption.CreateEncryptedPackageStream(input, encryption.GenerateSecretKey("password"));
+        }
+
+        using (stream)
+        {
+            Assert.That(stream.CanWrite, Is.False);
+            Assert.Throws<NotSupportedException>(() => stream.Write(new byte[1], 0, 1));
+            Assert.Throws<NotSupportedException>(() => stream.SetLength(0));
+            Assert.Throws<NotSupportedException>(() => stream.WriteByte(0));
+        }
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void CleanupAttemptsEveryResourceAndPreservesFirstFailure(bool operationFailed)
+    {
+        var first = new DisposalTrackingStream([]) { DisposeError = new IOException("First cleanup failure.") };
+        var second = new DisposalTrackingStream([]) { DisposeError = new IOException("Second cleanup failure.") };
+        var original = new InvalidOperationException("Operation failed.");
+
+        void FailAndCleanup()
+        {
+            try
+            {
+                throw original;
+            }
+            catch (Exception error)
+            {
+                ResourceCleanup.DisposeAll(error, first, second);
+                throw;
+            }
+        }
+
+        if (operationFailed)
+            Assert.That(Assert.Throws<InvalidOperationException>(FailAndCleanup), Is.SameAs(original));
+        else
+            Assert.That(Assert.Throws<IOException>(() => ResourceCleanup.DisposeAll(null, first, second)), Is.SameAs(first.DisposeError));
+
+        Assert.That(first.DisposeCount, Is.EqualTo(1));
+        Assert.That(second.DisposeCount, Is.EqualTo(1));
+    }
+
+    [TestCase(3)]
+    [TestCase(4)]
+    public void ExtensibleEncryptionIsRecognizedButNotSupported(byte majorVersion)
+    {
+        Assert.Throws<NotSupportedException>(() => EncryptionInfo.Create([majorVersion, 0, 3, 0]));
+    }
+
+    [Test]
+    public void StandardAesEncryptionRejectsBlockKeyGeneration()
+    {
+        using var source = Configuration.GetTestWorkbook("standard_AES256_SHA1_ECB_pwd_password.xlsx");
+        var document = new CompoundDocument(source);
+        var info = document.FindEntry("EncryptionInfo")!;
+        var encryption = EncryptionInfo.Create(document.ReadStream(source, info.StreamFirstSector, (int)info.StreamSize, info.IsEntryMiniStream));
+
+        Assert.Throws<InvalidOperationException>(() => encryption.GenerateBlockKey(0, new byte[32], new byte[CryptoHelpers.MaxHashSize]));
+    }
+
     [TestCase(0)]
     [TestCase(4)]
     [TestCase(-1)]
@@ -166,6 +251,26 @@ public class EncryptionTests
             Assert.That(reader.GetString(0), Is.EqualTo(expected));
             reader.Reset();
         }
+    }
+
+    [Test]
+    public void AgilePackageDisposalPropagatesFailureWithoutRetryingDisposedResources()
+    {
+        using var source = Configuration.GetTestWorkbook("agile_AES128_SHA1_CBC_pwd_password.xlsx");
+        var document = new CompoundDocument(source);
+        var info = document.FindEntry("EncryptionInfo")!;
+        var encryption = EncryptionInfo.Create(document.ReadStream(source, info.StreamFirstSector, (int)info.StreamSize, info.IsEntryMiniStream));
+        var package = document.FindEntry("EncryptedPackage")!;
+        var input = new DisposalTrackingStream(document.ReadStream(source, package.StreamFirstSector, (int)package.StreamSize, package.IsEntryMiniStream))
+        {
+            DisposeError = new IOException("Disposal failed.")
+        };
+        var decrypted = encryption.CreateEncryptedPackageStream(input, encryption.GenerateSecretKey("password"));
+
+        Assert.That(Assert.Throws<IOException>(decrypted.Dispose), Is.SameAs(input.DisposeError));
+        Assert.That(input.CanRead, Is.False);
+        Assert.DoesNotThrow(decrypted.Dispose);
+        Assert.That(input.DisposeCount, Is.EqualTo(1));
     }
 
     private sealed class DisposalTrackingStream(byte[] bytes) : MemoryStream(bytes)

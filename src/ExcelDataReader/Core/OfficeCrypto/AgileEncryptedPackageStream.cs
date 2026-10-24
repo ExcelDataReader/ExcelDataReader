@@ -133,25 +133,31 @@ internal sealed class AgileEncryptedPackageStream : Stream
 
     public override void SetLength(long value)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public override void Write(byte[] buffer, int offset, int count)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
+        try
         {
-            Stream?.Dispose();
-            Stream = null;
-            _cipher?.Dispose();
-            _cipher = null;
+            if (disposing)
+            {
+                var stream = Stream;
+                var cipher = _cipher;
+                Stream = null;
+                _cipher = null;
+                ResourceCleanup.DisposeAll(null, stream, cipher);
+            }
         }
-
-        base.Dispose(disposing);
+        finally
+        {
+            base.Dispose(disposing);
+        }
     }
 
     private void ReadSegment()

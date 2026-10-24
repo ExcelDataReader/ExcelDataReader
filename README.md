@@ -390,6 +390,10 @@ By default, XLSX and XLSB readers return rows in ascending row-index order and c
 
 With `SinglePassMode = true`, consecutive entries for the same row are still combined, but out-of-order rows or revisits to completed rows throw `InvalidOperationException`. Use the default `SinglePassMode = false` when reading files with non-sequential rows.
 
+### Extensible Encryption exception type changed
+
+Workbooks using Extensible Encryption remain unsupported. Recognized Extensible Encryption versions now throw `NotSupportedException` instead of `InvalidOperationException`. Update any exception handling that specifically catches the previous type for this case.
+
 ### `TransformValue` callback parameter types changed to nullable
 
 The `ExcelDataTableConfiguration.TransformValue` delegate type changed from `Func<IExcelDataReader, int, object, object>` to `Func<IExcelDataReader, int, object?, object?>`. If you assigned a named method to this property, update its signature:

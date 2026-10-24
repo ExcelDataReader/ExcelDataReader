@@ -320,6 +320,35 @@ public sealed class CellCommentTests
         Assert.That(reader.GetDouble(0), Is.EqualTo(1));
     }
 
+    [TestCase("xml", false)]
+    [TestCase("xml", true)]
+    [TestCase("xls", false)]
+    [TestCase("xls", true)]
+    public void CommentRestorationFailuresPreserveScanErrors(string format, bool failScan)
+    {
+        using var source = new CommentFailureStream(CreateWorkbook(format));
+        using var reader = ExcelReaderFactory.CreateReader(source, new ExcelReaderConfiguration { LeaveOpen = true });
+        Assert.That(reader.Read(), Is.True);
+        source.RestorePosition = source.Position;
+        source.FailScan = failScan;
+        source.Armed = true;
+        try
+        {
+            if (failScan)
+            {
+                Assert.That(Assert.Throws<IOException>(() => reader.GetComment(0)), Is.SameAs(source.ScanError));
+            }
+            else
+            {
+                Assert.That(Assert.Throws<IOException>(() => reader.GetComment(0)), Is.SameAs(source.RestoreError));
+            }
+        }
+        finally
+        {
+            source.Armed = false;
+        }
+    }
+
     private static void AssertMessage(CellCommentThread? comment, string? author, string text)
     {
         Assert.That(comment, Is.Not.Null);
@@ -581,5 +610,56 @@ public sealed class CellCommentTests
         using (var writer = XmlWriter.Create(buffer, new XmlWriterSettings { ConformanceLevel = ConformanceLevel.Fragment }))
             writer.WriteString(text);
         return buffer.ToString();
+    }
+
+    private sealed class CommentFailureStream(byte[] bytes) : MemoryStream(bytes)
+    {
+        public bool Armed { get; set; }
+
+        public bool FailScan { get; set; }
+
+        public long RestorePosition { get; set; }
+
+        public IOException ScanError { get; } = new("Comment scan failed.");
+
+        public IOException RestoreError { get; } = new("Position restoration failed.");
+
+        public override long Position
+        {
+            get
+            {
+                return base.Position;
+            }
+
+            set
+            {
+                if (Armed && value == RestorePosition)
+                    throw RestoreError;
+                base.Position = value;
+            }
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (Armed && FailScan)
+                throw ScanError;
+            return base.Read(buffer, offset, count);
+        }
+
+#if NET8_0_OR_GREATER
+        public override int Read(Span<byte> buffer)
+        {
+            if (Armed && FailScan)
+                throw ScanError;
+            return base.Read(buffer);
+        }
+#endif
+
+        public override int ReadByte()
+        {
+            if (Armed && FailScan)
+                throw ScanError;
+            return base.ReadByte();
+        }
     }
 }

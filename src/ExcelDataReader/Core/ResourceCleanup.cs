@@ -4,9 +4,21 @@ namespace ExcelDataReader.Core;
 
 internal static class ResourceCleanup
 {
+    public static void RestorePosition(Stream stream, long position, Exception? failure)
+    {
+        try
+        {
+            stream.Position = position;
+        }
+        catch (Exception) when (failure != null)
+        {
+            // Preserve the operation failure already being rethrown by the caller.
+        }
+    }
+
     public static void DisposeAll(Exception? failure, params IDisposable?[] resources)
     {
-        List<Exception>? errors = null;
+        Exception? firstError = null;
         foreach (var resource in resources)
         {
             try
@@ -15,16 +27,12 @@ internal static class ResourceCleanup
             }
             catch (Exception error)
             {
-                (errors ??= []).Add(error);
+                firstError ??= error;
             }
         }
 
-        if (errors == null)
-            return;
-        if (failure != null)
-            errors.Insert(0, failure);
-        if (errors.Count == 1)
-            ExceptionDispatchInfo.Capture(errors[0]).Throw();
-        throw new AggregateException("Resource cleanup failed.", errors);
+        // Callers rethrow the operation failure after cleanup.
+        if (failure == null && firstError != null)
+            ExceptionDispatchInfo.Capture(firstError).Throw();
     }
 }

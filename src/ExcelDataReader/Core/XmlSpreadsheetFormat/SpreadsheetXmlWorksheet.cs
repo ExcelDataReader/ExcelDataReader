@@ -136,14 +136,20 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
             return _comments;
         long position = _stream.Position;
         Dictionary<long, CellCommentThread> comments;
+        Exception? failure = null;
         try
         {
             _stream.Position = 0;
             comments = SpreadsheetXmlCommentsReader.Load(_stream, _worksheetIndex);
         }
+        catch (Exception error)
+        {
+            failure = error;
+            throw;
+        }
         finally
         {
-            _stream.Position = position;
+            ResourceCleanup.RestorePosition(_stream, position, failure);
         }
 
         return _comments = comments;

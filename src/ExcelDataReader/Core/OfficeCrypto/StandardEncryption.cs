@@ -161,13 +161,7 @@ internal sealed class StandardEncryption : EncryptionInfo
     {
         if ((Flags & EncryptionHeaderFlags.AES) != 0)
         {
-            /*var salt = CryptoHelpers.Combine(secretKey, BitConverter.GetBytes(blockNumber));
-            salt = CryptoHelpers.HashBytes(salt, HashAlgorithm);
-            Array.Resize(ref salt, (int)KeySize / 8);
-            return salt;*/
-#pragma warning disable CA2201 // Do not raise reserved exception types
-            throw new Exception("Block key for ECMA-376 Standard Encryption not implemented");
-#pragma warning restore CA2201 // Do not raise reserved exception types
+            throw new InvalidOperationException("Block-key generation is not valid for Standard AES encryption.");
         }
         else if ((Flags & EncryptionHeaderFlags.CryptoAPI) != 0)
         {

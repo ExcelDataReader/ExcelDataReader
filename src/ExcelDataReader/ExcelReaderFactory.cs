@@ -11,6 +11,9 @@ namespace ExcelDataReader;
 /// <summary>
 /// The ExcelReader Factory.
 /// </summary>
+/// <remarks>
+/// Input errors may also occur when reading worksheets or requesting lazily loaded metadata.
+/// </remarks>
 public static class ExcelReaderFactory
 {
     private const string DirectoryEntryWorkbook = "Workbook";
@@ -24,6 +27,8 @@ public static class ExcelReaderFactory
     /// <param name="fileStream">The file stream.</param>
     /// <param name="configuration">The configuration object.</param>
     /// <returns>The excel data reader.</returns>
+    /// <exception cref="HeaderException">The input header is not recognized.</exception>
+    /// <exception cref="InvalidPasswordException">The workbook password is required but missing or incorrect.</exception>
     public static IExcelDataReader CreateReader(Stream fileStream, ExcelReaderConfiguration? configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
@@ -76,6 +81,8 @@ public static class ExcelReaderFactory
     /// <param name="fileStream">The file stream.</param>
     /// <param name="configuration">The configuration object.</param>
     /// <returns>The excel data reader.</returns>
+    /// <exception cref="HeaderException">The input header is not recognized.</exception>
+    /// <exception cref="InvalidPasswordException">The workbook password is required but missing or incorrect.</exception>
     public static IExcelDataReader CreateBinaryReader(Stream fileStream, ExcelReaderConfiguration? configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
@@ -114,6 +121,8 @@ public static class ExcelReaderFactory
     /// <param name="fileStream">The file stream.</param>
     /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>
     /// <returns>The excel data reader.</returns>
+    /// <exception cref="HeaderException">The input header is not recognized.</exception>
+    /// <exception cref="InvalidPasswordException">The workbook password is required but missing or incorrect.</exception>
     public static IExcelDataReader CreateOpenXmlReader(Stream fileStream, ExcelReaderConfiguration? configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
@@ -224,6 +233,8 @@ public static class ExcelReaderFactory
 
     private static Stream PrepareInputStream(Stream fileStream, ExcelReaderConfiguration configuration)
     {
+        ArgumentNullException.ThrowIfNull(fileStream);
+
         if (configuration.LeaveOpen)
         {
             fileStream = new LeaveOpenStream(fileStream);

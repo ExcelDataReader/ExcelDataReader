@@ -3,6 +3,44 @@ namespace ExcelDataReader.Tests;
 [TestFixture]
 public class ExcelReaderFactoryTests
 {
+    [Test]
+    public void FactoriesRejectNullStreams(
+        [Values("auto", "binary", "openxml", "csv")] string format,
+        [Values(false, true)] bool leaveOpen)
+    {
+        var configuration = new ExcelReaderConfiguration { LeaveOpen = leaveOpen };
+        var error = Assert.Throws<ArgumentNullException>(() =>
+        {
+            using var reader = format switch
+            {
+                "binary" => ExcelReaderFactory.CreateBinaryReader(null, configuration),
+                "openxml" => ExcelReaderFactory.CreateOpenXmlReader(null, configuration),
+                "csv" => ExcelReaderFactory.CreateCsvReader(null, configuration),
+                _ => ExcelReaderFactory.CreateReader(null, configuration),
+            };
+        });
+        Assert.That(error.ParamName, Is.EqualTo("fileStream"));
+    }
+
+    [Test]
+    public void SpreadsheetXmlProbePreservesStreamFailure()
+    {
+        using var stream = new ProbeFailureStream();
+
+        Assert.That(
+            Assert.Throws<IOException>(() => ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguration { LeaveOpen = true })),
+            Is.SameAs(stream.Failure));
+    }
+
+    [TestCase("not a spreadsheet")]
+    [TestCase("<Workbook invalid=\"&broken;\">")]
+    public void UnrecognizedOrMalformedXmlStillReportsHeaderFailure(string text)
+    {
+        using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(text));
+
+        Assert.Throws<Exceptions.HeaderException>(() => ExcelReaderFactory.CreateReader(stream));
+    }
+
     [TestCase("10x10.xls")]
     [TestCase("UnicodeChars.xls")]
     [TestCase("biff3.xls")]
@@ -89,6 +127,38 @@ public class ExcelReaderFactoryTests
         Assert.Throws<IOException>(() => ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguration { LeaveOpen = true }));
         Assert.That(stream.IsDisposed, Is.False);
         stream.Dispose();
+    }
+
+    private sealed class ProbeFailureStream : MemoryStream
+    {
+        private bool _initialRead;
+
+        public ProbeFailureStream()
+            : base(System.Text.Encoding.UTF8.GetBytes("<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\"/>"))
+        {
+        }
+
+        public IOException Failure { get; } = new("Input failed during format detection.");
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (_initialRead)
+                throw Failure;
+            _initialRead = true;
+            return base.Read(buffer, offset, count);
+        }
+
+#if NET8_0_OR_GREATER
+        public override int Read(Span<byte> buffer)
+        {
+            var bytes = new byte[buffer.Length];
+            int count = Read(bytes, 0, bytes.Length);
+            bytes.AsSpan(0, count).CopyTo(buffer);
+            return count;
+        }
+#endif
+
+        public override int ReadByte() => throw Failure;
     }
 
     private sealed class ThrowOnReadNonSeekableStream : Stream

@@ -47,7 +47,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
 
             return false;
         }
-        catch
+        catch (XmlException)
         {
             return false;
         }

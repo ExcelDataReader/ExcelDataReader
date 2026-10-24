@@ -1448,7 +1448,7 @@ public class SharedStringStorageTests
     }
 
     [Test]
-    public void MigrationFailureAndCleanupFailureBothSurface()
+    public void MigrationFailureTakesPrecedenceOverCleanupFailure()
     {
         var streams = new List<FaultStream>();
         using var store = new Store(SharedStringStorageMode.SpillToDisk, (directory, kind) =>
@@ -1458,8 +1458,8 @@ public class SharedStringStorageTests
             return stream;
         });
         store.Add("first");
-        var error = Assert.Throws<AggregateException>(() => store.Add(new string('x', (int)Budget * 2)))!;
-        Assert.That(error.Flatten().InnerExceptions.Select(e => e.Message), Does.Contain("injected write").And.Contain("injected dispose"));
+        var error = Assert.Throws<IOException>(() => store.Add(new string('x', (int)Budget * 2)))!;
+        Assert.That(error.Message, Is.EqualTo("injected write"));
         Assert.That(streams.All(s => s.WasDisposed), Is.True);
     }
 

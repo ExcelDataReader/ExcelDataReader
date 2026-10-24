@@ -85,21 +85,7 @@ internal sealed class StandardEncryptedPackageStream : Stream
                 BaseStream = null;
                 Decryptor = null;
                 Cipher = null;
-                try
-                {
-                    stream?.Dispose();
-                }
-                finally
-                {
-                    try
-                    {
-                        decryptor?.Dispose();
-                    }
-                    finally
-                    {
-                        cipher?.Dispose();
-                    }
-                }
+                ResourceCleanup.DisposeAll(null, stream, decryptor, cipher);
             }
         }
         finally

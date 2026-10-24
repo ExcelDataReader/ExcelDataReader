@@ -71,13 +71,19 @@ internal sealed class XlsWorksheet : IWorksheet
             return _comments;
         long position = Stream.Position;
         Dictionary<long, CellCommentThread> comments;
+        Exception? failure = null;
         try
         {
             comments = XlsCommentsReader.Load(this);
         }
+        catch (Exception error)
+        {
+            failure = error;
+            throw;
+        }
         finally
         {
-            Stream.Position = position;
+            ResourceCleanup.RestorePosition(Stream, position, failure);
         }
 
         return _comments = comments;

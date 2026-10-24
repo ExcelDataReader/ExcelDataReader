@@ -144,12 +144,12 @@ internal sealed class CompoundStream : Stream
 
     public override void SetLength(long value)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public override void Write(byte[] buffer, int offset, int count)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     protected override void Dispose(bool disposing)

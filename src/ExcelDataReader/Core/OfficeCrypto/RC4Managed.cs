@@ -14,17 +14,17 @@ internal sealed class RC4Managed : SymmetricAlgorithm
 
     public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public override void GenerateIV()
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public override void GenerateKey()
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     internal sealed class RC4Transform : ICryptoTransform

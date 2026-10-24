@@ -40,7 +40,7 @@ internal abstract class EncryptionInfo
         else if ((versionMajor == 3 || versionMajor == 4) && versionMinor == 3)
         {
             // 2.3.4.6 \EncryptionInfo Stream (Extensible Encryption)
-            throw new InvalidOperationException("Extensible Encryption not supported");
+            throw new NotSupportedException("Extensible Encryption not supported");
         }
         else if (versionMajor == 4 && versionMinor == 4)
         {
