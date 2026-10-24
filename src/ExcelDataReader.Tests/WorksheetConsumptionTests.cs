@@ -14,6 +14,65 @@ namespace ExcelDataReader.Tests;
 
 public class WorksheetConsumptionTests
 {
+    [TestCase("10x10.xls", false)]
+    [TestCase("10x10.xls", true)]
+    [TestCase("10x10.xlsx", false)]
+    [TestCase("10x10.xlsx", true)]
+    [TestCase("Open.xlsb", false)]
+    [TestCase("Open.xlsb", true)]
+    [TestCase("Issue242_StdRc4PwdPassword.xls", false)]
+    [TestCase("Issue242_XorPwdPassword.xls", true)]
+    [TestCase("agile_AES128_SHA1_CBC_pwd_password.xlsx", false)]
+    public void ResetWorksheetReplaysCurrentResultWithoutChangingNavigation(string fixture, bool singlePass)
+    {
+        using var source = Configuration.GetTestWorkbook(fixture);
+        var configuration = new ExcelReaderConfiguration { SinglePassMode = singlePass, LeaveOpen = true, Password = "password" };
+        using var reader = ExcelReaderFactory.CreateReader(source, configuration);
+        using var baseline = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook(fixture), configuration);
+        do
+        {
+            string name = baseline.Name;
+            var rows = new List<(object[] Values, double Height)>();
+            while (baseline.Read())
+            {
+                var values = new object[baseline.FieldCount];
+                baseline.GetValues(values);
+                rows.Add((values, baseline.RowHeight));
+            }
+
+            reader.ResetWorksheet();
+            _ = reader.Read();
+            for (int pass = 0; pass < 2; pass++)
+            {
+                reader.ResetWorksheet();
+                Assert.That(reader.Name, Is.EqualTo(name));
+                Assert.That(reader.RowHeight, Is.Zero);
+                Assert.Throws<InvalidOperationException>(() => reader.GetValue(0));
+                foreach (var row in rows)
+                {
+                    Assert.That(reader.Read(), Is.True);
+                    var values = new object[reader.FieldCount];
+                    reader.GetValues(values);
+                    Assert.That(values, Is.EqualTo(row.Values));
+                    Assert.That(reader.RowHeight, Is.EqualTo(row.Height));
+                }
+
+                Assert.That(reader.Read(), Is.False);
+            }
+
+            bool next = baseline.NextResult();
+            Assert.That(reader.NextResult(), Is.EqualTo(next));
+            if (!next)
+                break;
+        }
+        while (true);
+
+        Assert.Throws<InvalidOperationException>(reader.ResetWorksheet);
+        reader.Close();
+        Assert.Throws<InvalidOperationException>(reader.ResetWorksheet);
+        Assert.That(source.CanRead, Is.True);
+    }
+
     [TestCase("xml")]
     [TestCase("xml-preparing")]
     [TestCase("xlsb")]

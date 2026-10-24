@@ -261,6 +261,19 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         }
     }
 
+    /// <inheritdoc />
+    public void ResetWorksheet()
+    {
+        if (IsClosed || _worksheetIterator == null)
+            throw new InvalidOperationException("No worksheet is selected.");
+
+        var reader = _rowReader;
+        _rowReader = null;
+        ResetSheetData();
+        reader?.Dispose();
+        _rowReader = _worksheetIterator.Current.OpenReader();
+    }
+
     public virtual void Close()
     {
         if (IsClosed)

@@ -81,6 +81,14 @@ public interface IExcelDataReader : IDataReader
     void Reset();
 
     /// <summary>
+    /// Restarts reading the current worksheet without changing the selected result.
+    /// The next call to <see cref="IDataReader.Read"/> reads its first row.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The reader is closed or no worksheet is selected.</exception>
+    /// <exception cref="ExcelReaderException">A recognized worksheet structure is invalid.</exception>
+    void ResetWorksheet();
+
+    /// <summary>
     /// Gets the number format for the specified field -or- <see langword="null"/> if there is no value.
     /// Returns Excel's original locale-independent built-in format strings.
     /// </summary>
