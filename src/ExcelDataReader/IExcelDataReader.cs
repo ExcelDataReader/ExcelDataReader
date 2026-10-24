@@ -23,6 +23,17 @@ public interface IExcelDataReader : IDataReader
     string? VisibleState { get; }
 
     /// <summary>
+    /// Gets the selected CSV separator, or null for non-CSV readers, when separator detection
+    /// is disabled, or when no result is selected.
+    /// </summary>
+    /// <remarks>
+    /// Available immediately after creating a CSV reader. The separator may contain multiple
+    /// characters. With configured candidates, returns the selected candidate even if it does
+    /// not occur in the input. Reading to the end of a result does not clear this property.
+    /// </remarks>
+    string? CsvSeparator { get; }
+
+    /// <summary>
     /// Gets the active sheet.
     /// </summary>
     int ActiveSheet { get; }

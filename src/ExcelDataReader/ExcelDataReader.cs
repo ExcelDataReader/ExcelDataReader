@@ -38,6 +38,8 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     public string? VisibleState => _worksheetIterator?.Current?.VisibleState;
 
+    public virtual string? CsvSeparator => null;
+
     public int ActiveSheet => GetWorkbook().ActiveSheet;
 
     public bool IsActiveSheet => _idx == GetWorkbook().ActiveSheet;
@@ -70,6 +72,8 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     protected bool SinglePassMode { set => _singlePassMode = value; }
 
     protected TWorkbook? Workbook { get; set; }
+
+    protected TWorksheet? CurrentWorksheet => _worksheetIterator == null ? default : _worksheetIterator.Current;
 
     private Cell?[]? RowCells { get; set; }
 

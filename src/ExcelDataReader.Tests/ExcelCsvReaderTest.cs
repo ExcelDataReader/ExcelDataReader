@@ -8,6 +8,62 @@ namespace ExcelDataReader.Tests;
 /// </summary>
 public class ExcelCsvReaderTest
 {
+    [TestCase(",", 0)]
+    [TestCase(";", 0)]
+    [TestCase("||", 0)]
+    [TestCase("||", 1)]
+    public void CsvSeparatorExposesSelectedCandidateAndFollowsResultLifecycle(string separator, int analyzeRows)
+    {
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes($"first{separator}second\nthird{separator}fourth"));
+        using var reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration
+        {
+            AutodetectSeparators = [",", ";", "||"],
+            AnalyzeInitialCsvRows = analyzeRows,
+        });
+        Assert.That(reader.CsvSeparator, Is.EqualTo(separator));
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(1), Is.EqualTo("second"));
+        Assert.That(reader.CsvSeparator, Is.EqualTo(separator));
+        while (reader.Read())
+        {
+        }
+
+        Assert.That(reader.CsvSeparator, Is.EqualTo(separator));
+        reader.Reset();
+        Assert.That(reader.CsvSeparator, Is.EqualTo(separator));
+        Assert.That(reader.NextResult(), Is.False);
+        Assert.That(reader.CsvSeparator, Is.Null);
+        reader.Reset();
+        Assert.That(reader.CsvSeparator, Is.EqualTo(separator));
+        reader.Close();
+        Assert.That(reader.CsvSeparator, Is.Null);
+        reader.Reset();
+        Assert.That(reader.CsvSeparator, Is.Null);
+    }
+
+    [TestCase("")]
+    [TestCase("one column")]
+    public void CsvSeparatorReturnsConfiguredCandidateEvenWithoutMatches(string text)
+    {
+        using var reader = ExcelReaderFactory.CreateCsvReader(
+            new MemoryStream(Encoding.UTF8.GetBytes(text)),
+            new ExcelReaderConfiguration { AutodetectSeparators = ["||"] });
+        Assert.That(reader.CsvSeparator, Is.EqualTo("||"));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void CsvSeparatorIsNullWhenDetectionIsDisabled(bool nullCandidates)
+    {
+        using var reader = ExcelReaderFactory.CreateCsvReader(
+            new MemoryStream(Encoding.UTF8.GetBytes("a,b||c")),
+            new ExcelReaderConfiguration { AutodetectSeparators = nullCandidates ? null : [] });
+        Assert.That(reader.CsvSeparator, Is.Null);
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo("a,b||c"));
+        Assert.That(reader.CsvSeparator, Is.Null);
+    }
+
     [Test]
     public void CsvCommaInQuotes()
     {
