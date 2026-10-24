@@ -7,6 +7,20 @@ namespace ExcelDataReader.Tests;
 
 public class EncryptionTests
 {
+    [TestCase("")]
+    [TestCase("password")]
+    [TestCase("\u00e5\u4e2d\ud83d\ude00")]
+    [TestCase("\ud800x\udc00")]
+    public void SaltedPasswordEncodingPreservesUnicodeAndFallback(string password)
+    {
+        byte[] salt = [0, 255, 17];
+        var expected = salt.Concat(System.Text.Encoding.Unicode.GetBytes(password)).ToArray();
+
+        Assert.That(CryptoHelpers.EncodeSaltedPassword(password, salt), Is.EqualTo(expected));
+        Assert.That(salt, Is.EqualTo(new byte[] { 0, 255, 17 }));
+        Assert.That(CryptoHelpers.EncodeSaltedPassword(password, []), Is.EqualTo(System.Text.Encoding.Unicode.GetBytes(password)));
+    }
+
     [TestCase("agile_AES128_SHA1_CBC_pwd_password.xlsx", "password")]
     [TestCase("agile_AES192_SHA512_CBC_pwd_password.xlsx", "password")]
     [TestCase("standard_AES256_SHA1_ECB_pwd_password.xlsx", "password")]

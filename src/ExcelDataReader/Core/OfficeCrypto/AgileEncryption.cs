@@ -145,7 +145,7 @@ internal sealed class AgileEncryption : EncryptionInfo
 
     private static byte[] HashPassword(string password, byte[] saltValue, HashAlgorithm hashAlgorithm, int spinCount)
     {
-        var saltAndPassword = CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password));
+        var saltAndPassword = CryptoHelpers.EncodeSaltedPassword(password, saltValue);
         var hash = hashAlgorithm.ComputeHash(saltAndPassword);
         CryptoHelpers.SpinHash(hashAlgorithm, hash, spinCount);
         return hash;

@@ -31,6 +31,15 @@ internal static class CryptoHelpers
 
     public static byte[] Combine(byte[] first, byte[] second) => [.. first, .. second];
 
+    public static byte[] EncodeSaltedPassword(string password, byte[] salt)
+    {
+        var encoding = System.Text.Encoding.Unicode;
+        var result = new byte[checked(salt.Length + encoding.GetByteCount(password))];
+        Buffer.BlockCopy(salt, 0, result, 0, salt.Length);
+        encoding.GetBytes(password, 0, password.Length, result, salt.Length);
+        return result;
+    }
+
     public static void WriteInt32LittleEndian(byte[] destination, int offset, int value)
     {
         destination[offset] = (byte)value;
@@ -108,7 +117,7 @@ internal static class CryptoHelpers
 #endif
     }
 
-    public static SymmetricAlgorithm CreateCipher(CipherIdentifier identifier, int keySize, int blockSize, CipherMode mode) => identifier switch 
+    public static SymmetricAlgorithm CreateCipher(CipherIdentifier identifier, int keySize, int blockSize, CipherMode mode) => identifier switch
     {
         CipherIdentifier.RC4 => new RC4Managed(),
 #pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
