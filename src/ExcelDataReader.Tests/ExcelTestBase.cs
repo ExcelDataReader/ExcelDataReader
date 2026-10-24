@@ -10,6 +10,15 @@ public abstract class ExcelTestBase
     protected virtual bool SupportsCodeName => true;
 
     [Test]
+    public void CsvSeparatorIsNullForSpreadsheets()
+    {
+        using var reader = OpenReader("OldIssue11573_BlankValues");
+        Assert.That(reader.CsvSeparator, Is.Null);
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.CsvSeparator, Is.Null);
+    }
+
+    [Test]
     public void IssueDateAndTime1468Test()
     {
         using IExcelDataReader excelReader = OpenReader("EncodingFormulaDate1520");

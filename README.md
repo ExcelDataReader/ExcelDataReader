@@ -119,6 +119,15 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 | `GetCellStyle()`                                                                        | returns an object containing style information for a cell in the current row: indent, horizontal alignment, hidden, locked.                                                                                             |
 | The typed `Get*()` methods                                                              | throw `InvalidCastException` unless the types match exactly.                                                                                                                                                            |
 
+`CsvSeparator` returns the selected CSV delimiter as a string, including
+multi-character delimiters. It is available immediately after `CreateCsvReader()`
+and remains available after reading the last row. It returns `null` for
+spreadsheet formats, when separator detection is disabled, or after closing
+the reader or advancing past its only result. `Reset()` restores the CSV result
+and its separator unless the reader is closed. If candidates are configured but
+none occurs in the input (including empty input), the property still returns
+the candidate selected by the analyzer; it does not indicate detection certainty.
+
 ### Cell comments
 
 `GetComment(columnIndex)` returns an immutable `CellCommentThread` for the current

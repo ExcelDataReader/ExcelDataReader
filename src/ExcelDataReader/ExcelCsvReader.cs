@@ -12,4 +12,6 @@ internal sealed class ExcelCsvReader : ExcelDataReader<CsvWorkbook, CsvWorksheet
         // By default, the data reader is positioned on the first result.
         Reset();
     }
+
+    public override string? CsvSeparator => CurrentWorksheet?.Separator is { } separator && separator != "\0" ? separator : null;
 }
