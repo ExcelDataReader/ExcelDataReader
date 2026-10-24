@@ -3,6 +3,71 @@ namespace ExcelDataReader.Tests;
 [TestFixture]
 public class ExcelReaderFactoryTests
 {
+    [TestCase(1)]
+    [TestCase(7)]
+    public void RawXlsAcceptsShortReads(int chunkSize)
+    {
+        using var data = new MemoryStream();
+        using (var writer = new BinaryWriter(data, System.Text.Encoding.Unicode, leaveOpen: true))
+        {
+            writer.Write((ushort)0x809);
+            writer.Write((ushort)16);
+            writer.Write((ushort)0x600);
+            writer.Write((ushort)0x10);
+            writer.Write(new byte[12]);
+            writer.Write((ushort)0x203);
+            writer.Write((ushort)14);
+            writer.Write((ushort)0);
+            writer.Write((ushort)0);
+            writer.Write((ushort)0);
+            writer.Write(42.0);
+            writer.Write((ushort)0xA);
+            writer.Write((ushort)0);
+        }
+
+        using var stream = new ShortReadStream(data.ToArray(), chunkSize);
+        using var reader = ExcelReaderFactory.CreateReader(stream);
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetDouble(0), Is.EqualTo(42));
+        Assert.That(reader.Read(), Is.False);
+    }
+
+    [Test]
+    public void XlsTransportHandlesShortReadsAndRejectsTruncation(
+        [Values(1, 7, 1024)] int chunkSize,
+        [Values(20, 1024, 3000)] int payloadLength,
+        [Values(false, true)] bool truncated)
+    {
+        using var data = new MemoryStream();
+        byte[] payload = Enumerable.Range(0, payloadLength).Select(i => (byte)i).ToArray();
+        using (var writer = new BinaryWriter(data, System.Text.Encoding.Unicode, leaveOpen: true))
+        {
+            writer.Write((ushort)0xFF);
+            writer.Write((ushort)1018);
+            writer.Write(new byte[1018]);
+            writer.Write((ushort)0xFF);
+            writer.Write((ushort)payloadLength);
+            writer.Write(payload);
+        }
+
+        byte[] bytes = data.ToArray();
+        if (truncated)
+            Array.Resize(ref bytes, bytes.Length - 1);
+        using var source = new ShortReadStream(bytes, chunkSize);
+        using var transport = new Core.BinaryFormat.XlsBiffStream(source);
+        Assert.That(transport.ReadFrame(out _), Is.True);
+        if (truncated)
+        {
+            Assert.Throws<EndOfStreamException>(() => transport.ReadFrame(out _));
+        }
+        else
+        {
+            Assert.That(transport.ReadFrame(out var frame), Is.True);
+            Assert.That(frame.Bytes.Skip(4).Take(payloadLength), Is.EqualTo(payload));
+            Assert.That(transport.ReadFrame(out _), Is.False);
+        }
+    }
+
     [Test]
     public void FactoriesRejectNullStreams(
         [Values("auto", "binary", "openxml", "csv")] string format,
@@ -127,6 +192,15 @@ public class ExcelReaderFactoryTests
         Assert.Throws<IOException>(() => ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguration { LeaveOpen = true }));
         Assert.That(stream.IsDisposed, Is.False);
         stream.Dispose();
+    }
+
+    private sealed class ShortReadStream(byte[] bytes, int chunkSize) : MemoryStream(bytes)
+    {
+        public override int Read(byte[] buffer, int offset, int count) => base.Read(buffer, offset, Math.Min(count, chunkSize));
+
+#if NET8_0_OR_GREATER
+        public override int Read(Span<byte> buffer) => base.Read(buffer[..Math.Min(buffer.Length, chunkSize)]);
+#endif
     }
 
     private sealed class ProbeFailureStream : MemoryStream
