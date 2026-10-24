@@ -70,8 +70,17 @@ public class SpanStreamTests
         AssertMatchingReads(arrayStream, spanStream);
         if (arrayStream.CanSeek)
         {
-            Assert.Throws<InvalidOperationException>(() => Assert.That(arrayStream.Read(new byte[1], 0, 1), Is.Zero));
-            Assert.Throws<InvalidOperationException>(() => Assert.That(spanStream.Read(new byte[1].AsSpan()), Is.Zero));
+            Assert.That(arrayStream.Read(new byte[1], 0, 1), Is.Zero);
+            Assert.That(spanStream.Read(new byte[1].AsSpan()), Is.Zero);
+            Assert.That(spanStream.Read(Span<byte>.Empty), Is.Zero);
+            arrayStream.Seek(-1, SeekOrigin.End);
+            spanStream.Seek(-1, SeekOrigin.End);
+            var expected = new byte[16];
+            var actual = new byte[16];
+            Assert.That(arrayStream.Read(expected, 0, expected.Length), Is.EqualTo(1));
+            Assert.That(spanStream.Read(actual.AsSpan()), Is.EqualTo(1));
+            Assert.That(actual, Is.EqualTo(expected));
+            Assert.That(spanStream.Position, Is.EqualTo(spanStream.Length));
             arrayStream.Seek(3, SeekOrigin.Begin);
             spanStream.Seek(3, SeekOrigin.Begin);
             AssertMatchingReads(arrayStream, spanStream, 3);

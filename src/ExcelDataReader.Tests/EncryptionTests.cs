@@ -144,26 +144,24 @@ public class EncryptionTests
         Assert.That(input.DisposeCount, Is.EqualTo(1));
     }
 
-    [TestCase("agile_AES128_SHA1_CBC_pwd_password.xlsx")]
-    [TestCase("agile_AES192_SHA512_CBC_pwd_password.xlsx")]
-    [TestCase("agile_DESede_SHA384_CBC_pwd_password.xlsx")]
-    [TestCase("agile_DES_MD5_CBC_pwd_password.xlsx")]
-    [TestCase("agile_RC2_SHA1_CBC_pwd_password.xlsx")]
-    public void AgileSegmentsPreservePlaintextAcrossReadsAndSeeks(string file)
+    [Test]
+    public void AgileSegmentsPreservePlaintextAcrossReadsAndSeeks(
+        [Values("agile_AES128_SHA1_CBC_pwd_password.xlsx", "agile_AES192_SHA512_CBC_pwd_password.xlsx", "agile_DESede_SHA384_CBC_pwd_password.xlsx", "agile_DES_MD5_CBC_pwd_password.xlsx", "agile_RC2_SHA1_CBC_pwd_password.xlsx")] string file,
+        [Values(0, 1, 4096, 4097, (3 * 4096) - 13)] int length)
     {
         using var source = Configuration.GetTestWorkbook(file);
         var document = new CompoundDocument(source);
         var info = document.FindEntry("EncryptionInfo")!;
         var encryption = (AgileEncryption)EncryptionInfo.Create(document.ReadStream(source, info.StreamFirstSector, (int)info.StreamSize, info.IsEntryMiniStream));
         var key = encryption.GenerateSecretKey("password");
-        var expected = new byte[(3 * 4096) - 13];
+        var expected = new byte[length];
         new Random(42).NextBytes(expected);
         using var package = new MemoryStream();
         package.Write(BitConverter.GetBytes((long)expected.Length), 0, 8);
         using (var cipher = encryption.CreateCipher())
         {
             cipher.Padding = System.Security.Cryptography.PaddingMode.Zeros;
-            for (int segment = 0; segment < 3; segment++)
+            for (int segment = 0; segment * 4096 < length; segment++)
             {
                 using var encryptor = cipher.CreateEncryptor(key, encryption.GenerateBlockKey(segment, encryption.SaltValue));
                 var bytes = encryptor.TransformFinalBlock(expected, segment * 4096, Math.Min(4096, expected.Length - (segment * 4096)));
@@ -183,12 +181,38 @@ public class EncryptionTests
         }
 
         Assert.That(actual, Is.EqualTo(expected));
-        foreach (int position in new[] { 4095, 8192, 1, 4096, 0 })
+        foreach (int position in new[] { 4095, 8192, 1, 4096, 0 }.Where(position => position <= length))
         {
             Assert.That(decrypted.Seek(position, SeekOrigin.Begin), Is.EqualTo(position));
             var bytes = new byte[17];
-            Assert.That(decrypted.Read(bytes, 0, bytes.Length), Is.EqualTo(bytes.Length));
-            Assert.That(bytes, Is.EqualTo(expected.Skip(position).Take(bytes.Length).ToArray()));
+            int count = Math.Min(bytes.Length, length - position);
+            Assert.That(decrypted.Read(bytes, 0, bytes.Length), Is.EqualTo(count));
+            Assert.That(bytes.Take(count), Is.EqualTo(expected.Skip(position).Take(count)));
+            Assert.That(bytes.Skip(count), Is.All.Zero);
+        }
+
+        decrypted.Position = length;
+        Assert.That(decrypted.Read(actual, 0, 0), Is.Zero);
+        Assert.That(decrypted.Read(new byte[1], 0, 1), Is.Zero);
+        Assert.That(decrypted.ReadByte(), Is.EqualTo(-1));
+        Assert.That(decrypted.Seek(length + 4096L, SeekOrigin.Begin), Is.EqualTo(length + 4096L));
+        Assert.That(decrypted.Position, Is.EqualTo(length + 4096L));
+        Assert.That(decrypted.Read(new byte[1], 0, 1), Is.Zero);
+        decrypted.Position = 0;
+        using var copied = new MemoryStream();
+        decrypted.CopyTo(copied);
+        Assert.That(copied.ToArray(), Is.EqualTo(expected));
+
+        foreach (int missing in new[] { 1, 4096 }.Where(missing => missing < package.Length))
+        {
+            byte[] truncated = package.ToArray();
+            Array.Resize(ref truncated, truncated.Length - missing);
+            Assert.Throws<EndOfStreamException>(() =>
+            {
+                using var input = new MemoryStream(truncated);
+                using var reader = encryption.CreateEncryptedPackageStream(input, key);
+                reader.CopyTo(Stream.Null);
+            });
         }
     }
 
