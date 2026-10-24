@@ -44,5 +44,9 @@
     <EmbeddedResource Include="..\TestData\standard_AES128_SHA1_ECB_pwd_password.xlsx" />
     <EmbeddedResource Include="..\TestData\Issue242_StdRc4PwdPassword.xls" />
     <EmbeddedResource Include="..\TestData\Issue242_XorPwdPassword.xls" />
+    <EmbeddedResource Include="..\TestData\OldIssue11573_BlankValues.xls" />
+    <EmbeddedResource Include="..\TestData\OldIssue11573_BlankValues.xlsx" />
+    <EmbeddedResource Include="..\TestData\OldIssue11573_BlankValues.xlsb" />
+    <EmbeddedResource Include="..\TestData\OldIssue11573_BlankValues.xml" />
   </ItemGroup>
 </Project>
