@@ -194,17 +194,17 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
         return (visibleState, codeName, headerFooter);
     }
 
-    private static string? NormalizeHeaderFooter(string? value)
-        => value?.Replace("&V", "&L").Replace("&H", "&R").Replace("&S", "&P");
-
-    private static int ReadIndex(XmlReader reader, int current)
+    internal static int ReadIndex(XmlReader reader, int current)
     {
         int index = ParseInt(GetSpreadsheetAttribute(reader, "Index"), -1);
         return index > 0 ? index - 1 : current;
     }
 
-    private static int ReadCount(XmlReader reader, string attribute)
+    internal static int ReadCount(XmlReader reader, string attribute)
         => Math.Max(0, ParseInt(GetSpreadsheetAttribute(reader, attribute)));
+
+    private static string? NormalizeHeaderFooter(string? value)
+        => value?.Replace("&V", "&L").Replace("&H", "&R").Replace("&S", "&P");
 
     private static bool IsCellElement(XmlReader reader)
         => reader.NodeType == XmlNodeType.Element &&

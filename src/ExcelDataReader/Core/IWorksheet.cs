@@ -26,4 +26,6 @@ internal interface IWorksheet
     double DefaultRowHeight { get; }
 
     IWorksheetReader OpenReader();
+
+    Dictionary<long, CellCommentThread>? LoadComments();
 }

@@ -119,6 +119,28 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 | `GetCellStyle()`                                                                        | returns an object containing style information for a cell in the current row: indent, horizontal alignment, hidden, locked.                                                                                             |
 | The typed `Get*()` methods                                                              | throw `InvalidCastException` unless the types match exactly.                                                                                                                                                            |
 
+### Cell comments
+
+`GetComment(columnIndex)` returns an immutable `CellCommentThread` for the current
+row, or `null` when there is no supported comment. Its read-only `Messages`
+collection contains one `CellCommentMessage` for a legacy note, with `Author`
+and plain `Text`. The author is `null` for older XLS formats without author data.
+Legacy notes are supported in XLS, XLSX, XLSB and SpreadsheetML; modern threaded
+comments are not yet read. CSV always returns `null`. Rich-text formatting,
+note layout and automatic DataSet export are not included.
+
+Comments are loaded only when requested, once per worksheet, and cached for the
+reader's lifetime. The first request scans the worksheet in XLS and SpreadsheetML
+or reads the related comments part in XLSX/XLSB. Memory use is proportional to
+the loaded notes; reading without `GetComment()` does not decode or cache them.
+Notes never extend row or field counts, so only comments within the readable
+range are accessible, including notes on blank cells within that range.
+
+Call `Read()` successfully before accessing a comment. `GetComment()` throws
+`InvalidOperationException` when there is no current row and
+`IndexOutOfRangeException` for an invalid column. Invalid supported comment data
+is reported on first access; failed loads are not cached and may be retried.
+
 ### CreateReader() configuration options
 
 The `ExcelReaderFactory.CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()`, `CreateCsvReader()` methods accept an optional configuration object to modify the behavior of the reader:

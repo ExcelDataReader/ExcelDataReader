@@ -118,4 +118,19 @@ public interface IExcelDataReader : IDataReader
     /// <param name="i">The index of the column to find.</param>
     /// <returns>The cell error, or null if no error.</returns>
     CellError? GetCellError(int i);
+
+    /// <summary>
+    /// Gets the legacy comment for the specified column on the current row, or null if none is present.
+    /// Modern threaded comments are not currently read. CSV always returns null.
+    /// </summary>
+    /// <remarks>
+    /// The first call for a worksheet loads its notes lazily. XLS and SpreadsheetML require an
+    /// additional scan; subsequent calls reuse the loaded notes for the reader's lifetime.
+    /// Notes do not extend the reader's row or field counts.
+    /// </remarks>
+    /// <param name="i">The zero-based column index.</param>
+    /// <returns>The immutable comment, or null.</returns>
+    /// <exception cref="InvalidOperationException">There is no current row.</exception>
+    /// <exception cref="IndexOutOfRangeException">The column is outside the current field count.</exception>
+    CellCommentThread? GetComment(int i);
 }

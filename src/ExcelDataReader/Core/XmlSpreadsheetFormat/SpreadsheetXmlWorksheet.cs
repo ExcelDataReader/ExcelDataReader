@@ -10,6 +10,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     private readonly IReadOnlyDictionary<string, ExtendedFormat> _stylesById;
     private readonly IReadOnlyDictionary<int, NumberFormatString>? _formats;
     private readonly int _worksheetIndex;
+    private Dictionary<long, CellCommentThread>? _comments;
 
     private SpreadsheetXmlWorksheet(
         string name,
@@ -128,6 +129,25 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
 
     public IWorksheetReader OpenReader()
         => new SpreadsheetXmlWorksheetReader(_stream, _worksheetIndex, _stylesById, _formats, WorksheetReadMode.Materialize);
+
+    public Dictionary<long, CellCommentThread>? LoadComments()
+    {
+        if (_comments != null)
+            return _comments;
+        long position = _stream.Position;
+        Dictionary<long, CellCommentThread> comments;
+        try
+        {
+            _stream.Position = 0;
+            comments = SpreadsheetXmlCommentsReader.Load(_stream, _worksheetIndex);
+        }
+        finally
+        {
+            _stream.Position = position;
+        }
+
+        return _comments = comments;
+    }
 
     private struct MetadataSink(
         string name,

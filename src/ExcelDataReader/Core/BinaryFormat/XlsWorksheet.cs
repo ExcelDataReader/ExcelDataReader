@@ -8,6 +8,7 @@ namespace ExcelDataReader.Core.BinaryFormat;
 internal sealed class XlsWorksheet : IWorksheet
 {
     private readonly XlsWorksheetMetadata _metadata;
+    private Dictionary<long, CellCommentThread>? _comments;
 
     public XlsWorksheet(XlsWorkbook workbook, XlsSheetInfo refSheet, Stream stream, bool singlePassMode = false)
     {
@@ -63,4 +64,22 @@ internal sealed class XlsWorksheet : IWorksheet
     public XlsWorkbook Workbook { get; }
 
     public IWorksheetReader OpenReader() => new XlsWorksheetReader(this);
+
+    public Dictionary<long, CellCommentThread>? LoadComments()
+    {
+        if (_comments != null)
+            return _comments;
+        long position = Stream.Position;
+        Dictionary<long, CellCommentThread> comments;
+        try
+        {
+            comments = XlsCommentsReader.Load(this);
+        }
+        finally
+        {
+            Stream.Position = position;
+        }
+
+        return _comments = comments;
+    }
 }

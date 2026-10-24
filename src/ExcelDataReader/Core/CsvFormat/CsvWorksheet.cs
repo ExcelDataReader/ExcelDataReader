@@ -90,5 +90,7 @@ internal sealed class CsvWorksheet : IWorksheet
 
     private int AnalyzedRowCount { get; }
 
+    public Dictionary<long, CellCommentThread>? LoadComments() => null;
+
     public IWorksheetReader OpenReader() => new CsvWorksheetReader(this, BomLength);
 }

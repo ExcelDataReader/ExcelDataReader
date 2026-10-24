@@ -24,6 +24,8 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     private double _pendingRowHeight;
     private double _rowHeight;
     private bool _rowReady;
+    private Dictionary<long, CellCommentThread>? _comments;
+    private bool _commentsLoaded;
 
     ~ExcelDataReader()
     {
@@ -212,6 +214,22 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
         return RowCells[i]?.Error;
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2201:Do not raise reserved exception types", Justification = "Match existing cell accessor column validation.")]
+    public CellCommentThread? GetComment(int i)
+    {
+        if (RowCells == null || _rowReader == null)
+            throw new InvalidOperationException("No data exists for the row/column.");
+        if ((uint)i >= (uint)FieldCount)
+            throw new IndexOutOfRangeException();
+        if (!_commentsLoaded)
+        {
+            _comments = _worksheetIterator!.Current.LoadComments();
+            _commentsLoaded = true;
+        }
+
+        return _comments != null && _comments.TryGetValue(((long)(_nextRowIndex - 1) << 32) | (uint)i, out var comment) ? comment : null;
+    }
+
     /// <inheritdoc />
     public void Reset()
     {
@@ -386,6 +404,8 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     private void ResetSheetData()
     {
+        _comments = null;
+        _commentsLoaded = false;
         RowCells = null;
         _nextRowIndex = 0;
         _pendingRowIndex = -1;

@@ -5,6 +5,7 @@ namespace ExcelDataReader.Core.OpenXmlFormat;
 internal sealed class XlsxWorksheet : IWorksheet
 {
     private readonly OpenXmlRowOrder.Region[] _orderRegions = [];
+    private Dictionary<long, CellCommentThread>? _comments;
 
     public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, SheetRecord refSheet, bool singlePassMode = false)
     {
@@ -93,6 +94,9 @@ internal sealed class XlsxWorksheet : IWorksheet
                 ? new OpenXmlRowReader(reader, DefaultRowHeight, _orderRegions)
                 : EmptyReader.Instance
             : EmptyReader.Instance;
+
+    public Dictionary<long, CellCommentThread>? LoadComments() =>
+        _comments ??= Path is { Length: > 0 } path ? Document.LoadComments(path) ?? [] : [];
 
     private struct MetadataConsumer(bool pauseAtSheetData) : IWorksheetHandler
     {
