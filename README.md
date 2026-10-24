@@ -1,16 +1,12 @@
 # ExcelDataReader
 
-[![NuGet](https://img.shields.io/nuget/v/ExcelDataReader.svg)](https://www.nuget.org/packages/ExcelDataReader)
+[![NuGet](https://img.shields.io/nuget/v/ExcelDataReader.svg)](https://www.nuget.org/packages/ExcelDataReader) [![CI](https://github.com/ExcelDataReader/ExcelDataReader/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/ExcelDataReader/ExcelDataReader/actions/workflows/ci.yml)
 
 Lightweight and fast library written in C# for reading Microsoft Excel files (2.0-2021, 365).
 
 Please feel free to fork and submit pull requests to the develop branch.
 
 If you are reporting an issue it is really useful if you can supply an example Excel file as this makes debugging much easier and without it we may not be able to resolve any problems.
-
-## Continuous integration
-
-[![CI](https://github.com/ExcelDataReader/ExcelDataReader/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/ExcelDataReader/ExcelDataReader/actions/workflows/ci.yml)
 
 ## Supported file formats and versions
 
@@ -70,26 +66,11 @@ using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
 
 Use `ExcelReaderFactory.CreateCsvReader` instead of `CreateReader` to parse a stream of plain text with comma separated values.
 
-See also the configuration options `FallbackEncoding` and `AutodetectSeparators`.
+Use `AutodetectSeparators` to configure possible delimiters, including multi-character delimiters such as `["||"]`. The selected delimiter is available through `reader.CsvSeparator`. Set `FallbackEncoding` when reading files that are not UTF-8 and have no encoding marker.
 
-Separator candidates are strings. The defaults remain single characters; multi-character separators
-are considered only when explicitly configured, for example `AutodetectSeparators = ["||"]`.
-Matching is ordinal and separators inside quoted fields are treated as text. Candidates must not
-be null or empty. Multi-character candidates must not contain CR, LF, or the configured quote
-character. There is no fixed length limit. Invalid candidates cause `CreateCsvReader` to throw
-`ArgumentException`: this includes null or empty entries, and multi-character entries containing
-CR, LF, or the configured quote character. Validation occurs when the reader is created, not
-when the property is assigned. A null or empty candidate array retains the existing behavior
-of disabling separator detection and reading each row as a single field.
+By default, the reader examines the whole file during initialization to determine its column and row counts. For large files, set `AnalyzeInitialCsvRows` to limit this analysis to the specified number of rows. `RowCount` is unavailable when this option is enabled, and `FieldCount` is based on the sampled rows.
 
-**4.0 migration:** `AutodetectSeparators` changed from `char[]` to `string[]`.
-Replace character literals such as `[',', ';']` with string literals such as `[",", ";"]`.
-
-The input CSV is always parsed once completely to set FieldCount, RowCount, Encoding, Separator (or twice if the CSV lacks BOM and is not UTF8), and then parsed once again while iterating the row records. Throws `System.Text.DecoderFallbackException` if the input cannot be parsed with the specified encoding.
-
-For large CSV files where `RowCount` is not needed upfront and `FieldCount` from the first row (e.g. a header row) is sufficient, set `AnalyzeInitialCsvRows = 1` to limit the pre-scan to a single row. This avoids reading the entire file twice.
-
-The reader returns all CSV field values as strings and makes no attempts to convert the data to numbers or dates. This caller is responsible for interpreting the CSV data.
+All CSV field values are returned as strings. The caller is responsible for converting them to numbers, dates, or other types.
 
 ### Using the reader methods
 
@@ -119,14 +100,9 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 | `GetCellStyle()`                                                                        | returns an object containing style information for a cell in the current row: indent, horizontal alignment, hidden, locked.                                                                                             |
 | The typed `Get*()` methods                                                              | throw `InvalidCastException` unless the types match exactly.                                                                                                                                                            |
 
-`CsvSeparator` returns the selected CSV delimiter as a string, including
-multi-character delimiters. It is available immediately after `CreateCsvReader()`
-and remains available after reading the last row. It returns `null` for
-spreadsheet formats, when separator detection is disabled, or after closing
-the reader or advancing past its only result. `Reset()` restores the CSV result
-and its separator unless the reader is closed. If candidates are configured but
-none occurs in the input (including empty input), the property still returns
-the candidate selected by the analyzer; it does not indicate detection certainty.
+`CsvSeparator` returns the selected CSV delimiter, including multi-character
+delimiters. It is available immediately after `CreateCsvReader()` and returns
+`null` for non-CSV formats, disabled separator detection, or no selected result.
 
 ### Cell comments
 
@@ -138,17 +114,10 @@ Legacy notes are supported in XLS, XLSX, XLSB and SpreadsheetML; modern threaded
 comments are not yet read. CSV always returns `null`. Rich-text formatting,
 note layout and automatic DataSet export are not included.
 
-Comments are loaded only when requested, once per worksheet, and cached for the
-reader's lifetime. The first request scans the worksheet in XLS and SpreadsheetML
-or reads the related comments part in XLSX/XLSB. Memory use is proportional to
-the loaded notes; reading without `GetComment()` does not decode or cache them.
-Notes never extend row or field counts, so only comments within the readable
-range are accessible, including notes on blank cells within that range.
-
-Call `Read()` successfully before accessing a comment. `GetComment()` throws
-`InvalidOperationException` when there is no current row and
-`IndexOutOfRangeException` for an invalid column. Invalid supported comment data
-is reported on first access; failed loads are not cached and may be retried.
+Call `Read()` successfully before accessing a comment. Comments are loaded only
+when requested, so the first lookup may take additional time and memory. Only
+comments within the reader's row and column range are accessible, including
+notes on blank cells within that range.
 
 ### CreateReader() configuration options
 
@@ -157,46 +126,39 @@ The `ExcelReaderFactory.CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlR
 ```c#
 var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguration()
 {
-    // Gets or sets the encoding to use when the input XLS lacks a CodePage
-    // record, or when the input CSV lacks a BOM and does not parse as UTF8. 
+    // Encoding to use when the input XLS lacks a CodePage record,
+    // or when the input CSV lacks a BOM and does not parse as UTF8.
     // Default: cp1252 (XLS BIFF2-5 and CSV only)
     FallbackEncoding = Encoding.GetEncoding(1252),
 
-    // Gets or sets the password used to open password protected workbooks.
+    // Password used to open password-protected workbooks.
     Password = "password",
 
-    // Gets or sets an array of CSV separator candidates. The reader 
-    // autodetects which best fits the input data. Default: , ; TAB | # 
-    // (CSV only)
+    // CSV separator candidates. The reader autodetects which best fits the input data.
+    // Default: , ; TAB | # (CSV only)
     AutodetectSeparators = new string[] { ",", ";", "\t", "|", "#" },
 
-    // Gets or sets the quote character for CSV. Default: "
-    // (CSV only)
+    // Quote character for CSV. Default: " (CSV only)
     QuoteChar = '"',
 
-    // Gets or sets a value indicating whether to trim white space values for CSV (Default 'true').
-    // (CSV only)
+    // Trim whitespace around CSV fields. Default: true (CSV only)
     TrimWhiteSpace = true,
 
-    // Gets or sets a value indicating whether to leave the stream open after
-    // the IExcelDataReader object is disposed. Default: false
+    // Leave the stream open after the reader is disposed. Default: false
     LeaveOpen = false,
 
-    // Gets or sets a value indicating the number of rows to analyze for
-    // encoding, separator and field count in a CSV. When set, this option
-    // causes the IExcelDataReader.RowCount property to throw an exception.
-    // Default: 0 - analyzes the entire file (CSV only, has no effect on other
-    // formats)
+    // Number of CSV rows to analyze for encoding, separator and field count.
+    // When nonzero, accessing RowCount throws an exception.
+    // Default: 0 - analyzes the entire file (CSV only)
     AnalyzeInitialCsvRows = 0,
 
-    // Gets or sets a value indicating whether to skip the initial full-scan
-    // pass used to determine FieldCount and RowCount. When true, RowCount
+    // Read without determining the full worksheet size upfront. When true, RowCount
     // throws InvalidOperationException and FieldCount grows dynamically as
     // rows are read. Default: false
     // (XLS, XLSX/XLSB, and SpreadsheetML only, has no effect on CSV)
     SinglePassMode = false,
 
-    // Gets or sets an escape character for CSV quoted fields. When set, this
+    // Escape character for CSV quoted fields. When set, this
     // character inside a quoted field escapes the next character, e.g. set to
     // '\\' to support \" as an escaped quote. Not part of RFC 4180; only
     // enable when reading files that use backslash-style escaping.
@@ -205,7 +167,7 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
 });
 ```
 
-`CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()`, and `CreateCsvReader()` require seek support during probing and parsing. If the input stream is non-seekable, ExcelDataReader copies it to a `MemoryStream` first.
+Non-seekable input streams are buffered in memory before reading.
 
 ### Large shared string tables
 
@@ -238,50 +200,45 @@ The `AsDataSet()` method accepts an optional configuration object to modify the 
 ```c#
 var result = reader.AsDataSet(new ExcelDataSetConfiguration()
 {
-    // Gets or sets a value indicating whether to set the DataColumn.DataType 
-    // property in a second pass.
+    // Set the DataColumn.DataType property in a second pass.
     UseColumnDataType = true,
 
-    // Gets or sets a callback to determine whether to include the current sheet
-    // in the DataSet. Called once per sheet before ConfigureDataTable.
+    // Include the current sheet in the DataSet.
+    // Called once per sheet before ConfigureDataTable.
     FilterSheet = (tableReader, sheetIndex) => true,
 
-    // Gets or sets a callback to obtain configuration options for a DataTable. 
+    // Configure each DataTable.
     ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
     {
-        // Gets or sets a value indicating whether the DataTable should be case
-        // sensitive. Useful when setting a primary key after loading from Excel.
+        // Whether the DataTable should be case sensitive.
+        // Useful when setting a primary key after loading from Excel.
         CaseSensitive = false,
 
-        // Gets or sets a value indicating the prefix of generated column names.
+        // Prefix of generated column names.
         EmptyColumnNamePrefix = "Column",
 
-        // Gets or sets a value indicating whether to use a row from the 
-        // data as column names.
+        // Use a row from the data as column names.
         UseHeaderRow = false,
 
-        // Gets or sets a callback to determine which row is the header row. 
+        // Select which row is the header row.
         // Only called when UseHeaderRow = true.
         ReadHeaderRow = (rowReader) => {
             // F.ex skip the first row and use the 2nd row as column headers:
             rowReader.Read();
         },
 
-        // Gets or sets a callback to determine whether to include the 
-        // current row in the DataTable.
+        // Include the current row in the DataTable.
         FilterRow = (rowReader) => {
             return true;
         },
 
-        // Gets or sets a callback to determine whether to include the specific
-        // column in the DataTable. Called once per column after reading the 
-        // headers.
+        // Include the specific column in the DataTable.
+        // Called once per column after reading the headers.
         FilterColumn = (rowReader, columnIndex) => {
             return true;
         },
 
-        // Gets or sets a value indicating whether merged cells should be filled
-        // with their top-left cell's value. Default: false
+        // Fill merged cells with their top-left cell's value. Default: false
         FillMergedCellsValue = false,
     }
 });
@@ -330,6 +287,10 @@ See also:
 - https://www.nuget.org/packages/ExcelNumberFormat
 
 ## Upgrading from 3.x to 4.0
+
+### CSV separator candidates are strings
+
+`AutodetectSeparators` changed from `char[]` to `string[]` to support multi-character delimiters. Replace character literals such as `[',', ';']` with string literals such as `[",", ";"]`.
 
 ### Null cells now return `DBNull.Value` instead of `null`
 
