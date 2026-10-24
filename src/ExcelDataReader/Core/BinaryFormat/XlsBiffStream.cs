@@ -159,9 +159,9 @@ internal sealed class XlsBiffStream : IDisposable
     }
 
     // Serves 'count' bytes into dest[destOffset..], draining the read-ahead buffer first.
-    // When the buffer is exhausted it is refilled with a single BaseStream.Read(1024).
+    // Refill read-ahead in one call when possible, accumulating short reads as needed.
     // For large bodies that exceed the remaining buffer the tail is read directly from
-    // BaseStream in one call (avoids per-1024-chunk overhead for SST / other big records).
+    // BaseStream (avoids per-1024-chunk overhead for SST / other big records).
     private void ReadFromReadAhead(byte[] dest, int destOffset, int count)
     {
         // Fast path: serve from the in-memory buffer when possible.
@@ -186,8 +186,13 @@ internal sealed class XlsBiffStream : IDisposable
         {
             _readAheadStart = 0;
             _readAheadEnd = BaseStream.Read(_readAheadBuffer, 0, ReadAheadSize);
-            if (_readAheadEnd < count)
-                throw new EndOfStreamException();
+            while (_readAheadEnd < count)
+            {
+                int read = BaseStream.Read(_readAheadBuffer, _readAheadEnd, ReadAheadSize - _readAheadEnd);
+                if (read == 0)
+                    throw new EndOfStreamException();
+                _readAheadEnd += read;
+            }
 
             Buffer.BlockCopy(_readAheadBuffer, 0, dest, destOffset, count);
             _readAheadStart = count;
@@ -199,7 +204,8 @@ internal sealed class XlsBiffStream : IDisposable
             // and will be refilled on the next call.
             _readAheadStart = 0;
             _readAheadEnd = 0;
-            BaseStream.ReadAtLeast(dest, destOffset, count);
+            if (BaseStream.ReadAtLeast(dest, destOffset, count) != count)
+                throw new EndOfStreamException();
         }
     }
 
