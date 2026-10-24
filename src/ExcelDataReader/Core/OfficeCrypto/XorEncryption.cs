@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 
 namespace ExcelDataReader.Core.OfficeCrypto;
 
@@ -36,10 +37,11 @@ internal sealed class XorEncryption : EncryptionInfo
         return XorManaged.CreateXorArray_Method1(passwordBytes);
     }
 
-    public override bool VerifyPassword(string password)
+    public override bool TryVerifyPassword(string password, [NotNullWhen(true)] out byte[]? secretKey)
     {
         var passwordBytes = System.Text.Encoding.ASCII.GetBytes(password.Substring(0, Math.Min(password.Length, 15)));
         var verifier = XorManaged.CreatePasswordVerifier_Method1(passwordBytes);
-        return verifier == HashValue;
+        secretKey = verifier == HashValue ? XorManaged.CreateXorArray_Method1(passwordBytes) : null;
+        return secretKey != null;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 
 namespace ExcelDataReader.Core.OfficeCrypto;
 
@@ -200,13 +201,14 @@ internal sealed class StandardEncryption : EncryptionInfo
         }
     }
 
-    public override bool VerifyPassword(string password)
+    public override bool TryVerifyPassword(string password, [NotNullWhen(true)] out byte[]? secretKey)
     {
         // 2.3.4.9 Password Verification (Standard Encryption)
         // 2.3.5.6 Password Verification
-        var secretKey = GenerateSecretKey(password);
+        secretKey = null;
+        var candidateKey = GenerateSecretKey(password);
 
-        var blockKey = ((Flags & EncryptionHeaderFlags.AES) != 0) ? secretKey : GenerateBlockKey(0, secretKey);
+        var blockKey = ((Flags & EncryptionHeaderFlags.AES) != 0) ? candidateKey : GenerateBlockKey(0, candidateKey);
 
         using var cipher = CryptoHelpers.CreateCipher(CipherAlgorithm, KeySize, BlockSize, CipherMode.ECB);
         using var transform = cipher.CreateDecryptor(blockKey, SaltValue);
@@ -220,6 +222,7 @@ internal sealed class StandardEncryption : EncryptionInfo
                 return false;
         }
 
+        secretKey = candidateKey;
         return true;
     }
 

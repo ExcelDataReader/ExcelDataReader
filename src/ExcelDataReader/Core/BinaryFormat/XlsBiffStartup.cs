@@ -53,11 +53,11 @@ internal static class XlsBiffStartup
         if (frame.IsValid && frame.Id == BIFFRECORDTYPE.FILEPASS)
         {
             encryption = ReadEncryption(frame, version);
-            if (encryption.VerifyPassword("VelvetSweatshop"))
-                password = "VelvetSweatshop";
-            else if (password == null || !encryption.VerifyPassword(password))
+            if (!encryption.TryVerifyPassword("VelvetSweatshop", out secretKey) &&
+                (password == null || !encryption.TryVerifyPassword(password, out secretKey)))
+            {
                 throw new InvalidPasswordException(Errors.ErrorInvalidPassword);
-            secretKey = encryption.GenerateSecretKey(password);
+            }
         }
         else
         {

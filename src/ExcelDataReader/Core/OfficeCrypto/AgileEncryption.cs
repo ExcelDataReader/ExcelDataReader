@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 using System.Xml;
 
 namespace ExcelDataReader.Core.OfficeCrypto;
@@ -18,7 +19,7 @@ internal sealed class AgileEncryption : EncryptionInfo
 
     private static readonly byte[] _inputSuffix = [0xfe, 0xa7, 0xd2, 0x76, 0x3b, 0x4b, 0x9e, 0x79];
     private static readonly byte[] _valueSuffix = [0xd7, 0xaa, 0x0f, 0x6d, 0x30, 0x61, 0x34, 0x4e];
-    
+
     public AgileEncryption(byte[] bytes)
     {
         using var stream = new MemoryStream(bytes, 8, bytes.Length - 8);
@@ -70,9 +71,13 @@ internal sealed class AgileEncryption : EncryptionInfo
 
     public override byte[] GenerateSecretKey(string password)
     {
+        byte[] passwordHash;
+        using (var hashAlgorithm = CryptoHelpers.Create(PasswordHashAlgorithm))
+            passwordHash = HashPassword(password, PasswordSaltValue, hashAlgorithm, PasswordSpinCount);
+
         using var cipher = CryptoHelpers.CreateCipher(PasswordCipherAlgorithm, PasswordKeyBits, PasswordBlockSize * 8, PasswordCipherChaining);
 
-        return GenerateSecretKey(password, PasswordSaltValue, PasswordHashAlgorithm, PasswordEncryptedKeyValue, PasswordSpinCount, PasswordKeyBits, cipher);
+        return GenerateSecretKey(passwordHash, PasswordSaltValue, PasswordHashAlgorithm, PasswordEncryptedKeyValue, PasswordKeyBits, cipher);
     }
 
     public override int GenerateBlockKey(int blockNumber, byte[] secretKey, byte[] destination)
@@ -86,18 +91,19 @@ internal sealed class AgileEncryption : EncryptionInfo
         return new AgileEncryptedPackageStream(stream, secretKey, SaltValue, this);
     }
 
-    public override bool VerifyPassword(string password)
+    public override bool TryVerifyPassword(string password, [NotNullWhen(true)] out byte[]? secretKey)
     {
-        byte[] secretKey;
+        secretKey = null;
+        byte[] passwordHash;
         using (var hashAlgorithm = CryptoHelpers.Create(PasswordHashAlgorithm))
-            secretKey = HashPassword(password, PasswordSaltValue, hashAlgorithm, PasswordSpinCount);
+            passwordHash = HashPassword(password, PasswordSaltValue, hashAlgorithm, PasswordSpinCount);
 
         var inputBlockKey = CryptoHelpers.HashBytes(
-            CryptoHelpers.Combine(secretKey, _inputSuffix), PasswordHashAlgorithm);
+            CryptoHelpers.Combine(passwordHash, _inputSuffix), PasswordHashAlgorithm);
         Array.Resize(ref inputBlockKey, PasswordKeyBits / 8);
 
         var valueBlockKey = CryptoHelpers.HashBytes(
-            CryptoHelpers.Combine(secretKey, _valueSuffix),
+            CryptoHelpers.Combine(passwordHash, _valueSuffix),
             PasswordHashAlgorithm);
         Array.Resize(ref valueBlockKey, PasswordKeyBits / 8);
 
@@ -113,20 +119,15 @@ internal sealed class AgileEncryption : EncryptionInfo
                 return false;
         }
 
+        secretKey = GenerateSecretKey(passwordHash, PasswordSaltValue, PasswordHashAlgorithm, PasswordEncryptedKeyValue, PasswordKeyBits, cipher);
         return true;
     }
 
-    private static byte[] GenerateSecretKey(string password, byte[] saltValue, HashIdentifier hashIdentifier, byte[] encryptedKeyValue, int spinCount, int keyBits, SymmetricAlgorithm cipher)
+    private static byte[] GenerateSecretKey(byte[] passwordHash, byte[] saltValue, HashIdentifier hashIdentifier, byte[] encryptedKeyValue, int keyBits, SymmetricAlgorithm cipher)
     {
         byte[] block3 = [0x14, 0x6e, 0x0b, 0xe7, 0xab, 0xac, 0xd0, 0xd6];
 
-        byte[] hash;
-        using (var hashAlgorithm = CryptoHelpers.Create(hashIdentifier))
-        {
-            hash = HashPassword(password, saltValue, hashAlgorithm, spinCount);
-
-            hash = CryptoHelpers.HashBytes(CryptoHelpers.Combine(hash, block3), hashIdentifier);
-        }
+        byte[] hash = CryptoHelpers.HashBytes(CryptoHelpers.Combine(passwordHash, block3), hashIdentifier);
 
         // Truncate or pad with 0x36
         var hashSize = hash.Length;
