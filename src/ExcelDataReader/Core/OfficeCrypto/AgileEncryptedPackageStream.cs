@@ -8,10 +8,8 @@ internal sealed class AgileEncryptedPackageStream : Stream
     private const int SegmentLength = 4096;
 
     private System.Security.Cryptography.SymmetricAlgorithm? _cipher;
-#if NET8_0_OR_GREATER
     private byte[]? _decryptBuffer;
     private byte[]? _ivBuffer;
-#endif
 
     public AgileEncryptedPackageStream(Stream stream, byte[] key, byte[] iv, EncryptionInfo encryption)
     {
@@ -168,24 +166,28 @@ internal sealed class AgileEncryptedPackageStream : Stream
         {
             _cipher = Encryption.CreateCipher();
             _cipher.Key = Key;
+            _cipher.Padding = System.Security.Cryptography.PaddingMode.None;
         }
 
+        _ivBuffer ??= new byte[CryptoHelpers.MaxHashSize];
+        var ivLength = Encryption.GenerateBlockKey(SegmentIndex, IV, _ivBuffer);
+        _decryptBuffer ??= new byte[SegmentLength];
 #if NET8_0_OR_GREATER
         if (_cipher.Mode == System.Security.Cryptography.CipherMode.CBC)
         {
             // One-shot decryption reuses the cipher, IV and buffers instead of creating a decryptor and CryptoStream per segment.
-            _ivBuffer ??= new byte[CryptoHelpers.MaxHashSize];
-            var ivLength = Encryption.GenerateBlockKey(SegmentIndex, IV, _ivBuffer);
-            _decryptBuffer ??= new byte[SegmentLength];
             _cipher.DecryptCbc(SegmentBytes, _ivBuffer.AsSpan(0, ivLength), _decryptBuffer, System.Security.Cryptography.PaddingMode.None);
-            (SegmentBytes, _decryptBuffer) = (_decryptBuffer, SegmentBytes);
         }
         else
 #endif
         {
-            SegmentBytes = CryptoHelpers.DecryptBytes(_cipher, SegmentBytes, Key, Encryption.GenerateBlockKey(SegmentIndex, IV));
+            Array.Resize(ref _ivBuffer, ivLength);
+            using var decryptor = _cipher.CreateDecryptor(Key, _ivBuffer);
+            if (decryptor.TransformBlock(SegmentBytes, 0, SegmentLength, _decryptBuffer, 0) != SegmentLength)
+                throw new System.Security.Cryptography.CryptographicException("Incomplete encrypted package segment.");
         }
 
+        (SegmentBytes, _decryptBuffer) = (_decryptBuffer, SegmentBytes);
         SegmentIndex++;
         Offset += SegmentLength;
     }
