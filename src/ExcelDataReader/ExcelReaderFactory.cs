@@ -191,17 +191,13 @@ public static class ExcelReaderFactory
         var infoBytes = document.ReadStream(fileStream, encryptionInfo.StreamFirstSector, (int)encryptionInfo.StreamSize, encryptionInfo.IsEntryMiniStream);
         var encryption = EncryptionInfo.Create(infoBytes);
 
-        if (encryption.VerifyPassword("VelvetSweatshop"))
-        {
-            // Magic password used for write-protected workbooks
-            password = "VelvetSweatshop";
-        }
-        else if (password == null || !encryption.VerifyPassword(password))
+        // The magic password used for write-protected workbooks takes precedence.
+        if (!encryption.TryVerifyPassword("VelvetSweatshop", out var secretKey) &&
+            (password == null || !encryption.TryVerifyPassword(password, out secretKey)))
         {
             throw new InvalidPasswordException(Errors.ErrorInvalidPassword);
         }
 
-        var secretKey = encryption.GenerateSecretKey(password);
         var packageStream = new CompoundStream(document, fileStream, encryptedPackage.StreamFirstSector, (int)encryptedPackage.StreamSize, encryptedPackage.IsEntryMiniStream, false);
 
         stream = encryption.CreateEncryptedPackageStream(packageStream, secretKey);

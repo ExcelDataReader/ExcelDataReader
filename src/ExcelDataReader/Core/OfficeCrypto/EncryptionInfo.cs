@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 
 namespace ExcelDataReader.Core.OfficeCrypto;
 
@@ -73,7 +74,8 @@ internal abstract class EncryptionInfo
 
     public abstract Stream CreateEncryptedPackageStream(Stream stream, byte[] secretKey);
 
-    public abstract bool VerifyPassword(string password);
+    // Return the verified key so startup does not repeat password derivation.
+    public abstract bool TryVerifyPassword(string password, [NotNullWhen(true)] out byte[]? secretKey);
 
     public abstract SymmetricAlgorithm CreateCipher();
 }

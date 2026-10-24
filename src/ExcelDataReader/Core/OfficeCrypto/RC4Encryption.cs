@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 
 namespace ExcelDataReader.Core.OfficeCrypto;
 
@@ -67,11 +68,12 @@ internal sealed class RC4Encryption : EncryptionInfo
         return GenerateSecretKey(password, Salt);
     }
 
-    public override bool VerifyPassword(string password)
+    public override bool TryVerifyPassword(string password, [NotNullWhen(true)] out byte[]? secretKey)
     {
         // 2.3.6.4 Password Verification
-        var secretKey = GenerateSecretKey(password);
-        var blockKey = GenerateBlockKey(0, secretKey);
+        secretKey = null;
+        var candidateKey = GenerateSecretKey(password);
+        var blockKey = GenerateBlockKey(0, candidateKey);
 
         using var cipher = CryptoHelpers.CreateCipher(CipherIdentifier.RC4, 0, 0, 0);
         using var transform = cipher.CreateDecryptor(blockKey, null);
@@ -85,6 +87,7 @@ internal sealed class RC4Encryption : EncryptionInfo
                 return false;
         }
 
+        secretKey = candidateKey;
         return true;
     }
 }
