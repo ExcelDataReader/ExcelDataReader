@@ -7,6 +7,7 @@ using ExcelDataReader.Core.BinaryFormat;
 using ExcelDataReader.Core.OpenXmlFormat;
 using ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
+using ExcelDataReader.Exceptions;
 using ExcelDataReader.TestFixtures;
 
 namespace ExcelDataReader.Tests;
@@ -363,6 +364,67 @@ public class WorksheetConsumptionTests
         }
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void XlsMalformedStringsReportContentErrorsAndCanBeReset(bool legacyFormula)
+    {
+        using var buffer = new MemoryStream();
+        using (var writer = new BinaryWriter(buffer, Encoding.Unicode, leaveOpen: true))
+        {
+            XlsRecord(writer, 0x809, data =>
+            {
+                data.Write((ushort)(legacyFormula ? 0x500 : 0x600));
+                data.Write((ushort)0x10);
+                data.Write(new byte[12]);
+            });
+            XlsRecord(writer, 0x203, data =>
+            {
+                data.Write(new byte[6]);
+                data.Write(42.0);
+            });
+            XlsRecord(writer, legacyFormula ? (ushort)6 : (ushort)0x204, data =>
+            {
+                data.Write((ushort)1);
+                data.Write(new byte[4]);
+                if (legacyFormula)
+                {
+                    data.Write(new byte[6]);
+                    data.Write((ushort)0xffff);
+                    data.Write(new byte[8]);
+                }
+                else
+                {
+                    data.Write((ushort)1);
+                }
+            });
+            if (legacyFormula)
+            {
+                XlsRecord(writer, 0x207, data =>
+                {
+                    data.Write((ushort)4);
+                    data.Write((byte)'A');
+                });
+                XlsRecord(writer, 0x3c, data => data.Write((byte)'B'));
+            }
+
+            XlsRecord(writer, 0xa, _ => { });
+        }
+
+        using var source = new MemoryStream(buffer.ToArray());
+        using (var reader = ExcelReaderFactory.CreateBinaryReader(source, new ExcelReaderConfiguration { SinglePassMode = true, LeaveOpen = true }))
+        {
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                Assert.That(reader.Read(), Is.True);
+                Assert.That(reader.GetDouble(0), Is.EqualTo(42));
+                Assert.Throws<ExcelReaderException>(() => reader.Read());
+                reader.Reset();
+            }
+        }
+
+        Assert.That(source.CanRead, Is.True);
+    }
+
     [TestCase("xml")]
     [TestCase("xlsb")]
     public void WorksheetCallbackExceptionsPropagateAndReaderCanBeDisposed(string format)
@@ -491,7 +553,7 @@ public class WorksheetConsumptionTests
             {
                 Assert.That(reader.Read(), Is.True);
                 Assert.That(reader.GetDouble(0), Is.EqualTo(0.25));
-                Assert.Throws<ArgumentException>(() => reader.Read());
+                Assert.Throws<ExcelReaderException>(() => reader.Read());
                 reader.Reset();
                 Assert.That(reader.Read(), Is.True);
                 Assert.That(reader.GetDouble(0), Is.EqualTo(0.25));

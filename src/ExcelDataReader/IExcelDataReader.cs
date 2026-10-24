@@ -1,4 +1,5 @@
 using System.Data;
+using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader;
 
@@ -143,5 +144,6 @@ public interface IExcelDataReader : IDataReader
     /// <returns>The immutable comment, or null.</returns>
     /// <exception cref="InvalidOperationException">There is no current row.</exception>
     /// <exception cref="IndexOutOfRangeException">The column is outside the current field count.</exception>
+    /// <exception cref="ExcelReaderException">Supported comment data or its references are invalid.</exception>
     CellCommentThread? GetComment(int i);
 }

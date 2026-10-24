@@ -3,11 +3,49 @@
 using ExcelDataReader.Core;
 using ExcelDataReader.Core.CompoundFormat;
 using ExcelDataReader.Core.OfficeCrypto;
+using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Tests;
 
 public class EncryptionTests
 {
+    [TestCase(false, false)]
+    [TestCase(true, false)]
+    [TestCase(false, true)]
+    public void InvalidAgileMetadataPreservesContentAndXmlFailureDistinction(bool encryptedKey, bool malformedXml)
+    {
+        string element = encryptedKey
+            ? "<keyEncryptors><keyEncryptor><encryptedKey xmlns=\"http://schemas.microsoft.com/office/2006/keyEncryptor/password\"/></keyEncryptor></keyEncryptors>"
+            : "<keyData/>";
+        string xml = malformedXml ? "<encryption" : $"<encryption xmlns=\"http://schemas.microsoft.com/office/2006/encryption\">{element}</encryption>";
+        using var source = new MemoryStream();
+        using (var writer = new BinaryWriter(source, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            writer.Write((ushort)0x809);
+            writer.Write((ushort)16);
+            writer.Write((ushort)0x600);
+            writer.Write((ushort)0x10);
+            writer.Write(new byte[12]);
+            byte[] metadata = System.Text.Encoding.UTF8.GetBytes(xml);
+            writer.Write((ushort)0x2f);
+            writer.Write((ushort)(10 + metadata.Length));
+            writer.Write((ushort)1);
+            writer.Write((ushort)4);
+            writer.Write((ushort)4);
+            writer.Write(0);
+            writer.Write(metadata);
+            writer.Write((ushort)0xa);
+            writer.Write((ushort)0);
+        }
+
+        source.Position = 0;
+        if (malformedXml)
+            Assert.Throws<System.Xml.XmlException>(() => ExcelReaderFactory.CreateReader(source, new ExcelReaderConfiguration { LeaveOpen = true }));
+        else
+            Assert.Throws<ExcelReaderException>(() => ExcelReaderFactory.CreateReader(source, new ExcelReaderConfiguration { LeaveOpen = true }));
+        Assert.That(source.CanRead, Is.True);
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void DecryptionOnlyAlgorithmsRejectEncryptionAndKeyGeneration(bool xor)

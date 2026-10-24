@@ -78,7 +78,7 @@ internal static class XlsFormulaStringReader
         }
 
         if (copied != byteCount)
-            throw new ArgumentException(Errors.ErrorBiffRecordSize);
+            throw new ExcelReaderException(Errors.ErrorBiffRecordSize);
         return encoding.GetString(bytes, 0, byteCount);
     }
 }

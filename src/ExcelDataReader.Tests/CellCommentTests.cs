@@ -152,7 +152,7 @@ public sealed class CellCommentTests
         long position = source.Position;
         for (int attempt = 0; attempt < 2; attempt++)
         {
-            Assert.Throws(format == "xlsx" ? typeof(XmlException) : typeof(ExcelReaderException), () => reader.GetComment(0));
+            Assert.Throws<ExcelReaderException>(() => reader.GetComment(0));
             if (format is "xml" or "xls")
                 Assert.That(source.Position, Is.EqualTo(position));
         }
@@ -296,12 +296,16 @@ public sealed class CellCommentTests
         }
     }
 
-    [TestCase("A0", "0", typeof(ExcelReaderException))]
-    [TestCase("XFE1", "0", typeof(ExcelReaderException))]
-    [TestCase("A1048577", "0", typeof(ExcelReaderException))]
-    [TestCase("AAAAAAA1", "0", typeof(XmlException))]
-    [TestCase("A14", "-1", typeof(XmlException))]
-    public void InvalidOpenXmlCommentReferencesFailOnlyOnLookup(string reference, string author, Type error)
+    [TestCase("A0", "0")]
+    [TestCase("XFE1", "0")]
+    [TestCase("A1048577", "0")]
+    [TestCase("AAAAAAA1", "0")]
+    [TestCase("A14", null)]
+    [TestCase("A14", "-1")]
+    [TestCase("A14", "1")]
+    [TestCase("A14", "invalid")]
+    [TestCase("A14", "2147483648")]
+    public void InvalidOpenXmlCommentReferencesFailOnlyOnLookup(string reference, string? author)
     {
         using var stream = new MemoryStream();
         byte[] bytes = CreateWorkbook("xlsx");
@@ -309,15 +313,64 @@ public sealed class CellCommentTests
         using (var zip = new ZipArchive(stream, ZipArchiveMode.Update, leaveOpen: true))
         {
             zip.GetEntry("notes/comments.xml")!.Delete();
-            WriteEntry(zip, "notes/comments.xml", $"<comments xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><authors><author>author</author></authors><commentList><comment ref=\"{reference}\" authorId=\"{author}\"><text><t>note</t></text></comment></commentList></comments>");
+            string attribute = author == null ? string.Empty : $" authorId=\"{author}\"";
+            WriteEntry(zip, "notes/comments.xml", $"<comments xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><authors><author>author</author></authors><commentList><comment ref=\"{reference}\"{attribute}><text><t>note</t></text></comment></commentList></comments>");
         }
 
         stream.Position = 0;
         using var reader = ExcelReaderFactory.CreateReader(stream);
         Assert.That(reader.Read(), Is.True);
-        Assert.Throws(error, () => reader.GetComment(0));
+        Assert.Throws<ExcelReaderException>(() => reader.GetComment(0));
         Assert.That(reader.Read(), Is.True);
         Assert.That(reader.GetDouble(0), Is.EqualTo(1));
+    }
+
+    [TestCase("missing-target")]
+    [TestCase("missing-part")]
+    [TestCase("outside-package")]
+    [TestCase("wrong-root")]
+    [TestCase("xml-syntax")]
+    public void InvalidCommentPartsPreserveLazyFailureAndContinuation(string failure)
+    {
+        using var stream = new MemoryStream();
+        byte[] bytes = CreateWorkbook("xlsx");
+        stream.Write(bytes, 0, bytes.Length);
+        using (var zip = new ZipArchive(stream, ZipArchiveMode.Update, leaveOpen: true))
+        {
+            if (failure is "wrong-root" or "xml-syntax")
+            {
+                zip.GetEntry("notes/comments.xml")!.Delete();
+                WriteEntry(zip, "notes/comments.xml", failure == "wrong-root" ? "<wrong/>" : "<comments");
+            }
+            else
+            {
+                zip.GetEntry("xl/worksheets/_rels/data.xml.rels")!.Delete();
+                string target = failure switch
+                {
+                    "missing-target" => string.Empty,
+                    "missing-part" => " Target=\"../../notes/missing.xml\"",
+                    _ => " Target=\"../../../comments.xml\"",
+                };
+                WriteEntry(zip, "xl/worksheets/_rels/data.xml.rels", $"<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"notes\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments\"{target}/></Relationships>");
+            }
+        }
+
+        stream.Position = 0;
+        using var reader = ExcelReaderFactory.CreateReader(stream);
+        Assert.That(reader.Read(), Is.True);
+        for (int attempt = 0; attempt < 2; attempt++)
+        {
+            if (failure == "xml-syntax")
+                Assert.Throws<XmlException>(() => reader.GetComment(0));
+            else
+                Assert.Throws<ExcelReaderException>(() => reader.GetComment(0));
+        }
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetDouble(0), Is.EqualTo(1));
+        reader.Reset();
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetDouble(0), Is.Zero);
     }
 
     [TestCase("xml", false)]
@@ -347,6 +400,32 @@ public sealed class CellCommentTests
         {
             source.Armed = false;
         }
+    }
+
+    [TestCase("xlsx", false)]
+    [TestCase("xlsx", true)]
+    [TestCase("xls", false)]
+    [TestCase("xls", true)]
+    public void CommentLoadingDoesNotTranslateCallerStreamExceptions(string format, bool xmlError)
+    {
+        Exception failure = xmlError ? new XmlException("Caller stream failure.") : new ArgumentException("Caller stream failure.");
+        using var source = new CommentFailureStream(CreateWorkbook(format)) { ScanError = failure };
+        using var reader = ExcelReaderFactory.CreateReader(source, new ExcelReaderConfiguration { LeaveOpen = true });
+        Assert.That(reader.Read(), Is.True);
+        source.RestorePosition = long.MaxValue;
+        source.FailScan = true;
+        source.Armed = true;
+        try
+        {
+            Assert.That(Assert.Throws(failure.GetType(), () => reader.GetComment(0)), Is.SameAs(failure));
+        }
+        finally
+        {
+            source.Armed = false;
+        }
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetDouble(0), Is.EqualTo(1));
     }
 
     private static void AssertMessage(CellCommentThread? comment, string? author, string text)
@@ -620,7 +699,7 @@ public sealed class CellCommentTests
 
         public long RestorePosition { get; set; }
 
-        public IOException ScanError { get; } = new("Comment scan failed.");
+        public Exception ScanError { get; set; } = new IOException("Comment scan failed.");
 
         public IOException RestoreError { get; } = new("Position restoration failed.");
 
