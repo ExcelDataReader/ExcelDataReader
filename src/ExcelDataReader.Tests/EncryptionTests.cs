@@ -7,6 +7,58 @@ namespace ExcelDataReader.Tests;
 
 public class EncryptionTests
 {
+    [TestCase(0)]
+    [TestCase(4)]
+    [TestCase(-1)]
+    public void StandardPackageDisposalHandlesUnreadPartialAndCompleteReads(int readCount)
+    {
+        using var source = Configuration.GetTestWorkbook("standard_AES256_SHA1_ECB_pwd_password.xlsx");
+        var document = new CompoundDocument(source);
+        var info = document.FindEntry("EncryptionInfo")!;
+        var encryption = EncryptionInfo.Create(document.ReadStream(source, info.StreamFirstSector, (int)info.StreamSize, info.IsEntryMiniStream));
+        var package = document.FindEntry("EncryptedPackage")!;
+        using var input = new DisposalTrackingStream(document.ReadStream(source, package.StreamFirstSector, (int)package.StreamSize, package.IsEntryMiniStream));
+        var decrypted = encryption.CreateEncryptedPackageStream(input, encryption.GenerateSecretKey("password"));
+        try
+        {
+            if (readCount < 0)
+                decrypted.CopyTo(Stream.Null);
+            else if (readCount > 0)
+                Assert.That(decrypted.Read(new byte[readCount], 0, readCount), Is.EqualTo(readCount));
+        }
+        finally
+        {
+            Assert.DoesNotThrow(decrypted.Dispose);
+        }
+
+        Assert.That(input.CanRead, Is.False);
+        Assert.Throws<ObjectDisposedException>(() => _ = decrypted.Read(new byte[1], 0, 1));
+        Assert.DoesNotThrow(decrypted.Dispose);
+        Assert.That(input.DisposeCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void StandardPackageDisposalPropagatesFailureWithoutRetryingDisposedResources()
+    {
+        using var source = Configuration.GetTestWorkbook("standard_AES256_SHA1_ECB_pwd_password.xlsx");
+        var document = new CompoundDocument(source);
+        var info = document.FindEntry("EncryptionInfo")!;
+        var encryption = EncryptionInfo.Create(document.ReadStream(source, info.StreamFirstSector, (int)info.StreamSize, info.IsEntryMiniStream));
+        var package = document.FindEntry("EncryptedPackage")!;
+        var input = new DisposalTrackingStream(document.ReadStream(source, package.StreamFirstSector, (int)package.StreamSize, package.IsEntryMiniStream))
+        {
+            DisposeError = new IOException("Disposal failed.")
+        };
+        var decrypted = encryption.CreateEncryptedPackageStream(input, encryption.GenerateSecretKey("password"));
+        Assert.That(decrypted.Read(new byte[4], 0, 4), Is.EqualTo(4));
+
+        Assert.That(Assert.Throws<IOException>(decrypted.Dispose), Is.SameAs(input.DisposeError));
+        Assert.That(input.CanRead, Is.False);
+        Assert.Throws<ObjectDisposedException>(() => _ = decrypted.Read(new byte[1], 0, 1));
+        Assert.DoesNotThrow(decrypted.Dispose);
+        Assert.That(input.DisposeCount, Is.EqualTo(1));
+    }
+
     [TestCase("agile_AES128_SHA1_CBC_pwd_password.xlsx")]
     [TestCase("agile_AES192_SHA512_CBC_pwd_password.xlsx")]
     [TestCase("agile_DESede_SHA384_CBC_pwd_password.xlsx")]
@@ -96,8 +148,6 @@ public class EncryptionTests
         var signature = new byte[4];
         Assert.That(decrypted.Read(signature, 0, signature.Length), Is.EqualTo(signature.Length));
         Assert.That(signature, Is.EqualTo(new byte[] { 0x50, 0x4b, 0x03, 0x04 }));
-        if (!decrypted.CanSeek)
-            decrypted.CopyTo(Stream.Null);
     }
 
     [TestCase("Issue289.xlsx", null, "aaaaaaa")]
@@ -115,6 +165,24 @@ public class EncryptionTests
             Assert.That(reader.Read(), Is.True);
             Assert.That(reader.GetString(0), Is.EqualTo(expected));
             reader.Reset();
+        }
+    }
+
+    private sealed class DisposalTrackingStream(byte[] bytes) : MemoryStream(bytes)
+    {
+        public IOException? DisposeError { get; set; }
+
+        public int DisposeCount { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+            {
+                DisposeCount++;
+                if (DisposeError != null)
+                    throw DisposeError;
+            }
         }
     }
 }
