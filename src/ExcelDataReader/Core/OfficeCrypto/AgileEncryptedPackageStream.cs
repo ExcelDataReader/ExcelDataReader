@@ -10,6 +10,8 @@ internal sealed class AgileEncryptedPackageStream : Stream
     private System.Security.Cryptography.SymmetricAlgorithm? _cipher;
     private byte[]? _decryptBuffer;
     private byte[]? _ivBuffer;
+    private long _position;
+    private int _loadedSegment = -1;
 
     public AgileEncryptedPackageStream(Stream stream, byte[] key, byte[] iv, EncryptionInfo encryption)
     {
@@ -18,9 +20,23 @@ internal sealed class AgileEncryptedPackageStream : Stream
         IV = iv;
         Encryption = encryption;
 
-        Stream.ReadAtLeast(SegmentBytes, 0, 8);
-        DecryptedLength = BitConverter.ToInt32(SegmentBytes, 0);
-        ReadSegment();
+        if (Stream.ReadAtLeast(SegmentBytes, 0, 8) != 8)
+            throw new EndOfStreamException("Incomplete encrypted package header.");
+        DecryptedLength = BitConverter.ToInt64(SegmentBytes, 0);
+        if (DecryptedLength < 0)
+            throw new System.Security.Cryptography.CryptographicException("Invalid encrypted package length.");
+        if (DecryptedLength > 0)
+        {
+            try
+            {
+                ReadSegment(0);
+            }
+            catch (Exception error)
+            {
+                ResourceCleanup.DisposeAll(error, _cipher);
+                throw;
+            }
+        }
     }
 
     public override bool CanRead => true;
@@ -31,7 +47,7 @@ internal sealed class AgileEncryptedPackageStream : Stream
 
     public override long Length => DecryptedLength;
 
-    public override long Position { get => Offset - SegmentLength + SegmentOffset; set => Seek(value, SeekOrigin.Begin); }
+    public override long Position { get => _position; set => Seek(value, SeekOrigin.Begin); }
 
     private Stream? Stream { get; set; }
 
@@ -41,15 +57,9 @@ internal sealed class AgileEncryptedPackageStream : Stream
 
     private EncryptionInfo Encryption { get; }
 
-    private int Offset { get; set; }
-
     private byte[] SegmentBytes { get; set; } = new byte[SegmentLength];
 
-    private int SegmentOffset { get; set; }
-
-    private int SegmentIndex { get; set; }
-
-    private int DecryptedLength { get; set; }
+    private long DecryptedLength { get; }
 
     public override void Flush()
     {
@@ -60,24 +70,24 @@ internal sealed class AgileEncryptedPackageStream : Stream
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
         return Read(buffer.AsSpan(offset, count));
 #else
-        if (Position >= Length)
-        {
-            throw new InvalidOperationException("Tried to read past the end of the encrypted stream");
-        }
+        if (buffer == null)
+            throw new ArgumentNullException(nameof(buffer));
+        if (offset < 0 || count < 0 || offset > buffer.Length - count)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        _ = Stream ?? throw new ObjectDisposedException(nameof(AgileEncryptedPackageStream));
+        count = (int)Math.Min(count, Math.Max(0, Length - Position));
 
         int index = 0;
         while (index < count)
         {
-            if (SegmentOffset == SegmentBytes.Length)
-            {
-                ReadSegment();
-                SegmentOffset = 0;
-            }
-
-            var chunkSize = Math.Min(count - index, SegmentBytes.Length - SegmentOffset);
-            Array.Copy(SegmentBytes, SegmentOffset, buffer, offset + index, chunkSize);
+            int segment = checked((int)(_position / SegmentLength));
+            int segmentOffset = (int)(_position % SegmentLength);
+            if (_loadedSegment != segment)
+                ReadSegment(segment);
+            var chunkSize = Math.Min(count - index, SegmentLength - segmentOffset);
+            Array.Copy(SegmentBytes, segmentOffset, buffer, offset + index, chunkSize);
             index += chunkSize;
-            SegmentOffset += chunkSize;
+            _position += chunkSize;
         }
 
         return index;
@@ -87,24 +97,20 @@ internal sealed class AgileEncryptedPackageStream : Stream
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
     public override int Read(Span<byte> buffer)
     {
-        if (Position >= Length)
-        {
-            throw new InvalidOperationException("Tried to read past the end of the encrypted stream");
-        }
+        _ = Stream ?? throw new ObjectDisposedException(nameof(AgileEncryptedPackageStream));
+        int count = (int)Math.Min(buffer.Length, Math.Max(0, Length - Position));
 
         int index = 0;
-        while (index < buffer.Length)
+        while (index < count)
         {
-            if (SegmentOffset == SegmentBytes.Length)
-            {
-                ReadSegment();
-                SegmentOffset = 0;
-            }
-
-            var chunkSize = Math.Min(buffer.Length - index, SegmentBytes.Length - SegmentOffset);
-            SegmentBytes.AsSpan(SegmentOffset, chunkSize).CopyTo(buffer[index..]);
+            int segment = checked((int)(_position / SegmentLength));
+            int segmentOffset = (int)(_position % SegmentLength);
+            if (_loadedSegment != segment)
+                ReadSegment(segment);
+            var chunkSize = Math.Min(count - index, SegmentLength - segmentOffset);
+            SegmentBytes.AsSpan(segmentOffset, chunkSize).CopyTo(buffer[index..]);
             index += chunkSize;
-            SegmentOffset += chunkSize;
+            _position += chunkSize;
         }
 
         return index;
@@ -113,22 +119,18 @@ internal sealed class AgileEncryptedPackageStream : Stream
 
     public override long Seek(long offset, SeekOrigin origin)
     {
-        switch (origin)
+        _ = Stream ?? throw new ObjectDisposedException(nameof(AgileEncryptedPackageStream));
+        long position = origin switch
         {
-            case SeekOrigin.Begin:
-                SegmentIndex = (int)(offset / SegmentLength);
-                Offset = SegmentIndex * SegmentLength;
-                SegmentOffset = (int)(offset % SegmentLength);
-                if (Offset < Length)
-                    ReadSegment();
-                return Position;
-            case SeekOrigin.Current:
-                return Seek(Position + offset, SeekOrigin.Begin);
-            case SeekOrigin.End:
-                return Seek(Length + offset, SeekOrigin.Begin);
-            default:
-                return Offset;
-        }
+            SeekOrigin.Begin => offset,
+            SeekOrigin.Current => checked(Position + offset),
+            SeekOrigin.End => checked(Length + offset),
+            _ => throw new ArgumentOutOfRangeException(nameof(origin)),
+        };
+        if (position < 0)
+            throw new IOException("Cannot seek before the beginning of the encrypted stream.");
+        _position = position;
+        return position;
     }
 
     public override void SetLength(long value)
@@ -160,13 +162,14 @@ internal sealed class AgileEncryptedPackageStream : Stream
         }
     }
 
-    private void ReadSegment()
+    private void ReadSegment(int segmentIndex)
     {
         var stream = Stream ?? throw new ObjectDisposedException(nameof(AgileEncryptedPackageStream));
 
         // NOTE: +8 skips EncryptedPackage header
-        stream.Seek(8 + Offset, SeekOrigin.Begin);
-        stream.ReadAtLeast(SegmentBytes, 0, SegmentLength);
+        long offset = (long)segmentIndex * SegmentLength;
+        _loadedSegment = -1;
+        stream.Seek(8 + offset, SeekOrigin.Begin);
 
         if (_cipher == null)
         {
@@ -175,26 +178,31 @@ internal sealed class AgileEncryptedPackageStream : Stream
             _cipher.Padding = System.Security.Cryptography.PaddingMode.None;
         }
 
+        int plaintextLength = (int)Math.Min(SegmentLength, Length - offset);
+        int blockSize = _cipher.BlockSize / 8;
+        int encryptedLength = ((plaintextLength + blockSize - 1) / blockSize) * blockSize;
+        if (stream.ReadAtLeast(SegmentBytes, 0, encryptedLength) != encryptedLength)
+            throw new EndOfStreamException("Incomplete encrypted package segment.");
+
         _ivBuffer ??= new byte[CryptoHelpers.MaxHashSize];
-        var ivLength = Encryption.GenerateBlockKey(SegmentIndex, IV, _ivBuffer);
+        var ivLength = Encryption.GenerateBlockKey(segmentIndex, IV, _ivBuffer);
         _decryptBuffer ??= new byte[SegmentLength];
 #if NET8_0_OR_GREATER
         if (_cipher.Mode == System.Security.Cryptography.CipherMode.CBC)
         {
             // One-shot decryption reuses the cipher, IV and buffers instead of creating a decryptor and CryptoStream per segment.
-            _cipher.DecryptCbc(SegmentBytes, _ivBuffer.AsSpan(0, ivLength), _decryptBuffer, System.Security.Cryptography.PaddingMode.None);
+            _cipher.DecryptCbc(SegmentBytes.AsSpan(0, encryptedLength), _ivBuffer.AsSpan(0, ivLength), _decryptBuffer, System.Security.Cryptography.PaddingMode.None);
         }
         else
 #endif
         {
             Array.Resize(ref _ivBuffer, ivLength);
             using var decryptor = _cipher.CreateDecryptor(Key, _ivBuffer);
-            if (decryptor.TransformBlock(SegmentBytes, 0, SegmentLength, _decryptBuffer, 0) != SegmentLength)
+            if (decryptor.TransformBlock(SegmentBytes, 0, encryptedLength, _decryptBuffer, 0) != encryptedLength)
                 throw new System.Security.Cryptography.CryptographicException("Incomplete encrypted package segment.");
         }
 
         (SegmentBytes, _decryptBuffer) = (_decryptBuffer, SegmentBytes);
-        SegmentIndex++;
-        Offset += SegmentLength;
+        _loadedSegment = segmentIndex;
     }
 }
