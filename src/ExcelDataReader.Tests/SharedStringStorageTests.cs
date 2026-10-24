@@ -1545,6 +1545,7 @@ public class SharedStringStorageTests
             ("\ud800", false),
             ("\ud83d\ude00", false),
             ("\0", false),
+            (string.Empty, true),
         ];
         using var stream = new MemoryStream();
         using (var writer = new BinaryWriter(stream, Encoding.Unicode, leaveOpen: true))
@@ -1576,7 +1577,8 @@ public class SharedStringStorageTests
         var parser = new XlsSSTReader();
         parser.ReadStrings(new XlsBiffFrame(record), 12, false, table, values.Length);
         parser.Flush(table);
-        string[] expected = ["long value", "x", string.Empty, "n\u00ff", "\ufffd", "\ud83d\ude00", "\0"];
+        string[] expected = ["long value", "x", string.Empty, "n\u00ff", "\ufffd", "\ud83d\ude00", "\0", string.Empty];
+        Assert.That(table.Count, Is.EqualTo(expected.Length));
         for (int i = 0; i < expected.Length; i++)
             Assert.That(table.GetString(i), Is.EqualTo(expected[i]), $"Entry {i}");
 
