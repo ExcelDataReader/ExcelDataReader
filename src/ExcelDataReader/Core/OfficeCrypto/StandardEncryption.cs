@@ -231,7 +231,7 @@ internal sealed class StandardEncryption : EncryptionInfo
     /// </summary>
     private static byte[] GenerateCryptoApiSecretKey(string password, byte[] saltValue, HashIdentifier hashAlgorithm)
     {
-        return CryptoHelpers.HashBytes(CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password)), hashAlgorithm);
+        return CryptoHelpers.HashBytes(CryptoHelpers.EncodeSaltedPassword(password, saltValue), hashAlgorithm);
     }
 
     /// <summary>
@@ -242,7 +242,7 @@ internal sealed class StandardEncryption : EncryptionInfo
         byte[] hash;
         using (var hashAlgorithm = CryptoHelpers.Create(hashIdentifier))
         {
-            hash = hashAlgorithm.ComputeHash(CryptoHelpers.Combine(saltValue, System.Text.Encoding.Unicode.GetBytes(password)));
+            hash = hashAlgorithm.ComputeHash(CryptoHelpers.EncodeSaltedPassword(password, saltValue));
             CryptoHelpers.SpinHash(hashAlgorithm, hash, 50000);
 
             // One more round with the block number appended instead of prepended.
