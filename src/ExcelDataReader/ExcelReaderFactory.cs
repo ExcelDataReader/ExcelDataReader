@@ -13,6 +13,7 @@ namespace ExcelDataReader;
 /// </summary>
 /// <remarks>
 /// Input errors may also occur when reading worksheets or requesting lazily loaded metadata.
+/// Documented exceptions are not exhaustive; malformed content may also cause standard .NET exceptions.
 /// </remarks>
 public static class ExcelReaderFactory
 {
@@ -29,6 +30,7 @@ public static class ExcelReaderFactory
     /// <returns>The excel data reader.</returns>
     /// <exception cref="HeaderException">The input header is not recognized.</exception>
     /// <exception cref="InvalidPasswordException">The workbook password is required but missing or incorrect.</exception>
+    /// <exception cref="ExcelReaderException">A recognized workbook structure is invalid or a required workbook part is missing.</exception>
     public static IExcelDataReader CreateReader(Stream fileStream, ExcelReaderConfiguration? configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
@@ -83,6 +85,7 @@ public static class ExcelReaderFactory
     /// <returns>The excel data reader.</returns>
     /// <exception cref="HeaderException">The input header is not recognized.</exception>
     /// <exception cref="InvalidPasswordException">The workbook password is required but missing or incorrect.</exception>
+    /// <exception cref="ExcelReaderException">A recognized workbook structure is invalid or a required workbook part is missing.</exception>
     public static IExcelDataReader CreateBinaryReader(Stream fileStream, ExcelReaderConfiguration? configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
@@ -123,6 +126,7 @@ public static class ExcelReaderFactory
     /// <returns>The excel data reader.</returns>
     /// <exception cref="HeaderException">The input header is not recognized.</exception>
     /// <exception cref="InvalidPasswordException">The workbook password is required but missing or incorrect.</exception>
+    /// <exception cref="ExcelReaderException">A recognized workbook structure is invalid or a required workbook part is missing.</exception>
     public static IExcelDataReader CreateOpenXmlReader(Stream fileStream, ExcelReaderConfiguration? configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();

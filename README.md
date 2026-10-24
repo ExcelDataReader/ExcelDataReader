@@ -355,6 +355,10 @@ With `SinglePassMode = true`, consecutive entries for the same row are still com
 
 Workbooks using Extensible Encryption remain unsupported. Recognized Extensible Encryption versions now throw `NotSupportedException` instead of `InvalidOperationException`. Update any exception handling that specifically catches the previous type for this case.
 
+### Exceptions for malformed workbook content
+
+Some explicit checks for malformed XLS records and missing required encryption attributes now throw `ExcelReaderException` instead of `ArgumentException`, `IndexOutOfRangeException`, or `XmlException`. Update handlers that relied on those specific types. Other failures, including XML parsing and ZIP errors, can still throw standard .NET exceptions.
+
 ### `TransformValue` callback parameter types changed to nullable
 
 The `ExcelDataTableConfiguration.TransformValue` delegate type changed from `Func<IExcelDataReader, int, object, object>` to `Func<IExcelDataReader, int, object?, object?>`. If you assigned a named method to this property, update its signature:

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Xml;
+using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.OfficeCrypto;
 
@@ -208,7 +209,7 @@ internal sealed class AgileEncryption : EncryptionInfo
 #pragma warning restore CA1806 // Do not ignore method results
 
                 if (cipherAlgorithm == null || cipherChaining == null || hashAlgorithm == null || saltValue == null)
-                    throw new XmlException("Invalid keyData in encryption info.");
+                    throw new ExcelReaderException("Invalid keyData in encryption info.");
 
                 SaltValue = Convert.FromBase64String(saltValue);
                 HashSize = hashSize; // given in bytes, also given implicitly by SHA512
@@ -282,7 +283,7 @@ internal sealed class AgileEncryption : EncryptionInfo
                 if (cipherAlgorithm == null || cipherChaining == null || hashAlgorithm == null || saltValue == null ||
                     encryptedVerifierHashInput == null || encryptedVerifierHashValue == null || encryptedKeyValue == null)
                 {
-                    throw new XmlException("Invalid encryptedKey in encryption info.");
+                    throw new ExcelReaderException("Invalid encryptedKey in encryption info.");
                 }
 
                 PasswordSaltValue = Convert.FromBase64String(saltValue);

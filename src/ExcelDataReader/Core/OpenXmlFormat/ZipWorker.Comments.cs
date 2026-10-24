@@ -1,6 +1,7 @@
 using System.Xml;
 using ExcelDataReader.Core.OpenXmlFormat.BinaryFormat;
 using ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
+using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.OpenXmlFormat;
 
@@ -29,8 +30,8 @@ internal sealed partial class ZipWorker
                 continue;
             if (reader.GetAttribute("TargetMode") == "External")
                 continue;
-            string target = reader.GetAttribute("Target") ?? throw new XmlException("Missing comments relationship target.");
-            var entry = FindEntry(ResolveCommentPath(directory, target)) ?? throw new XmlException("Missing comments part.");
+            string target = reader.GetAttribute("Target") ?? throw new ExcelReaderException("Missing comments relationship target.");
+            var entry = FindEntry(ResolveCommentPath(directory, target)) ?? throw new ExcelReaderException("Missing comments part.");
             using var comments = OpenZipEntry(entry);
             if (entry.FullName.EndsWith(".bin", StringComparison.OrdinalIgnoreCase))
             {
@@ -55,7 +56,7 @@ internal sealed partial class ZipWorker
             if (part == "..")
             {
                 if (parts.Count == 0)
-                    throw new XmlException("Invalid comments relationship target.");
+                    throw new ExcelReaderException("Invalid comments relationship target.");
                 parts.RemoveAt(parts.Count - 1);
             }
             else

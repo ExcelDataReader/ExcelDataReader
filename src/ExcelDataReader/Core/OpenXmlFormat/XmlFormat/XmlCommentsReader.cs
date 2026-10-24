@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Xml;
+using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.OpenXmlFormat.XmlFormat;
 
@@ -15,7 +16,7 @@ internal static class XmlCommentsReader
         reader.MoveToContent();
         string ns = reader.NamespaceURI;
         if (reader.LocalName != "comments" || (ns != Transitional && ns != Strict))
-            throw new XmlException("Invalid comments part.");
+            throw new ExcelReaderException("Invalid comments part.");
         while (reader.Read())
         {
             if (reader.NodeType != XmlNodeType.Element || reader.NamespaceURI != ns)
@@ -32,10 +33,11 @@ internal static class XmlCommentsReader
                 if (reference.Length is < 2 or > 10 ||
                     (reference.Length > 3 && char.IsLetter(reference[3])) ||
                     !ReferenceHelper.ParseReference(reference, out int column, out int row))
-                    throw new XmlException("Invalid comment cell reference.");
-                int authorId = int.Parse(reader.GetAttribute("authorId") ?? throw new XmlException("Missing comment author."), CultureInfo.InvariantCulture);
-                if ((uint)authorId >= (uint)authors.Count)
-                    throw new XmlException("Invalid comment author index.");
+                    throw new ExcelReaderException("Invalid comment cell reference.");
+                string author = reader.GetAttribute("authorId") ?? throw new ExcelReaderException("Missing comment author.");
+                if (!int.TryParse(author, NumberStyles.Integer, CultureInfo.InvariantCulture, out int authorId) ||
+                    (uint)authorId >= (uint)authors.Count)
+                    throw new ExcelReaderException("Invalid comment author index.");
                 var text = new StringBuilder();
                 using (var comment = reader.ReadSubtree())
                 {

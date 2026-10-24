@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Core.BinaryFormat;
 
@@ -119,12 +120,9 @@ internal readonly struct XlsBiffFrame(byte[] bytes)
         return bytes[offset];
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2201:Do not raise reserved exception types", Justification = "Preserve the legacy string decoder's exception for a truncated string header.")]
     public byte ReadStringByteAt(int offset)
     {
-        if ((uint)offset >= RecordSize + 4)
-            throw new IndexOutOfRangeException();
-
+        EnsureRange(offset, sizeof(byte));
         return bytes[offset];
     }
 
@@ -148,8 +146,10 @@ internal readonly struct XlsBiffFrame(byte[] bytes)
 
     public void EnsureRange(int offset, int count)
     {
-        if (offset < 0 || count < 0 || offset > RecordSize + 4 - count)
+        if (offset < 0 || count < 0)
             throw new ArgumentException(Errors.ErrorBiffRecordSize);
+        if (offset > RecordSize + 4 - count)
+            throw new ExcelReaderException(Errors.ErrorBiffRecordSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
