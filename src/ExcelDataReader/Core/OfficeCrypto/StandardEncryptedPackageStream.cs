@@ -75,19 +75,37 @@ internal sealed class StandardEncryptedPackageStream : Stream
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
+        try
         {
-            Decryptor?.Dispose();
-            Decryptor = null;
-
-            Cipher?.Dispose();
-            Cipher = null;
-
-            BaseStream?.Dispose();
-            BaseStream = null;
+            if (disposing)
+            {
+                var stream = BaseStream;
+                var decryptor = Decryptor;
+                var cipher = Cipher;
+                BaseStream = null;
+                Decryptor = null;
+                Cipher = null;
+                try
+                {
+                    stream?.Dispose();
+                }
+                finally
+                {
+                    try
+                    {
+                        decryptor?.Dispose();
+                    }
+                    finally
+                    {
+                        cipher?.Dispose();
+                    }
+                }
+            }
         }
-
-        base.Dispose(disposing);
+        finally
+        {
+            base.Dispose(disposing);
+        }
     }
 
     private CryptoStream GetBaseStream()
