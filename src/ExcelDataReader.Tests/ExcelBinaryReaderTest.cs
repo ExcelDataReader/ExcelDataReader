@@ -303,6 +303,29 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         Assert.That(date, Is.EqualTo(new DateTime(2016, 09, 10)));
     }
 
+    [TestCase(false, SharedStringStorageMode.Default)]
+    [TestCase(true, SharedStringStorageMode.Default)]
+    [TestCase(false, SharedStringStorageMode.SpillToDisk)]
+    [TestCase(true, SharedStringStorageMode.SpillToDisk)]
+    public void Issue158_FinalEmptySharedStringIsNotDBNull(bool singlePass, SharedStringStorageMode storageMode)
+    {
+        using var reader = ExcelReaderFactory.CreateBinaryReader(
+            Configuration.GetTestWorkbook("Issue158.xls"),
+            new ExcelReaderConfiguration { SinglePassMode = singlePass, SharedStringStorageMode = storageMode });
+
+        for (int pass = 0; pass < 2; pass++)
+        {
+            for (int row = 0; row < 15; row++)
+                Assert.That(reader.Read(), Is.True, $"Row {row + 1}");
+
+            Assert.That(reader.GetValue(0), Is.EqualTo(string.Empty));
+            Assert.That(reader.IsDBNull(0), Is.False);
+            Assert.That(reader.IsDBNull(1), Is.True);
+            Assert.That(reader.Read(), Is.False);
+            reader.Reset();
+        }
+    }
+
     [Test]
     public void Issue173()
     {
