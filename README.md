@@ -341,9 +341,9 @@ var value = (DateTimeOffset)reader.GetValue(i);
 var value = reader.GetDateTime(i); // or (DateTime)reader.GetValue(i)
 ```
 
-### Non-seekable streams are consumed even when `LeaveOpen = true`
+### Non-seekable input streams are now supported
 
-If the input stream is non-seekable, ExcelDataReader copies it to a `MemoryStream`. When this copy occurs, the source stream is fully consumed regardless of the `LeaveOpen` setting. If you need to reuse the source stream, ensure it is seekable before passing it to `CreateReader()`.
+Non-seekable input streams previously caused an exception. They are now fully buffered in memory before reading, so memory usage grows with the input size.
 
 ### Row ordering in XLSX and XLSB files
 
