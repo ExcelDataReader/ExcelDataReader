@@ -242,7 +242,7 @@ public class ExcelCsvReaderTest
     {
         TestNoSeparator(new ExcelReaderConfiguration()
         {
-            AutodetectSeparators = Array.Empty<char>()
+            AutodetectSeparators = Array.Empty<string>()
         });
 
         TestNoSeparator(new ExcelReaderConfiguration()

@@ -134,7 +134,7 @@ static Command BuildCsvCommand()
     var outputOpt = new Option<OutputFormat>("--output", ["-o"]) { Description = "Data output format: table, csv, tsv (default: no data output, stats only)", DefaultValueFactory = _ => OutputFormat.None };
     var encodingOpt = new Option<string>("--encoding", ["-e"]) { Description = "Fallback encoding when no BOM / not UTF-8 (default: windows-1252)", DefaultValueFactory = _ => "windows-1252" };
     var noTrimOpt = new Option<bool>("--no-trim") { Description = "Don't trim whitespace in values" };
-    var separatorsOpt = new Option<string?>("--separators") { Description = "Separator candidates, e.g. \",;\" -- use \\t for TAB (default: , ; TAB | #)" };
+    var separatorsOpt = new Option<string[]>("--separators") { Description = "Separator candidates as separate arguments, e.g. \",\" \";\" \"||\" -- use \\t for TAB (default: , ; TAB | #)", AllowMultipleArgumentsPerToken = true };
     var quoteCharOpt = new Option<string?>("--quote-char") { Description = "Quote character (default: \")" };
     var escapeCharOpt = new Option<string?>("--escape-char") { Description = "Escape character for quoted fields (default: disabled)" };
     var dataSetOpt = new Option<bool>("--dataset") { Description = "Use AsDataSet extension (loads all data into a DataSet in memory)" };
@@ -157,7 +157,7 @@ static Command BuildCsvCommand()
         var output = parseResult.GetValue(outputOpt);
         var encodingName = parseResult.GetValue(encodingOpt)!;
         var noTrim = parseResult.GetValue(noTrimOpt);
-        var separatorsStr = parseResult.GetValue(separatorsOpt);
+        var separators = parseResult.GetValue(separatorsOpt);
         var quoteCharStr = parseResult.GetValue(quoteCharOpt);
         var escapeCharStr = parseResult.GetValue(escapeCharOpt);
         var useDataSet = parseResult.GetValue(dataSetOpt);
@@ -169,8 +169,8 @@ static Command BuildCsvCommand()
             QuoteChar = quoteCharStr?.Length > 0 ? quoteCharStr[0] : '"',
             EscapeChar = escapeCharStr?.Length > 0 ? escapeCharStr[0] : null,
         };
-        if (separatorsStr is not null)
-            config.AutodetectSeparators = separatorsStr.Replace("\\t", "\t").ToCharArray();
+        if (separators is { Length: > 0 })
+            config.AutodetectSeparators = separators.Select(separator => separator.Replace("\\t", "\t")).ToArray();
 
         var memBefore = Process.GetCurrentProcess().WorkingSet64;
         var sw = Stopwatch.StartNew();

@@ -4,7 +4,7 @@ namespace ExcelDataReader.Core.CsvFormat;
 
 internal sealed class CsvWorksheet : IWorksheet
 {
-    public CsvWorksheet(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators, int analyzeInitialCsvRows, char? quoteChar = null, bool trimWhiteSpace = true, char? escapeChar = null)
+    public CsvWorksheet(Stream stream, Encoding fallbackEncoding, string[] autodetectSeparators, int analyzeInitialCsvRows, char? quoteChar = null, bool trimWhiteSpace = true, char? escapeChar = null)
     {
         Stream = stream;
         QuoteChar = quoteChar;
@@ -74,7 +74,7 @@ internal sealed class CsvWorksheet : IWorksheet
 
     public char? QuoteChar { get; }
 
-    public char Separator { get; }
+    public string Separator { get; }
 
     public char? EscapeChar { get; }
 

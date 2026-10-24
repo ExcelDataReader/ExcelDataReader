@@ -5,7 +5,7 @@ namespace ExcelDataReader;
 
 internal sealed class ExcelCsvReader : ExcelDataReader<CsvWorkbook, CsvWorksheet>
 {
-    public ExcelCsvReader(Stream stream, Encoding fallbackEncoding, char[] autodetectSeparators, int analyzeInitialCsvRows, char? quoteChar = null, bool trimWhiteSpace = true, char? escapeChar = null)
+    public ExcelCsvReader(Stream stream, Encoding fallbackEncoding, string[] autodetectSeparators, int analyzeInitialCsvRows, char? quoteChar = null, bool trimWhiteSpace = true, char? escapeChar = null)
     {
         Workbook = new CsvWorkbook(stream, fallbackEncoding, autodetectSeparators, analyzeInitialCsvRows, quoteChar, trimWhiteSpace, escapeChar);
 

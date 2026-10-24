@@ -9,7 +9,7 @@ internal static class CsvAnalyzer
     /// Uses fallbackEncoding if there is no BOM. Throws DecoderFallbackException if there are invalid characters in the stream.
     /// Returns the separator whose average field count is closest to its max field count.
     /// </summary>
-    public static void Analyze(Stream stream, char[] separators, Encoding fallbackEncoding, int analyzeInitialCsvRows, char? quoteChar, bool trimWhiteSpace, char? escapeChar, out int fieldCount, out char autodetectSeparator, out Encoding autodetectEncoding, out int bomLength, out int rowCount)
+    public static void Analyze(Stream stream, string[] separators, Encoding fallbackEncoding, int analyzeInitialCsvRows, char? quoteChar, bool trimWhiteSpace, char? escapeChar, out int fieldCount, out string autodetectSeparator, out Encoding autodetectEncoding, out int bomLength, out int rowCount)
     {
         var bufferSize = 1024;
         var probeSize = 16;
@@ -21,7 +21,7 @@ internal static class CsvAnalyzer
 
         if (separators == null || separators.Length == 0)
         {
-            separators = ['\0'];
+            separators = ["\0"];
         }
 
         var separatorInfos = new SeparatorInfo[separators.Length];
@@ -38,7 +38,7 @@ internal static class CsvAnalyzer
         FlushSeparatorsBuffers(separators, separatorInfos);
 
         SeparatorInfo bestSeparatorInfo = separatorInfos[0];
-        char bestSeparator = separators[0];
+        string bestSeparator = separators[0];
         double bestDistance = double.MaxValue;
 
         for (var i = 0; i < separators.Length; i++)
@@ -69,7 +69,7 @@ internal static class CsvAnalyzer
         rowCount = analyzeInitialCsvRows == 0 ? bestSeparatorInfo.RowCount : -1;
     }
 
-    private static void AnalyzeCsvRows(Stream inputStream, byte[] buffer, int initialBytesRead, int bomLength, int analyzeInitialCsvRows, char[] separators, SeparatorInfo[] separatorInfos)
+    private static void AnalyzeCsvRows(Stream inputStream, byte[] buffer, int initialBytesRead, int bomLength, int analyzeInitialCsvRows, string[] separators, SeparatorInfo[] separatorInfos)
     {
         ParseSeparatorsBuffer(buffer, bomLength, initialBytesRead - bomLength, separators, separatorInfos);
 
@@ -107,7 +107,7 @@ internal static class CsvAnalyzer
         return false;
     }
 
-    private static void ParseSeparatorsBuffer(byte[] bytes, int offset, int count, char[] separators, SeparatorInfo[] separatorInfos)
+    private static void ParseSeparatorsBuffer(byte[] bytes, int offset, int count, string[] separators, SeparatorInfo[] separatorInfos)
     {
         for (var i = 0; i < separators.Length; i++)
         {
@@ -120,7 +120,7 @@ internal static class CsvAnalyzer
         }
     }
 
-    private static void FlushSeparatorsBuffers(char[] separators, SeparatorInfo[] separatorInfos)
+    private static void FlushSeparatorsBuffers(string[] separators, SeparatorInfo[] separatorInfos)
     {
         for (var i = 0; i < separators.Length; i++)
         {

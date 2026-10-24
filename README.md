@@ -72,6 +72,19 @@ Use `ExcelReaderFactory.CreateCsvReader` instead of `CreateReader` to parse a st
 
 See also the configuration options `FallbackEncoding` and `AutodetectSeparators`.
 
+Separator candidates are strings. The defaults remain single characters; multi-character separators
+are considered only when explicitly configured, for example `AutodetectSeparators = ["||"]`.
+Matching is ordinal and separators inside quoted fields are treated as text. Candidates must not
+be null or empty. Multi-character candidates must not contain CR, LF, or the configured quote
+character. There is no fixed length limit. Invalid candidates cause `CreateCsvReader` to throw
+`ArgumentException`: this includes null or empty entries, and multi-character entries containing
+CR, LF, or the configured quote character. Validation occurs when the reader is created, not
+when the property is assigned. A null or empty candidate array retains the existing behavior
+of disabling separator detection and reading each row as a single field.
+
+**4.0 migration:** `AutodetectSeparators` changed from `char[]` to `string[]`.
+Replace character literals such as `[',', ';']` with string literals such as `[",", ";"]`.
+
 The input CSV is always parsed once completely to set FieldCount, RowCount, Encoding, Separator (or twice if the CSV lacks BOM and is not UTF8), and then parsed once again while iterating the row records. Throws `System.Text.DecoderFallbackException` if the input cannot be parsed with the specified encoding.
 
 For large CSV files where `RowCount` is not needed upfront and `FieldCount` from the first row (e.g. a header row) is sufficient, set `AnalyzeInitialCsvRows = 1` to limit the pre-scan to a single row. This avoids reading the entire file twice.
@@ -124,7 +137,7 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
     // Gets or sets an array of CSV separator candidates. The reader 
     // autodetects which best fits the input data. Default: , ; TAB | # 
     // (CSV only)
-    AutodetectSeparators = new char[] { ',', ';', '\t', '|', '#' },
+    AutodetectSeparators = new string[] { ",", ";", "\t", "|", "#" },
 
     // Gets or sets the quote character for CSV. Default: "
     // (CSV only)

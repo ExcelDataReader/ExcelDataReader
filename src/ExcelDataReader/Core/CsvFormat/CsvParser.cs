@@ -9,12 +9,16 @@ namespace ExcelDataReader.Core.CsvFormat;
 internal sealed class CsvParser
 {
     private readonly char _separator;
+    private readonly string? _delimiter;
+    private readonly int[]? _delimiterPrefixes;
     private readonly char? _quoteChar;
     private readonly char? _escapeChar;
     private readonly bool _trimWhiteSpace;
+    private readonly bool _trimTabs;
     private readonly Decoder _decoder;
     private readonly char[] _chars = new char[1024];
     private readonly StringBuilder? _value;
+    private int _delimiterOffset;
     private CsvState _state;
     private PendingEvent _pending;
     private int _charOffset;
@@ -30,9 +34,32 @@ internal sealed class CsvParser
     private bool _flushing;
     private bool _finished;
 
-    public CsvParser(char separator, Encoding encoding, char? quoteChar = null, bool trimWhiteSpace = true, char? escapeChar = null, WorksheetReadMode mode = WorksheetReadMode.Materialize)
+    public CsvParser(string separator, Encoding encoding, char? quoteChar = null, bool trimWhiteSpace = true, char? escapeChar = null, WorksheetReadMode mode = WorksheetReadMode.Materialize)
     {
-        _separator = separator;
+        if (string.IsNullOrEmpty(separator))
+            throw new ArgumentException("CSV separator candidates must not be null or empty.", nameof(separator));
+        if (separator.Length > 1)
+        {
+            foreach (char c in separator)
+            {
+                if (c is '\r' or '\n' || c == quoteChar)
+                    throw new ArgumentException("Multi-character CSV separators must not contain line breaks or the quote character.", nameof(separator));
+            }
+
+            _delimiter = separator;
+            _delimiterPrefixes = new int[separator.Length];
+            for (int i = 1, prefix = 0; i < separator.Length; i++)
+            {
+                while (prefix > 0 && separator[i] != separator[prefix])
+                    prefix = _delimiterPrefixes[prefix - 1];
+                if (separator[i] == separator[prefix])
+                    prefix++;
+                _delimiterPrefixes[i] = prefix;
+            }
+        }
+
+        _separator = separator[0];
+        _trimTabs = separator != "\t";
         _quoteChar = quoteChar;
         _escapeChar = escapeChar;
         _trimWhiteSpace = trimWhiteSpace;
@@ -68,11 +95,25 @@ internal sealed class CsvParser
             if (EmitPending(ref handler) == WorksheetReadControl.Pause)
                 return WorksheetReadStatus.Paused;
 
-            if (_charOffset < _charCount)
+            if (_delimiter == null)
             {
-                if (ParseChar(_chars[_charOffset]))
-                    _charOffset++;
-                continue;
+                while (_charOffset < _charCount)
+                {
+                    if (ParseChar(_chars[_charOffset]))
+                        _charOffset++;
+                    if (EmitPending(ref handler) == WorksheetReadControl.Pause)
+                        return WorksheetReadStatus.Paused;
+                }
+            }
+            else
+            {
+                while (_charOffset < _charCount)
+                {
+                    if (ParseDelimitedChar(_chars[_charOffset]))
+                        _charOffset++;
+                    if (EmitPending(ref handler) == WorksheetReadControl.Pause)
+                        return WorksheetReadStatus.Paused;
+                }
             }
 
             if (count == 0)
@@ -91,6 +132,8 @@ internal sealed class CsvParser
         if (!_flushing)
         {
             _flushing = true;
+            FlushDelimiterPrefix(_delimiterOffset);
+            _delimiterOffset = 0;
 
             // Match the original EOF rule: an empty final field alone does not create a row.
             if (_valueLength > 0 || _fieldCount > 0)
@@ -295,6 +338,50 @@ internal sealed class CsvParser
         }
     }
 
+    private bool ParseDelimitedChar(char c)
+    {
+        if (_state == CsvState.QuotedValueQuote && c != _quoteChar)
+            _state = CsvState.Value;
+
+        if (_state is not (CsvState.PreValue or CsvState.Value))
+            return ParseChar(c);
+
+        while (_delimiterOffset > 0 && c != _delimiter![_delimiterOffset])
+        {
+            int prefix = _delimiterPrefixes![_delimiterOffset - 1];
+            FlushDelimiterPrefix(_delimiterOffset - prefix);
+            _delimiterOffset = prefix;
+        }
+
+        if (c == _delimiter![_delimiterOffset])
+        {
+            if (++_delimiterOffset == _delimiter.Length)
+            {
+                _delimiterOffset = 0;
+                _state = CsvState.PreValue;
+                QueueField(endRow: false);
+            }
+
+            return true;
+        }
+
+        return ParseChar(c);
+    }
+
+    private void FlushDelimiterPrefix(int length)
+    {
+        // Only unmatched prefix characters become field text; a complete separator is never trimmed.
+        for (int i = 0; i < length; i++)
+        {
+            char c = _delimiter![i];
+            if (_state == CsvState.PreValue && _trimWhiteSpace && IsWhitespace(c))
+                continue;
+            _state = CsvState.Value;
+            Append(c);
+            _trailingWhitespace = _trimWhiteSpace && IsWhitespace(c) ? _trailingWhitespace + 1 : 0;
+        }
+    }
+
     private void QueueField(bool endRow)
     {
         if (_finished)
@@ -309,5 +396,5 @@ internal sealed class CsvParser
         _value?.Append(c);
     }
 
-    private bool IsWhitespace(char c) => c == ' ' || (_separator != '\t' && c == '\t');
+    private bool IsWhitespace(char c) => c == ' ' || (_trimTabs && c == '\t');
 }
