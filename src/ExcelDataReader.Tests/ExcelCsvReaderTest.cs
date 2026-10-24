@@ -8,6 +8,46 @@ namespace ExcelDataReader.Tests;
 /// </summary>
 public class ExcelCsvReaderTest
 {
+    [TestCase("", 0)]
+    [TestCase("a||b\nc||d", 0)]
+    [TestCase("a||b\nc||d", 1)]
+    public void ResetWorksheetRestartsCsvAndPreservesSeparator(string text, int analyzeRows)
+    {
+        using var reader = ExcelReaderFactory.CreateCsvReader(new MemoryStream(Encoding.UTF8.GetBytes(text)), new ExcelReaderConfiguration
+        {
+            AutodetectSeparators = ["||"],
+            AnalyzeInitialCsvRows = analyzeRows,
+        });
+        for (int pass = 0; pass < 3; pass++)
+        {
+            reader.ResetWorksheet();
+            Assert.That(reader.CsvSeparator, Is.EqualTo("||"));
+            if (text.Length == 0)
+            {
+                Assert.That(reader.Read(), Is.False);
+            }
+            else
+            {
+                Assert.That(reader.Read(), Is.True);
+                Assert.That(reader.GetString(0), Is.EqualTo("a"));
+                Assert.That(reader.GetString(1), Is.EqualTo("b"));
+                if (pass != 0)
+                {
+                    Assert.That(reader.Read(), Is.True);
+                    Assert.That(reader.GetString(0), Is.EqualTo("c"));
+                    Assert.That(reader.Read(), Is.False);
+                }
+            }
+        }
+
+        Assert.That(reader.NextResult(), Is.False);
+        Assert.Throws<InvalidOperationException>(reader.ResetWorksheet);
+        reader.Reset();
+        reader.ResetWorksheet();
+        reader.Close();
+        Assert.Throws<InvalidOperationException>(reader.ResetWorksheet);
+    }
+
     [TestCase(",", 0)]
     [TestCase(";", 0)]
     [TestCase("||", 0)]

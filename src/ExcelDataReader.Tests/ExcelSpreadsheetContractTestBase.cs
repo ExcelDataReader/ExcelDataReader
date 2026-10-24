@@ -2,6 +2,46 @@ namespace ExcelDataReader.Tests;
 
 public abstract class ExcelSpreadsheetContractTestBase : ExcelTestBase
 {
+    [TestCase(false)]
+    [TestCase(true)]
+    public void SpreadsheetContract_ResetWorksheetPreservesSelectionAndNavigation(bool singlePass)
+    {
+        using var source = OpenFixtureStream(GetFixtureWorksheetsRowsAndTypes());
+        using var reader = OpenReader(source, new ExcelReaderConfiguration { SinglePassMode = singlePass, LeaveOpen = true });
+        reader.ResetWorksheet();
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo("Name"));
+        Assert.That(reader.Read(), Is.True);
+        reader.ResetWorksheet();
+        Assert.That(reader.Name, Is.EqualTo("Sheet1"));
+        Assert.Throws<InvalidOperationException>(() => reader.GetValue(0));
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo("Name"));
+        Assert.That(reader.NextResult(), Is.True);
+        bool active = reader.IsActiveSheet;
+        for (int pass = 0; pass < 2; pass++)
+        {
+            Assert.That(reader.Name, Is.EqualTo("Sheet2"));
+            Assert.That(reader.IsActiveSheet, Is.EqualTo(active));
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetString(0), Is.EqualTo("X"));
+            while (reader.Read())
+            {
+            }
+
+            reader.ResetWorksheet();
+        }
+
+        Assert.That(reader.NextResult(), Is.False);
+        Assert.Throws<InvalidOperationException>(reader.ResetWorksheet);
+        reader.Reset();
+        reader.ResetWorksheet();
+        Assert.That(reader.Name, Is.EqualTo("Sheet1"));
+        reader.Close();
+        Assert.Throws<InvalidOperationException>(reader.ResetWorksheet);
+        Assert.That(source.CanRead, Is.True);
+    }
+
     [Test]
     public void SpreadsheetContract_WorksheetsRowsAndTypes()
     {

@@ -57,10 +57,15 @@ public sealed class CellCommentTests
         Assert.That(reader.Read(), Is.False);
         Assert.Throws<InvalidOperationException>(() => reader.GetComment(0));
         reader.Reset();
-        for (int row = 0; row <= 13; row++)
-            Assert.That(reader.Read(), Is.True);
-        AssertMessage(reader.GetComment(0), Author, Text);
-        Assert.That(reader.GetComment(0), Is.SameAs(retained));
+        for (int attempt = 0; attempt < 2; attempt++)
+        {
+            for (int row = 0; row <= 13; row++)
+                Assert.That(reader.Read(), Is.True);
+            AssertMessage(reader.GetComment(0), Author, Text);
+            Assert.That(reader.GetComment(0), Is.SameAs(retained));
+            reader.ResetWorksheet();
+        }
+
         reader.Close();
         Assert.That(source.CanRead, Is.True);
         Assert.Throws<InvalidOperationException>(() => reader.GetComment(0));
