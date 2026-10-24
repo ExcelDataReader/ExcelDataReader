@@ -19,9 +19,15 @@ public class ExcelReaderConfiguration
     public string? Password { get; set; }
 
     /// <summary>
-    /// Gets or sets an array of CSV separator candidates. The reader autodetects which best fits the input data. Default: , ; TAB | # (CSV only).
+    /// Gets or sets an array of CSV separator strings. The reader autodetects which best fits the input data. Default: , ; TAB | # (CSV only).
+    /// Candidates must not be null or empty. Multi-character candidates must not contain CR, LF, or the configured quote character.
     /// </summary>
-    public char[] AutodetectSeparators { get; set; } = [',', ';', '\t', '|', '#'];
+    /// <remarks>
+    /// Invalid candidates cause <see cref="ExcelReaderFactory.CreateCsvReader"/> to throw <see cref="ArgumentException"/>
+    /// when the reader is created, not when this property is assigned.
+    /// A null or empty array disables separator detection, treating each row as a single field.
+    /// </remarks>
+    public string[] AutodetectSeparators { get; set; } = [",", ";", "\t", "|", "#"];
 
     /// <summary>
     /// Gets or sets a QuoteCharacter for CSV (Default '"').

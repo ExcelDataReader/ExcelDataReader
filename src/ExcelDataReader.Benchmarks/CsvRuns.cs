@@ -15,6 +15,9 @@ public class CsvRuns
     [Params(false, true)]
     public bool DetectSeparator { get; set; }
 
+    [Params(",", "||")]
+    public string Separator { get; set; } = ",";
+
     [GlobalSetup]
     public void Setup()
     {
@@ -29,11 +32,11 @@ public class CsvRuns
         };
         var text = new StringBuilder();
         for (int row = 0; row < 1000; row++)
-            text.Append(field).Append(',').Append(field).Append(',').Append(field).Append("\r\n");
+            text.Append(field).Append(Separator).Append(field).Append(Separator).Append(field).Append("\r\n");
         _data = Encoding.UTF8.GetBytes(text.ToString());
         _configuration = new ExcelReaderConfiguration
         {
-            AutodetectSeparators = DetectSeparator ? [',', ';', '\t', '|', '#'] : [','],
+            AutodetectSeparators = DetectSeparator ? [",", ";", "\t", Separator == "," ? "|" : Separator, "#"] : [Separator],
         };
 
         int decodedLength = Content switch

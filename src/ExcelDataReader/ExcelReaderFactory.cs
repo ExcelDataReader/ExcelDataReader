@@ -151,6 +151,9 @@ public static class ExcelReaderFactory
     /// <param name="fileStream">The file stream.</param>
     /// <param name="configuration">The reader configuration -or- <see langword="null"/> to use the default configuration.</param>
     /// <returns>The excel data reader.</returns>
+    /// <exception cref="ArgumentException">
+    /// A separator candidate is null or empty, or a multi-character candidate contains CR, LF, or the configured quote character.
+    /// </exception>
     public static IExcelDataReader CreateCsvReader(Stream fileStream, ExcelReaderConfiguration? configuration = null)
     {
         configuration ??= new ExcelReaderConfiguration();
