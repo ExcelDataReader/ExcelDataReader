@@ -146,6 +146,20 @@ be empty when a stored hyperlink contains only a tooltip.
 Hyperlinks are loaded on first access, which may require an additional worksheet
 scan. Reading hyperlinks does not change cell values or DataSet output.
 
+To use hyperlink addresses instead of cell values in `AsDataSet()`, configure
+`TransformValue`. Cells without hyperlinks keep their original values:
+
+```c#
+var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+{
+    ConfigureDataTable = _ => new ExcelDataTableConfiguration()
+    {
+        TransformValue = (rowReader, i, value) =>
+            rowReader.GetHyperlink(i)?.Address ?? value
+    }
+});
+```
+
 ### Document properties
 
 `reader.DocumentProperties` exposes the workbook's `Title`, `Subject`, `Author`,
