@@ -46,7 +46,8 @@ jobs:
         env:
           VERSION_PREFIX: ${{ steps.version.outputs.prefix }}
           VERSION_SUFFIX: ${{ steps.version.outputs.suffix }}
-        run: dotnet build ExcelDataReader.slnx --no-restore -c Release /p:TreatWarningsAsErrors=true /p:VersionPrefix=$env:VERSION_PREFIX /p:VersionSuffix=$env:VERSION_SUFFIX
+          RELEASE_NOTES: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}
+        run: dotnet build ExcelDataReader.slnx --no-restore -c Release /p:TreatWarningsAsErrors=true /p:VersionPrefix=$env:VERSION_PREFIX /p:VersionSuffix=$env:VERSION_SUFFIX /p:PackageReleaseNotes=$env:RELEASE_NOTES
 
       - name: Test
         run: dotnet test src/ExcelDataReader.Tests/ExcelDataReader.Tests.csproj --no-build -c Release
