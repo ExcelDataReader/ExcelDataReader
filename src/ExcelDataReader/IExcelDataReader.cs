@@ -34,9 +34,8 @@ public interface IExcelDataReader : IDataReader
     /// is disabled, or when no result is selected.
     /// </summary>
     /// <remarks>
-    /// Available immediately after creating a CSV reader. The separator may contain multiple
-    /// characters. With configured candidates, returns the selected candidate even if it does
-    /// not occur in the input. Reading to the end of a result does not clear this property.
+    /// Available immediately after creating a CSV reader, including after reaching the end of its rows.
+    /// May contain multiple characters. The selected candidate need not occur in the input.
     /// </remarks>
     string? CsvSeparator { get; }
 
@@ -150,8 +149,7 @@ public interface IExcelDataReader : IDataReader
     /// Modern threaded comments are not currently read. CSV always returns null.
     /// </summary>
     /// <remarks>
-    /// The first call for a worksheet loads its notes lazily. XLS and SpreadsheetML require an
-    /// additional scan; subsequent calls reuse the loaded notes for the reader's lifetime.
+    /// Loaded on first access, which may require an additional worksheet scan.
     /// Notes do not extend the reader's row or field counts.
     /// </remarks>
     /// <param name="i">The zero-based column index.</param>
@@ -166,12 +164,9 @@ public interface IExcelDataReader : IDataReader
     /// or null when there is no supported hyperlink. CSV always returns null.
     /// </summary>
     /// <remarks>
-    /// The first call for a worksheet loads its hyperlinks lazily; subsequent calls reuse
-    /// the metadata for the reader's lifetime. An additional worksheet scan may be required.
+    /// Loaded on first access, which may require an additional worksheet scan.
     /// Hyperlinks do not change cell values or extend row or field counts. Formula-generated
     /// links are not read. Unsupported hyperlink representations are skipped.
-    /// Cells covered by one stored range share the same immutable object. For overlapping
-    /// ranges, the last stored supported hyperlink wins.
     /// </remarks>
     /// <param name="i">The zero-based column index.</param>
     /// <returns>The immutable hyperlink, including tooltip-only links with an empty address, or null.</returns>

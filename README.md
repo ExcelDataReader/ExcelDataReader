@@ -100,11 +100,11 @@ The `AsDataSet()` extension method is a convenient helper for quickly getting th
 | `GetNumberFormatString()`                                                               | returns a string containing the formatting codes for a value in the current row, or `null` if there is no value. See also the Formatting section below.                                                                 |
 | `GetNumberFormatIndex()`                                                                | returns the number format index for a value in the current row. Index values below 164 refer to built-in number formats, otherwise indicate a custom number format.                                                     |
 | `GetCellStyle()`                                                                        | returns an object containing style information for a cell in the current row: indent, horizontal alignment, hidden, locked.                                                                                             |
+| `CsvSeparator` | returns the selected CSV delimiter, including multi-character delimiters. Available immediately after `CreateCsvReader()`; returns `null` for non-CSV formats, disabled separator detection, or no selected result. |
+| `GetComment()` | returns an immutable comment for a cell in the current row, or `null` if none is supported. Loaded lazily; see [Cell comments](#cell-comments). |
+| `GetHyperlink()` | returns an immutable explicit hyperlink for a cell in the current row, or `null` if none is supported. Loaded lazily; see [Hyperlinks](#hyperlinks). |
+| `DocumentProperties` | returns immutable workbook document properties populated during open. See [Document properties](#document-properties). |
 | The typed `Get*()` methods                                                              | throw `InvalidCastException` unless the types match exactly.                                                                                                                                                            |
-
-`CsvSeparator` returns the selected CSV delimiter, including multi-character
-delimiters. It is available immediately after `CreateCsvReader()` and returns
-`null` for non-CSV formats, disabled separator detection, or no selected result.
 
 ### Cell comments
 
@@ -116,10 +116,9 @@ Legacy notes are supported in XLS, XLSX, XLSB and SpreadsheetML; modern threaded
 comments are not yet read. CSV always returns `null`. Rich-text formatting,
 note layout and automatic DataSet export are not included.
 
-Call `Read()` successfully before accessing a comment. Comments are loaded only
-when requested, so the first lookup may take additional time and memory. Only
-comments within the reader's row and column range are accessible, including
-notes on blank cells within that range.
+Call `Read()` successfully before accessing a comment. Comments are loaded on
+first access, which may require an additional worksheet scan. Reading comments
+does not change cell values or DataSet output.
 
 ### Hyperlinks
 
@@ -144,11 +143,8 @@ while (reader.Read())
 destinations and defined names are not validated or resolved. An address can
 be empty when a stored hyperlink contains only a tooltip.
 
-The first lookup loads the worksheet's hyperlink metadata lazily and may require
-an additional scan. Later lookups and resets reuse it. One stored range shares
-one hyperlink object across its covered cells; the last stored supported link
-wins when ranges overlap. Hyperlinks do not extend row or field counts, and
-merged cells do not automatically inherit a link. DataSet values are unchanged.
+Hyperlinks are loaded on first access, which may require an additional worksheet
+scan. Reading hyperlinks does not change cell values or DataSet output.
 
 ### Document properties
 

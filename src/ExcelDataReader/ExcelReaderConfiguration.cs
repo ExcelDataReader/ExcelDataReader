@@ -60,25 +60,22 @@ public class ExcelReaderConfiguration
 
     /// <summary>
     /// Gets or sets shared string storage for XLSX, XLSB, and BIFF8 XLS. Default: Default.
-    /// SpillToDisk retains the normal table until its accounted capacity exceeds SharedStringSpillThreshold,
-    /// then migrates to temporary disk storage with a small bounded decoded cache.
+    /// SpillToDisk uses temporary disk storage when shared strings exceed SharedStringSpillThreshold.
     /// </summary>
     public SharedStringStorageMode SharedStringStorageMode { get; set; }
 
     /// <summary>
     /// Gets or sets the accounted SST storage threshold in bytes for SpillToDisk mode. Default: 64 MiB.
-    /// Must be at least 1 MiB. Includes table capacity and strings, plus disk buffers and lookup
-    /// cache after spill. Does not include parser temporaries, returned strings, rows, input
-    /// buffering, or other workbook data.
-    /// This is not a total managed-heap or process-memory limit.
+    /// Must be at least 1 MiB. Accounts for shared-string table capacity, strings, disk buffers
+    /// and cache, not other reader allocations. This is not a total memory limit.
     /// </summary>
     public long SharedStringSpillThreshold { get; set; } = 64L * 1024 * 1024;
 
     /// <summary>
-    /// Gets or sets the temporary directory used when SpillToDisk storage spills. Default: the system
-    /// temporary directory. Files are created only on spill and deleted when the reader closes.
+    /// Gets or sets the spill directory. Default: the system temporary directory.
+    /// Files are created only when spilling and deleted when the reader closes.
     /// Temporary strings are plaintext, including for password-protected workbooks.
-    /// Disk errors propagate without falling back to unbounded memory storage.
+    /// Disk errors propagate without an in-memory fallback.
     /// </summary>
     public string? SharedStringTemporaryDirectory { get; set; }
 
