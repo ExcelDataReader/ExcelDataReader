@@ -154,4 +154,22 @@ public interface IExcelDataReader : IDataReader
     /// <exception cref="IndexOutOfRangeException">The column is outside the current field count.</exception>
     /// <exception cref="ExcelReaderException">Supported comment data or its references are invalid.</exception>
     CellCommentThread? GetComment(int i);
+
+    /// <summary>
+    /// Gets the explicit stored hyperlink for the specified column on the current row,
+    /// or null when there is no supported hyperlink. CSV always returns null.
+    /// </summary>
+    /// <remarks>
+    /// The first call for a worksheet loads its hyperlinks lazily; subsequent calls reuse
+    /// the metadata for the reader's lifetime. An additional worksheet scan may be required.
+    /// Hyperlinks do not change cell values or extend row or field counts. Formula-generated
+    /// links are not read. Unsupported hyperlink representations are skipped.
+    /// Cells covered by one stored range share the same immutable object. For overlapping
+    /// ranges, the last stored supported hyperlink wins.
+    /// </remarks>
+    /// <param name="i">The zero-based column index.</param>
+    /// <returns>The immutable hyperlink, including tooltip-only links with an empty address, or null.</returns>
+    /// <exception cref="InvalidOperationException">There is no current row.</exception>
+    /// <exception cref="IndexOutOfRangeException">The column is outside the current field count.</exception>
+    CellHyperlink? GetHyperlink(int i);
 }

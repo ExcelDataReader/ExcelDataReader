@@ -28,4 +28,6 @@ internal interface IWorksheet
     IWorksheetReader OpenReader();
 
     Dictionary<long, CellCommentThread>? LoadComments();
+
+    HyperlinkStore? LoadHyperlinks();
 }

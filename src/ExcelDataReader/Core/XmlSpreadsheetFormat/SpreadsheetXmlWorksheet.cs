@@ -11,6 +11,7 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
     private readonly IReadOnlyDictionary<int, NumberFormatString>? _formats;
     private readonly int _worksheetIndex;
     private Dictionary<long, CellCommentThread>? _comments;
+    private HyperlinkStore? _hyperlinks;
 
     private SpreadsheetXmlWorksheet(
         string name,
@@ -153,6 +154,31 @@ internal sealed class SpreadsheetXmlWorksheet : IWorksheet
         }
 
         return _comments = comments;
+    }
+
+    public HyperlinkStore? LoadHyperlinks()
+    {
+        if (_hyperlinks != null)
+            return _hyperlinks;
+        long position = _stream.Position;
+        HyperlinkStore hyperlinks;
+        Exception? failure = null;
+        try
+        {
+            _stream.Position = 0;
+            hyperlinks = SpreadsheetXmlHyperlinksReader.Load(_stream, _worksheetIndex);
+        }
+        catch (Exception error)
+        {
+            failure = error;
+            throw;
+        }
+        finally
+        {
+            ResourceCleanup.RestorePosition(_stream, position, failure);
+        }
+
+        return _hyperlinks = hyperlinks;
     }
 
     private struct MetadataSink(
