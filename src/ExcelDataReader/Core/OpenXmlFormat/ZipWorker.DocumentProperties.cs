@@ -44,7 +44,7 @@ internal sealed partial class ZipWorker
             {
                 using var stream = entry.Open();
                 using var reader = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit });
-                properties.ReadXml(reader, spreadsheetXml: false);
+                XmlDocumentPropertiesReader.Load(reader, properties, spreadsheetXml: false);
             }
         }
         catch (XmlException)

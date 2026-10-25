@@ -226,7 +226,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
             {
                 var properties = new DocumentPropertiesBuilder();
                 using var subtree = workbookReader.ReadSubtree();
-                properties.ReadXml(subtree, spreadsheetXml: true);
+                XmlDocumentPropertiesReader.Load(subtree, properties, spreadsheetXml: true);
                 DocumentProperties = properties.Build();
                 continue;
             }

@@ -168,7 +168,7 @@ public sealed class DocumentPropertiesTests
             Assert.Throws<IOException>(() =>
             {
                 using var xml = System.Xml.XmlReader.Create(xmlStream);
-                new DocumentPropertiesBuilder().ReadXml(xml, spreadsheetXml: false);
+                XmlDocumentPropertiesReader.Load(xml, new DocumentPropertiesBuilder(), spreadsheetXml: false);
             }),
             Is.SameAs(xmlStream.Error));
     }
