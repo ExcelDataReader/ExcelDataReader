@@ -327,6 +327,15 @@ public abstract class ExcelTestBase
         AssertResetWorksheetReplaysCurrentResult(reader, baseline, source);
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void DocumentPropertiesAreAvailableDuringOpenAndSurviveReading(bool singlePass)
+    {
+        using var source = OpenStream("DocumentProperties");
+        using var reader = OpenReader(source, new ExcelReaderConfiguration { SinglePassMode = singlePass, LeaveOpen = true });
+        AssertDocumentPropertiesSurviveReading(reader, source);
+    }
+
     [Test]
     public void CsvSeparatorIsNullForSpreadsheets()
     {
@@ -1519,6 +1528,52 @@ public abstract class ExcelTestBase
         reader.Close();
         Assert.Throws<InvalidOperationException>(reader.ResetWorksheet);
         Assert.That(source.CanRead, Is.True);
+    }
+
+    internal static void AssertDocumentPropertiesSurviveReading(IExcelDataReader reader, Stream source)
+    {
+        var properties = reader.DocumentProperties;
+        Assert.That(properties.Title, Is.EqualTo("Workbook title"));
+        Assert.That(properties.Subject, Is.EqualTo("Workbook subject"));
+        Assert.That(properties.Keywords, Is.EqualTo("excel; test; keywords"));
+        Assert.That(properties.Description, Is.EqualTo("Description & <text>\nSecond line"));
+
+        // Excel's RemovePersonalInformation option removes both author fields on save.
+        Assert.That(properties.Author, Is.Null.Or.Empty);
+        Assert.That(properties.LastModifiedBy, Is.Null.Or.Empty);
+        Assert.That(properties.Created, Is.EqualTo(new DateTime(2020, 1, 2, 2, 4, 5, DateTimeKind.Utc)));
+        Assert.That(properties.LastPrinted, Is.EqualTo(new DateTime(2020, 5, 6, 5, 8, 8, DateTimeKind.Utc)));
+        Assert.That(properties.Modified, Is.GreaterThan(properties.Created));
+        Assert.That(properties.Created!.Value.Kind, Is.EqualTo(DateTimeKind.Utc));
+        Assert.That(properties.Modified!.Value.Kind, Is.EqualTo(DateTimeKind.Utc));
+        Assert.That(properties.LastPrinted!.Value.Kind, Is.EqualTo(DateTimeKind.Utc));
+        for (int pass = 0; pass < 2; pass++)
+        {
+            Assert.That(reader.Name, Is.EqualTo("Data"));
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetString(0), Is.EqualTo("Document properties fixture"));
+            Assert.That(reader.GetDouble(1), Is.EqualTo(42));
+            reader.ResetWorksheet();
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetDouble(1), Is.EqualTo(42));
+            Assert.That(reader.Read(), Is.False);
+            Assert.That(reader.NextResult(), Is.True);
+            Assert.That(reader.Name, Is.EqualTo("Other"));
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetString(0), Is.EqualTo("Second sheet"));
+            Assert.That(reader.Read(), Is.False);
+            Assert.That(reader.NextResult(), Is.False);
+            Assert.That(reader.DocumentProperties, Is.SameAs(properties));
+            reader.Reset();
+        }
+
+        var dataSet = reader.AsDataSet();
+        Assert.That(dataSet.Tables.Count, Is.EqualTo(2));
+        Assert.That(dataSet.Tables[0].Rows[0][1], Is.EqualTo(42));
+        reader.Close();
+        Assert.That(source.CanRead, Is.True);
+        Assert.That(reader.DocumentProperties, Is.SameAs(properties));
+        Assert.That(properties.Title, Is.EqualTo("Workbook title"));
     }
 
     protected IExcelDataReader OpenReader(string name)
