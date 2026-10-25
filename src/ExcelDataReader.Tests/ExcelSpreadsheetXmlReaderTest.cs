@@ -7,7 +7,7 @@ using ExcelDataReader.TestFixtures;
 namespace ExcelDataReader.Tests;
 
 [TestFixture]
-public class ExcelSpreadsheetXmlReaderTest : ExcelSpreadsheetContractTestBase
+public partial class ExcelSpreadsheetXmlReaderTest : ExcelTestBase
 {
     protected override DateTime Issue82_TodayDate => new(2013, 4, 19);
 
@@ -373,16 +373,6 @@ public class ExcelSpreadsheetXmlReaderTest : ExcelSpreadsheetContractTestBase
         Assert.That(retained, Is.LessThan(8L * 1024 * 1024));
     }
 
-    protected override string GetFixtureWorksheetsRowsAndTypes() => "SpreadsheetXml2003";
-
-    protected override string GetFixtureHiddenRow() => "SpreadsheetXml2003_HiddenRefreshRow";
-
-    protected override string GetFixtureSinglePassFieldCount() => "SpreadsheetXml2003_SinglePassFieldCount";
-
-    protected override string GetFixtureVisibility() => "SpreadsheetXml2003_Visibility";
-
-    protected override string GetFixtureMergeCells() => "SpreadsheetXml2003_MergedCells";
-
     protected override Stream OpenStream(string name)
     {
         return Configuration.GetTestWorkbook(name + ".xml");
@@ -396,6 +386,12 @@ public class ExcelSpreadsheetXmlReaderTest : ExcelSpreadsheetContractTestBase
     protected override bool IsFixtureSupported(string name) => name switch
     {
         "10x10" => true,
+        "CellComments" => true,
+        "Issue578" => true,
+        "Issue486" => true,
+        "Issue518" => true,
+        "Issue642" => true,
+        "Issue642_Onesheet" => true,
         "10x10000" => true,
         "255x10" => true,
         "Open" => true,

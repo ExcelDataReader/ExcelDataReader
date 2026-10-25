@@ -119,7 +119,7 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         var dataSet = excelReader.AsDataSet(Configuration.NoColumnNamesConfiguration);
         Assert.That(dataSet.Tables[0].Rows.Count, Is.EqualTo(34));
     }
-    
+
     [Test]
     public void UncalculatedTest()
     {
@@ -430,19 +430,19 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         using var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Row1217NotRead.xls"));
         var ds = excelReader.AsDataSet();
         Assert.That(
-            ds.Tables[0].Rows[1216].ItemArray, 
-            Is.EqualTo(new object[] 
+            ds.Tables[0].Rows[1216].ItemArray,
+            Is.EqualTo(new object[]
             {
                 DBNull.Value,
                 "Año",
                 "Mes",
-                DBNull.Value, 
+                DBNull.Value,
                 "Índice",
                 "Variación Mensual",
                 "Variación Acumulada",
                 "Variación en 12 Meses",
                 "Incidencia Mensual",
-                "Incidencia Acumulada", 
+                "Incidencia Acumulada",
                 "Incidencia a 12 Meses",
             }));
     }
@@ -598,23 +598,6 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     }
 
     [Test]
-    public void Issue240_ExceptionBeforeRead()
-    {
-        // Check the exception and message when trying to get data before calling Read().
-        // Using the same as SqlDataReader, making it easier to search for a general solution.
-        using IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("10x10.xls"));
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-        {
-            for (int columnIndex = 0; columnIndex < excelReader.FieldCount; columnIndex++)
-            {
-                _ = excelReader.GetString(columnIndex);
-            }
-        });
-
-        Assert.That(exception.Message, Is.EqualTo("No data exists for the row/column."));
-    }
-
-    [Test]
     public void Issue241_Simple95()
     {
         using var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Issue224_Simple95.xls"));
@@ -628,7 +611,7 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         using var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Issue45.xls"));
         Assert.That(reader.CodeName, Is.EqualTo("Hoja8"));
     }
-    
+
     [Test]
     public void Issue242_Password()
     {
@@ -731,7 +714,7 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         using var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Issue286_SST.xls"));
         Assert.That(reader, Is.Not.Null);
     }
-    
+
     [Test]
     public void Issue321_MissingEof()
     {
@@ -825,7 +808,7 @@ public class ExcelBinaryReaderTest : ExcelTestBase
 
         reader.Read();
         Assert.That(reader[0], Is.EqualTo("Same with XF 70 (ignored by Excel)"));
-        
+
         // TODO:
         Assert.That(reader.GetNumberFormatString(0), Is.EqualTo("General"));
 
@@ -912,7 +895,7 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     }
 
     [Test]
-    public void Issue438() 
+    public void Issue438()
     {
         using var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Issue438.xls"));
         reader.Read();
@@ -1077,7 +1060,7 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     public void Issue466_BIFF3_Errors()
     {
         using var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Issue466_Biff3.xls"));
-        
+
         // First row contains formula errors
         reader.Read();
         Assert.Throws<InvalidCastException>(() => reader.GetString(0));
@@ -1157,66 +1140,6 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     }
 
     [Test]
-    public void Issue578()
-    {
-        using var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Issue578.xls"));
-
-        reader.Read();
-        var values = new object[reader.FieldCount];
-        reader.GetValues(values);
-        var values2 = new object[reader.FieldCount + 1];
-        reader.GetValues(values2);
-        var values3 = new object[reader.FieldCount - 1];
-        reader.GetValues(values3);
-
-        Assert.That(values, Is.EqualTo(new object[] { 1, 2, 3, 4, 5 }));
-        Assert.That(values2, Is.EqualTo(new object[] { 1, 2, 3, 4, 5, null }));
-        Assert.That(values3, Is.EqualTo(new object[] { 1, 2, 3, 4 }));
-    }
-
-    [Test]
-    public void Issue642_ActiveSheet()
-    {
-        using var reader = OpenReader("Issue642");
-        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
-        {
-            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
-        });
-        Assert.That(reader.ActiveSheet, Is.EqualTo(5));
-        Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List6"));
-    }
-
-    [Test]
-    public void Issue642_ActiveSheet_SingleWorksheet()
-    {
-        using var reader = OpenReader("Issue642_Onesheet");
-        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
-        {
-            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
-        });
-        Assert.That(reader.ActiveSheet, Is.EqualTo(0));
-        Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List1"));
-    }
-
-    [Test]
-    public void Issue525_SstEagerMaterializationReturnsCorrectStrings()
-    {
-        using var reader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("10x10.xls"));
-        reader.Read();
-        string first = reader.GetString(0);
-        Assert.That(first, Is.EqualTo("col1"));
-        Assert.That(reader.GetString(4), Is.EqualTo("col5"));
-        Assert.That(reader.IsDBNull(9), Is.True);  // column 9 is empty in first row
-        Assert.Throws<InvalidCastException>(() => reader.GetString(9));
-
-        Assert.That(reader.GetString(0), Is.SameAs(first));
-
-        // Verify subsequent rows also resolve correctly
-        reader.Read();
-        Assert.That(reader.GetString(0), Is.EqualTo("10x10"));
-    }
-
-    [Test]
     public void ClipboardDimension()
     {
         using var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("ClipboardBiff8.xls"));
@@ -1225,8 +1148,8 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         Assert.That(excelReader.Dimension.ToRow, Is.EqualTo(11));
         Assert.That(excelReader.Dimension.FromColumn, Is.EqualTo(6));
         Assert.That(excelReader.Dimension.ToColumn, Is.EqualTo(7));
-    }    
-        
+    }
+
     public void Read_XlsExcel20()
     {
         using var stream = Configuration.GetTestWorkbook(Path.Combine("xls", "SIMPLE.XLS"));

@@ -1,12 +1,12 @@
 namespace ExcelDataReader.Tests;
 
-public abstract class ExcelSpreadsheetContractTestBase : ExcelTestBase
+public partial class ExcelSpreadsheetXmlReaderTest
 {
     [TestCase(false)]
     [TestCase(true)]
-    public void SpreadsheetContract_ResetWorksheetPreservesSelectionAndNavigation(bool singlePass)
+    public void SpreadsheetXml_ResetWorksheetPreservesSelectionAndNavigation(bool singlePass)
     {
-        using var source = OpenFixtureStream(GetFixtureWorksheetsRowsAndTypes());
+        using var source = OpenFixtureStream("SpreadsheetXml2003");
         using var reader = OpenReader(source, new ExcelReaderConfiguration { SinglePassMode = singlePass, LeaveOpen = true });
         reader.ResetWorksheet();
         Assert.That(reader.Read(), Is.True);
@@ -43,9 +43,9 @@ public abstract class ExcelSpreadsheetContractTestBase : ExcelTestBase
     }
 
     [Test]
-    public void SpreadsheetContract_WorksheetsRowsAndTypes()
+    public void SpreadsheetXml_WorksheetsRowsAndTypes()
     {
-        using var reader = OpenReader(OpenFixtureStream(GetFixtureWorksheetsRowsAndTypes()));
+        using var reader = OpenReader("SpreadsheetXml2003");
 
         Assert.That(reader.ResultsCount, Is.EqualTo(2));
         Assert.That(reader.Name, Is.EqualTo("Sheet1"));
@@ -83,9 +83,9 @@ public abstract class ExcelSpreadsheetContractTestBase : ExcelTestBase
     }
 
     [Test]
-    public void SpreadsheetContract_SinglePassMode_PreservesSheetMetadata()
+    public void SpreadsheetXml_SinglePassMode_PreservesSheetMetadata()
     {
-        using var reader = OpenReader(OpenFixtureStream(GetFixtureWorksheetsRowsAndTypes()), new ExcelReaderConfiguration { SinglePassMode = true });
+        using var reader = OpenReader(OpenFixtureStream("SpreadsheetXml2003"), new ExcelReaderConfiguration { SinglePassMode = true });
 
         Assert.That(reader.Name, Is.EqualTo("Sheet1"));
         Assert.That(reader.CodeName, Is.EqualTo("Sheet1"));
@@ -94,9 +94,9 @@ public abstract class ExcelSpreadsheetContractTestBase : ExcelTestBase
     }
 
     [Test]
-    public void SpreadsheetContract_HiddenRow_UsesZeroRowHeight()
+    public void SpreadsheetXml_HiddenRow_UsesZeroRowHeight()
     {
-        using var reader = OpenReader(OpenFixtureStream(GetFixtureHiddenRow()));
+        using var reader = OpenReader("SpreadsheetXml2003_HiddenRefreshRow");
 
         Assert.That(reader.Read(), Is.True);
         Assert.That(reader.GetString(0), Is.EqualTo("Refresh"));
@@ -110,9 +110,9 @@ public abstract class ExcelSpreadsheetContractTestBase : ExcelTestBase
     }
 
     [Test]
-    public void SpreadsheetContract_SinglePassMode_RowCountThrowsAndFieldCountGrows()
+    public void SpreadsheetXml_SinglePassMode_RowCountThrowsAndFieldCountGrows()
     {
-        using var reader = OpenReader(OpenFixtureStream(GetFixtureSinglePassFieldCount()), new ExcelReaderConfiguration { SinglePassMode = true });
+        using var reader = OpenReader(OpenFixtureStream("SpreadsheetXml2003_SinglePassFieldCount"), new ExcelReaderConfiguration { SinglePassMode = true });
 
         Assert.That(reader.FieldCount, Is.Zero);
         Assert.Throws<InvalidOperationException>(() => _ = reader.RowCount);
@@ -127,9 +127,9 @@ public abstract class ExcelSpreadsheetContractTestBase : ExcelTestBase
     }
 
     [Test]
-    public void SpreadsheetContract_SheetVisibility_AndDataSetProperties()
+    public void SpreadsheetXml_SheetVisibility_AndDataSetProperties()
     {
-        using var reader = OpenReader(OpenFixtureStream(GetFixtureVisibility()));
+        using var reader = OpenReader("SpreadsheetXml2003_Visibility");
         Assert.That(reader.VisibleState, Is.EqualTo("hidden"));
 
         Assert.That(reader.NextResult(), Is.True);
@@ -146,23 +146,13 @@ public abstract class ExcelSpreadsheetContractTestBase : ExcelTestBase
     }
 
     [Test]
-    public void SpreadsheetContract_MergeCells_AreReported()
+    public void SpreadsheetXml_MergeCells_AreReported()
     {
-        using var reader = OpenReader(OpenFixtureStream(GetFixtureMergeCells()));
+        using var reader = OpenReader("SpreadsheetXml2003_MergedCells");
         Assert.That(reader.MergeCells, Is.EquivalentTo(new[]
         {
             new[] { 0, 0, 1, 0 },
             new[] { 2, 1, 2, 2 },
         }).Using<CellRange, int[]>((a, e) => a.FromColumn == e[0] && a.FromRow == e[1] && a.ToColumn == e[2] && a.ToRow == e[3]));
     }
-
-    protected abstract string GetFixtureWorksheetsRowsAndTypes();
-
-    protected abstract string GetFixtureHiddenRow();
-
-    protected abstract string GetFixtureSinglePassFieldCount();
-
-    protected abstract string GetFixtureVisibility();
-
-    protected abstract string GetFixtureMergeCells();
 }

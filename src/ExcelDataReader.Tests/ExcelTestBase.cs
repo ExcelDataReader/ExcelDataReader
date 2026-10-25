@@ -9,6 +9,324 @@ public abstract class ExcelTestBase
 
     protected virtual bool SupportsCodeName => true;
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void IssueFileLock5161_NextResultCanAbandonPartiallyReadSheets(bool singlePass)
+    {
+        using var reader = OpenReader(OpenFixtureStream("MultiSheet"), new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        int sheets = 0;
+        do
+        {
+            Assert.That(reader.Read(), Is.True);
+            sheets++;
+        }
+        while (reader.NextResult());
+        Assert.That(sheets, Is.EqualTo(reader.ResultsCount));
+    }
+
+    [Test]
+    public void Issue486_TransformValue()
+    {
+        using var reader = OpenReader("Issue486");
+        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
+        {
+            // DataSet converts boxed enum values to integers when column types are inferred.
+            UseColumnDataType = false,
+            ConfigureDataTable = _ => new ExcelDataTableConfiguration
+            {
+                UseHeaderRow = true,
+                TransformValue = (transformReader, n, value) =>
+                {
+                    var error = transformReader.GetCellError(n);
+                    if (error != null)
+                        return error;
+                    return value;
+                }
+            }
+        });
+        Assert.That(dataSet.Tables[0].Rows[0][0], Is.EqualTo(CellError.REF));
+        Assert.That(dataSet.Tables[0].Rows[0][1], Is.EqualTo(CellError.REF));
+        Assert.That(dataSet.Tables[0].Rows[1][0], Is.EqualTo(CellError.NAME));
+        Assert.That(dataSet.Tables[0].Rows[1][1], Is.EqualTo(CellError.NAME));
+    }
+
+    [Test]
+    public void Issue518_MultipleHeaderRows()
+    {
+        using var reader = OpenReader("Issue518");
+        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
+        {
+            ConfigureDataTable = _ => new ExcelDataTableConfiguration
+            {
+                UseHeaderRow = true,
+                ReadHeader = self =>
+                {
+                    List<string> headerNames = [];
+                    for (int i = 0; i < self.FieldCount; i++)
+                        headerNames.Add(Convert.ToString(self.GetValue(i)));
+                    Assert.That(self.Read(), Is.True);
+                    var result = new Dictionary<int, string>(self.FieldCount);
+                    for (int i = 0; i < self.FieldCount; i++)
+                    {
+                        string first = headerNames[i];
+                        string second = Convert.ToString(self.GetValue(i));
+                        string name = first.Length == 0 ? second : second.Length == 0 ? first : first + " " + second;
+                        result.Add(i, string.IsNullOrEmpty(name) ? "Column" + i : name);
+                    }
+
+                    return result;
+                }
+            }
+        });
+        var columns = dataSet.Tables[0].Columns;
+        Assert.That(columns[0].ColumnName, Is.EqualTo("ColName1 A"));
+        Assert.That(columns[1].ColumnName, Is.EqualTo("ColName1 B"));
+        Assert.That(columns[2].ColumnName, Is.EqualTo("ColName2 B"));
+        Assert.That(columns[3].ColumnName, Is.EqualTo("FirstOnly"));
+        Assert.That(columns[4].ColumnName, Is.EqualTo("SecondOnly"));
+        Assert.That(columns[5].ColumnName, Is.EqualTo("Another One"));
+    }
+
+    [Test]
+    public void Issue240_ExceptionBeforeRead()
+    {
+        using var reader = OpenReader("10x10");
+        var exception = Assert.Throws<InvalidOperationException>(() => reader.GetString(0));
+        Assert.That(exception.Message, Is.EqualTo("No data exists for the row/column."));
+    }
+
+    [Test]
+    public void Issue525_StringsAndMissingCellsReturnCorrectValues()
+    {
+        using var reader = OpenReader("10x10");
+        Assert.That(reader.Read(), Is.True);
+        string first = reader.GetString(0);
+        Assert.That(first, Is.EqualTo("col1"));
+        Assert.That(reader.GetString(4), Is.EqualTo("col5"));
+        Assert.That(reader.IsDBNull(9), Is.True);
+        Assert.Throws<InvalidCastException>(() => reader.GetString(9));
+        Assert.That(reader.GetString(0), Is.SameAs(first));
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo("10x10"));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void Issue734_DateTimeCellsReturnDateTime(bool singlePass)
+    {
+        using var reader = OpenReader(OpenFixtureStream("NumDoubleDateBoolString"), new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        Assert.That(reader.Read(), Is.True);
+        var value = reader.GetValue(5);
+        Assert.That(value, Is.TypeOf<DateTime>());
+        Assert.That(reader.GetFieldType(5), Is.EqualTo(typeof(DateTime)));
+        Assert.That(reader.GetDateTime(5), Is.EqualTo((DateTime)value));
+    }
+
+    [Test]
+    public void Issue578()
+    {
+        using var reader = OpenReader("Issue578");
+        Assert.That(reader.Read(), Is.True);
+        var values = new object[reader.FieldCount];
+        Assert.That(reader.GetValues(values), Is.EqualTo(reader.FieldCount));
+        var values2 = new object[reader.FieldCount + 1];
+        Assert.That(reader.GetValues(values2), Is.EqualTo(reader.FieldCount));
+        var values3 = new object[reader.FieldCount - 1];
+        Assert.That(reader.GetValues(values3), Is.EqualTo(values3.Length));
+        Assert.That(values, Is.EqualTo(new object[] { 1, 2, 3, 4, 5 }));
+        Assert.That(values2, Is.EqualTo(new object[] { 1, 2, 3, 4, 5, null }));
+        Assert.That(values3, Is.EqualTo(new object[] { 1, 2, 3, 4 }));
+    }
+
+    [Test]
+    public void Issue642_ActiveSheet()
+    {
+        using var reader = OpenReader("Issue642");
+        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
+        {
+            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
+        });
+        Assert.That(reader.ActiveSheet, Is.EqualTo(5));
+        Assert.That(dataSet.Tables.Count, Is.EqualTo(1));
+        Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List6"));
+    }
+
+    [Test]
+    public void Issue642_ActiveSheet_SingleWorksheet()
+    {
+        using var reader = OpenReader("Issue642_Onesheet");
+        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
+        {
+            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
+        });
+        Assert.That(reader.ActiveSheet, Is.EqualTo(0));
+        Assert.That(dataSet.Tables.Count, Is.EqualTo(1));
+        Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List1"));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void LazyCommentsPreserveBufferedRowsAndReaderLifecycle(bool singlePass)
+    {
+        const string text = "first & <second>\n\u03bb \ud83d\ude00";
+        using var source = OpenFixtureStream("CellComments");
+        using var reader = OpenReader(source, new ExcelReaderConfiguration { SinglePassMode = singlePass, LeaveOpen = true });
+        Assert.Throws<InvalidOperationException>(() => reader.GetComment(0));
+        CellCommentThread retained = null;
+        for (int row = 0; row < 700; row++)
+        {
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetDouble(0), Is.EqualTo(row));
+            if (row == 13)
+            {
+                retained = reader.GetComment(0);
+                Assert.That(retained, Is.Not.Null);
+                Assert.That(retained.Messages.Count, Is.EqualTo(1));
+                Assert.That(retained.Messages[0].Text, Is.EqualTo(text));
+                Assert.That(reader.GetComment(0), Is.SameAs(retained));
+                Assert.That(reader.GetDouble(0), Is.EqualTo(row));
+                Assert.Throws<IndexOutOfRangeException>(() => reader.GetComment(-1));
+                Assert.Throws<IndexOutOfRangeException>(() => reader.GetComment(reader.FieldCount));
+            }
+            else
+            {
+                Assert.That(reader.GetComment(0), Is.Null);
+            }
+        }
+
+        Assert.That(reader.Read(), Is.False);
+        Assert.Throws<InvalidOperationException>(() => reader.GetComment(0));
+        reader.Reset();
+        for (int attempt = 0; attempt < 2; attempt++)
+        {
+            for (int row = 0; row <= 13; row++)
+                Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetComment(0), Is.SameAs(retained));
+            reader.ResetWorksheet();
+        }
+
+        reader.Close();
+        Assert.That(source.CanRead, Is.True);
+        Assert.Throws<InvalidOperationException>(() => reader.GetComment(0));
+        Assert.That(retained.Messages[0].Text, Is.EqualTo(text));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void ReturnedStylesRemainStableAcrossReadingResetAndDisposal(bool singlePass)
+    {
+        using var reader = OpenReader(OpenFixtureStream("NumDoubleDateBoolString"), new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        Assert.That(reader.Read(), Is.True);
+        var style = reader.GetCellStyle(0);
+        var expected = (style.FontIndex, style.NumberFormatIndex, style.IndentLevel,
+            style.HorizontalAlignment, style.VerticalAlignment, style.Hidden, style.Locked);
+        Assert.That(reader.GetCellStyle(0), Is.SameAs(style));
+        while (reader.Read())
+        {
+            for (int column = 0; column < reader.FieldCount; column++)
+                _ = reader.GetCellStyle(column);
+        }
+
+        reader.Reset();
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetCellStyle(0), Is.SameAs(style));
+        reader.Dispose();
+        var actual = (style.FontIndex, style.NumberFormatIndex, style.IndentLevel,
+            style.HorizontalAlignment, style.VerticalAlignment, style.Hidden, style.Locked);
+        Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void CachedFormulaErrorsRemainSeparateFromNullValues(bool singlePass)
+    {
+        using var reader = OpenReader(OpenFixtureStream("Issue329_Error"), new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        Assert.That(reader.Read(), Is.True);
+        reader.Reset();
+        for (int pass = 0; pass < 2; pass++)
+        {
+            Assert.That(reader.Read(), Is.True);
+            for (int column = 0; column < 3; column++)
+                Assert.That(reader.IsDBNull(column), Is.True);
+            Assert.That(reader.GetCellError(0), Is.EqualTo(CellError.DIV0));
+            Assert.That(reader.GetCellError(1), Is.EqualTo(CellError.NA));
+            Assert.That(reader.GetCellError(2), Is.EqualTo(CellError.VALUE));
+            while (reader.Read())
+            {
+            }
+
+            reader.Reset();
+        }
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void CachedFormulaStringsAndDatesSurviveReset(bool singlePass)
+    {
+        using var reader = OpenReader(OpenFixtureStream("EncodingFormulaDate1520"), new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        Assert.That(reader.Read(), Is.True);
+        reader.Reset();
+        for (int pass = 0; pass < 2; pass++)
+        {
+            for (int row = 0; row <= 8; row++)
+            {
+                Assert.That(reader.Read(), Is.True);
+                if (row == 1)
+                {
+                    Assert.That(reader.GetString(0), Is.EqualTo("John test"));
+                    Assert.That(reader.GetDateTime(1).Date, Is.EqualTo(new DateTime(2009, 5, 1)));
+                }
+                else if (row == 2)
+                {
+                    Assert.That(reader.GetString(0), Is.EqualTo("Simon Hodgetts"));
+                    Assert.That(reader.GetDateTime(4).TimeOfDay, Is.EqualTo(TimeSpan.FromHours(11)));
+                }
+                else if (row is 7 or 8)
+                {
+                    Assert.That(reader.GetString(0), Is.EqualTo("librement réutilisable"));
+                }
+            }
+
+            while (reader.Read())
+            {
+            }
+
+            reader.Reset();
+        }
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void PartialReadResetAndNextResultPreserveValuesAndLeaveOpen(bool singlePass)
+    {
+        using var stream = OpenFixtureStream("10x10000");
+        using (var reader = OpenReader(stream, new ExcelReaderConfiguration { SinglePassMode = singlePass, LeaveOpen = true }))
+        {
+            Assert.That(reader.Read(), Is.True);
+            object first = reader.GetValue(0);
+            reader.Reset();
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetValue(0), Is.EqualTo(first));
+            _ = reader.NextResult();
+            reader.Reset();
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetValue(0), Is.EqualTo(first));
+        }
+
+        Assert.That(stream.CanRead, Is.True);
+    }
+
+    [Test]
+    public void ResetWorksheetReplaysCurrentResultWithoutChangingNavigation(
+        [Values("10x10", "Open")] string fixture, [Values(false, true)] bool singlePass)
+    {
+        using var source = OpenFixtureStream(fixture);
+        var configuration = new ExcelReaderConfiguration { SinglePassMode = singlePass, LeaveOpen = true };
+        using var reader = OpenReader(source, configuration);
+        using var baseline = OpenReader(OpenFixtureStream(fixture), configuration);
+        AssertResetWorksheetReplaysCurrentResult(reader, baseline, source);
+    }
+
     [Test]
     public void CsvSeparatorIsNullForSpreadsheets()
     {
@@ -1066,12 +1384,12 @@ public abstract class ExcelTestBase
         reader.Read();
         Assert.That(reader.FieldCount, Is.EqualTo(9));
         while (reader.Read())
-        {            
+        {
         }
-        
+
         Assert.That(reader.FieldCount, Is.GreaterThanOrEqualTo(10));
     }
-    
+
     [Test]
     public void Issue541_BuiltinFormat55IsDate()
     {
@@ -1152,7 +1470,57 @@ public abstract class ExcelTestBase
         Assert.That(result.Tables[0].Rows.Count, Is.EqualTo(9));
         Assert.That(result.Tables[0].Columns.Count, Is.EqualTo(10));
     }
-    
+
+    internal static void AssertResetWorksheetReplaysCurrentResult(IExcelDataReader reader, IExcelDataReader baseline, Stream source)
+    {
+        do
+        {
+            string name = baseline.Name;
+            int activeSheet = baseline.ActiveSheet;
+            bool isActiveSheet = baseline.IsActiveSheet;
+            var rows = new List<(object[] Values, double Height)>();
+            while (baseline.Read())
+            {
+                var values = new object[baseline.FieldCount];
+                baseline.GetValues(values);
+                rows.Add((values, baseline.RowHeight));
+            }
+
+            reader.ResetWorksheet();
+            _ = reader.Read();
+            for (int pass = 0; pass < 2; pass++)
+            {
+                reader.ResetWorksheet();
+                Assert.That(reader.Name, Is.EqualTo(name));
+                Assert.That(reader.ActiveSheet, Is.EqualTo(activeSheet));
+                Assert.That(reader.IsActiveSheet, Is.EqualTo(isActiveSheet));
+                Assert.That(reader.RowHeight, Is.Zero);
+                Assert.Throws<InvalidOperationException>(() => reader.GetValue(0));
+                foreach (var row in rows)
+                {
+                    Assert.That(reader.Read(), Is.True);
+                    var values = new object[reader.FieldCount];
+                    reader.GetValues(values);
+                    Assert.That(values, Is.EqualTo(row.Values));
+                    Assert.That(reader.RowHeight, Is.EqualTo(row.Height));
+                }
+
+                Assert.That(reader.Read(), Is.False);
+            }
+
+            bool next = baseline.NextResult();
+            Assert.That(reader.NextResult(), Is.EqualTo(next));
+            if (!next)
+                break;
+        }
+        while (true);
+
+        Assert.Throws<InvalidOperationException>(reader.ResetWorksheet);
+        reader.Close();
+        Assert.Throws<InvalidOperationException>(reader.ResetWorksheet);
+        Assert.That(source.CanRead, Is.True);
+    }
+
     protected IExcelDataReader OpenReader(string name)
     {
         return OpenReader(OpenFixtureStream(name));

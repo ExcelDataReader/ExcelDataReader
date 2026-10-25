@@ -18,18 +18,12 @@ public sealed class CellCommentTests
     [TestCase("xml", true)]
     [TestCase("xls", false)]
     [TestCase("xls", true)]
-    [TestCase("xlsx", false)]
-    [TestCase("xlsx", true)]
-    [TestCase("xlsb", false)]
-    [TestCase("xlsb", true)]
-    public void LazyCommentsPreserveBufferedRowsAndReaderLifecycle(string format, bool singlePass)
+    public void LazyCommentsRestoreSharedStreamPosition(string format, bool singlePass)
     {
         byte[] bytes = CreateWorkbook(format);
         using var source = new MemoryStream(bytes);
         using var reader = ExcelReaderFactory.CreateReader(source, new ExcelReaderConfiguration { SinglePassMode = singlePass, LeaveOpen = true });
         using var baseline = ExcelReaderFactory.CreateReader(new MemoryStream(bytes), new ExcelReaderConfiguration { SinglePassMode = singlePass });
-        Assert.Throws<InvalidOperationException>(() => reader.GetComment(0));
-        CellCommentThread? retained = null;
         for (int row = 0; row < Rows; row++)
         {
             Assert.That(reader.Read(), Is.True);
@@ -38,38 +32,18 @@ public sealed class CellCommentTests
             long position = source.Position;
             if (row == 13)
             {
-                retained = reader.GetComment(0);
-                AssertMessage(retained, Author, Text);
-                Assert.That(reader.GetComment(0), Is.SameAs(retained));
+                AssertMessage(reader.GetComment(0), Author, Text);
                 Assert.That(reader.GetValue(0), Is.EqualTo(baseline.GetValue(0)));
-                Assert.Throws<IndexOutOfRangeException>(() => reader.GetComment(-1));
-                Assert.Throws<IndexOutOfRangeException>(() => reader.GetComment(reader.FieldCount));
             }
             else if (row > 13)
             {
                 Assert.That(reader.GetComment(0), Is.Null);
             }
 
-            if (format is "xml" or "xls")
-                Assert.That(source.Position, Is.EqualTo(position), $"physical stream position at row {row}");
+            Assert.That(source.Position, Is.EqualTo(position), $"physical stream position at row {row}");
         }
 
         Assert.That(reader.Read(), Is.False);
-        Assert.Throws<InvalidOperationException>(() => reader.GetComment(0));
-        reader.Reset();
-        for (int attempt = 0; attempt < 2; attempt++)
-        {
-            for (int row = 0; row <= 13; row++)
-                Assert.That(reader.Read(), Is.True);
-            AssertMessage(reader.GetComment(0), Author, Text);
-            Assert.That(reader.GetComment(0), Is.SameAs(retained));
-            reader.ResetWorksheet();
-        }
-
-        reader.Close();
-        Assert.That(source.CanRead, Is.True);
-        Assert.Throws<InvalidOperationException>(() => reader.GetComment(0));
-        AssertMessage(retained, Author, Text);
     }
 
     [TestCase("Issue242_StdRc4PwdPassword.xls")]

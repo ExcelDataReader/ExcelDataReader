@@ -6,36 +6,14 @@ public class ExcelOpenXmlBinaryReaderTest : ExcelOpenXmlReaderBase
     /// <inheritdoc />
     protected override DateTime Issue82_TodayDate => new(2013, 4, 19);
 
+    protected override bool UsesBinaryWorksheet => true;
+
     [Test]
     public void Issue635()
     {
         using var reader = OpenReader("Issue635");
         var dataSet = reader.AsDataSet();
         Assert.That(dataSet.Tables[0].Rows[0].ItemArray, Is.EqualTo(new[] { "A", "B", "C", "D", "E", "F" }));
-    }
-
-    [Test]
-    public void Issue642_ActiveSheet()
-    {
-        using var reader = OpenReader("Issue642");
-        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
-        {
-            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
-        });
-        Assert.That(reader.ActiveSheet, Is.EqualTo(5));
-        Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List6"));
-    }
-
-    [Test]
-    public void Issue642_ActiveSheet_SingleWorksheet()
-    {
-        using var reader = OpenReader("Issue642_Onesheet");
-        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
-        {
-            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
-        });
-        Assert.That(reader.ActiveSheet, Is.EqualTo(0));
-        Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List1"));
     }
 
     [Test]

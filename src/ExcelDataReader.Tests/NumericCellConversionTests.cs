@@ -102,55 +102,6 @@ public class NumericCellConversionTests
         Assert.That(numericWorkbook.ConvertNumericValue(2.5, 14, date1904), Is.TypeOf<double>().And.EqualTo(2.5));
     }
 
-    [TestCase("xlsb", false)]
-    [TestCase("xlsb", true)]
-    [TestCase("xlsx", false)]
-    [TestCase("xlsx", true)]
-    public void DateAndDurationFixturesMatchXlsAfterEarlyAndCompleteReset(string extension, bool singlePass)
-    {
-        using var expectedReader = ExcelReaderFactory.CreateReader(
-            Configuration.GetTestWorkbook("Issue283_TimeSpan.xls"),
-            new ExcelReaderConfiguration { SinglePassMode = singlePass });
-        using var actualReader = ExcelReaderFactory.CreateReader(
-            Configuration.GetTestWorkbook("Issue283_TimeSpan." + extension),
-            new ExcelReaderConfiguration { SinglePassMode = singlePass });
-
-        Assert.That(expectedReader.Read(), Is.True);
-        Assert.That(actualReader.Read(), Is.True);
-        expectedReader.Reset();
-        actualReader.Reset();
-
-        for (int pass = 0; pass < 2; pass++)
-        {
-            int rows = 0;
-            while (expectedReader.Read())
-            {
-                Assert.That(actualReader.Read(), Is.True);
-                for (int column = 0; column < 3; column++)
-                {
-                    Assert.That(actualReader.GetValue(column), Is.EqualTo(expectedReader.GetValue(column)));
-                    Assert.That(actualReader.GetFieldType(column), Is.EqualTo(expectedReader.GetFieldType(column)));
-                    Assert.That(actualReader.GetCellError(column), Is.EqualTo(expectedReader.GetCellError(column)));
-                }
-
-                rows++;
-            }
-
-            Assert.That(rows, Is.GreaterThanOrEqualTo(9));
-
-            // Open XML fixtures retain trailing styled rows in single-pass mode.
-            while (actualReader.Read())
-            {
-                for (int column = 0; column < 3; column++)
-                    Assert.That(actualReader.IsDBNull(column), Is.True);
-            }
-
-            Assert.That(actualReader.NextResult(), Is.EqualTo(expectedReader.NextResult()));
-            expectedReader.Reset();
-            actualReader.Reset();
-        }
-    }
-
     private static IExcelDataReader OpenXmlCell(string value, string type)
     {
         var buffer = new MemoryStream();

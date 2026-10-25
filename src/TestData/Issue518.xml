@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Created>2020-09-01T11:26:41Z</Created>
+  <LastSaved>2021-11-12T15:48:52Z</LastSaved>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+  <RemovePersonalInformation/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>9930</WindowHeight>
+  <WindowWidth>18300</WindowWidth>
+  <WindowTopX>1935</WindowTopX>
+  <WindowTopY>32767</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Sheet1">
+  <Table ss:ExpandedColumnCount="6" ss:ExpandedRowCount="3" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultRowHeight="15">
+   <Column ss:AutoFitWidth="0" ss:Width="70.5"/>
+   <Column ss:Width="53.25" ss:Span="1"/>
+   <Column ss:Index="5" ss:Width="60.75"/>
+   <Row>
+    <Cell><Data ss:Type="String">ColName1</Data></Cell>
+    <Cell><Data ss:Type="String">ColName1</Data></Cell>
+    <Cell><Data ss:Type="String">ColName2</Data></Cell>
+    <Cell><Data ss:Type="String">FirstOnly</Data></Cell>
+    <Cell ss:Index="6"><Data ss:Type="String">Another</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">A</Data></Cell>
+    <Cell><Data ss:Type="String">B</Data></Cell>
+    <Cell><Data ss:Type="String">B</Data></Cell>
+    <Cell ss:Index="5"><Data ss:Type="String">SecondOnly</Data></Cell>
+    <Cell><Data ss:Type="String">One</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">aa</Data></Cell>
+    <Cell><Data ss:Type="String">bb</Data></Cell>
+    <Cell><Data ss:Type="String">cc</Data></Cell>
+    <Cell><Data ss:Type="String">dd</Data></Cell>
+    <Cell><Data ss:Type="String">ee</Data></Cell>
+    <Cell><Data ss:Type="String">ff</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.3"/>
+    <Footer x:Margin="0.3"/>
+    <PageMargins x:Bottom="0.75" x:Left="0.7" x:Right="0.7" x:Top="0.75"/>
+   </PageSetup>
+   <Selected/>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>19</ActiveRow>
+     <ActiveCol>1</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>

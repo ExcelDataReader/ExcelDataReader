@@ -4,26 +4,14 @@ namespace ExcelDataReader.Tests;
 
 public abstract class ExcelOpenXmlReaderBase : ExcelTestBase
 {
-    [Test]
-    public void Issue525_XlsxSstPreallocationReturnsCorrectStrings()
-    {
-        // Verify that pre-allocating the shared string table based on uniqueCount doesn't break resolution.
-        // XmlSharedStringsReader reserves store capacity from <sst uniqueCount="...">
-        using var reader = OpenReader("10x10");
-        reader.Read();
-        Assert.That(reader.GetString(0), Is.EqualTo("col1"));
-        Assert.That(reader.GetString(4), Is.EqualTo("col5"));
-        Assert.That(reader.IsDBNull(9), Is.True);  // column 9 is empty in first row
-        Assert.Throws<InvalidCastException>(() => reader.GetString(9));
+    protected virtual bool UsesBinaryWorksheet => false;
 
-        reader.Read();
-        Assert.That(reader.GetString(0), Is.EqualTo("10x10"));
-    }
+    protected virtual bool UsesStrictWorksheet => false;
 
     [Test]
     public void Issue14_InvalidOADate()
     {
-        using var excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("Issue14_InvalidOADate.xlsx"));
+        using var excelReader = OpenReader("Issue14_InvalidOADate");
         var dataSet = excelReader.AsDataSet();
 
         // Test out of range double formatted as date returns double
@@ -226,24 +214,6 @@ public abstract class ExcelOpenXmlReaderBase : ExcelTestBase
     }
 
     [Test]
-    public void Issue578()
-    {
-        using var reader = OpenReader("Issue578");
-
-        reader.Read();
-        var values = new object[reader.FieldCount];
-        reader.GetValues(values);
-        var values2 = new object[reader.FieldCount + 1];
-        reader.GetValues(values2);
-        var values3 = new object[reader.FieldCount - 1];
-        reader.GetValues(values3);
-
-        Assert.That(values, Is.EqualTo(new object[] { 1, 2, 3, 4, 5 }));
-        Assert.That(values2, Is.EqualTo(new object[] { 1, 2, 3, 4, 5, null }));
-        Assert.That(values3, Is.EqualTo(new object[] { 1, 2, 3, 4 }));
-    }
-
-    [Test]
     public void Issue682()
     {
         using var reader = OpenReader("Issue682");
@@ -252,4 +222,150 @@ public abstract class ExcelOpenXmlReaderBase : ExcelTestBase
         reader.GetValues(values);
         Assert.That(values, Is.EqualTo(new object[] { 100, 10, 1 }));
     }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void DateAndDurationFixturesMatchXlsAfterEarlyAndCompleteReset(bool singlePass)
+    {
+        using var expectedReader = ExcelReaderFactory.CreateBinaryReader(
+            Configuration.GetTestWorkbook("Issue283_TimeSpan.xls"),
+            new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        using var actualReader = OpenReader(
+            OpenFixtureStream("Issue283_TimeSpan"),
+            new ExcelReaderConfiguration { SinglePassMode = singlePass });
+
+        Assert.That(expectedReader.Read(), Is.True);
+        Assert.That(actualReader.Read(), Is.True);
+        expectedReader.Reset();
+        actualReader.Reset();
+
+        for (int pass = 0; pass < 2; pass++)
+        {
+            int rows = 0;
+            while (expectedReader.Read())
+            {
+                if (actualReader.Read())
+                {
+                    for (int column = 0; column < 3; column++)
+                    {
+                        Assert.That(actualReader.GetValue(column), Is.EqualTo(expectedReader.GetValue(column)));
+                        Assert.That(actualReader.GetFieldType(column), Is.EqualTo(expectedReader.GetFieldType(column)));
+                        Assert.That(actualReader.GetCellError(column), Is.EqualTo(expectedReader.GetCellError(column)));
+                    }
+                }
+                else
+                {
+                    // Excel exports can retain different numbers of trailing styled rows.
+                    Assert.That(rows, Is.GreaterThanOrEqualTo(9));
+                    for (int column = 0; column < 3; column++)
+                    {
+                        Assert.That(expectedReader.IsDBNull(column), Is.True);
+                        Assert.That(expectedReader.GetCellError(column), Is.Null);
+                    }
+                }
+
+                rows++;
+            }
+
+            Assert.That(rows, Is.GreaterThanOrEqualTo(9));
+
+            // Open XML fixtures retain trailing styled rows in single-pass mode.
+            while (actualReader.Read())
+            {
+                for (int column = 0; column < 3; column++)
+                    Assert.That(actualReader.IsDBNull(column), Is.True);
+            }
+
+            Assert.That(actualReader.NextResult(), Is.EqualTo(expectedReader.NextResult()));
+            expectedReader.Reset();
+            actualReader.Reset();
+        }
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void OpenXmlIndexedReadingMergesWorksheetWideOverlaps(bool distantRevisit)
+    {
+        int[] order = distantRevisit
+            ? [.. Enumerable.Range(0, 70), 0, 1, 75]
+            : [0, 3, 1, 4, 2, 5, 7, 6, 8];
+        var rows = order.Select((index, ordinal) => new WorksheetConsumptionTests.OrderingRow(index, ordinal % 2, ordinal + 0.25, 20 + ordinal, ordinal % 7 == 0)).ToArray();
+        rows = [.. rows, new WorksheetConsumptionTests.OrderingRow(order.Max() + 3, 0, null, 42, false)];
+        using var stream = new MemoryStream(CreateOrderingWorkbook(rows));
+        using (var reader = OpenReader(stream, new ExcelReaderConfiguration { LeaveOpen = true }))
+        {
+            Assert.That(reader.RowCount, Is.EqualTo(rows.Max(row => row.Index) + 1));
+            Assert.That(reader.FieldCount, Is.EqualTo(2));
+            Assert.That(reader.Read(), Is.True);
+            reader.Reset();
+            for (int pass = 0; pass < 2; pass++)
+            {
+                for (int index = 0; index < reader.RowCount; index++)
+                {
+                    Assert.That(reader.Read(), Is.True, $"row {index}");
+                    var fragments = rows.Where(row => row.Index == index).ToArray();
+                    double height = fragments.Length == 0 ? 15 : fragments.Last().Hidden ? 0 : fragments.Last().Height;
+                    Assert.That(reader.RowHeight, Is.EqualTo(height), $"row {index}");
+                    for (int column = 0; column < 2; column++)
+                    {
+                        var writes = fragments.Where(row => row.Column == column && row.Value.HasValue).ToArray();
+                        Assert.That(reader.GetValue(column), Is.EqualTo(writes.Length == 0 ? DBNull.Value : (object)writes.Last().Value!.Value), $"row {index}, column {column}");
+                    }
+                }
+
+                Assert.That(reader.Read(), Is.False);
+                Assert.That(reader.Read(), Is.False);
+                reader.Reset();
+            }
+        }
+
+        Assert.That(stream.CanRead, Is.True);
+    }
+
+    [Test]
+    public void OpenXmlSinglePassMergesCurrentFragmentsButRejectsCompletedRowRevisits()
+    {
+        WorksheetConsumptionTests.OrderingRow[] rows =
+        [
+            new(0, 0, 1, 24, false),
+            new(0, 1, 2, 9, false),
+            new(40, 0, 3, 15, false),
+            new(0, 0, 4, 15, false),
+        ];
+        using var reader = OpenReader(new MemoryStream(CreateOrderingWorkbook(rows)), new ExcelReaderConfiguration { SinglePassMode = true });
+        for (int pass = 0; pass < 2; pass++)
+        {
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetDouble(0), Is.EqualTo(1));
+            Assert.That(reader.GetDouble(1), Is.EqualTo(2));
+            Assert.That(reader.RowHeight, Is.EqualTo(9));
+            for (int index = 1; index <= 40; index++)
+                Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetDouble(0), Is.EqualTo(3));
+            Assert.That(Assert.Throws<InvalidOperationException>(() => reader.Read()).Message, Does.Contain("SinglePassMode = false"));
+            reader.Reset();
+        }
+    }
+
+    [Test]
+    public void OpenXmlReorderedLeadingGapsRetainHeights()
+    {
+        WorksheetConsumptionTests.OrderingRow[] rows = [new(4, 0, 4, 24, false), new(2, 0, 2, 18, false)];
+        using var reader = OpenReader(new MemoryStream(CreateOrderingWorkbook(rows)));
+        double[] heights = [0, 15, 18, 15, 24];
+        for (int index = 0; index < heights.Length; index++)
+        {
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.RowHeight, Is.EqualTo(heights[index]));
+            if (index is 2 or 4)
+                Assert.That(reader.GetDouble(0), Is.EqualTo(index));
+            else
+                Assert.That(reader.IsDBNull(0), Is.True);
+        }
+
+        Assert.That(reader.Read(), Is.False);
+    }
+
+    private byte[] CreateOrderingWorkbook(WorksheetConsumptionTests.OrderingRow[] rows) =>
+        WorksheetConsumptionTests.OrderingWorkbook(UsesBinaryWorksheet ? "xlsb" : "xlsx", rows, UsesStrictWorksheet);
 }

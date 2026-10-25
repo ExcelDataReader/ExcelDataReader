@@ -165,25 +165,6 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
     }
 
     [Test]
-    public void IssueFileLock5161()
-    {
-        using IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("MultiSheet.xlsx"));
-        
-        // read something from the 3rd sheet
-        int i = 0;
-        do
-        {
-            if (i == 0)
-            {
-                excelReader.Read();
-            }
-        }
-        while (excelReader.NextResult());
-
-        // bug was exposed here
-    }
-
-    [Test]
     public void Issue11522_OpenXml()
     {
         using IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(Configuration.GetTestWorkbook("OldIssue11522_OpenXml.xlsx"));
@@ -341,7 +322,7 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
         Assert.That(dataSet.Tables[0].Rows[1].ItemArray[0], Is.EqualTo("text\u3000"));
         Assert.That(dataSet.Tables[0].Rows[2].ItemArray[0], Is.EqualTo("\u3000text"));
     }
- 
+
     [Test]
     public void Issue97()
     {
@@ -473,37 +454,6 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
     }
 
     [Test]
-    public void Issue486_TransformValue()
-    {
-        using var reader = OpenReader("Issue486");
-        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
-        {
-            // If you set data type to an enum and import DataSet transforms the boxed enum values to boxed ints instead
-            UseColumnDataType = false,
-            ConfigureDataTable = _ => new ExcelDataTableConfiguration()
-            {
-                UseHeaderRow = true,
-                TransformValue = (transformReader, n, value) =>
-                {
-                    var error = transformReader.GetCellError(n);
-                    if (error != null)
-                    {
-                        return error;
-                    }
-
-                    return value;
-                }
-            }
-        });
-
-        Assert.That(dataSet.Tables[0].Rows[0][0], Is.EqualTo(CellError.REF));
-        Assert.That(dataSet.Tables[0].Rows[0][1], Is.EqualTo(CellError.REF));
-
-        Assert.That(dataSet.Tables[0].Rows[1][0], Is.EqualTo(CellError.NAME));
-        Assert.That(dataSet.Tables[0].Rows[1][1], Is.EqualTo(CellError.NAME));
-    }
-
-    [Test]
     public void Issue608()
     {
         using var reader = OpenReader("Issue608");
@@ -536,99 +486,6 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
         using var reader = OpenReader("Issue649_Date1904Parsings");
         var dataSet = reader.AsDataSet();
         Assert.That(dataSet.Tables[0].Rows[11].ItemArray[12], Is.EqualTo(new DateTime(2023, 9, 1)));
-    }
-
-    [Test]
-    public void Issue518_MultipleHeaderRows()
-    {
-        using (var reader = OpenReader("Issue518"))
-        {
-            var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
-            {
-                ConfigureDataTable = _ => new ExcelDataTableConfiguration()
-                {
-                    UseHeaderRow = true,
-                    ReadHeader = self =>
-                    {
-                        List<string> headerNames = [];
-
-                        // read first header row
-                        for (var i = 0; i < self.FieldCount; i++)
-                        {
-                            var s = Convert.ToString(self.GetValue(i));
-                            headerNames.Add(s);
-                        }
-
-                        // append second header row
-                        if (!self.Read()) 
-                        {
-                            throw new Exception();
-                        }
-
-                        var result = new Dictionary<int, string>(self.FieldCount);
-                        for (var i = 0; i < self.FieldCount; i++)
-                        {
-                            var first = headerNames[i];
-                            var second = Convert.ToString(self.GetValue(i));
-                            string name;
-                            if (first.Length == 0) 
-                            {
-                                name = second;
-                            } 
-                            else if (second.Length == 0) 
-                            {
-                                name = first;
-                            } 
-                            else 
-                            {
-                                name = first + " " + second;
-                            }
-
-                            if (string.IsNullOrEmpty(name))
-                            {
-                                name = "Column" + i;
-                            }
-
-                            result.Add(i, name);
-                        }
-
-                        return result;
-                    }
-                }
-            });
-
-            var columns = dataSet.Tables[0].Columns;
-            Assert.That(columns[0].ColumnName.ToString(), Is.EqualTo("ColName1 A"));
-            Assert.That(columns[1].ColumnName.ToString(), Is.EqualTo("ColName1 B"));
-            Assert.That(columns[2].ColumnName.ToString(), Is.EqualTo("ColName2 B"));
-            Assert.That(columns[3].ColumnName.ToString(), Is.EqualTo("FirstOnly"));
-            Assert.That(columns[4].ColumnName.ToString(), Is.EqualTo("SecondOnly"));
-            Assert.That(columns[5].ColumnName.ToString(), Is.EqualTo("Another One"));
-        }
-    }
-
-    [Test]
-    public void Issue642_ActiveSheet()
-    {
-        using var reader = OpenReader("Issue642");
-        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
-        {
-            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
-        });
-        Assert.That(reader.ActiveSheet, Is.EqualTo(5));
-        Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List6"));
-    }
-
-    [Test]
-    public void Issue642_ActiveSheet_SingleWorksheet()
-    {
-        using var reader = OpenReader("Issue642_Onesheet");
-        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration()
-        {
-            FilterSheet = (tableReader, sheetIndex) => tableReader.IsActiveSheet
-        });
-        Assert.That(reader.ActiveSheet, Is.EqualTo(0));
-        Assert.That(dataSet.Tables[0].TableName, Is.EqualTo("List1"));
     }
 
     [Test]
@@ -824,7 +681,7 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
         Assert.That(reader.GetNumberFormatString(5), Is.EqualTo("h:mm:ss"));
     }
 
-    protected override IExcelDataReader OpenReader(Stream stream, ExcelReaderConfiguration configuration = null) 
+    protected override IExcelDataReader OpenReader(Stream stream, ExcelReaderConfiguration configuration = null)
     => ExcelReaderFactory.CreateOpenXmlReader(stream, configuration);
 
     protected override Stream OpenStream(string name) => Configuration.GetTestWorkbook(name + ".xlsx");
