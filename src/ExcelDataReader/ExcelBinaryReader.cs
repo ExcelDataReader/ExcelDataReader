@@ -5,10 +5,11 @@ namespace ExcelDataReader;
 
 internal sealed class ExcelBinaryReader : ExcelDataReader<XlsWorkbook, XlsWorksheet>
 {
-    public ExcelBinaryReader(Stream stream, ExcelReaderConfiguration configuration)
+    public ExcelBinaryReader(Stream stream, ExcelReaderConfiguration configuration, DocumentProperties? documentProperties = null)
     {
         try
         {
+            DocumentProperties = documentProperties ?? DocumentProperties.Empty;
             Workbook = new XlsWorkbook(stream, configuration);
             Workbook.SinglePassMode = configuration.SinglePassMode;
             SinglePassMode = configuration.SinglePassMode;

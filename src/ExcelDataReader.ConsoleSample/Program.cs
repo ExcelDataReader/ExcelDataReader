@@ -10,6 +10,7 @@ Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 var rootCommand = new RootCommand("ExcelDataReader sample console application");
 rootCommand.Subcommands.Add(BuildExcelCommand());
 rootCommand.Subcommands.Add(BuildCsvCommand());
+rootCommand.Subcommands.Add(BuildPropertiesCommand());
 return rootCommand.Parse(args).Invoke();
 
 // ---- excel subcommand -------------------------------------------------------
@@ -123,6 +124,39 @@ static Command BuildExcelCommand()
         }
     });
 
+    return cmd;
+}
+
+// ---- properties subcommand --------------------------------------------------
+static Command BuildPropertiesCommand()
+{
+    var fileArg = new Argument<FileInfo>("file") { Description = "Path to the Excel file (XLS, XLSX, XLSB, XML Spreadsheet 2003)" };
+    var passwordOpt = new Option<string?>("--password", ["-p"]) { Description = "Password for protected workbooks" };
+    var encodingOpt = new Option<string>("--encoding", ["-e"]) { Description = "Fallback encoding for XLS BIFF2-5 (default: windows-1252)", DefaultValueFactory = _ => "windows-1252" };
+    var cmd = new Command("properties", "Show workbook document properties without reading worksheet rows");
+    cmd.Arguments.Add(fileArg);
+    cmd.Options.Add(passwordOpt);
+    cmd.Options.Add(encodingOpt);
+    cmd.SetAction(parseResult =>
+    {
+        using var stream = parseResult.GetValue(fileArg)!.OpenRead();
+        using var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguration
+        {
+            Password = parseResult.GetValue(passwordOpt),
+            FallbackEncoding = Encoding.GetEncoding(parseResult.GetValue(encodingOpt)!),
+            SinglePassMode = true,
+        });
+        var properties = reader.DocumentProperties;
+        Console.WriteLine($"Title: {properties.Title}");
+        Console.WriteLine($"Subject: {properties.Subject}");
+        Console.WriteLine($"Author: {properties.Author}");
+        Console.WriteLine($"Keywords: {properties.Keywords}");
+        Console.WriteLine($"Description: {properties.Description}");
+        Console.WriteLine($"Last modified by: {properties.LastModifiedBy}");
+        Console.WriteLine($"Created: {properties.Created:O}");
+        Console.WriteLine($"Modified: {properties.Modified:O}");
+        Console.WriteLine($"Last printed: {properties.LastPrinted:O}");
+    });
     return cmd;
 }
 

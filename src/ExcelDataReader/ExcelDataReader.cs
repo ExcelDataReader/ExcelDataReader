@@ -42,6 +42,8 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     public virtual string? CsvSeparator => null;
 
+    public DocumentProperties DocumentProperties { get; protected set; } = DocumentProperties.Empty;
+
     public int ActiveSheet => GetWorkbook().ActiveSheet;
 
     public bool IsActiveSheet => _idx == GetWorkbook().ActiveSheet;

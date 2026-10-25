@@ -47,7 +47,7 @@ public static class ExcelReaderFactory
             var document = new CompoundDocument(fileStream);
             if (TryGetWorkbook(fileStream, document, out var stream))
             {
-                return new ExcelBinaryReader(stream, configuration);
+                return CreateCompoundBinaryReader(stream, configuration, document, fileStream);
             }
 
             if (TryGetEncryptedPackage(fileStream, document, configuration.Password, out stream))
@@ -101,7 +101,7 @@ public static class ExcelReaderFactory
             var document = new CompoundDocument(fileStream);
             if (TryGetWorkbook(fileStream, document, out var stream))
             {
-                return new ExcelBinaryReader(stream, configuration);
+                return CreateCompoundBinaryReader(stream, configuration, document, fileStream);
             }
             else
             {
@@ -191,6 +191,19 @@ public static class ExcelReaderFactory
 
         stream = null;
         return false;
+    }
+
+    private static ExcelBinaryReader CreateCompoundBinaryReader(Stream stream, ExcelReaderConfiguration configuration, CompoundDocument document, Stream fileStream)
+    {
+        try
+        {
+            return new ExcelBinaryReader(stream, configuration, CompoundDocumentPropertiesReader.Load(document, fileStream));
+        }
+        catch (Exception error)
+        {
+            Core.ResourceCleanup.DisposeAll(error, stream);
+            throw;
+        }
     }
 
     private static bool TryGetEncryptedPackage(Stream fileStream, CompoundDocument document, string? password, [NotNullWhen(true)] out Stream? stream)

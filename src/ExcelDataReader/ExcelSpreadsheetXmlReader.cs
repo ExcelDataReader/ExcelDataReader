@@ -7,6 +7,7 @@ internal sealed class ExcelSpreadsheetXmlReader : ExcelDataReader<SpreadsheetXml
     public ExcelSpreadsheetXmlReader(Stream stream, bool singlePassMode = false)
     {
         Workbook = new SpreadsheetXmlWorkbook(stream);
+        DocumentProperties = Workbook.DocumentProperties;
         Workbook.SinglePassMode = singlePassMode;
         SinglePassMode = singlePassMode;
 

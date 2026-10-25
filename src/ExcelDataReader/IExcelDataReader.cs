@@ -9,6 +9,12 @@ namespace ExcelDataReader;
 public interface IExcelDataReader : IDataReader
 {
     /// <summary>
+    /// Gets the workbook's descriptive properties, loaded when the reader is opened.
+    /// Missing or unsupported properties are null. CSV and raw BIFF have no document properties.
+    /// </summary>
+    DocumentProperties DocumentProperties { get; }
+
+    /// <summary>
     /// Gets the sheet name.
     /// </summary>
     string? Name { get; }

@@ -150,6 +150,20 @@ one hyperlink object across its covered cells; the last stored supported link
 wins when ranges overlap. Hyperlinks do not extend row or field counts, and
 merged cells do not automatically inherit a link. DataSet values are unchanged.
 
+### Document properties
+
+`reader.DocumentProperties` exposes the workbook's `Title`, `Subject`, `Author`,
+`Keywords`, `Description`, `LastModifiedBy`, `Created`, `Modified` and
+`LastPrinted`. The immutable object is populated during open, independently of
+the selected worksheet and `SinglePassMode`. Dates are returned as UTC
+`DateTime` values; absent or unsupported properties are `null`.
+
+XLS, XLSX, XLSB and SpreadsheetML are supported. CSV and raw BIFF streams have
+no document properties. These are stored document properties, not filesystem
+attributes; `Description` corresponds to Excel's document Comments property,
+not cell comments. Custom properties are not exposed. Invalid optional property
+values are ignored without changing worksheet values.
+
 ### CreateReader() configuration options
 
 The `ExcelReaderFactory.CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()`, `CreateCsvReader()` methods accept an optional configuration object to modify the behavior of the reader:
