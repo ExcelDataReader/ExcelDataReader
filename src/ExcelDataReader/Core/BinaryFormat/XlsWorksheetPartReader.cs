@@ -118,6 +118,9 @@ internal sealed class XlsWorksheetPartReader(
                     for (int i = 0; i < count; i++)
                         mergeCells.Add(new CellRange(frame.ReadInt16(6 + i * 8), frame.ReadInt16(2 + i * 8), frame.ReadInt16(8 + i * 8), frame.ReadInt16(4 + i * 8)));
                     break;
+                case BIFFRECORDTYPE.COLWIDTH:
+                    columnWidths.Add(new Column(frame.ReadByte(0), frame.ReadByte(1), false, frame.ReadUInt16(2) / 256.0));
+                    break;
                 case BIFFRECORDTYPE.COLINFO:
                     var flags = frame.ReadUInt16(8);
                     columnWidths.Add(new Column(frame.ReadUInt16(0), frame.ReadUInt16(2), (flags & 1) != 0, (flags & 2) != 0 ? frame.ReadUInt16(4) / 256.0 : null));

@@ -86,6 +86,53 @@ public class WorksheetConsumptionTests
         Assert.That(cells, Is.EqualTo(41));
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void Biff2ColumnWidthsPreserveRangesAndFractionalWidths(bool singlePass)
+    {
+        using var buffer = new MemoryStream();
+        using (var writer = new BinaryWriter(buffer, Encoding.Unicode, leaveOpen: true))
+        {
+            XlsRecord(writer, 0x09, data =>
+            {
+                data.Write((ushort)2);
+                data.Write((ushort)0x10);
+            });
+            foreach (var (first, last, width) in new[] { (1, 2, 6528), (3, 3, 0), (255, 255, 10816) })
+            {
+                XlsRecord(writer, 0x24, data =>
+                {
+                    data.Write((byte)first);
+                    data.Write((byte)last);
+                    data.Write((ushort)width);
+                });
+            }
+
+            XlsRecord(writer, 0x02, data =>
+            {
+                data.Write((ushort)0);
+                data.Write((ushort)255);
+                data.Write(new byte[3]);
+                data.Write((ushort)42);
+            });
+            XlsRecord(writer, 0x0A, _ => { });
+        }
+
+        buffer.Position = 0;
+        using var reader = ExcelReaderFactory.CreateBinaryReader(buffer, new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.FieldCount, Is.EqualTo(256));
+        Assert.That(reader.GetColumnWidth(0), Is.EqualTo(8.43));
+        Assert.That(reader.GetColumnWidth(1), Is.EqualTo(25.5));
+        Assert.That(reader.GetColumnWidth(2), Is.EqualTo(25.5));
+        Assert.That(reader.GetColumnWidth(3), Is.Zero);
+        Assert.That(reader.GetColumnWidth(4), Is.EqualTo(8.43));
+        Assert.That(reader.GetColumnWidth(254), Is.EqualTo(8.43));
+        Assert.That(reader.GetColumnWidth(255), Is.EqualTo(42.25));
+        Assert.That(reader.GetValue(255), Is.EqualTo(42));
+        Assert.That(reader.Read(), Is.False);
+    }
+
     [Test]
     public void XlsTransportFramesPreserveGenericRecordsAndTheirPayloads()
     {
