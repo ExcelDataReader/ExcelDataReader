@@ -1,4 +1,5 @@
 using System.Text;
+using ExcelDataReader.Core;
 
 namespace ExcelDataReader.Core.BinaryFormat;
 
@@ -9,6 +10,7 @@ internal sealed class XlsWorksheet : IWorksheet
 {
     private readonly XlsWorksheetMetadata _metadata;
     private Dictionary<long, CellCommentThread>? _comments;
+    private HyperlinkStore? _hyperlinks;
 
     public XlsWorksheet(XlsWorkbook workbook, XlsSheetInfo refSheet, Stream stream, bool singlePassMode = false)
     {
@@ -87,5 +89,29 @@ internal sealed class XlsWorksheet : IWorksheet
         }
 
         return _comments = comments;
+    }
+
+    public HyperlinkStore LoadHyperlinks()
+    {
+        if (_hyperlinks != null)
+            return _hyperlinks;
+        long position = Stream.Position;
+        HyperlinkStore hyperlinks;
+        Exception? failure = null;
+        try
+        {
+            hyperlinks = XlsHyperlinksReader.Load(this);
+        }
+        catch (Exception error)
+        {
+            failure = error;
+            throw;
+        }
+        finally
+        {
+            ResourceCleanup.RestorePosition(Stream, position, failure);
+        }
+
+        return _hyperlinks = hyperlinks;
     }
 }

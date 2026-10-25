@@ -6,6 +6,7 @@ internal sealed class XlsxWorksheet : IWorksheet
 {
     private readonly OpenXmlRowOrder.Region[] _orderRegions = [];
     private Dictionary<long, CellCommentThread>? _comments;
+    private HyperlinkStore? _hyperlinks;
 
     public XlsxWorksheet(ZipWorker document, XlsxWorkbook workbook, SheetRecord refSheet, bool singlePassMode = false)
     {
@@ -97,6 +98,9 @@ internal sealed class XlsxWorksheet : IWorksheet
 
     public Dictionary<long, CellCommentThread>? LoadComments() =>
         _comments ??= Path is { Length: > 0 } path ? Document.LoadComments(path) ?? [] : [];
+
+    public HyperlinkStore? LoadHyperlinks() =>
+        _hyperlinks ??= Path is { Length: > 0 } path ? Document.LoadHyperlinks(path) : new HyperlinkStore();
 
     private struct MetadataConsumer(bool pauseAtSheetData) : IWorksheetHandler
     {

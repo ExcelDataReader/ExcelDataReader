@@ -26,6 +26,8 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     private bool _rowReady;
     private Dictionary<long, CellCommentThread>? _comments;
     private bool _commentsLoaded;
+    private HyperlinkStore? _hyperlinks;
+    private bool _hyperlinksLoaded;
 
     ~ExcelDataReader()
     {
@@ -235,6 +237,23 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
     }
 
     /// <inheritdoc />
+    [SuppressMessage("Usage", "CA2201:Do not raise reserved exception types", Justification = "Match existing cell accessor column validation.")]
+    public CellHyperlink? GetHyperlink(int i)
+    {
+        if (RowCells == null || _rowReader == null)
+            throw new InvalidOperationException("No data exists for the row/column.");
+        if ((uint)i >= (uint)FieldCount)
+            throw new IndexOutOfRangeException();
+        if (!_hyperlinksLoaded)
+        {
+            _hyperlinks = _worksheetIterator!.Current.LoadHyperlinks();
+            _hyperlinksLoaded = true;
+        }
+
+        return _hyperlinks?.Find(_nextRowIndex - 1, i);
+    }
+
+    /// <inheritdoc />
     public void Reset()
     {
         _rowReader?.Dispose();
@@ -408,6 +427,8 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
 
     private void ResetSheetData()
     {
+        _hyperlinks = null;
+        _hyperlinksLoaded = false;
         _comments = null;
         _commentsLoaded = false;
         RowCells = null;

@@ -119,6 +119,35 @@ when requested, so the first lookup may take additional time and memory. Only
 comments within the reader's row and column range are accessible, including
 notes on blank cells within that range.
 
+### Hyperlinks
+
+`GetHyperlink(columnIndex)` returns an immutable `CellHyperlink` for the current
+row, or `null` when there is no supported explicit hyperlink. XLS (BIFF8), XLSX, XLSB
+and SpreadsheetML are supported; CSV returns `null`. Formula-generated links
+and unsupported hyperlink representations are not read.
+
+```c#
+while (reader.Read())
+{
+    var value = reader.GetValue(0); // Cell values are unchanged.
+    var link = reader.GetHyperlink(0);
+    var address = link?.Address;
+    var tooltip = link?.Tooltip;
+}
+```
+
+`Address` contains the complete destination, such as
+`https://example.com/report.xlsx#Summary!A1`, `#SalesTotals` or
+`report.xlsx#Summary!A1`. Relative paths and stored escaping are preserved;
+destinations and defined names are not validated or resolved. An address can
+be empty when a stored hyperlink contains only a tooltip.
+
+The first lookup loads the worksheet's hyperlink metadata lazily and may require
+an additional scan. Later lookups and resets reuse it. One stored range shares
+one hyperlink object across its covered cells; the last stored supported link
+wins when ranges overlap. Hyperlinks do not extend row or field counts, and
+merged cells do not automatically inherit a link. DataSet values are unchanged.
+
 ### CreateReader() configuration options
 
 The `ExcelReaderFactory.CreateReader()`, `CreateBinaryReader()`, `CreateOpenXmlReader()`, `CreateCsvReader()` methods accept an optional configuration object to modify the behavior of the reader:

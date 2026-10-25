@@ -92,5 +92,7 @@ internal sealed class CsvWorksheet : IWorksheet
 
     public Dictionary<long, CellCommentThread>? LoadComments() => null;
 
+    public HyperlinkStore? LoadHyperlinks() => null;
+
     public IWorksheetReader OpenReader() => new CsvWorksheetReader(this, BomLength);
 }
