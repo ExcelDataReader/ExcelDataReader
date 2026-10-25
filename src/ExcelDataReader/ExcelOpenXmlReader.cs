@@ -10,6 +10,7 @@ internal sealed class ExcelOpenXmlReader : ExcelDataReader<XlsxWorkbook, XlsxWor
         Document = new(stream);
         try
         {
+            DocumentProperties = Document.LoadDocumentProperties();
             Workbook = new XlsxWorkbook(Document, configuration);
             Workbook.SinglePassMode = configuration.SinglePassMode;
             SinglePassMode = configuration.SinglePassMode;

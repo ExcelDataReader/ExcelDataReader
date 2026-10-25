@@ -28,6 +28,8 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
 
     public int ActiveSheet => _workbookSink.ActiveSheet;
 
+    public DocumentProperties DocumentProperties { get; private set; } = DocumentProperties.Empty;
+
     public static bool IsSpreadsheetXmlStream(Stream stream)
     {
         if (!stream.CanSeek)
@@ -218,6 +220,16 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
         {
             if (workbookReader.NodeType != XmlNodeType.Element)
                 continue;
+
+            if (workbookReader.Depth == 1 && workbookReader.LocalName == "DocumentProperties" &&
+                workbookReader.NamespaceURI == "urn:schemas-microsoft-com:office:office")
+            {
+                var properties = new DocumentPropertiesBuilder();
+                using var subtree = workbookReader.ReadSubtree();
+                properties.ReadXml(subtree, spreadsheetXml: true);
+                DocumentProperties = properties.Build();
+                continue;
+            }
 
             if (workbookReader.LocalName == "Styles" && workbookReader.NamespaceURI == SpreadsheetNamespace)
             {
