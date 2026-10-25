@@ -11,6 +11,8 @@ var rootCommand = new RootCommand("ExcelDataReader sample console application");
 rootCommand.Subcommands.Add(BuildExcelCommand());
 rootCommand.Subcommands.Add(BuildCsvCommand());
 rootCommand.Subcommands.Add(BuildPropertiesCommand());
+rootCommand.Subcommands.Add(BuildCellMetadataCommand(comments: true));
+rootCommand.Subcommands.Add(BuildCellMetadataCommand(comments: false));
 return rootCommand.Parse(args).Invoke();
 
 // ---- excel subcommand -------------------------------------------------------
@@ -38,6 +40,7 @@ static Command BuildExcelCommand()
     cmd.Options.Add(passwordOpt);
     cmd.Options.Add(encodingOpt);
     cmd.Options.Add(dataSetOpt);
+    var configureStorage = AddSharedStringOptions(cmd);
 
     cmd.SetAction(parseResult =>
     {
@@ -52,22 +55,8 @@ static Command BuildExcelCommand()
         var encodingName = parseResult.GetValue(encodingOpt)!;
         var useDataSet = parseResult.GetValue(dataSetOpt) || fillMerged;
 
-        // Expand comma-separated index tokens into a set of 1-based indices.
         var nameSet = new HashSet<string>(sheetNames, StringComparer.Ordinal);
-        var indexSet = new HashSet<int>();
-        foreach (var token in sheetIndexTokens)
-        {
-            foreach (var part in token.Split(','))
-            {
-                if (!int.TryParse(part.Trim(), out int idx) || idx < 1)
-                {
-                    Console.Error.WriteLine($"Invalid sheet index: '{part.Trim()}' (must be a positive integer)");
-                    return;
-                }
-
-                indexSet.Add(idx);
-            }
-        }
+        var indexSet = ParseSheetIndices(sheetIndexTokens);
 
         bool hasFilter = nameSet.Count > 0 || indexSet.Count > 0;
 
@@ -75,12 +64,14 @@ static Command BuildExcelCommand()
         var sw = Stopwatch.StartNew();
 
         using var stream = file.OpenRead();
-        using var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguration
+        var configuration = new ExcelReaderConfiguration
         {
             Password = password,
             FallbackEncoding = Encoding.GetEncoding(encodingName),
             SinglePassMode = singlePass,
-        });
+        };
+        configureStorage(parseResult, configuration);
+        using var reader = ExcelReaderFactory.CreateReader(stream, configuration);
 
         var openMs = sw.ElapsedMilliseconds;
 
@@ -125,6 +116,98 @@ static Command BuildExcelCommand()
     });
 
     return cmd;
+}
+
+static HashSet<int> ParseSheetIndices(string[] tokens)
+{
+    var indices = new HashSet<int>();
+    foreach (var part in tokens.SelectMany(token => token.Split(',')))
+    {
+        if (!int.TryParse(part.Trim(), out int index) || index < 1)
+            throw new ArgumentException($"Invalid sheet index: '{part.Trim()}' (must be a positive integer)");
+        indices.Add(index);
+    }
+
+    return indices;
+}
+
+static Action<System.CommandLine.ParseResult, ExcelReaderConfiguration> AddSharedStringOptions(Command command)
+{
+    var mode = new Option<SharedStringStorageMode>("--shared-string-storage") { Description = "Shared string storage: Default or SpillToDisk" };
+    var threshold = new Option<long>("--shared-string-threshold") { Description = "Spill threshold in bytes (minimum 1048576)", DefaultValueFactory = _ => 64L * 1024 * 1024 };
+    var directory = new Option<string?>("--shared-string-directory") { Description = "Temporary spill directory (strings are stored as plaintext, including encrypted files)" };
+    command.Options.Add(mode);
+    command.Options.Add(threshold);
+    command.Options.Add(directory);
+    return (result, configuration) =>
+    {
+        configuration.SharedStringStorageMode = result.GetValue(mode);
+        configuration.SharedStringSpillThreshold = result.GetValue(threshold);
+        configuration.SharedStringTemporaryDirectory = result.GetValue(directory);
+    };
+}
+
+static Command BuildCellMetadataCommand(bool comments)
+{
+    string description = comments ? "Show stored legacy cell comments" : "Show explicit stored hyperlinks (not formula-generated links)";
+    var command = new Command(comments ? "comments" : "links", description + ". Outputs quoted TSV with 1-based row/column coordinates for readable cells. Metadata is loaded lazily and may require an additional scan.");
+    var file = new Argument<FileInfo>("file") { Description = "Path to the Excel file" };
+    var password = new Option<string?>("--password", ["-p"]) { Description = "Password for protected workbooks" };
+    var encoding = new Option<string>("--encoding", ["-e"]) { Description = "Fallback XLS encoding", DefaultValueFactory = _ => "windows-1252" };
+    var names = new Option<string[]>("--sheet-name", ["-n"]) { Description = "Filter by sheet name (repeatable)", AllowMultipleArgumentsPerToken = false };
+    var indices = new Option<string[]>("--sheet-index", ["-i"]) { Description = "Filter by 1-based sheet index, comma-separated or repeatable", AllowMultipleArgumentsPerToken = false };
+    var singlePass = new Option<bool>("--single-pass") { Description = "Skip the row/column counting pre-scan" };
+    command.Arguments.Add(file);
+    command.Options.Add(password);
+    command.Options.Add(encoding);
+    command.Options.Add(names);
+    command.Options.Add(indices);
+    command.Options.Add(singlePass);
+    var configureStorage = AddSharedStringOptions(command);
+    command.SetAction(result =>
+    {
+        var nameSet = new HashSet<string>(result.GetValue(names) ?? [], StringComparer.Ordinal);
+        var indexSet = ParseSheetIndices(result.GetValue(indices) ?? []);
+        var configuration = new ExcelReaderConfiguration
+        {
+            Password = result.GetValue(password),
+            FallbackEncoding = Encoding.GetEncoding(result.GetValue(encoding)!),
+            SinglePassMode = result.GetValue(singlePass),
+        };
+        configureStorage(result, configuration);
+        using var stream = result.GetValue(file)!.OpenRead();
+        using var reader = ExcelReaderFactory.CreateReader(stream, configuration);
+        WriteSeparatedRow(comments ? ["Sheet", "Row", "Column", "Author", "Text"] : ["Sheet", "Row", "Column", "Address", "Tooltip"], '\t');
+        int sheet = 0;
+        do
+        {
+            sheet++;
+            if (nameSet.Count + indexSet.Count > 0 && !nameSet.Contains(reader.Name ?? string.Empty) && !indexSet.Contains(sheet))
+                continue;
+            int row = 0;
+            while (reader.Read())
+            {
+                row++;
+                for (int column = 0; column < reader.FieldCount; column++)
+                {
+                    if (comments)
+                    {
+                        if (reader.GetComment(column) is { } comment)
+                        {
+                            foreach (var message in comment.Messages)
+                                WriteSeparatedRow([reader.Name ?? string.Empty, row.ToString(), (column + 1).ToString(), message.Author ?? string.Empty, message.Text], '\t');
+                        }
+                    }
+                    else if (reader.GetHyperlink(column) is { } link)
+                    {
+                        WriteSeparatedRow([reader.Name ?? string.Empty, row.ToString(), (column + 1).ToString(), link.Address, link.Tooltip ?? string.Empty], '\t');
+                    }
+                }
+            }
+        }
+        while (reader.NextResult());
+    });
+    return command;
 }
 
 // ---- properties subcommand --------------------------------------------------
@@ -172,6 +255,8 @@ static Command BuildCsvCommand()
     var quoteCharOpt = new Option<string?>("--quote-char") { Description = "Quote character (default: \")" };
     var escapeCharOpt = new Option<string?>("--escape-char") { Description = "Escape character for quoted fields (default: disabled)" };
     var dataSetOpt = new Option<bool>("--dataset") { Description = "Use AsDataSet extension (loads all data into a DataSet in memory)" };
+    var analyzeRowsOpt = new Option<int>("--analyze-initial-rows") { Description = "Rows to analyze for CSV detection (0: entire file)" };
+    var showSeparatorOpt = new Option<bool>("--show-separator") { Description = "Print the detected separator on stderr" };
 
     var cmd = new Command("csv", "Read CSV files");
     cmd.Arguments.Add(fileArg);
@@ -183,6 +268,8 @@ static Command BuildCsvCommand()
     cmd.Options.Add(quoteCharOpt);
     cmd.Options.Add(escapeCharOpt);
     cmd.Options.Add(dataSetOpt);
+    cmd.Options.Add(analyzeRowsOpt);
+    cmd.Options.Add(showSeparatorOpt);
 
     cmd.SetAction(parseResult =>
     {
@@ -196,12 +283,17 @@ static Command BuildCsvCommand()
         var escapeCharStr = parseResult.GetValue(escapeCharOpt);
         var useDataSet = parseResult.GetValue(dataSetOpt);
 
+        int analyzeRows = parseResult.GetValue(analyzeRowsOpt);
+        if (analyzeRows < 0)
+            throw new ArgumentException("--analyze-initial-rows must be zero or greater.");
+
         var config = new ExcelReaderConfiguration
         {
             FallbackEncoding = Encoding.GetEncoding(encodingName),
             TrimWhiteSpace = !noTrim,
             QuoteChar = quoteCharStr?.Length > 0 ? quoteCharStr[0] : '"',
             EscapeChar = escapeCharStr?.Length > 0 ? escapeCharStr[0] : null,
+            AnalyzeInitialCsvRows = analyzeRows,
         };
         if (separators is { Length: > 0 })
             config.AutodetectSeparators = separators.Select(separator => separator.Replace("\\t", "\t")).ToArray();
@@ -213,6 +305,9 @@ static Command BuildCsvCommand()
         using var reader = ExcelReaderFactory.CreateCsvReader(stream, config);
 
         var openMs = sw.ElapsedMilliseconds;
+
+        if (parseResult.GetValue(showSeparatorOpt))
+            Console.Error.WriteLine($"Separator: {(reader.CsvSeparator is { } separator ? "\"" + separator.Replace("\t", "\\t").Replace("\r", "\\r").Replace("\n", "\\n") + "\"" : "(none)")}");
 
         if (useDataSet)
         {
