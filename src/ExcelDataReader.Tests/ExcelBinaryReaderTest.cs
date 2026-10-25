@@ -757,6 +757,20 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         Assert.That(reader.GetNumberFormatString(2), Is.EqualTo("0000.00"));
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void GetColumnWidth_Biff2(bool singlePass)
+    {
+        using var reader = ExcelReaderFactory.CreateBinaryReader(
+            Configuration.GetTestWorkbook(Path.Combine("xls", "BIFF2_DIMENSIONS.XLS")),
+            new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetColumnWidth(0), Is.EqualTo(8.43));
+        Assert.That(reader.GetColumnWidth(1), Is.EqualTo(25.7109375));
+        Assert.That(reader.GetColumnWidth(2), Is.EqualTo(25.7109375));
+        Assert.That(reader.GetColumnWidth(3), Is.EqualTo(8.43));
+    }
+
     [Test]
     public void Issue368_Formats()
     {
