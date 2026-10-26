@@ -6,6 +6,7 @@ namespace ExcelDataReader.Tests;
 /// <summary>
 /// Most CSV test data came from csv-spectrum: https://github.com/maxogden/csv-spectrum.
 /// </summary>
+[Parallelizable]
 public class ExcelCsvReaderTest
 {
     [TestCase("", 0)]

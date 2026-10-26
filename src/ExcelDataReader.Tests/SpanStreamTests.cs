@@ -129,7 +129,8 @@ public class SpanStreamTests
             int spanCount = spanStream.Read(actual.AsSpan(2, size));
             Assert.That(spanCount, Is.EqualTo(count));
             Assert.That(count, Is.GreaterThan(0));
-            Assert.That(actual, Is.EqualTo(expected));
+            if (!actual.AsSpan().SequenceEqual(expected))
+                Assert.That(actual, Is.EqualTo(expected));
             position += count;
         }
     }

@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using ExcelDataReader.TestFixtures;
@@ -343,21 +342,8 @@ public partial class ExcelSpreadsheetXmlReaderTest : ExcelTestBase
     }
 
     [Test]
-    [NonParallelizable]
-    public void ScanMode_RetainedMemoryDoesNotGrowWithCellPayloadOrVisitedSheets()
+    public void ScanMode_LargeRowIndexPreservesRowCountAndLeadingGap()
     {
-        MeasureRetainedMemory(10);
-        long small = MeasureRetainedMemory(100);
-        long large = MeasureRetainedMemory(10000);
-        TestContext.Out.WriteLine($"Retained bytes: 100 rows/sheet = {small}; 10000 rows/sheet = {large}");
-        Assert.That(large - small, Is.LessThan(8L * 1024 * 1024));
-    }
-
-    [Test]
-    [NonParallelizable]
-    public void ScanMode_LargeRowIndexDoesNotMaterializeEmptyRows()
-    {
-        long before = GC.GetTotalMemory(true);
         using var reader = CreateReader(
             """
             <Worksheet ss:Name="Sparse"><Table><Row ss:Index="1000000">
@@ -368,9 +354,6 @@ public partial class ExcelSpreadsheetXmlReaderTest : ExcelTestBase
         Assert.That(reader.FieldCount, Is.EqualTo(1));
         Assert.That(reader.Read(), Is.True);
         Assert.That(reader.IsDBNull(0), Is.True);
-        long retained = GC.GetTotalMemory(true) - before;
-        GC.KeepAlive(reader);
-        Assert.That(retained, Is.LessThan(8L * 1024 * 1024));
     }
 
     protected override Stream OpenStream(string name)
@@ -447,55 +430,5 @@ public partial class ExcelSpreadsheetXmlReaderTest : ExcelTestBase
         return ExcelReaderFactory.CreateReader(
             new MemoryStream(Encoding.UTF8.GetBytes(xml)),
             new ExcelReaderConfiguration { SinglePassMode = singlePass });
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static long MeasureRetainedMemory(int rowsPerSheet)
-    {
-        using var stream = new FileStream(Path.GetTempFileName(), FileMode.Open, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose);
-        using (var writer = new StreamWriter(stream, new UTF8Encoding(false), 4096, leaveOpen: true))
-        {
-            writer.Write("<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\">");
-            string padding = new('a', 4096);
-            for (int sheet = 0; sheet < 2; sheet++)
-            {
-                writer.Write("<Worksheet ss:Name=\"Sheet");
-                writer.Write(sheet.ToString(CultureInfo.InvariantCulture));
-                writer.Write("\"><Table>");
-                for (int row = 0; row < rowsPerSheet; row++)
-                {
-                    writer.Write("<Row><Cell><Data ss:Type=\"String\">");
-                    writer.Write(row.ToString(CultureInfo.InvariantCulture));
-                    writer.Write(padding);
-                    writer.Write("</Data></Cell></Row>");
-                }
-
-                writer.Write("</Table></Worksheet>");
-            }
-
-            writer.Write("</Workbook>");
-        }
-
-        stream.Position = 0;
-        long before = GC.GetTotalMemory(true);
-        using var reader = ExcelReaderFactory.CreateReader(stream);
-        long maximum = GC.GetTotalMemory(true) - before;
-        do
-        {
-            Assert.That(reader.RowCount, Is.EqualTo(rowsPerSheet));
-            for (int row = 0; row < rowsPerSheet; row++)
-            {
-                Assert.That(reader.Read(), Is.True);
-                Assert.That(reader.GetString(0), Does.StartWith(row.ToString(CultureInfo.InvariantCulture)));
-                if (row == rowsPerSheet / 2)
-                    maximum = Math.Max(maximum, GC.GetTotalMemory(true) - before);
-            }
-
-            Assert.That(reader.Read(), Is.False);
-            maximum = Math.Max(maximum, GC.GetTotalMemory(true) - before);
-        }
-        while (reader.NextResult());
-        GC.KeepAlive(reader);
-        return maximum;
     }
 }

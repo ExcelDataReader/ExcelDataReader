@@ -1,4 +1,4 @@
-﻿namespace ExcelDataReader.Tests;
+namespace ExcelDataReader.Tests;
 
 [SetUpFixture]
 public sealed class SetUpFixture

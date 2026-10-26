@@ -166,7 +166,13 @@ public class ExcelBinaryReaderTest : ExcelTestBase
         // This test was skipped for a long time as it produced: "System.NotSupportedException : No data is available for encoding 27651."
         // Upon revisiting the underlying cause appears to be fixed
         using IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("OldIssue11572_CodePage.xls"));
-        Assert.DoesNotThrow(() => excelReader.AsDataSet());
+        do
+        {
+            while (excelReader.Read())
+            {
+            }
+        }
+        while (excelReader.NextResult());
     }
 
     /// <summary>
@@ -538,11 +544,21 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     {
         // Big spreadsheets have additional sectors beyond the header with FAT contents
         using var excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("Issue184_FATSectors.xls"));
-        DataSet ds = null;
-        Assert.DoesNotThrow(() => ds = excelReader.AsDataSet());
-        Assert.That(ds.Tables.Count, Is.EqualTo(12));
-        Assert.That(ds.Tables[0].TableName, Is.EqualTo("DATAS (12)"));
-        Assert.That(ds.Tables[11].TableName, Is.EqualTo("DATAS (5)"));
+        Assert.That(excelReader.Name, Is.EqualTo("DATAS (12)"));
+        int sheetCount = 0;
+        string lastSheetName;
+        do
+        {
+            lastSheetName = excelReader.Name;
+            while (excelReader.Read())
+            {
+            }
+
+            sheetCount++;
+        }
+        while (excelReader.NextResult());
+        Assert.That(sheetCount, Is.EqualTo(12));
+        Assert.That(lastSheetName, Is.EqualTo("DATAS (5)"));
     }
 
     [Test]
@@ -668,8 +684,22 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     public void Issue263()
     {
         using var reader = ExcelReaderFactory.CreateReader(Configuration.GetTestWorkbook("Issue263.xls"));
-        var ds = reader.AsDataSet();
-        Assert.That(ds.Tables[1].Rows[3][0], Is.EqualTo("Economic Inactivity by age\n(Official statistics: not designated as National Statistics)"));
+        int sheetIndex = 0;
+        string value = null;
+        do
+        {
+            int rowIndex = 0;
+            while (reader.Read())
+            {
+                if (sheetIndex == 1 && rowIndex == 3)
+                    value = reader.GetString(0);
+                rowIndex++;
+            }
+
+            sheetIndex++;
+        }
+        while (reader.NextResult());
+        Assert.That(value, Is.EqualTo("Economic Inactivity by age\n(Official statistics: not designated as National Statistics)"));
     }
 
     [Test]

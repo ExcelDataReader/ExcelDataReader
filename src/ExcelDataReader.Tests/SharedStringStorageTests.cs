@@ -334,9 +334,14 @@ public class SharedStringStorageTests
     [Test]
     public void DecodedCacheCollisionsEvictionAndLargeValuesRemainBounded()
     {
+        var expectedValues = new string[5000];
         using var store = new Store(SharedStringStorageMode.SpillToDisk);
-        for (int i = 0; i < 5000; i++)
-            store.Add(new string('x', i == 4999 ? 40000 : 1000) + i);
+        for (int i = 0; i < expectedValues.Length; i++)
+        {
+            expectedValues[i] = new string('x', i == 4999 ? 40000 : 1000) + i;
+            store.Add(expectedValues[i]);
+        }
+
         store.Seal();
         Assert.That(store.Spilled, Is.True);
         long backingBytes = store.ResidentBytes;
@@ -355,7 +360,7 @@ public class SharedStringStorageTests
         {
             for (int i = 0; i < 5000; i++)
             {
-                Assert.That(store.Get(i), Is.EqualTo(new string('x', i == 4999 ? 40000 : 1000) + i));
+                Assert.That(store.Get(i), Is.EqualTo(expectedValues[i]));
                 Assert.That(store.ResidentBytes, Is.LessThanOrEqualTo(Budget));
                 Assert.That(store.ResidentBytes - backingBytes, Is.LessThanOrEqualTo(Budget / 8));
             }
@@ -427,6 +432,9 @@ public class SharedStringStorageTests
     [Test]
     public void GeneratedCorpus_AllFormatsAndModesPreserveValuesAndReset()
     {
+        var expectedValues = Enumerable.Range(0, 20000)
+            .Select(position => SharedStringWorkbook.Value(SharedStringWorkbook.Reference(position, 20000, "Permuted"), 64))
+            .ToArray();
         foreach (string format in new[] { "xlsx", "xlsb", "xls" })
         {
             string path = Path.Combine(TestContext.CurrentContext.WorkDirectory, Guid.NewGuid().ToString("N") + "." + format);
@@ -459,9 +467,14 @@ public class SharedStringStorageTests
                                     {
                                         for (int c = 0; c < reader.FieldCount; c++)
                                         {
-                                            string expected = SharedStringWorkbook.Value(SharedStringWorkbook.Reference(position++, 20000, "Permuted"), 64);
-                                            Assert.That(reader.GetString(c), Is.EqualTo(expected));
-                                            Assert.That(reader.GetString(c), Is.EqualTo(expected));
+                                            string expected = expectedValues[position++];
+                                            string first = reader.GetString(c);
+                                            string second = reader.GetString(c);
+                                            if (first != expected || second != expected)
+                                            {
+                                                Assert.That(first, Is.EqualTo(expected));
+                                                Assert.That(second, Is.EqualTo(expected));
+                                            }
                                         }
                                     }
                                 }
@@ -773,7 +786,15 @@ public class SharedStringStorageTests
         strings.Seal();
         Assert.That(utf16.DiskBytes, Is.EqualTo(strings.DiskBytes));
         Assert.That(utf16.ResidentBytes, Is.EqualTo(strings.ResidentBytes));
-        Assert.That(utf16Streams.Select(stream => stream.ToArray()), Is.EqualTo(stringStreams.Select(stream => stream.ToArray())));
+        Assert.That(utf16Streams.Count, Is.EqualTo(stringStreams.Count));
+        for (int i = 0; i < utf16Streams.Count; i++)
+        {
+            byte[] actual = utf16Streams[i].ToArray();
+            byte[] expected = stringStreams[i].ToArray();
+            if (!actual.AsSpan().SequenceEqual(expected))
+                Assert.That(actual, Is.EqualTo(expected));
+        }
+
         for (int i = 0; i < values.Length; i++)
             Assert.That(utf16.Get(i + 1), Is.EqualTo(Encoding.Unicode.GetString(CodeUnits(values[i]))));
         if (state == "resident")
@@ -1221,9 +1242,13 @@ public class SharedStringStorageTests
                 using var reader = format == "xls"
                     ? ExcelReaderFactory.CreateBinaryReader(input, options)
                     : ExcelReaderFactory.CreateOpenXmlReader(input, options);
-                var data = reader.AsDataSet();
-                Assert.That(data.Tables[0].Rows.Count, Is.EqualTo(5000));
-                Assert.That(data.Tables[0].Rows[0][0], Is.EqualTo(SharedStringWorkbook.Value(0, 64)));
+                Assert.That(reader.Read(), Is.True);
+                Assert.That(reader.GetString(0), Is.EqualTo(SharedStringWorkbook.Value(0, 64)));
+                int rowCount = 1;
+                while (reader.Read())
+                    rowCount++;
+                Assert.That(rowCount, Is.EqualTo(5000));
+                Assert.That(reader.NextResult(), Is.False);
                 reader.Close();
                 reader.Close();
                 Assert.That(input.CanRead, Is.EqualTo(leaveOpen));

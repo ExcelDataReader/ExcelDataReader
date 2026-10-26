@@ -32,7 +32,8 @@ public class ReferenceHelperTests
             char character = (char)i;
             bool letter = character is (>= 'A' and <= 'Z') or (>= 'a' and <= 'z');
             bool actual = ReferenceHelper.ParseReference(character + "1", out int column, out int row);
-            Assert.That(actual, Is.EqualTo(letter), $"U+{i:X4}");
+            if (actual != letter)
+                Assert.That(actual, Is.EqualTo(letter), $"U+{i:X4}");
             if (letter)
             {
                 int expectedColumn = character is >= 'a' and <= 'z' ? character - 'a' + 1 : character - 'A' + 1;

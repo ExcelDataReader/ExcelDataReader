@@ -3,6 +3,7 @@ using System.Globalization;
 
 namespace ExcelDataReader.Tests;
 
+[Parallelizable]
 public abstract class ExcelTestBase
 {
     protected abstract DateTime Issue82_TodayDate { get; }
