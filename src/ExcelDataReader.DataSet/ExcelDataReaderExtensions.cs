@@ -85,7 +85,7 @@ public static class ExcelDataReaderExtensions
 
         int rowIndex = -1;
         int lastCheckedFieldCount = 0;
-        List<int> columnIndices = [];
+        List<int> columnIndices = new(self.FieldCount);
         while (self.Read())
         {
             rowIndex++;
@@ -194,10 +194,20 @@ public static class ExcelDataReaderExtensions
                 var value = self.GetValue(columnIndex);
                 if (configuration.FillMergedCellsValue)
                 {
-                    var range = mergedCellsList.Find(range => range.FromRow <= rowIndex &&
-                                              range.ToRow >= rowIndex &&
-                                              range.FromColumn <= columnIndex &&
-                                              range.ToColumn >= columnIndex);
+                    CellRange? range = null;
+                    foreach (var candidate in mergedCellsList)
+                    {
+                        if (candidate.FromRow > rowIndex)
+                            break;
+
+                        if (candidate.FromRow <= rowIndex && candidate.ToRow >= rowIndex &&
+                            candidate.FromColumn <= columnIndex && candidate.ToColumn >= columnIndex)
+                        {
+                            range = candidate;
+                            break;
+                        }
+                    }
+
                     if (range != null)
                     {
                         if (mergeCellValue.TryGetValue((range.FromRow, range.FromColumn), out var mergedValue))

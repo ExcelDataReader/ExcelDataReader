@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\ExcelDataReader\ExcelDataReader.csproj" />
+    <ProjectReference Include="..\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj" />
     <Compile Include="..\ExcelDataReader.Tests\AllocationTestWorkbook.cs" Link="AllocationTestWorkbook.cs" />
     <Compile Include="..\ExcelDataReader.Tests\SharedStringWorkbook.cs" Link="SharedStringWorkbook.cs" />
   </ItemGroup>
