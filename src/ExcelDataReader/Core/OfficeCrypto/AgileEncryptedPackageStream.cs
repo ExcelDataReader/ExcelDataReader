@@ -20,7 +20,7 @@ internal sealed class AgileEncryptedPackageStream : Stream
         IV = iv;
         Encryption = encryption;
 
-        if (Stream.ReadAtLeast(SegmentBytes, 0, 8) != 8)
+        if (Stream.ReadAtLeast(SegmentBytes, 0, 8, 8, throwOnEndOfStream: false) != 8)
             throw new EndOfStreamException("Incomplete encrypted package header.");
         DecryptedLength = BitConverter.ToInt64(SegmentBytes, 0);
         if (DecryptedLength < 0)
@@ -70,8 +70,7 @@ internal sealed class AgileEncryptedPackageStream : Stream
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
         return Read(buffer.AsSpan(offset, count));
 #else
-        if (buffer == null)
-            throw new ArgumentNullException(nameof(buffer));
+        ArgumentNullException.ThrowIfNull(buffer);
         if (offset < 0 || count < 0 || offset > buffer.Length - count)
             throw new ArgumentOutOfRangeException(nameof(offset));
         _ = Stream ?? throw new ObjectDisposedException(nameof(AgileEncryptedPackageStream));
@@ -181,7 +180,7 @@ internal sealed class AgileEncryptedPackageStream : Stream
         int plaintextLength = (int)Math.Min(SegmentLength, Length - offset);
         int blockSize = _cipher.BlockSize / 8;
         int encryptedLength = ((plaintextLength + blockSize - 1) / blockSize) * blockSize;
-        if (stream.ReadAtLeast(SegmentBytes, 0, encryptedLength) != encryptedLength)
+        if (stream.ReadAtLeast(SegmentBytes, 0, encryptedLength, encryptedLength, throwOnEndOfStream: false) != encryptedLength)
             throw new EndOfStreamException("Incomplete encrypted package segment.");
 
         _ivBuffer ??= new byte[CryptoHelpers.MaxHashSize];

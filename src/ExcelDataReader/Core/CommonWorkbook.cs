@@ -98,7 +98,7 @@ internal class CommonWorkbook
 
     private static bool TryParseToTimeSpan(string s, out TimeSpan result)
     {
-        if (!Helpers.StringStartsWith(s, 'P'))
+        if (!s.StartsWith('P'))
             return TimeSpan.TryParse(s, out result);
 
         try

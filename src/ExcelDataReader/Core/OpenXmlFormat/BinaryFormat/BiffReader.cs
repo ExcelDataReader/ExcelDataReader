@@ -56,11 +56,7 @@ internal abstract class BiffReader(Stream stream) : IDisposable
         offset += 4;
         if (length == uint.MaxValue)
             return null;
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        string result = Encoding.Unicode.GetString(buffer.AsSpan((int)offset, (int)(length * 2)));
-#else
-        string result = Encoding.Unicode.GetString(buffer, (int)offset, (int)(length * 2));
-#endif
+        string result = GetString(buffer, offset, length);
         offset += length * 2;
         return result;
     }
@@ -108,7 +104,7 @@ internal abstract class BiffReader(Stream stream) : IDisposable
             throw new ExcelReaderException(Errors.ErrorBiffRecordSizeInvalid);
 
         buffer = _frameBuffer.GetBuffer((int)recordLength);
-        if (Stream.ReadAtLeast(buffer, 0, (int)recordLength) != recordLength)
+        if (Stream.ReadAtLeast(buffer, 0, (int)recordLength, (int)recordLength, throwOnEndOfStream: false) != recordLength)
             throw new ExcelReaderException(Errors.ErrorBiffRecordSizeInvalid);
 
         return true;

@@ -14,7 +14,7 @@ internal static class CsvAnalyzer
         var bufferSize = 1024;
         var probeSize = 16;
         var buffer = new byte[bufferSize];
-        var bytesRead = stream.ReadAtLeast(buffer, 0, probeSize);
+        var bytesRead = stream.ReadAtLeast(buffer, 0, probeSize, probeSize, throwOnEndOfStream: false);
 
         var detectedEncoding = GetEncodingFromBom(buffer, out bomLength);
         autodetectEncoding = detectedEncoding ?? fallbackEncoding;
@@ -80,7 +80,7 @@ internal static class CsvAnalyzer
 
         while (inputStream.Position < inputStream.Length)
         {
-            var bytesRead = inputStream.ReadAtLeast(buffer, 0, buffer.Length);
+            var bytesRead = inputStream.ReadAtLeast(buffer, 0, buffer.Length, buffer.Length, throwOnEndOfStream: false);
             ParseSeparatorsBuffer(buffer, 0, bytesRead, separators, separatorInfos);
             if (IsMinNumberOfRowAnalyzed(analyzeInitialCsvRows, separatorInfos))
             {

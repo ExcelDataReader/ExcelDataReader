@@ -199,7 +199,7 @@ internal sealed class CompoundStream : Stream
         baseStream.Seek(Document.GetSectorOffset(rootSector) + rootOffset, SeekOrigin.Begin);
 
         var chunkSize = (int)Math.Min(Length - Offset, Document.Header.MiniSectorSize);
-        if (baseStream.ReadAtLeast(_sectorBuffer, 0, chunkSize) < chunkSize)
+        if (baseStream.ReadAtLeast(_sectorBuffer, 0, chunkSize, chunkSize, throwOnEndOfStream: false) < chunkSize)
         {
             throw new CompoundDocumentException(Errors.ErrorEndOfFile);
         }
@@ -217,7 +217,7 @@ internal sealed class CompoundStream : Stream
         baseStream.Seek(Document.GetSectorOffset(sector), SeekOrigin.Begin);
 
         var chunkSize = (int)Math.Min(Length - Offset, Document.Header.SectorSize);
-        if (baseStream.ReadAtLeast(_sectorBuffer, 0, chunkSize) < chunkSize)
+        if (baseStream.ReadAtLeast(_sectorBuffer, 0, chunkSize, chunkSize, throwOnEndOfStream: false) < chunkSize)
         {
             throw new CompoundDocumentException(Errors.ErrorEndOfFile);
         }

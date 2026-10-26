@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace ExcelDataReader;
+namespace System;
 
 internal static class ArgumentNullExceptionExtensions
 {

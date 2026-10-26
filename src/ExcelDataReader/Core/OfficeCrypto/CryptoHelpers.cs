@@ -152,7 +152,7 @@ internal static class CryptoHelpers
         using MemoryStream msDecrypt = new(bytes, 0, length);
         using CryptoStream csDecrypt = new(msDecrypt, transform, CryptoStreamMode.Read);
         var result = new byte[length];
-        csDecrypt.ReadAtLeast(result, 0, length);
+        csDecrypt.ReadAtLeast(result, 0, length, length, throwOnEndOfStream: false);
         return result;
     }
 
@@ -160,6 +160,6 @@ internal static class CryptoHelpers
     {
         using MemoryStream msDecrypt = new(bytes, inputOffset, chunkSize);
         using CryptoStream csDecrypt = new(msDecrypt, transform, CryptoStreamMode.Read);
-        csDecrypt.ReadAtLeast(output, 0, chunkSize);
+        csDecrypt.ReadAtLeast(output, 0, chunkSize, chunkSize, throwOnEndOfStream: false);
     }
 }

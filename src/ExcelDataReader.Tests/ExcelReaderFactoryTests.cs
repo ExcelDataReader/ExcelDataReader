@@ -3,6 +3,35 @@ namespace ExcelDataReader.Tests;
 [TestFixture]
 public class ExcelReaderFactoryTests
 {
+    [TestCase(false)]
+    [TestCase(true)]
+    public void ReadAtLeastAccumulatesShortReadsAndHandlesEof(bool throwOnEndOfStream)
+    {
+        using var stream = new ShortReadStream(new byte[] { 1, 2, 3 }, 1);
+        var buffer = new byte[6];
+        Assert.That(stream.ReadAtLeast(buffer, 1, 4, 2, throwOnEndOfStream), Is.EqualTo(2));
+        Assert.That(buffer, Is.EqualTo(new byte[] { 0, 1, 2, 0, 0, 0 }));
+        if (throwOnEndOfStream)
+        {
+            Assert.Throws<EndOfStreamException>(() => stream.ReadAtLeast(buffer, 1, 4, 2));
+        }
+        else
+        {
+            Assert.That(stream.ReadAtLeast(buffer, 1, 4, 2, throwOnEndOfStream: false), Is.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public void ReadAtLeastValidatesMinimumAndDoesNotReadForZero()
+    {
+        using var stream = new ShortReadStream(new byte[] { 1, 2, 3 }, 1);
+        var buffer = new byte[4];
+        Assert.Throws<ArgumentOutOfRangeException>(() => stream.ReadAtLeast(buffer, 1, 2, -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => stream.ReadAtLeast(buffer, 1, 2, 3));
+        Assert.That(stream.ReadAtLeast(buffer, 1, 2, 0), Is.Zero);
+        Assert.That(stream.Position, Is.Zero);
+    }
+
     [TestCase(1)]
     [TestCase(7)]
     public void RawXlsAcceptsShortReads(int chunkSize)

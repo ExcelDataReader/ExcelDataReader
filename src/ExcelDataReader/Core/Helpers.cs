@@ -68,15 +68,6 @@ internal static class Helpers
         return value;
     }
 
-    public static bool StringStartsWith(string value, char start)
-    {
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        return value.StartsWith(start);
-#else
-        return value.Length > 0 && value[0] == start;
-#endif
-    }
-
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
     private static string DecodeEscapeChars(string input, int index)
     {

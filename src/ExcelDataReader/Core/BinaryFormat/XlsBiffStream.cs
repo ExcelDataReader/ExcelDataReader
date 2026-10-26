@@ -204,7 +204,7 @@ internal sealed class XlsBiffStream : IDisposable
             // and will be refilled on the next call.
             _readAheadStart = 0;
             _readAheadEnd = 0;
-            if (BaseStream.ReadAtLeast(dest, destOffset, count) != count)
+            if (BaseStream.ReadAtLeast(dest, destOffset, count, count, throwOnEndOfStream: false) != count)
                 throw new EndOfStreamException();
         }
     }

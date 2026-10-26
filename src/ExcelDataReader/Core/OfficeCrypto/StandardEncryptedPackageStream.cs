@@ -10,7 +10,7 @@ internal sealed class StandardEncryptedPackageStream : Stream
         Decryptor = Cipher.CreateDecryptor(secretKey, encryption.SaltValue);
 
         var header = new byte[8];
-        underlyingStream.ReadAtLeast(header, 0, 8);
+        underlyingStream.ReadAtLeast(header, 0, 8, 8, throwOnEndOfStream: false);
         DecryptedLength = BitConverter.ToInt32(header, 0);
 
         // Wrap CryptoStream to override the length and dispose the cipher and transform 

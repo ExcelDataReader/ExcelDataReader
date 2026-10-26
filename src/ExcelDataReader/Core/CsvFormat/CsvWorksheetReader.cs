@@ -42,7 +42,7 @@ internal sealed class CsvWorksheetReader : IWorksheetReader
                     return _parser.Flush(ref adapter);
 
                 _offset = 0;
-                _count = _stream.ReadAtLeast(_bytes, 0, _bytes.Length);
+                _count = _stream.ReadAtLeast(_bytes, 0, _bytes.Length, _bytes.Length, throwOnEndOfStream: false);
             }
         }
         finally

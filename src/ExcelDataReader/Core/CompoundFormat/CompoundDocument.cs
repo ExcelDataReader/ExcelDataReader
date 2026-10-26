@@ -102,7 +102,7 @@ internal sealed class CompoundDocument
     {
         using var cfb = new CompoundStream(this, stream, baseSector, length, isMini, true);
         var bytes = new byte[length];
-        cfb.ReadAtLeast(bytes, 0, length);
+        cfb.ReadAtLeast(bytes, 0, length, length, throwOnEndOfStream: false);
         return bytes;
     }
 
@@ -112,7 +112,7 @@ internal sealed class CompoundDocument
         result.Signature = reader.ReadUInt64();
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
         Span<byte> guid = stackalloc byte[16];
-        if (reader.BaseStream.ReadAtLeast(guid) != guid.Length)
+        if (reader.BaseStream.ReadAtLeast(guid, guid.Length, throwOnEndOfStream: false) != guid.Length)
             throw new EndOfStreamException();
         result.ClassId = new Guid(guid);
 #else
@@ -123,12 +123,8 @@ internal sealed class CompoundDocument
         result.ByteOrder = reader.ReadUInt16();
         result.SectorSizeInPot = reader.ReadUInt16();
         result.MiniSectorSizeInPot = reader.ReadUInt16();
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
         reader.ReadUInt32(); // skip 6 unused bytes
         reader.ReadUInt16();
-#else
-        reader.ReadBytes(6); // skip 6 unused bytes
-#endif
         result.DirectorySectorCount = reader.ReadInt32();
         result.FatSectorCount = reader.ReadInt32();
         result.RootDirectoryEntryStart = reader.ReadUInt32();
@@ -206,7 +202,7 @@ internal sealed class CompoundDocument
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
     private CompoundDirectoryEntry ReadDirectoryEntry(Stream stream, Span<byte> buffer)
     {
-        if (stream.ReadAtLeast(buffer) != buffer.Length)
+        if (stream.ReadAtLeast(buffer, buffer.Length, throwOnEndOfStream: false) != buffer.Length)
             throw new EndOfStreamException();
 
         var result = new CompoundDirectoryEntry();
@@ -236,7 +232,7 @@ internal sealed class CompoundDocument
 #else
     private CompoundDirectoryEntry ReadDirectoryEntry(Stream stream, byte[] buffer)
     {
-        if (stream.ReadAtLeast(buffer, 0, buffer.Length) != buffer.Length)
+        if (stream.ReadAtLeast(buffer, 0, buffer.Length, buffer.Length, throwOnEndOfStream: false) != buffer.Length)
             throw new EndOfStreamException();
 
         var result = new CompoundDirectoryEntry();

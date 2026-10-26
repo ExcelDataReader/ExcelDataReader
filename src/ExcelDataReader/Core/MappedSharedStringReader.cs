@@ -26,12 +26,7 @@ internal sealed class MappedSharedStringReader : IDisposable
 
     public bool TryReadExactly(long offset, byte[] buffer, int count, bool adjacent)
     {
-#if NET8_0_OR_GREATER
         ObjectDisposedException.ThrowIf(_disposed, this);
-#else
-        if (_disposed)
-            throw new ObjectDisposedException(nameof(MappedSharedStringReader));
-#endif
         if (offset < 0 || count < 0 || count > buffer.Length || offset > _length - count)
             throw new EndOfStreamException("Unexpected end of shared string storage.");
 

@@ -173,12 +173,7 @@ internal static class Parser
     private static void ValidateCondition(Tokenizer reader, int startIndex, int length)
     {
         // An unmatched '[' was previously passed to Substring with a negative length.
-#if NET8_0_OR_GREATER
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 2);
-#else
-        if (length < 2)
-            throw new ArgumentOutOfRangeException(nameof(length));
-#endif
 
         string source = reader.Source;
         int position = startIndex + 1;

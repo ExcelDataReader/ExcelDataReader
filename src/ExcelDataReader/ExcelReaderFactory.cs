@@ -38,7 +38,7 @@ public static class ExcelReaderFactory
 
         var probe = new byte[8];
         fileStream.Seek(0, SeekOrigin.Begin);
-        fileStream.ReadAtLeast(probe, 0, probe.Length);
+        fileStream.ReadAtLeast(probe, 0, probe.Length, probe.Length, throwOnEndOfStream: false);
         fileStream.Seek(0, SeekOrigin.Begin);
 
         if (CompoundDocument.IsCompoundDocument(probe))
@@ -93,7 +93,7 @@ public static class ExcelReaderFactory
 
         var probe = new byte[8];
         fileStream.Seek(0, SeekOrigin.Begin);
-        fileStream.ReadAtLeast(probe, 0, probe.Length);
+        fileStream.ReadAtLeast(probe, 0, probe.Length, probe.Length, throwOnEndOfStream: false);
         fileStream.Seek(0, SeekOrigin.Begin);
 
         if (CompoundDocument.IsCompoundDocument(probe))
@@ -134,7 +134,7 @@ public static class ExcelReaderFactory
 
         var probe = new byte[8];
         fileStream.Seek(0, SeekOrigin.Begin);
-        fileStream.ReadAtLeast(probe, 0, probe.Length);
+        fileStream.ReadAtLeast(probe, 0, probe.Length, probe.Length, throwOnEndOfStream: false);
         fileStream.Seek(0, SeekOrigin.Begin);
 
         // Probe for password protected compound document or zip file

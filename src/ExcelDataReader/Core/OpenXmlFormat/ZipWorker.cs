@@ -96,11 +96,7 @@ internal sealed partial class ZipWorker : IDisposable
         static string ResolvePath(string? basePath, string path)
         {
             // Can there be relative paths?
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
             if (path.StartsWith('/'))
-#else
-            if (path.StartsWith("/", StringComparison.Ordinal))
-#endif
                 return path[1..];
             return basePath + path;
         }
