@@ -186,7 +186,6 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     [Test]
     public void Issue11642_ValuesNotLoaded()
     {
-        // Excel.Log.Log.InitializeWith<Log4NetLog>();
         using IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(Configuration.GetTestWorkbook("OldIssue11642_ValuesNotLoaded.xls"));
         var dataSet = excelReader.AsDataSet();
 
@@ -210,7 +209,6 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     [Test]
     public void Issue1163911644_ForwardOnlyStream()
     {
-        // Excel.Log.Log.InitializeWith<Log4NetLog>();
         using var stream = Configuration.GetTestWorkbook("OpenOffice.xls");
         using var forwardStream = SeekErrorMemoryStream.CreateFromStream(stream);
         using IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(forwardStream);
@@ -228,7 +226,6 @@ public class ExcelBinaryReaderTest : ExcelTestBase
     {
         Assert.Throws<CompoundDocumentException>(() =>
         {
-            // Excel.Log.Log.InitializeWith<Log4NetLog>();
             using var forwardStream = Configuration.GetTestWorkbook("OldIssue12556_Corrupt.xls");
             using IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(forwardStream);
             Assert.DoesNotThrow(() => excelReader.AsDataSet());

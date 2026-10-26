@@ -343,6 +343,10 @@ See also:
 
 ## Upgrading from 3.x to 4.0
 
+### Logging API removed
+
+The unused `ExcelDataReader.Log` API (`Log`, `LogManager`, `ILog`, `ILogFactory`, and `NullLogFactory`) has been removed. Remove any logger initialization or implementations of these interfaces.
+
 ### CSV separator candidates are strings
 
 `AutodetectSeparators` changed from `char[]` to `string[]` to support multi-character delimiters. Replace character literals such as `[',', ';']` with string literals such as `[",", ";"]`.
