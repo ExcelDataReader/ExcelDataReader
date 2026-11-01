@@ -10,7 +10,12 @@ permissions: {}
 
 jobs:
   build:
-    runs-on: windows-latest
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
     permissions:
       contents: read
 
@@ -29,7 +34,7 @@ jobs:
             ExcelDataReader.slnx
 
       - name: Restore
-        run: dotnet restore --locked-mode
+        run: dotnet restore ExcelDataReader.slnx --locked-mode
 
       - name: Build
         run: dotnet build ExcelDataReader.slnx --no-restore -c Release /p:TreatWarningsAsErrors=true

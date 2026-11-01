@@ -5,7 +5,6 @@
   <Project Path="src/ExcelDataReader.Benchmarks/ExcelDataReader.Benchmarks.csproj" />
   <Project Path="src/ExcelDataReader.DataSet/ExcelDataReader.DataSet.csproj" />
   <Project Path="src/ExcelDataReader.ConsoleSample/ExcelDataReader.ConsoleSample.csproj" />
-  <Project Path="src/ExcelDataReader.Sample/ExcelDataReader.Sample.csproj" />
   <Project Path="src/ExcelDataReader.Tests/ExcelDataReader.Tests.csproj" />
   <Project Path="src/ExcelDataReader/ExcelDataReader.csproj" />
 </Solution>

@@ -94,20 +94,24 @@ public class SharedStringStorageTests
 
     [TestCase("payload")]
     [TestCase("index")]
-    public void MappingCreationFailureDisposesAllFiles(string failure)
+    public void MappingSetupFailureDisposesAllFiles(string failure)
     {
         var paths = new List<string>();
         var files = new List<FileStream>();
+        FileStream? invalidFile = null;
         using var store = new Store(SharedStringStorageMode.SpillToDisk, (directory, kind) =>
         {
             string path = Path.Combine(directory, Guid.NewGuid().ToString("N"));
             paths.Add(path);
-            var file = new FileStream(path, FileMode.CreateNew, kind == failure ? FileAccess.Write : FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose);
+            var file = new FileStream(path, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose);
             files.Add(file);
+            if (kind == failure)
+                invalidFile = file;
             return file;
         });
         store.Add(new string('x', (int)Budget));
-        Assert.Throws<UnauthorizedAccessException>(store.Seal);
+        invalidFile!.SetLength(invalidFile.Length + 1);
+        Assert.Throws<EndOfStreamException>(store.Seal);
         Assert.That(paths.All(path => !File.Exists(path)), Is.True);
         Assert.That(files.All(file => !file.CanWrite), Is.True);
         Assert.That(store.ResidentBytes, Is.EqualTo(256));
