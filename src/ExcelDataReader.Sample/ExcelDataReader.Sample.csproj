@@ -1,31 +1,21 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;net10.0-windows</TargetFrameworks>
-    <AssemblyName>TestApp</AssemblyName>
     <OutputType>WinExe</OutputType>
-    <PackageId>TestApp</PackageId>
-    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>ExcelDataReader.Sample</AssemblyName>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ExcelDataReader\ExcelDataReader.csproj" />
     <ProjectReference Include="..\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.IO" />
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Form1.cs">
-      <SubType>Form</SubType>
-    </Compile>
   </ItemGroup>
 
 </Project>
