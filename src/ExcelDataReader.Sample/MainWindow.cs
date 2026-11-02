@@ -1,6 +1,8 @@
 using System.Data;
 using System.Diagnostics;
+using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Platform.Storage;
 
 namespace ExcelDataReader.Sample;
@@ -13,6 +15,8 @@ internal sealed partial class MainWindow : Window
     };
 
     private DataSet? _dataSet;
+    private string? _selectedPath;
+    private bool _isProcessing;
 
     public MainWindow()
     {
@@ -29,53 +33,78 @@ internal sealed partial class MainWindow : Window
 
         if (files.Count > 0)
         {
-            FilePathTextBox.Text = files[0].Path.LocalPath;
+            _selectedPath = files[0].Path.LocalPath;
+            FilePathTextBox.Text = _selectedPath;
         }
     }
 
-    private void ProcessClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void ProcessClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
+        if (_isProcessing)
+        {
+            return;
+        }
+
+        var filePath = _selectedPath;
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            StatusTextBlock.Text = "Choose a file first.";
+            return;
+        }
+
+        var useHeaderRow = FirstRowNamesCheckBox.IsChecked == true;
+        var fillMergedCellsValue = FillMergedCellsCheckBox.IsChecked == true;
+        var singlePassMode = SinglePassModeCheckBox.IsChecked == true;
+        _isProcessing = true;
+        LoadControls.IsEnabled = false;
+
         try
         {
-            var filePath = FilePathTextBox.Text;
-            if (string.IsNullOrWhiteSpace(filePath))
+            SheetTableView.ItemsSource = null;
+            SheetTableView.Columns = new AvaloniaList<TableViewColumn>();
+            SheetComboBox.SelectedIndex = -1;
+            SheetComboBox.ItemsSource = null;
+            _dataSet?.Dispose();
+            _dataSet = null;
+            StatusTextBlock.Text = "Loading...";
+
+            var (dataSet, elapsed, openTiming) = await Task.Run(() =>
             {
-                StatusTextBlock.Text = "Select a file first.";
-                return;
-            }
+                using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                var stopwatch = Stopwatch.StartNew();
 
-            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            var stopwatch = Stopwatch.StartNew();
+                using IExcelDataReader reader = string.Equals(Path.GetExtension(filePath), ".csv", StringComparison.OrdinalIgnoreCase)
+                    ? ExcelReaderFactory.CreateCsvReader(stream)
+                    : ExcelReaderFactory.CreateReader(stream, new() { SinglePassMode = singlePassMode });
 
-            using IExcelDataReader reader = string.Equals(Path.GetExtension(filePath), ".csv", StringComparison.OrdinalIgnoreCase)
-                ? ExcelReaderFactory.CreateCsvReader(stream)
-                : ExcelReaderFactory.CreateReader(stream, new() { SinglePassMode = SinglePassModeCheckBox.IsChecked == true });
-
-            var openTiming = stopwatch.ElapsedMilliseconds;
-            _dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
-            {
-                UseColumnDataType = false,
-                ConfigureDataTable = _ => new ExcelDataTableConfiguration
+                var open = stopwatch.ElapsedMilliseconds;
+                var result = reader.AsDataSet(new ExcelDataSetConfiguration
                 {
-                    UseHeaderRow = FirstRowNamesCheckBox.IsChecked == true,
-                    FillMergedCellsValue = FillMergedCellsCheckBox.IsChecked == true
-                }
+                    UseColumnDataType = false,
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration
+                    {
+                        UseHeaderRow = useHeaderRow,
+                        FillMergedCellsValue = fillMergedCellsValue
+                    }
+                });
+
+                return (result, stopwatch.ElapsedMilliseconds, open);
             });
 
-            stopwatch.Stop();
-            StatusTextBlock.Text = $"Elapsed: {stopwatch.ElapsedMilliseconds} ms ({openTiming} ms to open)";
+            _dataSet = dataSet;
+            StatusTextBlock.Text = $"Elapsed: {elapsed} ms ({openTiming} ms to open)";
 
-            SheetComboBox.ItemsSource = _dataSet.Tables.Cast<DataTable>().ToList();
-            SheetComboBox.SelectedIndex = _dataSet.Tables.Count > 0 ? 0 : -1;
-            if (_dataSet.Tables.Count == 0)
-            {
-                SheetTableView.Columns.Clear();
-                SheetTableView.ItemsSource = null;
-            }
+            SheetComboBox.ItemsSource = dataSet.Tables.Cast<DataTable>().ToList();
+            SheetComboBox.SelectedIndex = dataSet.Tables.Count > 0 ? 0 : -1;
         }
         catch (Exception ex)
         {
             StatusTextBlock.Text = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            _isProcessing = false;
+            LoadControls.IsEnabled = true;
         }
     }
 
@@ -86,29 +115,23 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
-        SheetTableView.Columns.Clear();
+        SheetTableView.ItemsSource = null;
+        var columns = new AvaloniaList<TableViewColumn>();
         for (var columnIndex = 0; columnIndex < table.Columns.Count; columnIndex++)
         {
-            SheetTableView.Columns.Add(new TableViewColumn
+            var index = columnIndex;
+            columns.Add(new TableViewColumn
             {
                 Header = table.Columns[columnIndex].ColumnName,
-                Binding = new Avalonia.Data.Binding($"[{columnIndex}]")
+                Width = new GridLength(140),
+                CellTemplate = new FuncDataTemplate<DataRow>((row, _) => new TextBlock
+                {
+                    Text = row[index] is DBNull ? null : row[index].ToString()
+                })
             });
         }
 
-        var rows = new List<SheetGridRow>(table.Rows.Count);
-        foreach (DataRow dataRow in table.Rows)
-        {
-            var values = new object?[table.Columns.Count];
-            for (var columnIndex = 0; columnIndex < values.Length; columnIndex++)
-            {
-                var value = dataRow[columnIndex];
-                values[columnIndex] = value == DBNull.Value ? null : value;
-            }
-
-            rows.Add(new SheetGridRow(values));
-        }
-
-        SheetTableView.ItemsSource = rows;
+        SheetTableView.Columns = columns;
+        SheetTableView.ItemsSource = new SheetRows(table.Rows);
     }
 }

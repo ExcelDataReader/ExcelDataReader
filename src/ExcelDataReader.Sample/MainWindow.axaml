@@ -6,41 +6,45 @@
         Height="650"
         MinWidth="600"
         MinHeight="400">
-  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto"
+  <Grid RowDefinitions="Auto,Auto,*,Auto"
         RowSpacing="10"
         Margin="12">
-    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-      <TextBox x:Name="FilePathTextBox"
-               IsReadOnly="True"
-               VerticalContentAlignment="Center" />
-      <Button Grid.Column="1"
-              Content="Select file"
-              Click="SelectFileClick" />
-    </Grid>
+    <StackPanel x:Name="LoadControls" Spacing="10">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <TextBox x:Name="FilePathTextBox"
+                 IsReadOnly="True"
+                 PlaceholderText="Choose an Excel or CSV file"
+                 VerticalContentAlignment="Center" />
+        <Button Grid.Column="1"
+                Content="Choose file"
+                Click="SelectFileClick" />
+      </Grid>
 
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16">
-      <CheckBox x:Name="FirstRowNamesCheckBox"
-                Content="First row contains column names"
-                IsChecked="True" />
-      <CheckBox x:Name="FillMergedCellsCheckBox"
-                Content="Fill merged cells"
-                IsChecked="True" />
-      <CheckBox x:Name="SinglePassModeCheckBox"
-                Content="Single pass mode" />
-      <Button Content="Process" Click="ProcessClick" />
+      <StackPanel Orientation="Horizontal" Spacing="16">
+        <CheckBox x:Name="FirstRowNamesCheckBox"
+                  Content="First row contains column names"
+                  IsChecked="True" />
+        <CheckBox x:Name="FillMergedCellsCheckBox"
+                  Content="Fill merged cells"
+                  IsChecked="True" />
+        <CheckBox x:Name="SinglePassModeCheckBox"
+                  Content="Single pass mode" />
+        <Button Content="Process" Click="ProcessClick" />
+      </StackPanel>
     </StackPanel>
 
     <ComboBox x:Name="SheetComboBox"
-              Grid.Row="2"
+              Grid.Row="1"
               HorizontalAlignment="Left"
               MinWidth="240"
               PlaceholderText="Choose sheet"
               SelectionChanged="SheetSelectionChanged" />
 
-    <TableView x:Name="SheetTableView" Grid.Row="3" />
+    <TableView x:Name="SheetTableView" Grid.Row="2" ClipToBounds="True"
+               ScrollViewer.HorizontalScrollBarVisibility="Auto" />
 
     <TextBlock x:Name="StatusTextBlock"
-               Grid.Row="4"
+               Grid.Row="3"
                VerticalAlignment="Center" />
   </Grid>
 </Window>
