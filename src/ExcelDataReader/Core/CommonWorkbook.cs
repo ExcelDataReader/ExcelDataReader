@@ -152,7 +152,7 @@ internal class CommonWorkbook
                 return value switch
                 {
                     int integer => TimeSpan.FromDays((double)integer),
-                    double number => TimeSpan.FromDays(number),
+                    double number => TimeSpan.FromMilliseconds(Math.Round(number * 86400000D)),
                     _ => value,
                 };
             }

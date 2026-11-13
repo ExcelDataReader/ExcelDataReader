@@ -29,6 +29,12 @@ public class DecodedCellMaterializationTests
         Assert.That(Materialize(true, "Literal", 14, date1904), Is.True);
     }
 
+    [Test]
+    public void DurationsKeepWholeSeconds()
+    {
+        Assert.That(Materialize(11 / 86400D, "Literal", 46, false), Is.EqualTo(TimeSpan.FromSeconds(11)));
+    }
+
     [TestCase("Issue368_Header.xls", false)]
     [TestCase("Issue368_Ixfe.xls", false)]
     public void LegacyIntegersAndInlineFormatsSurviveReset(string fixture, bool singlePass)
