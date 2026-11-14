@@ -46,15 +46,19 @@ internal sealed class CompoundDocument
     internal static List<uint> GetSectorChain(uint sector, List<uint> sectorTable)
     {
         List<uint> chain = [];
+        uint slow = sector;
+        bool advanceSlow = false;
         while (sector != (uint)FATMARKERS.FAT_EndOfChain)
         {
             chain.Add(sector);
             sector = GetNextSector(sector, sectorTable);
 
-            if (chain.Contains(sector))
-            {
+            // Advance the slow pointer once for every two sectors traversed.
+            advanceSlow = !advanceSlow;
+            if (!advanceSlow)
+                slow = GetNextSector(slow, sectorTable);
+            if (sector != (uint)FATMARKERS.FAT_EndOfChain && sector == slow)
                 throw new CompoundDocumentException(Errors.ErrorCyclicSectorChain);
-            }
         }
 
         TrimSectorChain(chain, FATMARKERS.FAT_FreeSpace);

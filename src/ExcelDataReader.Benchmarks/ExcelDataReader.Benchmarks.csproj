@@ -31,6 +31,7 @@
     <EmbeddedResource Include="..\TestData\10x10000.xlsx" />
     <EmbeddedResource Include="..\TestData\10x10000.xlsb" />
     <EmbeddedResource Include="..\TestData\10x10000.xls" />
+    <EmbeddedResource Include="..\TestData\Issue184_FATSectors.xls" />
     <EmbeddedResource Include="..\TestData\Issue289.xlsx" />
     <EmbeddedResource Include="..\TestData\BigFormatted.xls" />
     <EmbeddedResource Include="..\TestData\BigFormatted.xlsx" />

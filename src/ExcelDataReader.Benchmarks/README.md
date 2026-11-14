@@ -25,6 +25,16 @@ For the supplied 100k/one-million-entry corpora, SpillToDisk1 forces spill and S
 stays below threshold. Confirm spill with `--sst-memory`; its forced-GC
 checkpoints measure retention, not throughput.
 
+`SectorChain` compares the original list search, the library's current
+Floyd cycle detection, a hybrid list/hash set, a hash set, and a bitset. It measures
+synthetic contiguous, fragmented and sparse chains alongside workbook stream
+chains from three XLS fixtures. Setup validates the results and cycle detection
+outside the measured operation. For example, run the .NET Framework benchmarks:
+
+```powershell
+dotnet run --project src\ExcelDataReader.Benchmarks\ExcelDataReader.Benchmarks.csproj -c Release -f net462 -- --filter "*SectorChain*" --job short
+```
+
 `--sst-io` diagnoses injected MemoryStream/FileStream construction and lookup
 calls over sequential, reverse-like, random, and hot Unicode references.
 It runs three warmups and five measured repetitions; counts are managed-stream
