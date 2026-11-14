@@ -861,6 +861,7 @@ public class SharedStringStorageTests
         Assert.That(expected[3], Is.EqualTo("\u00a0value\u00a0"));
         Assert.That(expected[4], Is.EqualTo("first & second  third"));
         Assert.That(expected[5], Is.EqualTo("first second third"));
+        Assert.That(expected[6], Is.EqualTo("\uD800 _x0041_ & < \uD83D\uDE00"));
         Assert.That(expected[7], Is.EqualTo(boundary));
         Assert.That(expected[8], Is.EqualTo("leftright"));
         foreach (var mode in new[] { SharedStringStorageMode.SpillToDisk })

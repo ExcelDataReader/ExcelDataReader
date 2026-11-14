@@ -1,6 +1,4 @@
-using System.Globalization;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace ExcelDataReader.Core;
 
@@ -9,10 +7,6 @@ namespace ExcelDataReader.Core;
 /// </summary>
 internal static class Helpers
 {
-#if !(NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER)
-    private static readonly Regex EscapeRegexInstance = new("_x([0-9A-F]{4,4})_", RegexOptions.Compiled);
-#endif
-
     private static readonly char[] SingleByteEncodingHelper = ['a'];
     private static readonly object True = true;
     private static readonly object False = false;
@@ -44,11 +38,7 @@ internal static class Helpers
         if (index < 0)
             return input;
 
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
         return DecodeEscapeChars(input, index);
-#else
-        return EscapeRegex().Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString());
-#endif
     }
 
     public static object ConvertFromOATime(double value, bool date1904)
@@ -67,7 +57,6 @@ internal static class Helpers
         return value;
     }
 
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
     private static string DecodeEscapeChars(string input, int index)
     {
         int firstMatch = -1;
@@ -88,27 +77,49 @@ internal static class Helpers
         if (matches == 0)
             return input;
 
-        return string.Create(input.Length - matches * 6, (Input: input, FirstMatch: firstMatch), static (destination, state) =>
-        {
-            int start = 0;
-            int written = 0;
-            int index = state.FirstMatch;
-            while (index >= 0)
-            {
-                bool valid = TryReadEscape(state.Input, index, out char value);
-                if (valid)
-                {
-                    state.Input.AsSpan(start, index - start).CopyTo(destination[written..]);
-                    written += index - start;
-                    destination[written++] = value;
-                    start = index + 7;
-                }
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        return string.Create(
+            input.Length - matches * 6,
+            (Input: input, FirstMatch: firstMatch),
+            static (destination, state) => WriteEscapeChars(state.Input, state.FirstMatch, destination));
+#else
+        var destination = new char[input.Length - matches * 6];
+        WriteEscapeChars(input, firstMatch, destination);
+        return new string(destination);
+#endif
+    }
 
-                index = state.Input.IndexOf("_x", index + (valid ? 7 : 2), StringComparison.Ordinal);
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+    private static void WriteEscapeChars(string input, int index, Span<char> destination)
+#else
+    private static void WriteEscapeChars(string input, int index, char[] destination)
+#endif
+    {
+        int start = 0;
+        int written = 0;
+        while (index >= 0)
+        {
+            bool valid = TryReadEscape(input, index, out char value);
+            if (valid)
+            {
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+                input.AsSpan(start, index - start).CopyTo(destination[written..]);
+#else
+                input.CopyTo(start, destination, written, index - start);
+#endif
+                written += index - start;
+                destination[written++] = value;
+                start = index + 7;
             }
 
-            state.Input.AsSpan(start).CopyTo(destination[written..]);
-        });
+            index = input.IndexOf("_x", index + (valid ? 7 : 2), StringComparison.Ordinal);
+        }
+
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+        input.AsSpan(start).CopyTo(destination[written..]);
+#else
+        input.CopyTo(start, destination, written, input.Length - start);
+#endif
     }
 
     private static bool TryReadEscape(string input, int index, out char value)
@@ -134,7 +145,6 @@ internal static class Helpers
         value = (char)code;
         return true;
     }
-#endif
 
     /// <summary>
     /// Convert a double from Excel to an OA DateTime double. 
@@ -162,8 +172,4 @@ internal static class Helpers
     {
         return value is > DateTimeHelper.OADateMinAsDouble and < DateTimeHelper.OADateMaxAsDouble;
     }
-
-#if !(NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER)
-    private static Regex EscapeRegex() => EscapeRegexInstance;
-#endif
 }

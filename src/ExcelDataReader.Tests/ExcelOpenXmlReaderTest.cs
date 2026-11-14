@@ -44,9 +44,8 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
         Assert.That(reader.Read(), Is.False);
     }
 
-    [TestCase(false)]
-    [TestCase(true)]
-    public void EscapeDecoding_MatchesOriginalRegex(bool shared)
+    [Test]
+    public void EscapeDecoding_MatchesOriginalRegex([Values(false, true)] bool shared, [Values(false, true)] bool singlePass)
     {
         string[] seeds =
         [
@@ -73,7 +72,9 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
 
         var regex = new Regex("_x([0-9A-F]{4,4})_");
         var items = values.Select(value => "<t xml:space=\"preserve\">" + SecurityElement.Escape(value) + "</t>").ToArray();
-        using var reader = ExcelReaderFactory.CreateReader(new MemoryStream(AllocationTestWorkbook.CreateXlsx(items, shared)));
+        using var reader = ExcelReaderFactory.CreateReader(
+            new MemoryStream(AllocationTestWorkbook.CreateXlsx(items, shared)),
+            new ExcelReaderConfiguration { SinglePassMode = singlePass });
         foreach (string value in values)
         {
             Assert.That(reader.Read(), Is.True);
