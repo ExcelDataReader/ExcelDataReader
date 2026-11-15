@@ -371,6 +371,30 @@ public class SharedStringStorageTests
         }
     }
 
+    [Test]
+    public void LargeCachedValueEvictsExistingCacheMetadata()
+    {
+        using var store = new Store(SharedStringStorageMode.SpillToDisk);
+        string large = new('x', 65500);
+        store.Add("first");
+        store.Add("second");
+        store.Add(large);
+        store.Add(new string('x', (int)Budget));
+        store.Seal();
+
+        store.Get(0);
+        store.Get(1);
+        string cached = store.Get(0);
+        store.Get(1);
+        Assert.That(store.Get(0), Is.SameAs(cached));
+
+        string decodedLarge = store.Get(2);
+        Assert.That(decodedLarge, Is.EqualTo(large));
+        Assert.That(store.Get(2), Is.SameAs(decodedLarge));
+        Assert.That(store.ResidentBytes, Is.LessThanOrEqualTo(Budget));
+        Assert.That(store.Get(0), Is.EqualTo("first").And.Not.SameAs(cached));
+    }
+
     [TestCase(1)]
     [TestCase(257)]
     [TestCase(1000)]

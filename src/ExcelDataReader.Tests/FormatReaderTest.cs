@@ -45,6 +45,34 @@ public class FormatReaderTest
         Assert.That(BuiltinNumberFormat.GetBuiltinNumberFormat(index, CultureInfo.InvariantCulture), Is.Null);
     }
 
+    [Test]
+    public void LocalePatternsPreserveQuotedAndEscapedLiterals()
+    {
+        var format = (DateTimeFormatInfo)CultureInfo.InvariantCulture.DateTimeFormat.Clone();
+        format.DateSeparator = "of";
+        format.ShortDatePattern = @"yyyy 'year' MM\X dd";
+        format.ShortTimePattern = @"HH\h mm 'min'";
+        format.LongTimePattern = @"HH\h mm 'min' ss";
+
+        Assert.That(BuiltinNumberFormat.GetBuiltinNumberFormat(14, format)!.FormatString, Is.EqualTo("yyyy \"year\" mm\"X\" dd"));
+        Assert.That(BuiltinNumberFormat.GetBuiltinNumberFormat(15, format)!.FormatString, Is.EqualTo("d\"of\"mmm\"of\"yy"));
+        Assert.That(BuiltinNumberFormat.GetBuiltinNumberFormat(20, format)!.FormatString, Is.EqualTo("hh\"h\" mm \"min\""));
+        Assert.That(BuiltinNumberFormat.GetBuiltinNumberFormat(21, format)!.FormatString, Is.EqualTo("hh\"h\" mm \"min\" ss"));
+        Assert.That(BuiltinNumberFormat.GetBuiltinNumberFormat(22, format)!.FormatString, Is.EqualTo("yyyy \"year\" mm\"X\" dd hh\"h\" mm \"min\""));
+    }
+
+    [Test]
+    public void LocaleTimeFormatsWithAmPmFallBackToBuiltinPatterns()
+    {
+        var format = (DateTimeFormatInfo)CultureInfo.InvariantCulture.DateTimeFormat.Clone();
+        format.ShortDatePattern = "MM/dd/yyyy";
+        format.ShortTimePattern = "h:mm t";
+        format.LongTimePattern = "h:mm:ss tt";
+        Assert.That(BuiltinNumberFormat.GetBuiltinNumberFormat(20, format)!.FormatString, Is.EqualTo(BuiltinNumberFormat.GetBuiltinNumberFormat(20)!.FormatString));
+        Assert.That(BuiltinNumberFormat.GetBuiltinNumberFormat(21, format)!.FormatString, Is.EqualTo(BuiltinNumberFormat.GetBuiltinNumberFormat(21)!.FormatString));
+        Assert.That(BuiltinNumberFormat.GetBuiltinNumberFormat(22, format)!.FormatString, Is.EqualTo("mm/dd/yyyy h:mm A/P"));
+    }
+
     [TestCase("", true, false, false)]
     [TestCase("0", true, false, false)]
     [TestCase("[>=100]0.00;[Blue][h]:mm:ss", true, false, true)]

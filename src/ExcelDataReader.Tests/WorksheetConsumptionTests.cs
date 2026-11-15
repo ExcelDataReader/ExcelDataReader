@@ -362,6 +362,53 @@ public class WorksheetConsumptionTests
         Assert.That(value, Is.EqualTo("A\u0439BC"));
     }
 
+    [TestCase(2, false)]
+    [TestCase(2, true)]
+    [TestCase(5, false)]
+    [TestCase(5, true)]
+    [TestCase(8, false)]
+    [TestCase(8, true)]
+    public void XlsInterruptedFormulaStringRejectsTruncationAndPreservesLookahead(int version, bool unexpectedRecord)
+    {
+        using var buffer = new MemoryStream();
+        using (var writer = new BinaryWriter(buffer, Encoding.Unicode, leaveOpen: true))
+        {
+            XlsRecord(writer, version == 2 ? (ushort)7 : (ushort)0x207, data =>
+            {
+                if (version == 2)
+                    data.Write((byte)4);
+                else
+                    data.Write((ushort)4);
+                if (version == 8)
+                    data.Write((byte)0);
+                data.Write((byte)'A');
+            });
+            XlsRecord(writer, 0x3c, data =>
+            {
+                if (version == 8)
+                    data.Write((byte)0);
+                data.Write((byte)'B');
+            });
+            if (unexpectedRecord)
+                XlsRecord(writer, 0xf0, data => data.Write((ushort)123));
+        }
+
+        buffer.Position = 0;
+        using var transport = new XlsBiffStream(buffer);
+        var exception = Assert.Throws<ExcelReaderException>(() => XlsFormulaStringReader.Read(transport, version, Encoding.ASCII));
+        Assert.That(exception.Message, Is.EqualTo(version == 8 ? Errors.ErrorBiffStringSize : Errors.ErrorBiffRecordSize));
+        if (unexpectedRecord)
+        {
+            Assert.That(transport.ReadFrame(out var next), Is.True);
+            Assert.That(next.Id, Is.EqualTo((BIFFRECORDTYPE)0xf0));
+            Assert.That(next.ReadUInt16(0), Is.EqualTo(123));
+        }
+        else
+        {
+            Assert.That(transport.ReadFrame(out _), Is.False);
+        }
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void XlsFormulaStringContinuesWithEncodingChangesAndLeavesTheNextCellReadable(bool singlePass)
