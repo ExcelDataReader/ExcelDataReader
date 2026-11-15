@@ -8,20 +8,6 @@ internal static class DateTimeHelper
     // All OA dates must be less than (not <=) OADateMaxAsDouble
     public const double OADateMaxAsDouble = 2958466.0;
 
-    // From DateTime class to enable OADate in PCL
-    // Number of 100ns ticks per time unit
-    private const long TicksPerMillisecond = 10000;
-    private const long TicksPerSecond = TicksPerMillisecond * 1000;
-    private const long TicksPerMinute = TicksPerSecond * 60;
-    private const long TicksPerHour = TicksPerMinute * 60;
-    private const long TicksPerDay = TicksPerHour * 24;
-
-    // Number of milliseconds per time unit
-    private const int MillisPerSecond = 1000;
-    private const int MillisPerMinute = MillisPerSecond * 60;
-    private const int MillisPerHour = MillisPerMinute * 60;
-    private const int MillisPerDay = MillisPerHour * 24;
-
     // Number of days in a non-leap year
     private const int DaysPerYear = 365;
 
@@ -40,31 +26,37 @@ internal static class DateTimeHelper
     // Number of days from 1/1/0001 to 12/31/9999
     private const int DaysTo10000 = DaysPer400Years * 25 - 366;
 
-    private const long MaxMillis = (long)DaysTo10000 * MillisPerDay;
+    private const long MaxTicks = (long)DaysTo10000 * TimeSpan.TicksPerDay;
 
-    private const long DoubleDateOffset = DaysTo1899 * TicksPerDay;
+    private const long DoubleDateOffset = DaysTo1899 * TimeSpan.TicksPerDay;
 
-    public static DateTime FromOADate(double d) => new(DoubleDateToTicks(d), DateTimeKind.Unspecified);
+    public static TimeSpan DurationFromDays(double value) => new(DaysToTicks(value));
 
-    // duplicated from DateTime
-    private static long DoubleDateToTicks(double value)
+    public static DateTime FromOADate(double value, int dayOffset)
     {
-        if (value >= OADateMaxAsDouble || value <= OADateMinAsDouble)
-            throw new ArgumentException("Invalid OA Date", nameof(value));
-        long millis = (long)(value * MillisPerDay + (value >= 0 ? 0.5 : -0.5));
+        long ticks = DaysToTicks(value) + (dayOffset * TimeSpan.TicksPerDay);
 
-        // The interesting thing here is when you have a value like 12.5 it all positive 12 days and 12 hours from 01/01/1899
-        // However if you a value of -12.25 it is minus 12 days but still positive 6 hours, almost as though you meant -11.75 all negative
-        // This line below fixes up the millis in the negative case
-        if (millis < 0)
-        {
-            millis -= millis % MillisPerDay * 2;
-        }
+        // Negative OA dates have a negative day component but a positive time of day.
+        if (ticks < 0)
+            ticks -= ticks % TimeSpan.TicksPerDay * 2;
 
-        millis += DoubleDateOffset / TicksPerMillisecond;
+        ticks += DoubleDateOffset;
+        if (ticks is < 0 or >= MaxTicks)
+            throw new ArgumentException("OA Date out of range", nameof(value));
 
-        if (millis is < 0 or >= MaxMillis)
-            throw new ArgumentException("OA Date out of range");
-        return millis * TicksPerMillisecond;
+        return new DateTime(ticks, DateTimeKind.Unspecified);
+    }
+
+    private static long DaysToTicks(double value)
+    {
+        if (double.IsNaN(value))
+            throw new ArgumentException("Value cannot be NaN.", nameof(value));
+        if (value > TimeSpan.MaxValue.TotalDays || value < TimeSpan.MinValue.TotalDays)
+            throw new OverflowException("Value is outside the range of a TimeSpan.");
+
+        // Keep whole days separate so large serials do not lose fractional ticks during multiplication.
+        long days = (long)value;
+        long fraction = (long)Math.Round((value - days) * TimeSpan.TicksPerDay, MidpointRounding.AwayFromZero);
+        return checked((days * TimeSpan.TicksPerDay) + fraction);
     }
 }

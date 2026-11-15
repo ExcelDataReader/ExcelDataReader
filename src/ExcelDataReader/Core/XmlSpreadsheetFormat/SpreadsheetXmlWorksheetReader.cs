@@ -282,7 +282,7 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
         {
             case "Number":
                 double number = ParseDouble(value, 0D);
-                return duration ? TimeSpan.FromDays(number) : number;
+                return duration ? DateTimeHelper.DurationFromDays(number) : number;
             case "DateTime":
                 if (TryParseSpreadsheetDateTime(value, duration, out var dateTime))
                     return dateTime;
@@ -346,7 +346,7 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
     {
         if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed))
         {
-            dateTime = duration ? TimeSpan.FromDays(GetExcelSerialDate(parsed)) : parsed;
+            dateTime = duration ? GetExcelSerialDuration(parsed) : parsed;
             return true;
         }
 
@@ -356,7 +356,7 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
         {
             // Validate the DateTime even when returning a duration, as on the ordinary date path.
             var date = new DateTime(1900, 2, 28).Add(time);
-            dateTime = duration ? TimeSpan.FromDays(60D + time.TotalDays) : date;
+            dateTime = duration ? TimeSpan.FromTicks((60 * TimeSpan.TicksPerDay) + time.Ticks) : date;
             return true;
         }
 
@@ -364,12 +364,12 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
         return false;
     }
 
-    private static double GetExcelSerialDate(DateTime dateTime)
+    private static TimeSpan GetExcelSerialDuration(DateTime dateTime)
     {
-        var serialDate = (dateTime - new DateTime(1899, 12, 31)).TotalDays;
+        var duration = dateTime - new DateTime(1899, 12, 31);
         if (dateTime >= new DateTime(1900, 3, 1))
-            serialDate++;
-        return serialDate;
+            duration += TimeSpan.FromDays(1);
+        return duration;
     }
 
     private static XmlReader CreateXmlReaderAtStart(Stream stream, bool tolerateLeadingWhitespace)

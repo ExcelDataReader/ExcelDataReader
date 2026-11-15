@@ -343,6 +343,10 @@ See also:
 
 ## Upgrading from 3.x to 4.0
 
+### Date and duration precision
+
+Numeric date and duration values are converted to `DateTime` or `TimeSpan` at tick precision rather than being rounded to milliseconds. Results can differ from 3.x and between values that Excel displays identically.
+
 ### Logging API removed
 
 The unused `ExcelDataReader.Log` API (`Log`, `LogManager`, `ILog`, `ILogFactory`, and `NullLogFactory`) has been removed. Remove any logger initialization or implementations of these interfaces.

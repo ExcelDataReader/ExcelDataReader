@@ -43,17 +43,17 @@ internal static class Helpers
 
     public static object ConvertFromOATime(double value, bool date1904)
     {
-        var dateValue = AdjustOADateTime(value, date1904);
-        if (IsValidOADateTime(dateValue))
-            return DateTimeHelper.FromOADate(dateValue);
+        int dayOffset = GetOADateOffset(value, date1904);
+        if (IsValidOADateTime(value + dayOffset))
+            return DateTimeHelper.FromOADate(value, dayOffset);
         return value;
     }
 
     public static object ConvertFromOATime(int value, bool date1904)
     {
-        var dateValue = AdjustOADateTime(value, date1904);
-        if (IsValidOADateTime(dateValue))
-            return DateTimeHelper.FromOADate(dateValue);
+        int dayOffset = GetOADateOffset(value, date1904);
+        if (IsValidOADateTime((double)value + dayOffset))
+            return DateTimeHelper.FromOADate(value, dayOffset);
         return value;
     }
 
@@ -147,25 +147,13 @@ internal static class Helpers
     }
 
     /// <summary>
-    /// Convert a double from Excel to an OA DateTime double. 
-    /// The returned value is normalized to the '1900' date mode and adjusted for the 1900 leap year bug.
+    /// Get the whole-day offset from an Excel date to its OA date.
     /// </summary>
-    private static double AdjustOADateTime(double value, bool date1904)
+    private static int GetOADateOffset(double value, bool date1904)
     {
-        if (!date1904)
-        {
-            // Workaround for 1900 leap year bug in Excel
-            if (value is >= 0.0 and < 60.0)
-            {
-                return value + 1;
-            }
-        }
-        else
-        {
-            return value + 1462.0;
-        }
-
-        return value;
+        if (date1904)
+            return 1462;
+        return value is >= 0.0 and < 60.0 ? 1 : 0;
     }
 
     private static bool IsValidOADateTime(double value)

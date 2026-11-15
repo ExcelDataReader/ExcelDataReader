@@ -151,8 +151,8 @@ internal class CommonWorkbook
             {
                 return value switch
                 {
-                    int integer => TimeSpan.FromDays((double)integer),
-                    double number => TimeSpan.FromDays(number),
+                    int integer => DateTimeHelper.DurationFromDays(integer),
+                    double number => DateTimeHelper.DurationFromDays(number),
                     _ => value,
                 };
             }
