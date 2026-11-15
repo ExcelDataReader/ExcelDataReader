@@ -106,8 +106,11 @@ public partial class ExcelSpreadsheetXmlReaderTest : ExcelTestBase
             "<Data ss:Type=\"String\">" + new string('\u03BB', 10000) + "</Data>",
             "<Data ss:Type=\"String\">last</Data>",
         ];
-        object[] expected = ["single", " \t\npreserved\n ", "one two three four", string.Empty,
-            12.5D, true, new DateTime(2026, 1, 2, 3, 4, 5), DBNull.Value, new string('\u03BB', 10000), "last"];
+        object[] expected =
+        [
+            "single", " \t\npreserved\n ", "one two three four", string.Empty,
+            12.5D, true, new DateTime(2026, 1, 2, 3, 4, 5), DBNull.Value, new string('\u03BB', 10000), "last",
+        ];
         using var reader = ExcelReaderFactory.CreateReader(
             new MemoryStream(AllocationTestWorkbook.CreateSpreadsheetXml(data)),
             new ExcelReaderConfiguration { SinglePassMode = singlePass });

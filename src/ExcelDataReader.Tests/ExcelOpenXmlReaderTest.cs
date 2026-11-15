@@ -29,8 +29,11 @@ public class ExcelOpenXmlReaderTest : ExcelOpenXmlReaderBase
             "<t>" + new string('\u03BB', 10000) + "</t>",
             "<t>last</t>",
         ];
-        object[] expected = ["single", "trimmed", " \t\npreserved\n ", "onetwo", "first second", "A",
-            shared ? string.Empty : DBNull.Value, new string('\u03BB', 10000), "last"];
+        object[] expected =
+        [
+            "single", "trimmed", " \t\npreserved\n ", "onetwo", "first second", "A",
+            shared ? string.Empty : DBNull.Value, new string('\u03BB', 10000), "last",
+        ];
         using var reader = ExcelReaderFactory.CreateReader(
             new MemoryStream(AllocationTestWorkbook.CreateXlsx(items, shared)),
             new ExcelReaderConfiguration { SinglePassMode = singlePass });
