@@ -81,6 +81,62 @@ public class NumericCellConversionTests
         Assert.That(workbook.ConvertNumericValue(serial + 0.5, 14, date1904), Is.EqualTo(expected.AddHours(12)));
     }
 
+    [TestCase(0.0004 / 86400, 4000L)]
+    [TestCase(-0.0004 / 86400, -4000L)]
+    [TestCase(0.0005 / 86400, 5000L)]
+    [TestCase(0.0025 / 86400, 25000L)]
+    [TestCase(11.0 / 86400, 110000000L)]
+    [TestCase(-11.0 / 86400, -110000000L)]
+    [TestCase(0.5 / TimeSpan.TicksPerDay, 1L)]
+    [TestCase(-0.5 / TimeSpan.TicksPerDay, -1L)]
+    public void DurationsPreserveTickPrecision(double serial, long expectedTicks)
+    {
+        var workbook = new CommonWorkbook();
+        Assert.That(workbook.ConvertNumericValue(serial, 46, false), Is.EqualTo(TimeSpan.FromTicks(expectedTicks)));
+    }
+
+    [Test]
+    public void DurationsHandleRangeBoundariesAndInvalidValues()
+    {
+        var workbook = new CommonWorkbook();
+        Assert.That(workbook.ConvertNumericValue(TimeSpan.MaxValue.TotalDays, 46, false), Is.EqualTo(TimeSpan.FromTicks(9223372036854775429L)));
+        Assert.That(workbook.ConvertNumericValue(TimeSpan.MinValue.TotalDays, 46, false), Is.EqualTo(TimeSpan.FromTicks(-9223372036854775429L)));
+        Assert.Throws<OverflowException>(() => workbook.ConvertNumericValue(double.PositiveInfinity, 46, false));
+        Assert.Throws<OverflowException>(() => workbook.ConvertNumericValue(double.NegativeInfinity, 46, false));
+        Assert.Throws<ArgumentException>(() => workbook.ConvertNumericValue(double.NaN, 46, false));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void DatesPreserveTickPrecisionWhenApplyingEpoch(bool date1904)
+    {
+        var workbook = new CommonWorkbook();
+        var epoch = date1904 ? new DateTime(1904, 1, 1) : new DateTime(1899, 12, 31);
+        Assert.That(workbook.ConvertNumericValue(0.0004 / 86400, 14, date1904), Is.EqualTo(epoch.AddTicks(4000)));
+        Assert.That(workbook.ConvertNumericValue(11.0 / 86400, 14, date1904), Is.EqualTo(epoch.AddSeconds(11)));
+        Assert.That(workbook.ConvertNumericValue(1.0 / TimeSpan.TicksPerDay, 14, date1904), Is.EqualTo(epoch.AddTicks(1)));
+        if (date1904)
+            Assert.That(workbook.ConvertNumericValue(-0.0004 / 86400, 14, true), Is.EqualTo(epoch.AddTicks(-4000)));
+    }
+
+    [Test]
+    public void DatesPreserveThePrecisionOfLargeSerials()
+    {
+        var workbook = new CommonWorkbook();
+        Assert.That(workbook.ConvertNumericValue(45000.00000000463, 14, false), Is.EqualTo(new DateTime(2023, 3, 15).AddTicks(3998)));
+        Assert.That(workbook.ConvertNumericValue(2958465.9999999995, 14, false), Is.EqualTo(DateTime.MaxValue.AddTicks(-401)));
+    }
+
+    [TestCase(-0.25, false, 1899, 12, 30, 6)]
+    [TestCase(-1.25, false, 1899, 12, 29, 6)]
+    [TestCase(-1462.25, true, 1899, 12, 30, 6)]
+    [TestCase(-0.25, true, 1903, 12, 31, 18)]
+    public void NegativeDatesKeepOADateSemantics(double serial, bool date1904, int year, int month, int day, int hour)
+    {
+        var workbook = new CommonWorkbook();
+        Assert.That(workbook.ConvertNumericValue(serial, 14, date1904), Is.EqualTo(new DateTime(year, month, day, hour, 0, 0)));
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void CustomFormatsOverrideBuiltinsAndDateClassificationPrecedesDuration(bool date1904)

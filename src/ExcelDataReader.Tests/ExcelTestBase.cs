@@ -123,6 +123,24 @@ public abstract class ExcelTestBase
         Assert.That(reader.GetDateTime(5), Is.EqualTo((DateTime)value));
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void Issue788_PreservesDateAndDurationPrecision(bool singlePass)
+    {
+        using var reader = OpenReader(OpenFixtureStream("Issue788_Precision"), new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        for (int pass = 0; pass < 2; pass++)
+        {
+            Assert.That(reader.Read(), Is.True);
+            Assert.That(reader.GetValue(1), Is.EqualTo(new DateTime(1899, 12, 31).AddTicks(4000)));
+            Assert.That(reader.GetValue(2), Is.EqualTo(TimeSpan.FromSeconds(11)));
+            Assert.That(reader.GetValue(3), Is.EqualTo(TimeSpan.FromTicks(-4000)));
+            Assert.That(reader.GetValue(4), Is.EqualTo(new DateTime(1899, 12, 31).AddTicks(3219)));
+            Assert.That(reader.GetValue(5), Is.EqualTo(0.0004 / 86400));
+            Assert.That(reader.Read(), Is.False);
+            reader.Reset();
+        }
+    }
+
     [Test]
     public void Issue578()
     {
