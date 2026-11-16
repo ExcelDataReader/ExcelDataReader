@@ -63,6 +63,21 @@ public class NoProviderTests
         AssertProviderNotRegistered();
     }
 
+    [Test]
+    public void IncompleteUtf8CsvUsesFallbackWithoutRegisteringProvider()
+    {
+        AssertProviderNotRegistered();
+        using var stream = new MemoryStream([0xe9]);
+#if NET10_0
+        Assert.Throws<NotSupportedException>(() => ExcelReaderFactory.CreateCsvReader(stream));
+#else
+        using var reader = ExcelReaderFactory.CreateCsvReader(stream);
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo("\u00e9"));
+#endif
+        AssertProviderNotRegistered();
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void ReadsBiff2WithDeclaredUtf8WithoutRegisteringProvider(bool singlePass)

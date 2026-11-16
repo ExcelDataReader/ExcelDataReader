@@ -35,7 +35,7 @@ internal static class CsvAnalyzer
 
         AnalyzeCsvRows(stream, buffer, bytesRead, bomLength, analyzeInitialCsvRows, separators, separatorInfos);
 
-        FlushSeparatorsBuffers(separators, separatorInfos);
+        FlushSeparatorsBuffers(separators, separatorInfos, stream.Position >= stream.Length);
 
         SeparatorInfo bestSeparatorInfo = separatorInfos[0];
         string bestSeparator = separators[0];
@@ -120,14 +120,14 @@ internal static class CsvAnalyzer
         }
     }
 
-    private static void FlushSeparatorsBuffers(string[] separators, SeparatorInfo[] separatorInfos)
+    private static void FlushSeparatorsBuffers(string[] separators, SeparatorInfo[] separatorInfos, bool flushDecoder)
     {
         for (var i = 0; i < separators.Length; i++)
         {
             SeparatorInfo separatorInfo = separatorInfos[i];
 
             var handler = new CountingHandler(separatorInfo);
-            separatorInfo.Buffer.Flush(ref handler);
+            separatorInfo.Buffer.Flush(ref handler, flushDecoder);
         }
     }
 
