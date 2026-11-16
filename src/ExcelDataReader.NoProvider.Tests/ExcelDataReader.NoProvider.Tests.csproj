@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="NUnit.Framework" />
+    <!-- Exercise the .NET Standard asset on net10 and the .NET 10 asset on net11. -->
+    <ProjectReference Include="..\ExcelDataReader\ExcelDataReader.csproj" Condition="'$(TargetFramework)' == 'net10.0'" SetTargetFramework="TargetFramework=netstandard2.0" SkipGetTargetFrameworkProperties="true" />
+    <ProjectReference Include="..\ExcelDataReader\ExcelDataReader.csproj" Condition="'$(TargetFramework)' != 'net10.0'" />
+    <Compile Include="..\ExcelDataReader.Tests\TestWorkbook.cs" Link="TestWorkbook.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageReference Include="NUnit" Version="5.0.0" />
+    <PackageReference Include="NUnit.Analyzers" Version="4.15.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
+  </ItemGroup>
+</Project>

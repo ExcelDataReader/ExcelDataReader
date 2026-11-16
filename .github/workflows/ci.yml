@@ -43,3 +43,6 @@ jobs:
 
       - name: Test
         run: dotnet test src/ExcelDataReader.Tests/ExcelDataReader.Tests.csproj --no-build -c Release
+
+      - name: Test without registered code pages
+        run: dotnet test src/ExcelDataReader.NoProvider.Tests/ExcelDataReader.NoProvider.Tests.csproj --no-build -c Release
