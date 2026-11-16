@@ -469,7 +469,7 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
 
 ## Code page support
 
-On .NET 10 or later, the .NET 10 library target can use `CodePagesEncodingProvider` for supported legacy encodings without registering it globally. This does not register the provider for the rest of the application. Registering it allows the normal encoding lookup to succeed directly, avoiding the failed lookup and exception handling for supported code pages.
+On .NET 10 or later, the .NET 10 library target can use `CodePagesEncodingProvider` for supported legacy encodings without registering it globally. When a lookup needs an encoding supplied by this provider, the normal lookup fails first, so there is a small exception-handling performance cost. Registering the provider makes the normal lookup succeed directly and avoids that fallback cost, but affects the entire application; the library does not register it globally.
 
 When using the .NET Standard library targets on .NET Core or .NET 5 or later, many legacy encodings require a registered provider. This includes the default Windows-1252 fallback when reading BIFF2-5 XLS files or non-UTF-8 CSV files without a BOM. If needed, reference the `System.Text.Encoding.CodePages` package and register the provider during application initialization:
 
