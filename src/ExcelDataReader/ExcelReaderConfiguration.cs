@@ -92,4 +92,6 @@ public class ExcelReaderConfiguration
     /// This is not part of RFC 4180; only enable it when reading files that use backslash-style escaping.
     /// </summary>
     public char? EscapeChar { get; set; }
+
+    internal Encoding? ConfiguredFallbackEncoding => _fallbackEncoding;
 }

@@ -19,6 +19,8 @@ internal sealed class XlsStringData
         _characterCount = characterCount;
     }
 
+    public string? DecodedValue => _value;
+
     public static XlsStringData Read(XlsBiffFrame frame, int offset, bool shortCount, bool unicode)
     {
         int count = shortCount ? frame.ReadStringByteAt(offset) : frame.ReadUInt16At(offset);

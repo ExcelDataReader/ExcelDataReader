@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace ExcelDataReader.Core.BinaryFormat;
 
 /// <summary>
@@ -72,8 +70,8 @@ internal sealed class XlsSheetInfo
     /// <summary>
     /// Gets the name of the worksheet.
     /// </summary>
-    public string GetSheetName(Encoding encoding)
+    public string GetSheetName(XlsWorkbook workbook)
     {
-        return _sheetName.GetValue(encoding);
+        return _sheetName.DecodedValue ?? _sheetName.GetValue(workbook.Encoding);
     }
 }

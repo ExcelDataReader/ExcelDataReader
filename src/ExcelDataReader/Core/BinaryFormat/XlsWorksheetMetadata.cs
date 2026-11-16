@@ -2,8 +2,10 @@ using System.Text;
 
 namespace ExcelDataReader.Core.BinaryFormat;
 
-internal sealed class XlsWorksheetMetadata
+internal sealed class XlsWorksheetMetadata(XlsWorkbook workbook)
 {
+    private Encoding? _encoding;
+
     public string? CodeName { get; set; }
 
     public HeaderFooter? HeaderFooter { get; set; }
@@ -12,7 +14,11 @@ internal sealed class XlsWorksheetMetadata
 
     public List<Column> ColumnWidths { get; set; } = [];
 
-    public Encoding Encoding { get; set; } = Encoding.Unicode;
+    public Encoding Encoding
+    {
+        get => _encoding ??= workbook.Encoding;
+        set => _encoding = value;
+    }
 
     public double DefaultRowHeight { get; set; } = 255;
 

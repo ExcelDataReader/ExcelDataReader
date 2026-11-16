@@ -10,9 +10,8 @@ internal sealed class XlsWorksheetPartReader(
 {
     public XlsWorksheetMetadata Load()
     {
-        var metadata = new XlsWorksheetMetadata
+        var metadata = new XlsWorksheetMetadata(workbook)
         {
-            Encoding = workbook.Encoding,
             IsDate1904 = workbook.IsDate1904,
         };
 

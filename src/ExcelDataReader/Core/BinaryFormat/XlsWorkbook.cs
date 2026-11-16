@@ -11,6 +11,8 @@ namespace ExcelDataReader.Core.BinaryFormat;
 internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXlsWorkbookPartSink, IStylesPartSink
 {
     private readonly ISharedStringStore _stringStore = new SharedStringTable();
+    private readonly Encoding? _fallbackEncoding;
+    private Encoding? _encoding;
 
     internal XlsWorkbook(Stream stream, ExcelReaderConfiguration configuration)
     {
@@ -23,7 +25,8 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXl
         BiffVersion = version;
         SecretKey = biffStream.SecretKey;
         Encryption = biffStream.Encryption;
-        Encoding = version == 8 ? Encoding.Unicode : configuration.FallbackEncoding;
+        _fallbackEncoding = configuration.ConfiguredFallbackEncoding;
+        _encoding = version == 8 ? Encoding.Unicode : null;
 
         try
         {
@@ -63,7 +66,11 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXl
 
     public EncryptionInfo? Encryption { get; }
 
-    public Encoding Encoding { get; private set; }
+    public Encoding Encoding
+    {
+        get => _encoding ??= _fallbackEncoding ?? EncodingHelper.GetEncoding(1252);
+        private set => _encoding = value;
+    }
 
     Encoding IXlsWorkbookPartSink.Encoding => Encoding;
 
