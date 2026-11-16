@@ -1,4 +1,5 @@
 using System.Text;
+using ExcelDataReader.Core;
 
 namespace ExcelDataReader;
 
@@ -7,11 +8,17 @@ namespace ExcelDataReader;
 /// </summary>
 public class ExcelReaderConfiguration
 {
+    private Encoding? _fallbackEncoding;
+
     /// <summary>
     /// Gets or sets a value indicating the encoding to use when the input XLS lacks a CodePage record,
     /// or when the input CSV lacks a BOM and does not parse as UTF8. Default: cp1252. (XLS BIFF2-5 and CSV only).
     /// </summary>
-    public Encoding FallbackEncoding { get; set; } = Encoding.GetEncoding(1252);
+    public Encoding FallbackEncoding
+    {
+        get => _fallbackEncoding ??= EncodingHelper.GetEncoding(1252);
+        set => _fallbackEncoding = value;
+    }
 
     /// <summary>
     /// Gets or sets the password used to open password protected workbooks.
@@ -85,4 +92,6 @@ public class ExcelReaderConfiguration
     /// This is not part of RFC 4180; only enable it when reading files that use backslash-style escaping.
     /// </summary>
     public char? EscapeChar { get; set; }
+
+    internal Encoding? ConfiguredFallbackEncoding => _fallbackEncoding;
 }

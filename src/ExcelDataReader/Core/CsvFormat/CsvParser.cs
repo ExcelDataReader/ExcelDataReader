@@ -31,6 +31,7 @@ internal sealed class CsvParser
     private bool _rowStarted;
     private bool _carriageReturn;
     private bool _endRow;
+    private bool _decoderFlushed;
     private bool _flushing;
     private bool _finished;
 
@@ -126,9 +127,23 @@ internal sealed class CsvParser
         }
     }
 
-    public WorksheetReadStatus Flush<THandler>(ref THandler handler)
+    public WorksheetReadStatus Flush<THandler>(ref THandler handler, bool flushDecoder = true)
         where THandler : struct, ICsvHandler
     {
+        int offset = 0;
+        int count = 0;
+        var empty = Array.Empty<byte>();
+        if (ParseBuffer(empty, ref offset, ref count, ref handler) == WorksheetReadStatus.Paused)
+            return WorksheetReadStatus.Paused;
+
+        while (flushDecoder && !_decoderFlushed)
+        {
+            _decoder.Convert(empty, 0, 0, _chars, 0, _chars.Length, true, out _, out _charCount, out _decoderFlushed);
+            _charOffset = 0;
+            if (ParseBuffer(empty, ref offset, ref count, ref handler) == WorksheetReadStatus.Paused)
+                return WorksheetReadStatus.Paused;
+        }
+
         if (!_flushing)
         {
             _flushing = true;

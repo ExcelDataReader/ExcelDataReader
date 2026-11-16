@@ -184,7 +184,7 @@ var reader = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguratio
     // Encoding to use when the input XLS lacks a CodePage record,
     // or when the input CSV lacks a BOM and does not parse as UTF8.
     // Default: cp1252 (XLS BIFF2-5 and CSV only)
-    FallbackEncoding = Encoding.GetEncoding(1252),
+    // FallbackEncoding = Encoding.UTF8,
 
     // Password used to open password-protected workbooks.
     Password = "password",
@@ -343,6 +343,10 @@ See also:
 
 ## Upgrading from 3.x to 4.0
 
+### Unsupported XLS code pages
+
+An XLS file declaring an unsupported code page now throws instead of retaining the previous encoding for unrecognized IDs. Code page 0 is also rejected. `FallbackEncoding` is used for BIFF2-5 files without a code page, not for unsupported code pages.
+
 ### Date and duration precision
 
 Numeric date and duration values are converted to `DateTime` or `TimeSpan` at tick precision rather than being rounded to milliseconds. Results can differ from 3.x and between values that Excel displays identically.
@@ -463,14 +467,14 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
 });
 ```
 
-## Important note on .NET Core
+## Code page support
 
-By default, ExcelDataReader throws a NotSupportedException "No data is available for encoding 1252." on .NET Core and .NET 5.0 or later.
+On .NET 10 or later, the .NET 10 library target can use `CodePagesEncodingProvider` for supported legacy encodings without registering it globally. This does not register the provider for the rest of the application. Registering it allows the normal encoding lookup to succeed directly, avoiding the failed lookup and exception handling for supported code pages.
 
-To fix, add a dependency to the package `System.Text.Encoding.CodePages` and then add code to register the code page provider during application initialization (f.ex in Startup.cs):
+When using the .NET Standard library targets on .NET Core or .NET 5 or later, many legacy encodings require a registered provider. This includes the default Windows-1252 fallback when reading BIFF2-5 XLS files or non-UTF-8 CSV files without a BOM. If needed, reference the `System.Text.Encoding.CodePages` package and register the provider during application initialization:
 
 ```c#
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 ```
 
-This is required to parse strings in binary BIFF2-5 Excel documents encoded with DOS-era code pages. These encodings are registered by default in the full .NET Framework, but not on .NET Core and .NET 5.0 or later.
+The full .NET Framework supports many legacy code pages without registration. An unsupported declared code page still causes an exception; registering the provider does not make every code page available.

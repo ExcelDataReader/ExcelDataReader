@@ -349,7 +349,7 @@ public class CsvConsumptionTests
         string value = new string('x', 1022) + "é終";
         byte[] bytes = encoding.GetPreamble().Concat(encoding.GetBytes(value + separator + "b\r\nlast" + separator)).ToArray();
         using var stream = new MemoryStream(bytes);
-        var worksheet = new CsvWorksheet(stream, Encoding.UTF8, [separator], 0, '"');
+        var worksheet = new CsvWorksheet(stream, () => Encoding.UTF8, [separator], 0, '"');
         using (var reader = worksheet.OpenReader())
         {
             var handler = new WorksheetHandler();
@@ -380,7 +380,7 @@ public class CsvConsumptionTests
     public void WorksheetRetriesInvalidUtf8WithFallbackEncoding()
     {
         using var stream = new MemoryStream([0xe9, (byte)',', (byte)'b', (byte)'\n']);
-        var worksheet = new CsvWorksheet(stream, Encoding.GetEncoding(1252), [","], 0);
+        var worksheet = new CsvWorksheet(stream, () => Encoding.GetEncoding(1252), [","], 0);
         using var reader = worksheet.OpenReader();
         var handler = new WorksheetHandler();
         while (reader.Consume(ref handler) == WorksheetReadStatus.Paused)
@@ -390,11 +390,89 @@ public class CsvConsumptionTests
         Assert.That(handler.Events, Is.EqualTo(new[] { "begin", "row:0", "cell:0:é", "cell:1:b", "end" }));
     }
 
+    [TestCase(0)]
+    [TestCase(1)]
+    public void IncompleteUtf8AtActualEndUsesFallback(int analyzeRows)
+    {
+        using var stream = new MemoryStream([0xe9]);
+        using var reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration
+        {
+            AnalyzeInitialCsvRows = analyzeRows,
+            FallbackEncoding = Encoding.GetEncoding(1252),
+        });
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo("é"));
+        Assert.That(reader.Read(), Is.False);
+    }
+
+    [Test]
+    public void SamplingDoesNotFlushAnIncompleteCharacterBeforeEndOfStream()
+    {
+        string value = new string('x', 11) + "é";
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("a,b\n" + value + ",c\n"));
+        using var reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration
+        {
+            AnalyzeInitialCsvRows = 1,
+            FallbackEncoding = Encoding.ASCII,
+        });
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo(value));
+        Assert.That(reader.GetString(1), Is.EqualTo("c"));
+    }
+
+    [Test]
+    public void IncompleteUtf8AfterSampleThrowsAtEndOfStream()
+    {
+        var bytes = Encoding.UTF8.GetBytes("a,b\n" + new string('x', 20)).Concat(new byte[] { 0xc3 }).ToArray();
+        using var stream = new MemoryStream(bytes);
+        using var reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration { AnalyzeInitialCsvRows = 1 });
+        Assert.That(reader.Read(), Is.True);
+        Assert.Throws<DecoderFallbackException>(() => reader.Read());
+    }
+
+    [Test]
+    public void DecoderOutputAtEndSurvivesCallbackPauses()
+    {
+        var parser = new CsvParser(",", new FlushOutputEncoding());
+        var handler = new ParserHandler(pause: true);
+        byte[] bytes = [1];
+        int offset = 0;
+        int count = bytes.Length;
+        Assert.That(parser.ParseBuffer(bytes, ref offset, ref count, ref handler), Is.EqualTo(WorksheetReadStatus.EndOfInput));
+        int pauses = 0;
+        while (parser.Flush(ref handler) == WorksheetReadStatus.Paused)
+            Assert.That(++pauses, Is.LessThan(20));
+        Assert.That(handler.Events, Is.EqualTo(new[]
+        {
+            "row:0", "field:0:x", "field:1:y", "end:2:False:False",
+            "row:1", "field:0:z", "end:1:False:True",
+        }));
+    }
+
+    [Test]
+    public void WorksheetDoesNotResolveFallbackEncodingForUtf8()
+    {
+        bool fallbackResolved = false;
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("a,b\n"));
+        _ = new CsvWorksheet(
+            stream,
+            () =>
+            {
+                fallbackResolved = true;
+                return Encoding.UTF8;
+            },
+            [","],
+            0);
+
+        Assert.That(fallbackResolved, Is.False);
+    }
+
     [Test]
     public void RowEndPauseReturnsOneCompleteRowWithoutStartingTheNext()
     {
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes("a,b\nc,d\n"));
-        var worksheet = new CsvWorksheet(stream, Encoding.UTF8, [","], 0);
+        var worksheet = new CsvWorksheet(stream, () => Encoding.UTF8, [","], 0);
         using var reader = worksheet.OpenReader();
         var handler = new WorksheetHandler(pauseEveryEvent: false);
         Assert.That(reader.Consume(ref handler), Is.EqualTo(WorksheetReadStatus.Paused));
@@ -465,5 +543,35 @@ public class CsvConsumptionTests
             Events.Add(value);
             return pauseEveryEvent ? WorksheetReadControl.Pause : WorksheetReadControl.Continue;
         }
+    }
+
+    private sealed class FlushOutputEncoding : UTF8Encoding
+    {
+        public override Decoder GetDecoder() => new FlushOutputDecoder();
+    }
+
+    private sealed class FlushOutputDecoder : Decoder
+    {
+        private bool _hasInput;
+
+        public override void Convert(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex, int charCount, bool flush, out int bytesUsed, out int charsUsed, out bool completed)
+        {
+            bytesUsed = byteCount;
+            _hasInput |= byteCount > 0;
+            charsUsed = 0;
+            if (flush && _hasInput)
+            {
+                const string output = "x,y\nz";
+                output.CopyTo(0, chars, charIndex, output.Length);
+                charsUsed = output.Length;
+                _hasInput = false;
+            }
+
+            completed = true;
+        }
+
+        public override int GetCharCount(byte[] bytes, int index, int count) => throw new NotSupportedException();
+
+        public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex) => throw new NotSupportedException();
     }
 }

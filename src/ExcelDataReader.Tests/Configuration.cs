@@ -27,22 +27,7 @@ internal static class Configuration
         }
     };
 
-    public static Stream GetTestWorkbook(string key)
-    {
-        var fileName = GetTestWorkbookPath(key);
-        return new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-    }
+    public static Stream GetTestWorkbook(string key) => TestWorkbook.Open(key);
 
-    public static string GetTestWorkbookPath(string key)
-    {
-        var directory = TestContext.CurrentContext.TestDirectory;
-        while (directory != null && !File.Exists(Path.Combine(directory, "ExcelDataReader.slnx")))
-            directory = Path.GetDirectoryName(directory);
-
-        var resources = Path.Combine(directory, "src/TestData");
-        var path = Path.Combine(resources, key);
-        path = Path.GetFullPath(path);
-        Assert.That(path, Does.Exist, $"File not found: '{path}'.");
-        return path;
-    }
+    public static string GetTestWorkbookPath(string key) => TestWorkbook.GetPath(key);
 }

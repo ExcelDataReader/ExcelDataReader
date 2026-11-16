@@ -16,7 +16,7 @@ internal sealed class XlsWorksheet : IWorksheet
     {
         Workbook = workbook;
         Stream = stream;
-        Name = refSheet.GetSheetName(workbook.Encoding);
+        Name = refSheet.GetSheetName(workbook);
         DataOffset = refSheet.StartOffset;
         VisibleState = refSheet.VisibleState switch
         {

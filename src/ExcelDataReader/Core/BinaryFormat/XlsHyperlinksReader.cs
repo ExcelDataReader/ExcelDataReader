@@ -36,7 +36,7 @@ internal static class XlsHyperlinksReader
             switch (frame.Id)
             {
                 case BIFFRECORDTYPE.HLINK:
-                    if (TryReadHyperlink(frame, GetAnsiPathEncoding(worksheet.Encoding), out var range, out var address))
+                    if (TryReadHyperlink(frame, worksheet, out var range, out var address))
                         hyperlinks.Add((range, address));
                     break;
                 case BIFFRECORDTYPE.QUICKTIP:
@@ -61,10 +61,10 @@ internal static class XlsHyperlinksReader
     private static Encoding GetAnsiPathEncoding(Encoding worksheetEncoding)
     {
         // BIFF8 defaults to UTF-16 for BIFF strings, but FileMoniker ansiPath is byte-oriented.
-        return worksheetEncoding.CodePage is 1200 or 1201 ? Encoding.GetEncoding(1252) : worksheetEncoding;
+        return worksheetEncoding.CodePage is 1200 or 1201 ? EncodingHelper.GetEncoding(1252) : worksheetEncoding;
     }
 
-    private static bool TryReadHyperlink(XlsBiffFrame frame, Encoding encoding, out CellRange range, out string address)
+    private static bool TryReadHyperlink(XlsBiffFrame frame, XlsWorksheet worksheet, out CellRange range, out string address)
     {
         range = ReadRange(frame, 0, 8);
         address = string.Empty;
@@ -102,7 +102,7 @@ internal static class XlsHyperlinksReader
                 if (monikerClassId == UrlMonikerClassId)
                     destination = ReadUrlMoniker(frame, ref offset, end);
                 else if (monikerClassId == FileMonikerClassId)
-                    destination = ReadFileMoniker(frame, ref offset, end, encoding);
+                    destination = ReadFileMoniker(frame, ref offset, end, worksheet);
                 else
                     return false;
             }
@@ -172,7 +172,7 @@ internal static class XlsHyperlinksReader
         return url;
     }
 
-    private static string ReadFileMoniker(XlsBiffFrame frame, ref int offset, int end, Encoding encoding)
+    private static string ReadFileMoniker(XlsBiffFrame frame, ref int offset, int end, XlsWorksheet worksheet)
     {
         ushort antiCount = ReadUInt16(frame, ref offset, end);
         uint ansiLength = ReadUInt32(frame, ref offset, end);
@@ -182,7 +182,7 @@ internal static class XlsHyperlinksReader
         Require(frame.Bytes[4 + offset + ansiByteCount - 1] == 0);
         for (int i = 0; i < ansiByteCount - 1; i++)
             Require(frame.Bytes[4 + offset + i] != 0);
-        string ansiPath = encoding.GetString(frame.Bytes, 4 + offset, ansiByteCount - 1);
+        int ansiOffset = offset;
         offset += ansiByteCount;
 
         ushort endServer = ReadUInt16(frame, ref offset, end);
@@ -193,7 +193,10 @@ internal static class XlsHyperlinksReader
         Require(unicodePathSize <= int.MaxValue && unicodePathSize <= end - offset);
 
         if (unicodePathSize == 0)
+        {
+            string ansiPath = GetAnsiPathEncoding(worksheet.Encoding).GetString(frame.Bytes, 4 + ansiOffset, ansiByteCount - 1);
             return AddParentDirectories(ansiPath, antiCount, endServer);
+        }
 
         Require(unicodePathSize >= 6);
         int unicodeEnd = offset + (int)unicodePathSize;

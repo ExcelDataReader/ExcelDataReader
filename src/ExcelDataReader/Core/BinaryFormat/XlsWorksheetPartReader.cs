@@ -10,9 +10,8 @@ internal sealed class XlsWorksheetPartReader(
 {
     public XlsWorksheetMetadata Load()
     {
-        var metadata = new XlsWorksheetMetadata
+        var metadata = new XlsWorksheetMetadata(workbook)
         {
-            Encoding = workbook.Encoding,
             IsDate1904 = workbook.IsDate1904,
         };
 
@@ -132,7 +131,7 @@ internal sealed class XlsWorksheetPartReader(
                     biffFormats.Add((ushort)biffFormats.Count, XlsWorkbookPartReader.ReadFormat(frame, workbook.BiffVersion));
                     break;
                 case BIFFRECORDTYPE.CODEPAGE:
-                    metadata.Encoding = EncodingHelper.GetEncoding(frame.ReadUInt16(0)) ?? metadata.Encoding;
+                    metadata.Encoding = EncodingHelper.GetEncoding(frame.ReadUInt16(0));
                     break;
                 case BIFFRECORDTYPE.HEADER when frame.RecordSize > 0:
                     header = XlsStringData.Read(frame, 4, workbook.BiffVersion < 8, workbook.BiffVersion == 8);
