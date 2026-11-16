@@ -172,7 +172,7 @@ public static class ExcelReaderFactory
         configuration ??= new ExcelReaderConfiguration();
         fileStream = PrepareInputStream(fileStream, configuration);
 
-        return new ExcelCsvReader(fileStream, configuration.FallbackEncoding, configuration.AutodetectSeparators, configuration.AnalyzeInitialCsvRows, configuration.QuoteChar, configuration.TrimWhiteSpace, configuration.EscapeChar);
+        return new ExcelCsvReader(fileStream, () => configuration.FallbackEncoding, configuration.AutodetectSeparators, configuration.AnalyzeInitialCsvRows, configuration.QuoteChar, configuration.TrimWhiteSpace, configuration.EscapeChar);
     }
 
     private static bool TryGetWorkbook(Stream fileStream, CompoundDocument document, [NotNullWhen(true)] out Stream? stream)

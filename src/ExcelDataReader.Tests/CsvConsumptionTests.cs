@@ -349,7 +349,7 @@ public class CsvConsumptionTests
         string value = new string('x', 1022) + "é終";
         byte[] bytes = encoding.GetPreamble().Concat(encoding.GetBytes(value + separator + "b\r\nlast" + separator)).ToArray();
         using var stream = new MemoryStream(bytes);
-        var worksheet = new CsvWorksheet(stream, Encoding.UTF8, [separator], 0, '"');
+        var worksheet = new CsvWorksheet(stream, () => Encoding.UTF8, [separator], 0, '"');
         using (var reader = worksheet.OpenReader())
         {
             var handler = new WorksheetHandler();
@@ -380,7 +380,7 @@ public class CsvConsumptionTests
     public void WorksheetRetriesInvalidUtf8WithFallbackEncoding()
     {
         using var stream = new MemoryStream([0xe9, (byte)',', (byte)'b', (byte)'\n']);
-        var worksheet = new CsvWorksheet(stream, Encoding.GetEncoding(1252), [","], 0);
+        var worksheet = new CsvWorksheet(stream, () => Encoding.GetEncoding(1252), [","], 0);
         using var reader = worksheet.OpenReader();
         var handler = new WorksheetHandler();
         while (reader.Consume(ref handler) == WorksheetReadStatus.Paused)
@@ -391,10 +391,28 @@ public class CsvConsumptionTests
     }
 
     [Test]
+    public void WorksheetDoesNotResolveFallbackEncodingForUtf8()
+    {
+        bool fallbackResolved = false;
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("a,b\n"));
+        _ = new CsvWorksheet(
+            stream,
+            () =>
+            {
+                fallbackResolved = true;
+                return Encoding.UTF8;
+            },
+            [","],
+            0);
+
+        Assert.That(fallbackResolved, Is.False);
+    }
+
+    [Test]
     public void RowEndPauseReturnsOneCompleteRowWithoutStartingTheNext()
     {
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes("a,b\nc,d\n"));
-        var worksheet = new CsvWorksheet(stream, Encoding.UTF8, [","], 0);
+        var worksheet = new CsvWorksheet(stream, () => Encoding.UTF8, [","], 0);
         using var reader = worksheet.OpenReader();
         var handler = new WorksheetHandler(pauseEveryEvent: false);
         Assert.That(reader.Consume(ref handler), Is.EqualTo(WorksheetReadStatus.Paused));

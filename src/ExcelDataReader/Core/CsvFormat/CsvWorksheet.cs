@@ -4,7 +4,7 @@ namespace ExcelDataReader.Core.CsvFormat;
 
 internal sealed class CsvWorksheet : IWorksheet
 {
-    public CsvWorksheet(Stream stream, Encoding fallbackEncoding, string[] autodetectSeparators, int analyzeInitialCsvRows, char? quoteChar = null, bool trimWhiteSpace = true, char? escapeChar = null)
+    public CsvWorksheet(Stream stream, Func<Encoding> fallbackEncoding, string[] autodetectSeparators, int analyzeInitialCsvRows, char? quoteChar = null, bool trimWhiteSpace = true, char? escapeChar = null)
     {
         Stream = stream;
         QuoteChar = quoteChar;
@@ -27,7 +27,7 @@ internal sealed class CsvWorksheet : IWorksheet
             // If cannot parse as UTF-8, try fallback encoding
             Stream.Seek(0, SeekOrigin.Begin);
 
-            CsvAnalyzer.Analyze(Stream, autodetectSeparators, fallbackEncoding, analyzeInitialCsvRows, quoteChar, trimWhiteSpace, escapeChar, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
+            CsvAnalyzer.Analyze(Stream, autodetectSeparators, fallbackEncoding(), analyzeInitialCsvRows, quoteChar, trimWhiteSpace, escapeChar, out var fieldCount, out var separator, out var encoding, out var bomLength, out var rowCount);
             FieldCount = fieldCount;
             AnalyzedRowCount = rowCount;
             AnalyzedPartial = analyzeInitialCsvRows > 0;

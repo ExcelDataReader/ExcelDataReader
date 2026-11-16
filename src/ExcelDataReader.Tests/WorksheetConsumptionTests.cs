@@ -86,6 +86,63 @@ public class WorksheetConsumptionTests
         Assert.That(cells, Is.EqualTo(41));
     }
 
+    [TestCase((ushort)0, false)]
+    [TestCase((ushort)0, true)]
+    [TestCase((ushort)9999, false)]
+    [TestCase((ushort)9999, true)]
+    [TestCase((ushort)50930, false)]
+    [TestCase((ushort)50930, true)]
+    public void Biff2RejectsUnsupportedDeclaredCodePage(ushort codePage, bool singlePass)
+    {
+        using var buffer = new MemoryStream();
+        using (var writer = new BinaryWriter(buffer, Encoding.Unicode, leaveOpen: true))
+        {
+            XlsRecord(writer, 0x09, data =>
+            {
+                data.Write((ushort)2);
+                data.Write((ushort)0x10);
+            });
+            XlsRecord(writer, (ushort)BIFFRECORDTYPE.CODEPAGE, data => data.Write(codePage));
+            XlsRecord(writer, 0x0A, _ => { });
+        }
+
+        buffer.Position = 0;
+        Assert.Throws<NotSupportedException>(() =>
+        {
+            using var reader = ExcelReaderFactory.CreateBinaryReader(buffer, new ExcelReaderConfiguration
+            {
+                SinglePassMode = singlePass,
+                FallbackEncoding = Encoding.UTF8,
+            });
+            reader.Read();
+        });
+    }
+
+    [TestCase((ushort)0)]
+    [TestCase((ushort)9999)]
+    [TestCase((ushort)50930)]
+    public void XlsWorkbookGlobalsRejectUnsupportedDeclaredCodePage(ushort codePage)
+    {
+        using var buffer = new MemoryStream();
+        using (var writer = new BinaryWriter(buffer, Encoding.Unicode, leaveOpen: true))
+        {
+            XlsRecord(writer, 0x809, data =>
+            {
+                data.Write((ushort)0x600);
+                data.Write((ushort)0x05);
+                data.Write(new byte[12]);
+            });
+            XlsRecord(writer, (ushort)BIFFRECORDTYPE.CODEPAGE, data => data.Write(codePage));
+            XlsRecord(writer, 0x0A, _ => { });
+        }
+
+        buffer.Position = 0;
+        Assert.Throws<NotSupportedException>(() =>
+        {
+            using var workbook = new XlsWorkbook(buffer, new ExcelReaderConfiguration { FallbackEncoding = Encoding.UTF8 });
+        });
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void Biff2ColumnWidthsPreserveRangesAndFractionalWidths(bool singlePass)

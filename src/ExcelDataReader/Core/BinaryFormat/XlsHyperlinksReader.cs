@@ -61,7 +61,7 @@ internal static class XlsHyperlinksReader
     private static Encoding GetAnsiPathEncoding(Encoding worksheetEncoding)
     {
         // BIFF8 defaults to UTF-16 for BIFF strings, but FileMoniker ansiPath is byte-oriented.
-        return worksheetEncoding.CodePage is 1200 or 1201 ? Encoding.GetEncoding(1252) : worksheetEncoding;
+        return worksheetEncoding.CodePage is 1200 or 1201 ? EncodingHelper.GetEncoding(1252) : worksheetEncoding;
     }
 
     private static bool TryReadHyperlink(XlsBiffFrame frame, Encoding encoding, out CellRange range, out string address)

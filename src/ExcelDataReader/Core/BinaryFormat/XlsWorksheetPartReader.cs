@@ -132,7 +132,7 @@ internal sealed class XlsWorksheetPartReader(
                     biffFormats.Add((ushort)biffFormats.Count, XlsWorkbookPartReader.ReadFormat(frame, workbook.BiffVersion));
                     break;
                 case BIFFRECORDTYPE.CODEPAGE:
-                    metadata.Encoding = EncodingHelper.GetEncoding(frame.ReadUInt16(0)) ?? metadata.Encoding;
+                    metadata.Encoding = EncodingHelper.GetEncoding(frame.ReadUInt16(0));
                     break;
                 case BIFFRECORDTYPE.HEADER when frame.RecordSize > 0:
                     header = XlsStringData.Read(frame, 4, workbook.BiffVersion < 8, workbook.BiffVersion == 8);

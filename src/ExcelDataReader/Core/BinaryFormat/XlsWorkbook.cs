@@ -158,7 +158,7 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXl
     void IStylesPartSink.AddCellStyleExtendedFormat(ExtendedFormat format) => CellStyleExtendedFormats.Add(format);
 
     void IXlsWorkbookPartSink.SetCodePage(ushort codePage) =>
-        Encoding = EncodingHelper.GetEncoding(codePage) ?? Encoding;
+        Encoding = EncodingHelper.GetEncoding(codePage);
 
     void IXlsWorkbookPartSink.SetDate1904(bool date1904) => IsDate1904 = date1904;
 

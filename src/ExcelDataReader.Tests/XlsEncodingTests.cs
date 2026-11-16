@@ -8,16 +8,32 @@ public class XlsEncodingTests
     [TestCase((ushort)1251, 1251)]
     [TestCase((ushort)932, 932)]
     [TestCase((ushort)10000, 10000)]
+    [TestCase((ushort)20000, 20000)]
+    [TestCase((ushort)20002, 20002)]
+    [TestCase((ushort)20932, 20932)]
+    [TestCase((ushort)32768, 10000)]
+    [TestCase((ushort)32769, 1252)]
+    [TestCase((ushort)50222, 50222)]
     [TestCase((ushort)65001, 65001)]
     public void EncodingHelperResolvesRepresentativeCodePages(ushort codePage, int expectedCodePage)
     {
-        Assert.That(EncodingHelper.GetEncoding(codePage)!.CodePage, Is.EqualTo(expectedCodePage));
+        Assert.That(EncodingHelper.GetEncoding(codePage).CodePage, Is.EqualTo(expectedCodePage));
+    }
+
+    [TestCase((ushort)0)]
+    [TestCase((ushort)9999)]
+    [TestCase((ushort)50930)]
+    public void EncodingHelperThrowsForUnsupportedCodePage(ushort codePage)
+    {
+        Assert.Throws<NotSupportedException>(() => EncodingHelper.GetEncoding(codePage));
     }
 
     [Test]
-    public void EncodingHelperReturnsNullForUnknownCodePage()
+    public void EncodingHelperUsesDeclaredJapaneseCodePageForDecoding()
     {
-        Assert.That(EncodingHelper.GetEncoding(9999), Is.Null);
+        var encoding = EncodingHelper.GetEncoding(20932);
+
+        Assert.That(encoding.GetString(new byte[] { 0xA1, 0xC1 }), Is.EqualTo("\u301C"));
     }
 
     [TestCase(204, 1251)]
