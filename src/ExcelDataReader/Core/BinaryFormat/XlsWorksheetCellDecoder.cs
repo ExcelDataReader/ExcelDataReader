@@ -29,7 +29,7 @@ internal sealed class XlsWorksheetCellDecoder(XlsWorksheet worksheet)
             BIFFRECORDTYPE.BOOLERR_OLD => DecodeBoolErr(frame, 7, 8, out error),
             BIFFRECORDTYPE.INTEGER or BIFFRECORDTYPE.INTEGER_OLD => new DecodedCellValue((int)frame.ReadUInt16(frame.Id == BIFFRECORDTYPE.INTEGER_OLD ? 7 : 6)),
             BIFFRECORDTYPE.LABEL or BIFFRECORDTYPE.LABEL_V2 or BIFFRECORDTYPE.RSTRING =>
-                new DecodedCellValue(GetLabelValue(frame, GetEncoding(effectiveStyle))),
+                new DecodedCellValue(GetLabelValue(frame, effectiveStyle)),
             BIFFRECORDTYPE.FORMULA or BIFFRECORDTYPE.FORMULA_V3 or BIFFRECORDTYPE.FORMULA_V4 =>
                 new DecodedCellValue(GetFormulaValue(stream, frame, out error, effectiveStyle)),
             _ => default,
@@ -62,7 +62,9 @@ internal sealed class XlsWorksheetCellDecoder(XlsWorksheet worksheet)
         switch (formulaValueByte1)
         {
             case 0x00:
-                return XlsFormulaStringReader.Read(stream, worksheet.Workbook.BiffVersion, GetEncoding(style));
+                return worksheet.Workbook.BiffVersion == 8
+                    ? XlsFormulaStringReader.ReadBiff8(stream)
+                    : XlsFormulaStringReader.ReadLegacy(stream, worksheet.Workbook.BiffVersion, GetEncoding(style));
 
             case 0x01:
                 return Helpers.BoxBoolean(formulaValueByte3 != 0);
@@ -76,7 +78,7 @@ internal sealed class XlsWorksheetCellDecoder(XlsWorksheet worksheet)
         }
     }
 
-    private string GetLabelValue(XlsBiffFrame frame, Encoding encoding)
+    private string GetLabelValue(XlsBiffFrame frame, ExtendedFormat style)
     {
         int biffVersion = worksheet.Workbook.BiffVersion;
         int offset;
@@ -126,6 +128,7 @@ internal sealed class XlsWorksheetCellDecoder(XlsWorksheet worksheet)
             return EncodingHelper.DecodeLatin1(frame.Bytes, start, characterCount);
         }
 
+        Encoding encoding = GetEncoding(style);
         offset += frame.Id == BIFFRECORDTYPE.LABEL_V2 ? 1 : 2;
         int count = characterCount * (Helpers.IsSingleByteEncoding(encoding) ? 1 : 2);
         frame.EnsureRange(offset, count);

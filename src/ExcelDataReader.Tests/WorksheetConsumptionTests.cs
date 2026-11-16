@@ -412,7 +412,7 @@ public class WorksheetConsumptionTests
 
         using var transport = new XlsBiffStream(new MemoryStream(buffer.ToArray()));
         Assert.That(transport.ReadFrame(out _), Is.True);
-        string value = XlsFormulaStringReader.Read(transport, version, encoding);
+        string value = XlsFormulaStringReader.ReadLegacy(transport, version, encoding);
         Assert.That(transport.ReadFrame(out var next), Is.True);
         Assert.That(next.Id, Is.EqualTo((BIFFRECORDTYPE)0xf0));
         Assert.That(next.ReadUInt16(0), Is.EqualTo(123));
@@ -452,7 +452,13 @@ public class WorksheetConsumptionTests
 
         buffer.Position = 0;
         using var transport = new XlsBiffStream(buffer);
-        var exception = Assert.Throws<ExcelReaderException>(() => XlsFormulaStringReader.Read(transport, version, Encoding.ASCII));
+        var exception = Assert.Throws<ExcelReaderException>(() =>
+        {
+            if (version == 8)
+                XlsFormulaStringReader.ReadBiff8(transport);
+            else
+                XlsFormulaStringReader.ReadLegacy(transport, version, Encoding.ASCII);
+        });
         Assert.That(exception.Message, Is.EqualTo(version == 8 ? Errors.ErrorBiffStringSize : Errors.ErrorBiffRecordSize));
         if (unexpectedRecord)
         {

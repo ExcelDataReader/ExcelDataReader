@@ -140,6 +140,69 @@ public class NoProviderTests
         AssertProviderNotRegistered();
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void ReadsBiff8FormulaStringsWithoutRegisteringProvider(bool singlePass)
+    {
+        AssertProviderNotRegistered();
+        using var stream = TestWorkbook.Open("Hyperlinks.xls");
+        using var reader = ExcelReaderFactory.CreateBinaryReader(stream, new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        for (int row = 0; row <= 10; row++)
+            Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo("Formula label"));
+        reader.Reset();
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo("Website fragment"));
+        AssertProviderNotRegistered();
+    }
+
+    [TestCase(0x0204, false)]
+    [TestCase(0x0204, true)]
+    [TestCase(0x00d6, false)]
+    [TestCase(0x00d6, true)]
+    public void ReadsBiff8InlineStringsWithoutRegisteringProvider(int recordId, bool singlePass)
+    {
+        AssertProviderNotRegistered();
+        using var stream = CreateBiff8InlineString((ushort)recordId);
+        using var reader = ExcelReaderFactory.CreateBinaryReader(stream, new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo("\u03bb"));
+        reader.Reset();
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetString(0), Is.EqualTo("\u03bb"));
+        AssertProviderNotRegistered();
+    }
+
+    [TestCase("url", false)]
+    [TestCase("url", true)]
+    [TestCase("unicodeFile", false)]
+    [TestCase("unicodeFile", true)]
+    public void ReadsBiff8UnicodeHyperlinksWithoutRegisteringProvider(string kind, bool singlePass)
+    {
+        AssertProviderNotRegistered();
+        using var stream = CreateBiff8Hyperlink(kind);
+        using var reader = ExcelReaderFactory.CreateBinaryReader(stream, new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetHyperlink(0)?.Address, Is.EqualTo(kind == "url" ? "https://example.com/" : "\u5831\u544a.xlsx"));
+        AssertProviderNotRegistered();
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void Biff8AnsiHyperlinkStillRequiresCodePage(bool singlePass)
+    {
+        AssertProviderNotRegistered();
+        using var stream = CreateBiff8Hyperlink("ansiFile");
+        using var reader = ExcelReaderFactory.CreateBinaryReader(stream, new ExcelReaderConfiguration { SinglePassMode = singlePass });
+        Assert.That(reader.Read(), Is.True);
+#if NET10_0
+        Assert.Throws<NotSupportedException>(() => reader.GetHyperlink(0));
+#else
+        Assert.That(reader.GetHyperlink(0)?.Address, Is.EqualTo("caf\u00e9.xls"));
+#endif
+        AssertProviderNotRegistered();
+    }
+
     private static void AssertProviderNotRegistered()
     {
         Assert.Throws<NotSupportedException>(() => Encoding.GetEncoding(1252));
@@ -213,5 +276,112 @@ public class NoProviderTests
 
         stream.Position = 0;
         return stream;
+    }
+
+    private static MemoryStream CreateBiff8InlineString(ushort recordId)
+    {
+        var stream = new MemoryStream();
+        using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
+        {
+            BiffRecord(writer, 0x0809, data =>
+            {
+                data.Write((ushort)0x0600);
+                data.Write((ushort)5);
+            });
+            BiffRecord(writer, 0x0085, data =>
+            {
+                data.Write(42U);
+                data.Write((ushort)0);
+                data.Write((byte)1);
+                data.Write((byte)0);
+                data.Write((byte)'S');
+            });
+            BiffRecord(writer, 0x0031, data => data.Write(new byte[13]));
+            BiffRecord(writer, 0x000a, _ => { });
+            BiffRecord(writer, 0x0809, data =>
+            {
+                data.Write((ushort)0x0600);
+                data.Write((ushort)0x10);
+            });
+            BiffRecord(writer, recordId, data =>
+            {
+                data.Write((ushort)0);
+                data.Write((ushort)0);
+                data.Write((ushort)0);
+                data.Write((ushort)1);
+                data.Write((byte)1);
+                data.Write((ushort)0x03bb);
+            });
+            BiffRecord(writer, 0x000a, _ => { });
+        }
+
+        stream.Position = 0;
+        return stream;
+    }
+
+    private static MemoryStream CreateBiff8Hyperlink(string kind)
+    {
+        var stream = new MemoryStream();
+        using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
+        {
+            BiffRecord(writer, 0x0809, data =>
+            {
+                data.Write((ushort)0x0600);
+                data.Write((ushort)0x10);
+            });
+            BiffRecord(writer, 0x0203, data =>
+            {
+                data.Write((ushort)0);
+                data.Write((ushort)0);
+                data.Write((ushort)0);
+                data.Write(42.0);
+            });
+            BiffRecord(writer, 0x01b8, data =>
+            {
+                data.Write(new byte[8]);
+                data.Write(new Guid("79EAC9D0-BAF9-11CE-8C82-00AA004BA90B").ToByteArray());
+                data.Write(2);
+                data.Write(1);
+                data.Write(new Guid(kind == "url" ? "79EAC9E0-BAF9-11CE-8C82-00AA004BA90B" : "00000303-0000-0000-C000-000000000046").ToByteArray());
+                if (kind == "url")
+                {
+                    byte[] url = Encoding.Unicode.GetBytes("https://example.com/\0");
+                    data.Write(url.Length);
+                    data.Write(url);
+                }
+                else
+                {
+                    byte[] ansi = [(byte)'c', (byte)'a', (byte)'f', 0xe9, (byte)'.', (byte)'x', (byte)'l', (byte)'s', 0];
+                    data.Write((ushort)0);
+                    data.Write(ansi.Length);
+                    data.Write(ansi);
+                    data.Write(ushort.MaxValue);
+                    data.Write((ushort)0xdead);
+                    data.Write(new byte[20]);
+                    byte[] unicode = kind == "unicodeFile" ? Encoding.Unicode.GetBytes("\u5831\u544a.xlsx") : [];
+                    data.Write(unicode.Length == 0 ? 0 : unicode.Length + 6);
+                    if (unicode.Length != 0)
+                    {
+                        data.Write(unicode.Length);
+                        data.Write((ushort)3);
+                        data.Write(unicode);
+                    }
+                }
+            });
+            BiffRecord(writer, 0x000a, _ => { });
+        }
+
+        stream.Position = 0;
+        return stream;
+    }
+
+    private static void BiffRecord(BinaryWriter writer, ushort id, Action<BinaryWriter> write)
+    {
+        using var payload = new MemoryStream();
+        using (var data = new BinaryWriter(payload, Encoding.UTF8, leaveOpen: true))
+            write(data);
+        writer.Write(id);
+        writer.Write((ushort)payload.Length);
+        writer.Write(payload.ToArray());
     }
 }
