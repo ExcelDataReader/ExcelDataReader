@@ -33,6 +33,7 @@ jobs:
             src/**/packages.lock.json
             src/**/*.csproj
             Directory.Build.props
+            Directory.Packages.props
             ExcelDataReader.slnx
 
       - name: Restore
