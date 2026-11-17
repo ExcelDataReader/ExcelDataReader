@@ -24,17 +24,23 @@ If you are reporting an issue it is really useful if you can supply an example E
 
 \* See [Code page support](#code-page-support) for details.
 
-## Finding the binaries
-
-It is recommended to use NuGet through the VS Package Manager Console `Install-Package <package>` or using the VS "Manage NuGet Packages..." extension. 
+## Installation
 
 As of ExcelDataReader version 3.0, the project was split into multiple packages:
 
 Both packages support .NET Framework 4.6.2, .NET Standard 2.0 and 2.1, and .NET 10 or later.
 
-Install the `ExcelDataReader` base package to use the low-level reader interface.
+Install the `ExcelDataReader` base package to use the low-level reader interface:
 
-Install the `ExcelDataReader.DataSet` extension package to use the `AsDataSet()` method to populate a `System.Data.DataSet`. This also pulls in the base package.
+```sh
+dotnet add package ExcelDataReader
+```
+
+To use the `AsDataSet()` method to populate a `System.Data.DataSet`, install `ExcelDataReader.DataSet`. It also pulls in the base package:
+
+```sh
+dotnet add package ExcelDataReader.DataSet
+```
 
 ## How to use
 
