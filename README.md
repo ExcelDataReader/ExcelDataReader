@@ -471,14 +471,14 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
 
 ## Code page support
 
-The `FallbackEncoding` option is used only for BIFF2-5 XLS files without a `CodePage` record, and for CSV files without a BOM that are not valid UTF-8. It defaults to Windows-1252.
+ExcelDataReader resolves code pages declared in XLS files across BIFF versions, including BIFF8; if a declared code page cannot be resolved, reading throws. For BIFF2-5 files without a `CodePage` record, and for CSV files without a BOM that are not valid UTF-8, it uses `FallbackEncoding` instead; this option defaults to Windows-1252.
 
-On .NET 10 or later, when the library resolves a code page (for example, one declared in an XLS file or the default `FallbackEncoding`), the .NET 10 library target first calls `Encoding.GetEncoding`. If that lookup fails, it tries `CodePagesEncodingProvider` for the requested code page, so supported legacy encodings can be used without registering the provider globally. This fallback has a small exception-handling cost. Registering the provider during application initialization lets the first lookup succeed directly, avoiding that cost, but affects the entire application; the library does not register it globally.
+On .NET 10 or later, when resolving an XLS-declared code page or the default Windows-1252 `FallbackEncoding`, the .NET 10 library target first calls `Encoding.GetEncoding`. If that lookup fails, it tries `CodePagesEncodingProvider` for the requested code page, so supported legacy encodings can be used without registering the provider globally. This fallback has a small exception-handling cost. Registering the provider during application initialization lets the first lookup succeed directly, avoiding that cost, but affects the entire application; the library does not register it globally.
 
-The .NET Standard library targets do not perform this fallback. On .NET Core or .NET 5 or later, reference the `System.Text.Encoding.CodePages` package and register the provider during application initialization when your files need a legacy encoding:
+The .NET Standard targets do not include `CodePagesEncodingProvider`. When using one of these targets on a runtime that does not support a requested code page by default, the lookup throws unless your application references the `System.Text.Encoding.CodePages` package and registers the provider during initialization:
 
 ```c#
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 ```
 
-The full .NET Framework supports many legacy code pages without registration. An unsupported declared code page still causes an exception; registering the provider does not make every code page available.
+The full .NET Framework supports many legacy code pages without registration.
