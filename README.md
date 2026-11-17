@@ -471,9 +471,11 @@ var result = reader.AsDataSet(new ExcelDataSetConfiguration()
 
 ## Code page support
 
-On .NET 10 or later, the .NET 10 library target can use `CodePagesEncodingProvider` for supported legacy encodings without registering it globally. When a lookup needs an encoding supplied by this provider, the normal lookup fails first, so there is a small exception-handling performance cost. Registering the provider makes the normal lookup succeed directly and avoids that fallback cost, but affects the entire application; the library does not register it globally.
+The `FallbackEncoding` option is used only for BIFF2-5 XLS files without a `CodePage` record, and for CSV files without a BOM that are not valid UTF-8. It defaults to Windows-1252.
 
-When using the .NET Standard library targets on .NET Core or .NET 5 or later, many legacy encodings require a registered provider. This includes the default Windows-1252 fallback when reading BIFF2-5 XLS files or non-UTF-8 CSV files without a BOM. If needed, reference the `System.Text.Encoding.CodePages` package and register the provider during application initialization:
+On .NET 10 or later, when the library resolves a code page (for example, one declared in an XLS file or the default `FallbackEncoding`), the .NET 10 library target first calls `Encoding.GetEncoding`. If that lookup fails, it tries `CodePagesEncodingProvider` for the requested code page, so supported legacy encodings can be used without registering the provider globally. This fallback has a small exception-handling cost. Registering the provider during application initialization lets the first lookup succeed directly, avoiding that cost, but affects the entire application; the library does not register it globally.
+
+The .NET Standard library targets do not perform this fallback. On .NET Core or .NET 5 or later, reference the `System.Text.Encoding.CodePages` package and register the provider during application initialization when your files need a legacy encoding:
 
 ```c#
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
