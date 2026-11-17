@@ -26,7 +26,7 @@ If you are reporting an issue it is really useful if you can supply an example E
 
 ## Installation
 
-As of ExcelDataReader version 3.0, the project was split into multiple packages:
+ExcelDataReader 2.x was distributed as a single package. Starting with version 3.0, it is distributed in two packages:
 
 Both packages support .NET Framework 4.6.2, .NET Standard 2.0 and 2.1, and .NET 10 or later.
 
@@ -44,31 +44,29 @@ dotnet add package ExcelDataReader.DataSet
 
 ## How to use
 
+For low-level row-by-row reading, use `CreateReader()` to auto-detect the file format:
+
 ```c#
 using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
+using (var reader = ExcelReaderFactory.CreateReader(stream))
 {
-    // Auto-detect format, supports:
-    //  - Binary Excel files (2.0-2003 format; *.xls)
-    //  - Legacy Excel XML Spreadsheet files (2002-2003 format; *.xml)
-    //  - OpenXml Excel files (2007 format; *.xlsx, *.xlsb)
-    using (var reader = ExcelReaderFactory.CreateReader(stream))
+    do
     {
-        // Choose one of either 1 or 2:
-
-        // 1. Use the reader methods
-        do
+        while (reader.Read())
         {
-            while (reader.Read())
-            {
-                // reader.GetDouble(0);
-            }
-        } while (reader.NextResult());
+            // reader.GetDouble(0);
+        }
+    } while (reader.NextResult());
+}
+```
 
-        // 2. Use the AsDataSet extension method
-        var result = reader.AsDataSet();
+To populate a `DataSet` instead, use the `AsDataSet()` extension method from the `ExcelDataReader.DataSet` package:
 
-        // The result of each spreadsheet is in result.Tables
-    }
+```c#
+using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
+using (var reader = ExcelReaderFactory.CreateReader(stream))
+{
+    var result = reader.AsDataSet();
 }
 ```
 
