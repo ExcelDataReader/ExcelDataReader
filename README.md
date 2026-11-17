@@ -14,13 +14,15 @@ If you are reporting an issue it is really useful if you can supply an example E
 | --------- | ---------------- | ----------- | ---------------- |
 | .xlsx     | ZIP, CFB+ZIP     | OpenXml     | 2007 and newer |
 | .xlsb     | ZIP, CFB         | OpenXml     | 2007 and newer |
-| .xls      | CFB              | BIFF8       | 97, 2000, XP, 2003<br>98, 2001, v.X, 2004 (Mac) |
-| .xls      | CFB              | BIFF5       | 5.0, 95 |
-| .xls      | -                | BIFF4       | 4.0 |
-| .xls      | -                | BIFF3       | 3.0 |
-| .xls      | -                | BIFF2       | 2.0, 2.2 |
+| .xls      | CFB              | BIFF8 [*](#code-page-support) | 97, 2000, XP, 2003<br>98, 2001, v.X, 2004 (Mac) |
+| .xls      | CFB              | BIFF5 [*](#code-page-support) | 5.0, 95 |
+| .xls      | -                | BIFF4 [*](#code-page-support) | 4.0 |
+| .xls      | -                | BIFF3 [*](#code-page-support) | 3.0 |
+| .xls      | -                | BIFF2 [*](#code-page-support) | 2.0, 2.2 |
 | .xml      | -                | SpreadsheetML | 2002, 2003 (XML Spreadsheet) |
-| .csv      | -                | CSV         | (All) |
+| .csv      | -                | CSV [*](#code-page-support) | (All) |
+
+\* See [Code page support](#code-page-support) for details.
 
 ## Finding the binaries
 
