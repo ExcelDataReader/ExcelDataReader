@@ -235,7 +235,7 @@ internal abstract class ExcelDataReader<TWorkbook, TWorksheet> : IExcelDataReade
             _commentsLoaded = true;
         }
 
-        return _comments != null && _comments.TryGetValue(((long)(_nextRowIndex - 1) << 32) | (uint)i, out var comment) ? comment : null;
+        return _comments?.GetValueOrDefault(((long)(_nextRowIndex - 1) << 32) | (uint)i);
     }
 
     /// <inheritdoc />

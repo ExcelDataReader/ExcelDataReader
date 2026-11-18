@@ -231,8 +231,7 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
     {
         if (style.NumberFormatIndex != 0)
         {
-            NumberFormatString? fmt = null;
-            formats?.TryGetValue(style.NumberFormatIndex, out fmt);
+            NumberFormatString? fmt = formats?.GetValueOrDefault(style.NumberFormatIndex);
 #pragma warning disable CA1305
             fmt ??= BuiltinNumberFormat.GetBuiltinNumberFormat(style.NumberFormatIndex);
 #pragma warning restore CA1305

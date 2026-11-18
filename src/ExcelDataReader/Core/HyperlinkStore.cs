@@ -56,7 +56,7 @@ internal sealed class HyperlinkStore
         column = 0;
         row = 0;
         int position = 0;
-        while (position < reference.Length && (uint)((reference[position] | 0x20) - 'a') < 26)
+        while (position < reference.Length && char.IsAsciiLetter(reference[position]))
         {
             column = (column * 26) + (reference[position++] | 0x20) - 'a' + 1;
             if (column > 16384)
@@ -67,10 +67,10 @@ internal sealed class HyperlinkStore
             return false;
         for (; position < reference.Length; position++)
         {
-            int digit = reference[position] - '0';
-            if ((uint)digit > 9)
+            char character = reference[position];
+            if (!char.IsAsciiDigit(character))
                 return false;
-            row = (row * 10) + digit;
+            row = (row * 10) + character - '0';
             if (row > 1048576)
                 return false;
         }

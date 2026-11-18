@@ -26,8 +26,6 @@ internal static class ReferenceHelper
         return TryParseDecInt(value, position, out row);
     }
 
-    private static bool IsDigit(int ch) => ((uint)ch - '0') <= 9;
-
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
     private static bool TryParseColumn(ReadOnlySpan<char> value, out int column, out int position)
 #else
@@ -40,7 +38,7 @@ internal static class ReferenceHelper
         {
             var c = value[position];
             int letter = (c | 0x20) - 'a';
-            if ((uint)letter <= 'z' - 'a')
+            if (char.IsAsciiLetter(c))
             {
                 if (column > (int.MaxValue - letter - 1) / 26)
                 {
@@ -54,7 +52,7 @@ internal static class ReferenceHelper
                 continue;
             }
 
-            if (IsDigit(c))
+            if (char.IsAsciiDigit(c))
                 return position > 0;
 
             column = 0;
@@ -76,8 +74,8 @@ internal static class ReferenceHelper
         long r = 0;
         for (int i = startIndex; i < s.Length; i++)
         {
-            int num = s[i];
-            if (!IsDigit(num))
+            char num = s[i];
+            if (!char.IsAsciiDigit(num))
                 goto Fail;
             r = r * 10 + (num - '0');
             if (r > int.MaxValue)

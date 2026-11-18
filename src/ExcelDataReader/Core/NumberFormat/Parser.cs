@@ -209,7 +209,7 @@ internal static class Parser
 
     private static void ReadDigits(string source, ref int position, int end)
     {
-        while (position < end && source[position] is >= '0' and <= '9')
+        while (position < end && char.IsAsciiDigit(source[position]))
             position++;
     }
 }

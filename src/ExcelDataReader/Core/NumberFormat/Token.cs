@@ -36,7 +36,7 @@ internal readonly record struct Token(int Start, int Length)
     public bool IsDurationPart(string source) =>
         StartsWithIgnoreCase(source, "[h") || StartsWithIgnoreCase(source, "[m") || StartsWithIgnoreCase(source, "[s");
 
-    public bool IsDigit09(string source) => Length == 1 && source[Start] is >= '0' and <= '9';
+    public bool IsDigit09(string source) => Length == 1 && char.IsAsciiDigit(source[Start]);
 
     public bool IsDigit19(string source) => Length == 1 && source[Start] is >= '1' and <= '9';
 

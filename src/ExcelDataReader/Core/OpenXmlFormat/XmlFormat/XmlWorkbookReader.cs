@@ -62,7 +62,7 @@ internal sealed class XmlWorkbookReader(XmlReader reader, Dictionary<string, str
                             uint.TryParse(sheetId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedSheetId) ? parsedSheetId : 0,
                             rid,
                             reader.GetAttribute(AttributeVisibleState),
-                            rid != null && _worksheetsRels.TryGetValue(rid, out var path) ? path : null));
+                            rid != null ? _worksheetsRels.GetValueOrDefault(rid) : null));
                         reader.Skip();
                     }
                     else if (!XmlReaderHelper.SkipContent(reader))

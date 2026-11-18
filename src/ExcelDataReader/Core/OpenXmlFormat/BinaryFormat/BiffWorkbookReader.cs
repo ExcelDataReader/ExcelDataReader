@@ -54,6 +54,6 @@ internal sealed class BiffWorkbookReader(Stream stream, Dictionary<string, strin
         uint nameLength = GetDWord(buffer, offset);
         string name = GetString(buffer, offset + 4, nameLength);
 
-        return new SheetRecord(name, id, rid, state, rid != null && _worksheetRels.TryGetValue(rid, out var path) ? path : null);
+        return new SheetRecord(name, id, rid, state, rid != null ? _worksheetRels.GetValueOrDefault(rid) : null);
     }
 }

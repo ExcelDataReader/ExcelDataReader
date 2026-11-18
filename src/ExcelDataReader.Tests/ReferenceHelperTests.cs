@@ -16,6 +16,8 @@ public class ReferenceHelperTests
     [TestCase("FXSHRXX1", false, 0, 0)]
     [TestCase("MWLQKWV1", false, 0, 0)]
     [TestCase("A1!", false, 1, 0)]
+    [TestCase("!1", false, 0, 0)]
+    [TestCase("A!1", false, 0, 0)]
     [TestCase("A\u0661", false, 0, 0)]
     [TestCase("$A1", false, 0, 0)]
     [TestCase("A", false, 1, 0)]

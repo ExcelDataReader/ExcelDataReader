@@ -74,7 +74,7 @@ internal sealed class AgileEncryptedPackageStream : Stream
         if (offset < 0 || count < 0 || offset > buffer.Length - count)
             throw new ArgumentOutOfRangeException(nameof(offset));
         _ = Stream ?? throw new ObjectDisposedException(nameof(AgileEncryptedPackageStream));
-        count = (int)Math.Min(count, Math.Max(0, Length - Position));
+        count = (int)Math.Clamp(Length - Position, 0, count);
 
         int index = 0;
         while (index < count)
@@ -97,7 +97,7 @@ internal sealed class AgileEncryptedPackageStream : Stream
     public override int Read(Span<byte> buffer)
     {
         _ = Stream ?? throw new ObjectDisposedException(nameof(AgileEncryptedPackageStream));
-        int count = (int)Math.Min(buffer.Length, Math.Max(0, Length - Position));
+        int count = (int)Math.Clamp(Length - Position, 0, buffer.Length);
 
         int index = 0;
         while (index < count)

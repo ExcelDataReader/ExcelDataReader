@@ -134,10 +134,6 @@ internal sealed class Tokenizer(string fmt)
     private bool PeekOneOf(int offset, string s)
     {
         int c = Peek(offset);
-#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
         return c >= 0 && s.Contains((char)c);
-#else
-        return c >= 0 && s.IndexOf((char)c) >= 0;
-#endif
     }
 }

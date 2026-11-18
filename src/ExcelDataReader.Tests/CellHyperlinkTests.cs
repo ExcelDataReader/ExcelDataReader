@@ -400,6 +400,11 @@ public sealed class CellHyperlinkTests
     [TestCase("AAAAAAAAAAAA1")]
     [TestCase("A1:B2:C3")]
     [TestCase("B2:A1")]
+    [TestCase("!1")]
+    [TestCase("A!1")]
+    [TestCase("A1!")]
+    [TestCase("\u017F1")]
+    [TestCase("A\u0661")]
     public void InvalidRangeCannotBecomeA1(string reference)
     {
         Assert.Throws<ExcelReaderException>(() => HyperlinkStore.ParseRange(reference));

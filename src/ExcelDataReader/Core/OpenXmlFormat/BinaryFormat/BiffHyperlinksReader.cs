@@ -62,7 +62,7 @@ internal sealed class BiffHyperlinksReader(Stream stream, IReadOnlyDictionary<st
             return null;
         Require(characters <= 255);
         string value = ReadCharacters(buffer, length, ref offset, characters);
-        Require(value.IndexOf('\0') < 0);
+        Require(!value.Contains('\0'));
         return value;
     }
 

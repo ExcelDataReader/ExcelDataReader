@@ -49,7 +49,7 @@ internal static class XlsHyperlinksReader
         var result = new HyperlinkStore();
         foreach (var hyperlink in hyperlinks)
         {
-            tooltips.TryGetValue(hyperlink.Range, out string? tooltip);
+            string? tooltip = tooltips.GetValueOrDefault(hyperlink.Range);
             result.Add(
                 hyperlink.Range,
                 new CellHyperlink(hyperlink.Address, string.IsNullOrEmpty(tooltip) ? null : tooltip));
