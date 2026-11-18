@@ -35,6 +35,9 @@ internal sealed partial class MainWindow : Window
         {
             _selectedPath = files[0].Path.LocalPath;
             FilePathTextBox.Text = _selectedPath;
+            ClearPreview();
+            ProcessButton.IsEnabled = true;
+            StatusTextBlock.Text = "Ready to load.";
         }
     }
 
@@ -60,12 +63,7 @@ internal sealed partial class MainWindow : Window
 
         try
         {
-            SheetTableView.ItemsSource = null;
-            SheetTableView.Columns = new AvaloniaList<TableViewColumn>();
-            SheetComboBox.SelectedIndex = -1;
-            SheetComboBox.ItemsSource = null;
-            _dataSet?.Dispose();
-            _dataSet = null;
+            ClearPreview();
             StatusTextBlock.Text = "Loading...";
 
             var (dataSet, elapsed, openTiming) = await Task.Run(() =>
@@ -95,6 +93,7 @@ internal sealed partial class MainWindow : Window
             StatusTextBlock.Text = $"Elapsed: {elapsed} ms ({openTiming} ms to open)";
 
             SheetComboBox.ItemsSource = dataSet.Tables.Cast<DataTable>().ToList();
+            SheetComboBox.IsEnabled = dataSet.Tables.Count > 0;
             SheetComboBox.SelectedIndex = dataSet.Tables.Count > 0 ? 0 : -1;
         }
         catch (Exception ex)
@@ -106,6 +105,17 @@ internal sealed partial class MainWindow : Window
             _isProcessing = false;
             LoadControls.IsEnabled = true;
         }
+    }
+
+    private void ClearPreview()
+    {
+        SheetTableView.ItemsSource = null;
+        SheetTableView.Columns = new AvaloniaList<TableViewColumn>();
+        SheetComboBox.SelectedIndex = -1;
+        SheetComboBox.ItemsSource = null;
+        SheetComboBox.IsEnabled = false;
+        _dataSet?.Dispose();
+        _dataSet = null;
     }
 
     private void SheetSelectionChanged(object? sender, SelectionChangedEventArgs e)
