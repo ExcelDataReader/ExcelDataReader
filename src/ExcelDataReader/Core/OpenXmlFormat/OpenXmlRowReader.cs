@@ -238,7 +238,7 @@ internal sealed class OpenXmlRowReader(IWorksheetReader reader, double defaultRo
             owner._physicalRowIndex = index;
             owner._hidden = hidden;
             owner._height = height;
-            if (!owner._buffering && owner._rowOpen && owner._rowIndex == index)
+            if (owner is { _buffering: false, _rowOpen: true } && owner._rowIndex == index)
             {
                 return Handler.OnRow(index, hidden, height ?? owner._defaultRowHeight);
             }

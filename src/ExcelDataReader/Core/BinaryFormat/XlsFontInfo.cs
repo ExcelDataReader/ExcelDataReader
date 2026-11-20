@@ -4,7 +4,7 @@ namespace ExcelDataReader.Core.BinaryFormat;
 
 internal sealed class XlsFontInfo
 {
-    private ushort _codePage = 1252;
+    private readonly ushort _codePage = 1252;
     private Encoding? _byteStringEncoding;
 
     public XlsFontInfo(XlsBiffFrame frame, int biffVersion)

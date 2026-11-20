@@ -27,7 +27,7 @@ internal sealed class OpenXmlRowOrder
         long step = (long)index - _lastIndex;
         int ordinalStep = ordinal - _lastOrdinal;
         _descending |= step < 0;
-        if (step >= int.MinValue && step <= int.MaxValue &&
+        if (step is >= int.MinValue and <= int.MaxValue &&
             (_current.Count == 1 || (step == _current.Step && ordinalStep == _current.OrdinalStep)))
         {
             _current = _current with { Step = (int)step, OrdinalStep = ordinalStep, Count = _current.Count + 1 };

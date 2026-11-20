@@ -9,17 +9,17 @@ internal sealed class CsvWorkbook(Stream stream, Func<Encoding> fallbackEncoding
 
     public int ActiveSheet => 0;
 
-    public Stream Stream { get; } = stream;
+    private Stream Stream { get; } = stream;
 
-    public char? QuoteChar { get; } = quoteChar;
+    private char? QuoteChar { get; } = quoteChar;
 
-    public string[] AutodetectSeparators { get; } = autodetectSeparators;
+    private string[] AutodetectSeparators { get; } = autodetectSeparators;
 
-    public int AnalyzeInitialCsvRows { get; } = analyzeInitialCsvRows;
+    private int AnalyzeInitialCsvRows { get; } = analyzeInitialCsvRows;
 
-    public bool TrimWhiteSpace { get; } = trimWhiteSpace;
+    private bool TrimWhiteSpace { get; } = trimWhiteSpace;
 
-    public char? EscapeChar { get; } = escapeChar;
+    private char? EscapeChar { get; } = escapeChar;
 
     public IEnumerable<CsvWorksheet> ReadWorksheets()
     {

@@ -152,7 +152,7 @@ internal sealed class CompoundDocument
 
     private static void TrimSectorChain(List<uint> chain, FATMARKERS marker)
     {
-        while (chain.Count > 0 && chain[chain.Count - 1] == (uint)marker)
+        while (chain.Count > 0 && chain[^1] == (uint)marker)
         {
             chain.RemoveAt(chain.Count - 1);
         }

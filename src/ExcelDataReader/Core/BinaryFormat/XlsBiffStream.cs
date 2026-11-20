@@ -49,47 +49,23 @@ internal sealed class XlsBiffStream : IDisposable
         set => Seek(value, SeekOrigin.Begin);
     }
 
-    public Stream BaseStream { get; }
-
     public byte[]? SecretKey { get; private set; }
 
     public EncryptionInfo? Encryption { get; private set; }
 
-    public SymmetricAlgorithm? Cipher { get; private set; }
+    private Stream BaseStream { get; }
+
+    private SymmetricAlgorithm? Cipher { get; set; }
 
     /// <summary>
     /// Gets or sets the ICryptoTransform instance used to decrypt the current block.
     /// </summary>
-    public ICryptoTransform? CipherTransform { get; set; }
+    private ICryptoTransform? CipherTransform { get; set; }
 
     /// <summary>
     /// Gets or sets the current block number being decrypted with CipherTransform.
     /// </summary>
-    public int CipherBlock { get; set; }
-
-    /// <summary>
-    /// Sets stream pointer to the specified offset.
-    /// </summary>
-    /// <param name="offset">Offset value.</param>
-    /// <param name="origin">Offset origin.</param>
-    public void Seek(int offset, SeekOrigin origin)
-    {
-        // Discard buffered bytes: they belong to the old position.
-        _readAheadStart = 0;
-        _readAheadEnd = 0;
-        BaseStream.Seek(offset, origin);
-
-        if (Position < 0)
-            throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "{0} On offset={1}", Errors.ErrorBiffIlegalBefore, offset));
-        if (Position > Size)
-            throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "{0} On offset={1}", Errors.ErrorBiffIlegalAfter, offset));
-
-        if (SecretKey != null)
-        {
-            CreateBlockDecryptor(offset / 1024);
-            AlignBlockDecryptor(offset % 1024);
-        }
-    }
+    private int CipherBlock { get; set; }
 
     // All consumers must finish reading a frame before requesting the next one.
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -139,7 +115,31 @@ internal sealed class XlsBiffStream : IDisposable
         else
             CryptoHelpers.DecryptBytes(transform, input, inputOffset, count, output);
     }
+    
+    /// <summary>
+    /// Sets stream pointer to the specified offset.
+    /// </summary>
+    /// <param name="offset">Offset value.</param>
+    /// <param name="origin">Offset origin.</param>
+    private void Seek(int offset, SeekOrigin origin)
+    {
+        // Discard buffered bytes: they belong to the old position.
+        _readAheadStart = 0;
+        _readAheadEnd = 0;
+        BaseStream.Seek(offset, origin);
 
+        if (Position < 0)
+            throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "{0} On offset={1}", Errors.ErrorBiffIlegalBefore, offset));
+        if (Position > Size)
+            throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "{0} On offset={1}", Errors.ErrorBiffIlegalAfter, offset));
+
+        if (SecretKey != null)
+        {
+            CreateBlockDecryptor(offset / 1024);
+            AlignBlockDecryptor(offset % 1024);
+        }
+    }
+    
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     private void ReadFrameHeader(out int offset, out BIFFRECORDTYPE id, out ushort size)
     {

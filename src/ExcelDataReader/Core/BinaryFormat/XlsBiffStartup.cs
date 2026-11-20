@@ -31,7 +31,7 @@ internal static class XlsBiffStartup
         int version = 0;
         BIFFTYPE type = default;
         stream.ReadFrame(out var frame);
-        if (frame.IsValid && frame.Id is BIFFRECORDTYPE.BOF or BIFFRECORDTYPE.BOF_V2 or BIFFRECORDTYPE.BOF_V3 or BIFFRECORDTYPE.BOF_V4)
+        if (frame is { IsValid: true, Id: BIFFRECORDTYPE.BOF or BIFFRECORDTYPE.BOF_V2 or BIFFRECORDTYPE.BOF_V3 or BIFFRECORDTYPE.BOF_V4 })
         {
             version = explicitVersion == 0 ? GetVersion(frame) : explicitVersion;
             type = (BIFFTYPE)frame.ReadUInt16(2);
@@ -50,7 +50,7 @@ internal static class XlsBiffStartup
         if (!frame.IsValid || frame.Id != BIFFRECORDTYPE.FILEPASS)
             stream.ReadFrame(out frame);
 
-        if (frame.IsValid && frame.Id == BIFFRECORDTYPE.FILEPASS)
+        if (frame is { IsValid: true, Id: BIFFRECORDTYPE.FILEPASS })
         {
             encryption = ReadEncryption(frame, version);
             if (!encryption.TryVerifyPassword("VelvetSweatshop", out secretKey) &&

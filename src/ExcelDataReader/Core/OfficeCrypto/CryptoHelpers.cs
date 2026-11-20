@@ -131,15 +131,6 @@ internal static class CryptoHelpers
         _ => throw new InvalidOperationException("Unsupported encryption method: " + identifier.ToString()),
     };
 
-    public static SymmetricAlgorithm InitCipher(SymmetricAlgorithm cipher, int keySize, int blockSize, CipherMode mode)
-    {
-        cipher.KeySize = keySize;
-        cipher.BlockSize = blockSize;
-        cipher.Mode = mode;
-        cipher.Padding = PaddingMode.Zeros;
-        return cipher;
-    }
-
     public static byte[] DecryptBytes(SymmetricAlgorithm algo, byte[] bytes, byte[] key, byte[] iv)
     {
         using var decryptor = algo.CreateDecryptor(key, iv);
@@ -161,5 +152,14 @@ internal static class CryptoHelpers
         using MemoryStream msDecrypt = new(bytes, inputOffset, chunkSize);
         using CryptoStream csDecrypt = new(msDecrypt, transform, CryptoStreamMode.Read);
         csDecrypt.ReadAtLeast(output, 0, chunkSize, chunkSize, throwOnEndOfStream: false);
+    }
+    
+    private static SymmetricAlgorithm InitCipher(SymmetricAlgorithm cipher, int keySize, int blockSize, CipherMode mode)
+    {
+        cipher.KeySize = keySize;
+        cipher.BlockSize = blockSize;
+        cipher.Mode = mode;
+        cipher.Padding = PaddingMode.Zeros;
+        return cipher;
     }
 }

@@ -263,7 +263,7 @@ internal sealed class XlsWorksheetReader : IWorksheetReader
     {
         ref var row = ref _block[index - _blockStart];
         row.Present = true;
-        row.Height = (offset.RowHeight.HasValue && !offset.UseDefaultRowHeight
+        row.Height = (offset is { RowHeight: not null, UseDefaultRowHeight: false }
             ? offset.RowHeight.Value
             : _worksheet.DefaultRowHeight) / 20.0;
 

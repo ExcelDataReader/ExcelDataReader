@@ -67,23 +67,23 @@ internal readonly struct XlsCellStyle
         }
     }
 
-    public int Font { get; }
-
-    public int Format { get; }
-
-    public int ParentCellStyleXf { get; }
-
     public bool IsCellStyleXf { get; }
 
-    public bool IsLocked { get; }
+    private int Font { get; }
 
-    public bool IsHidden { get; }
+    private int Format { get; }
 
-    public int IndentLevel { get; }
+    private int ParentCellStyleXf { get; }
 
-    public HorizontalAlignment HorizontalAlignment { get; }
+    private bool IsLocked { get; }
 
-    public VerticalAlignment VerticalAlignment { get; }
+    private bool IsHidden { get; }
+
+    private int IndentLevel { get; }
+
+    private HorizontalAlignment HorizontalAlignment { get; }
+
+    private VerticalAlignment VerticalAlignment { get; }
 
     public void AddTo(IStylesPartSink sink)
     {

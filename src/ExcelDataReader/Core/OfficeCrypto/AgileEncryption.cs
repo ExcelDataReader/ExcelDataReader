@@ -29,41 +29,41 @@ internal sealed class AgileEncryption : EncryptionInfo
         ReadXmlEncryptionInfoStream(xmlReader);
     }
 
-    public CipherIdentifier CipherAlgorithm { get; set; }
-
-    public CipherMode CipherChaining { get; set; }
-
-    public HashIdentifier HashAlgorithm { get; set; }
-
-    public int KeyBits { get; set; }
-
-    public int BlockSize { get; set; }
-
     public int HashSize { get; set; }
 
-    public byte[] SaltValue { get; set; } = [];
-
-    public byte[] PasswordSaltValue { get; set; } = [];
-
-    public CipherIdentifier PasswordCipherAlgorithm { get; set; }
-
-    public CipherMode PasswordCipherChaining { get; set; }
-
-    public HashIdentifier PasswordHashAlgorithm { get; set; }
-
-    public byte[] PasswordEncryptedKeyValue { get; set; } = [];
-
-    public byte[] PasswordEncryptedVerifierHashInput { get; set; } = [];
-
-    public byte[] PasswordEncryptedVerifierHashValue { get; set; } = [];
-
-    public int PasswordSpinCount { get; set; }
-
-    public int PasswordKeyBits { get; set; }
-
-    public int PasswordBlockSize { get; set; }
-
     public override bool IsXor => false;
+    
+    public byte[] SaltValue { get; set; } = [];
+    
+    private CipherIdentifier CipherAlgorithm { get; set; }
+
+    private CipherMode CipherChaining { get; set; }
+
+    private HashIdentifier HashAlgorithm { get; set; }
+
+    private int KeyBits { get; set; }
+
+    private int BlockSize { get; set; }
+
+    private byte[] PasswordSaltValue { get; set; } = [];
+
+    private CipherIdentifier PasswordCipherAlgorithm { get; set; }
+
+    private CipherMode PasswordCipherChaining { get; set; }
+
+    private HashIdentifier PasswordHashAlgorithm { get; set; }
+
+    private byte[] PasswordEncryptedKeyValue { get; set; } = [];
+
+    private byte[] PasswordEncryptedVerifierHashInput { get; set; } = [];
+
+    private byte[] PasswordEncryptedVerifierHashValue { get; set; } = [];
+
+    private int PasswordSpinCount { get; set; }
+
+    private int PasswordKeyBits { get; set; }
+
+    private int PasswordBlockSize { get; set; }
 
     public override SymmetricAlgorithm CreateCipher()
     {

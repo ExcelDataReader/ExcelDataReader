@@ -7,11 +7,10 @@ namespace ExcelDataReader.Core.BinaryFormat;
 // CODEPAGE record supplies their encoding; no record header or borrowed data is retained.
 internal sealed class XlsStringData
 {
-    private readonly string? _value;
     private readonly byte[]? _characters;
     private readonly int _characterCount;
 
-    public XlsStringData(string value) => _value = value;
+    public XlsStringData(string value) => DecodedValue = value;
 
     private XlsStringData(byte[] characters, int characterCount)
     {
@@ -19,7 +18,7 @@ internal sealed class XlsStringData
         _characterCount = characterCount;
     }
 
-    public string? DecodedValue => _value;
+    public string? DecodedValue { get; }
 
     public static XlsStringData Read(XlsBiffFrame frame, int offset, bool shortCount, bool unicode)
     {
@@ -48,5 +47,5 @@ internal sealed class XlsStringData
     }
 
     public string GetValue(Encoding encoding) =>
-        _value ?? encoding.GetString(_characters!, 0, _characterCount * (Helpers.IsSingleByteEncoding(encoding) ? 1 : 2));
+        DecodedValue ?? encoding.GetString(_characters!, 0, _characterCount * (Helpers.IsSingleByteEncoding(encoding) ? 1 : 2));
 }

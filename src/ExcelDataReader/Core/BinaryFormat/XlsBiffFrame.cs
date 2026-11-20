@@ -61,12 +61,6 @@ internal readonly struct XlsBiffFrame(byte[] bytes)
         get => IsBiff2Cell ? (ushort)(ReadByteAt(9) & 0x3f) : (ushort)0;
     }
 
-    public bool IsBiff2Cell
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Id is BIFFRECORDTYPE.NUMBER_OLD or BIFFRECORDTYPE.INTEGER_OLD or BIFFRECORDTYPE.LABEL_V2 or BIFFRECORDTYPE.BLANK_OLD or BIFFRECORDTYPE.BOOLERR_OLD;
-    }
-
     public double NumberValue
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -91,6 +85,12 @@ internal readonly struct XlsBiffFrame(byte[] bytes)
         get => ReadUInt16At(RecordSize + 2);
     }
 
+    private bool IsBiff2Cell
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Id is BIFFRECORDTYPE.NUMBER_OLD or BIFFRECORDTYPE.INTEGER_OLD or BIFFRECORDTYPE.LABEL_V2 or BIFFRECORDTYPE.BLANK_OLD or BIFFRECORDTYPE.BOOLERR_OLD;
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte ReadByte(int offset) => ReadByteAt(4 + offset);
 
@@ -132,18 +132,6 @@ internal readonly struct XlsBiffFrame(byte[] bytes)
         return BitConverter.ToUInt16(bytes, offset);
     }
 
-    public uint ReadUInt32At(int offset)
-    {
-        EnsureRange(offset, sizeof(uint));
-        return BitConverter.ToUInt32(bytes, offset);
-    }
-
-    public double ReadDoubleAt(int offset)
-    {
-        EnsureRange(offset, sizeof(double));
-        return BitConverter.ToDouble(bytes, offset);
-    }
-
     public void EnsureRange(int offset, int count)
     {
         if (offset < 0 || count < 0)
@@ -172,5 +160,17 @@ internal readonly struct XlsBiffFrame(byte[] bytes)
             ? (int)rk >> 2
             : BitConverter.Int64BitsToDouble((long)(rk & 0xfffffffc) << 32);
         return (rk & 1) != 0 ? number / 100 : number;
+    }
+    
+    private uint ReadUInt32At(int offset)
+    {
+        EnsureRange(offset, sizeof(uint));
+        return BitConverter.ToUInt32(bytes, offset);
+    }
+
+    private double ReadDoubleAt(int offset)
+    {
+        EnsureRange(offset, sizeof(double));
+        return BitConverter.ToDouble(bytes, offset);
     }
 }

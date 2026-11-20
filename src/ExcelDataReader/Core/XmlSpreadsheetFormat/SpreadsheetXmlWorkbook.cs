@@ -43,7 +43,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
             {
                 if (reader.NodeType == XmlNodeType.Element)
                 {
-                    return reader.LocalName == "Workbook" && reader.NamespaceURI == SpreadsheetNamespace;
+                    return reader is { LocalName: "Workbook", NamespaceURI: SpreadsheetNamespace };
                 }
             }
 
@@ -97,13 +97,13 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
                 if (worksheetReader.NodeType != XmlNodeType.Element)
                     continue;
 
-                if (worksheetReader.LocalName == "WorksheetOptions" && worksheetReader.NamespaceURI == ExcelNamespace)
+                if (worksheetReader is { LocalName: "WorksheetOptions", NamespaceURI: ExcelNamespace })
                 {
                     (visibleState, codeName, headerFooter) = SpreadsheetXmlWorksheetReader.ParseWorksheetOptions(worksheetReader.ReadSubtree());
                     continue;
                 }
 
-                if (worksheetReader.LocalName == "Table" && worksheetReader.NamespaceURI == SpreadsheetNamespace)
+                if (worksheetReader is { LocalName: "Table", NamespaceURI: SpreadsheetNamespace })
                 {
                     expandedColumnCount = ParseInt(GetSpreadsheetAttribute(worksheetReader, "ExpandedColumnCount"));
                     SkipElement(worksheetReader);
@@ -204,7 +204,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
             if (reader.NodeType != XmlNodeType.Element)
                 continue;
 
-            if (reader.LocalName == "Workbook" && reader.NamespaceURI == SpreadsheetNamespace)
+            if (reader is { LocalName: "Workbook", NamespaceURI: SpreadsheetNamespace })
             {
                 ParseWorkbookElements(reader);
                 return;
@@ -221,8 +221,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
             if (workbookReader.NodeType != XmlNodeType.Element)
                 continue;
 
-            if (workbookReader.Depth == 1 && workbookReader.LocalName == "DocumentProperties" &&
-                workbookReader.NamespaceURI == "urn:schemas-microsoft-com:office:office")
+            if (workbookReader is { Depth: 1, LocalName: "DocumentProperties", NamespaceURI: "urn:schemas-microsoft-com:office:office" })
             {
                 var properties = new DocumentPropertiesBuilder();
                 using var subtree = workbookReader.ReadSubtree();
@@ -231,19 +230,19 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
                 continue;
             }
 
-            if (workbookReader.LocalName == "Styles" && workbookReader.NamespaceURI == SpreadsheetNamespace)
+            if (workbookReader is { LocalName: "Styles", NamespaceURI: SpreadsheetNamespace })
             {
                 ParseStyles(workbookReader.ReadSubtree(), _stylesById);
                 continue;
             }
 
-            if (workbookReader.LocalName == "ExcelWorkbook" && workbookReader.NamespaceURI == ExcelNamespace)
+            if (workbookReader is { LocalName: "ExcelWorkbook", NamespaceURI: ExcelNamespace })
             {
                 ParseActiveSheet(workbookReader.ReadSubtree());
                 continue;
             }
 
-            if (workbookReader.LocalName == "Worksheet" && workbookReader.NamespaceURI == SpreadsheetNamespace)
+            if (workbookReader is { LocalName: "Worksheet", NamespaceURI: SpreadsheetNamespace })
             {
                 _workbookSink.AddWorksheet(ParseWorksheetDescriptor(workbookReader.ReadSubtree(), workbookReader));
             }
@@ -276,9 +275,7 @@ internal sealed class SpreadsheetXmlWorkbook : CommonWorkbook, IWorkbook<Spreads
         {
             while (workbookOptionsReader.Read())
             {
-                if (workbookOptionsReader.NodeType == XmlNodeType.Element &&
-                    workbookOptionsReader.LocalName == "ActiveSheet" &&
-                    workbookOptionsReader.NamespaceURI == ExcelNamespace)
+                if (workbookOptionsReader is { NodeType: XmlNodeType.Element, LocalName: "ActiveSheet", NamespaceURI: ExcelNamespace })
                 {
                     var text = workbookOptionsReader.ReadElementContentAsString();
                     if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var activeSheet))

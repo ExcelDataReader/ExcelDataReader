@@ -26,7 +26,7 @@ internal static class XmlHyperlinksReader
             if (reader.NodeType != XmlNodeType.Element)
                 continue;
 
-            if (reader.Depth == 1 && reader.LocalName == "hyperlinks" && reader.NamespaceURI == ns)
+            if (reader is { Depth: 1, LocalName: "hyperlinks" } && reader.NamespaceURI == ns)
             {
                 inHyperlinks = !reader.IsEmptyElement;
                 hyperlinksDepth = reader.Depth;

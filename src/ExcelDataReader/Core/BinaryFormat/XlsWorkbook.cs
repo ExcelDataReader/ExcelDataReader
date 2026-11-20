@@ -58,8 +58,6 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXl
         }
     }
 
-    public Stream Stream { get; }
-
     public int BiffVersion { get; }
 
     public byte[]? SecretKey { get; }
@@ -76,13 +74,6 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXl
 
     public List<XlsFontInfo> Fonts { get; } = [];
 
-    public List<XlsSheetInfo> Sheets { get; } = [];
-
-    /// <summary>
-    /// Gets a value indicating whether a shared string table was found.
-    /// </summary>
-    public bool HasSharedStrings { get; private set; }
-
     /// <summary>
     /// Gets a value indicating whether the workbook uses the 1904 date system.
     /// </summary>
@@ -92,6 +83,12 @@ internal sealed class XlsWorkbook : CommonWorkbook, IWorkbook<XlsWorksheet>, IXl
 
     public int ActiveSheet { get; private set; }
 
+    private Stream Stream { get; }
+
+    private List<XlsSheetInfo> Sheets { get; } = [];
+
+    private bool HasSharedStrings { get; set; }
+    
     public static bool IsRawBiffStream(byte[] bytes)
     {
         if (bytes.Length < 8)

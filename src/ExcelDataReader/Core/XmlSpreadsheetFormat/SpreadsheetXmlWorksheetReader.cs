@@ -199,9 +199,7 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
         => value?.Replace("&V", "&L").Replace("&H", "&R").Replace("&S", "&P");
 
     private static bool IsCellElement(XmlReader reader)
-        => reader.NodeType == XmlNodeType.Element &&
-            reader.NamespaceURI == SpreadsheetNamespace &&
-            reader.LocalName == "Cell";
+        => reader is { NodeType: XmlNodeType.Element, NamespaceURI: SpreadsheetNamespace, LocalName: "Cell" };
 
     private static bool IsEndElementAt(XmlReader reader, int depth)
         => reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth;
@@ -217,8 +215,7 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
         {
             if (cellReader.NodeType == XmlNodeType.Element &&
                 cellReader.Depth == cellDepth + 1 &&
-                cellReader.NamespaceURI == SpreadsheetNamespace &&
-                cellReader.LocalName == "Data")
+                cellReader is { NamespaceURI: SpreadsheetNamespace, LocalName: "Data" })
             {
                 hasData = true;
             }
@@ -575,8 +572,7 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
     {
         if (_reader.NodeType == XmlNodeType.Element &&
             _reader.Depth == _worksheetDepth + 1 &&
-            _reader.LocalName == "WorksheetOptions" &&
-            _reader.NamespaceURI == ExcelNamespace)
+            _reader is { LocalName: "WorksheetOptions", NamespaceURI: ExcelNamespace })
         {
             var (_, codeName, headerFooter) = ParseWorksheetOptions(_reader.ReadSubtree());
             _pendingCodeName = codeName;
@@ -584,9 +580,8 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
             _optionCodeNamePending = true;
         }
         else if (_reader.NodeType == XmlNodeType.Element &&
-            _reader.Depth == _worksheetDepth + 1 &&
-            _reader.LocalName == "Table" &&
-            _reader.NamespaceURI == SpreadsheetNamespace)
+                 _reader.Depth == _worksheetDepth + 1 &&
+                 _reader is { LocalName: "Table", NamespaceURI: SpreadsheetNamespace })
         {
             _tableFound = !_reader.IsEmptyElement;
             _tableDepth = _reader.Depth;
@@ -643,9 +638,7 @@ internal sealed class SpreadsheetXmlWorksheetReader : IWorksheetReader
         int seenWorksheetIndex = -1;
         while (_reader.Read())
         {
-            if (_reader.NodeType == XmlNodeType.Element &&
-                _reader.LocalName == "Worksheet" &&
-                _reader.NamespaceURI == SpreadsheetNamespace)
+            if (_reader is { NodeType: XmlNodeType.Element, LocalName: "Worksheet", NamespaceURI: SpreadsheetNamespace })
             {
                 seenWorksheetIndex++;
                 if (seenWorksheetIndex == _worksheetIndex)

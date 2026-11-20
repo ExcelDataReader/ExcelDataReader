@@ -18,34 +18,13 @@ internal sealed class RC4Encryption : EncryptionInfo
         Array.Copy(bytes, 4 + 32, EncryptedVerifierHash, 0, 16);
     }
 
-    public byte[] Salt { get; }
-
-    public byte[] EncryptedVerifier { get; }
-
-    public byte[] EncryptedVerifierHash { get; }
-
     public override bool IsXor => false;
+    
+    private byte[] Salt { get; }
 
-    public static byte[] GenerateSecretKey(string password, byte[] salt)
-    {
-        if (password.Length > 16)
-            password = password.Substring(0, 16);
-        var h = CryptoHelpers.HashBytes(System.Text.Encoding.Unicode.GetBytes(password), HashIdentifier.MD5);
-        Array.Resize(ref h, 5);
+    private byte[] EncryptedVerifier { get; }
 
-        // 2.3.6.2: concatenate h and the salt 16 times, then hash and truncate to 5 bytes.
-        var combined = new byte[16 * (h.Length + salt.Length)];
-        for (var i = 0; i < 16; i++)
-        {
-            var offset = i * (h.Length + salt.Length);
-            Buffer.BlockCopy(h, 0, combined, offset, h.Length);
-            Buffer.BlockCopy(salt, 0, combined, offset + h.Length, salt.Length);
-        }
-
-        h = CryptoHelpers.HashBytes(combined, HashIdentifier.MD5);
-        Array.Resize(ref h, 5);
-        return h;
-    }
+    private byte[] EncryptedVerifierHash { get; }
 
     public override SymmetricAlgorithm CreateCipher()
     {
@@ -89,5 +68,26 @@ internal sealed class RC4Encryption : EncryptionInfo
 
         secretKey = candidateKey;
         return true;
+    }
+    
+    private static byte[] GenerateSecretKey(string password, byte[] salt)
+    {
+        if (password.Length > 16)
+            password = password.Substring(0, 16);
+        var h = CryptoHelpers.HashBytes(System.Text.Encoding.Unicode.GetBytes(password), HashIdentifier.MD5);
+        Array.Resize(ref h, 5);
+
+        // 2.3.6.2: concatenate h and the salt 16 times, then hash and truncate to 5 bytes.
+        var combined = new byte[16 * (h.Length + salt.Length)];
+        for (var i = 0; i < 16; i++)
+        {
+            var offset = i * (h.Length + salt.Length);
+            Buffer.BlockCopy(h, 0, combined, offset, h.Length);
+            Buffer.BlockCopy(salt, 0, combined, offset + h.Length, salt.Length);
+        }
+
+        h = CryptoHelpers.HashBytes(combined, HashIdentifier.MD5);
+        Array.Resize(ref h, 5);
+        return h;
     }
 }

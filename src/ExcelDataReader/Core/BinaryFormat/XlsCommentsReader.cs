@@ -70,7 +70,7 @@ internal static class XlsCommentsReader
         var text = new StringBuilder(remaining);
         while (remaining > 0)
         {
-            Require(stream.ReadFrame(out frame) && frame.Id == BIFFRECORDTYPE.CONTINUE && frame.RecordSize > 1);
+            Require(stream.ReadFrame(out frame) && frame is { Id: BIFFRECORDTYPE.CONTINUE, RecordSize: > 1 });
             bool wide = (frame.ReadByte(0) & 1) != 0;
             int bytes = frame.RecordSize - 1;
             Require(!wide || bytes % 2 == 0);
@@ -84,7 +84,7 @@ internal static class XlsCommentsReader
 
         while (runBytes > 0)
         {
-            Require(stream.ReadFrame(out frame) && frame.Id == BIFFRECORDTYPE.CONTINUE && frame.RecordSize > 0 && frame.RecordSize <= runBytes);
+            Require(stream.ReadFrame(out frame) && frame is { Id: BIFFRECORDTYPE.CONTINUE, RecordSize: > 0 } && frame.RecordSize <= runBytes);
             runBytes -= frame.RecordSize;
         }
 
@@ -114,7 +114,7 @@ internal static class XlsCommentsReader
             remaining -= length;
             if (remaining == 0)
                 break;
-            Require(stream.ReadFrame(out frame) && frame.Id == BIFFRECORDTYPE.NOTE && frame.RecordSize > 6 && frame.ReadUInt16(0) == ushort.MaxValue);
+            Require(stream.ReadFrame(out frame) && frame is { Id: BIFFRECORDTYPE.NOTE, RecordSize: > 6 } && frame.ReadUInt16(0) == ushort.MaxValue);
             length = frame.ReadUInt16(4);
             Require(length is > 0 and <= 2048 && length <= remaining);
         }

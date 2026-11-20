@@ -28,7 +28,7 @@ internal sealed class XmlSharedStringsReader(XmlReader reader, ISharedStringStor
 
         while (!Reader.EOF)
         {
-            if (Reader.NodeType == XmlNodeType.Element && Reader.LocalName == ElementStringItem)
+            if (Reader is { NodeType: XmlNodeType.Element, LocalName: ElementStringItem })
             {
                 Store.Add(Helpers.ConvertEscapeChars(StringHelper.ReadStringItem(Reader, NsSpreadsheetMl)));
             }

@@ -43,10 +43,6 @@ internal sealed class CompoundStream : Stream
         ReadSector();
     }
 
-    public List<uint> SectorChain { get; }
-
-    public List<uint>? RootSectorChain { get; }
-
     public override bool CanRead => true;
 
     public override bool CanSeek => false;
@@ -71,6 +67,10 @@ internal sealed class CompoundStream : Stream
 
     private int SectorOffset { get; set; }
 
+    private List<uint> SectorChain { get; }
+
+    private List<uint>? RootSectorChain { get; }
+    
     public override void Flush()
     {
     }

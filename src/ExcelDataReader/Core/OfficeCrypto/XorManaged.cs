@@ -40,10 +40,6 @@ internal sealed class XorManaged : SymmetricAlgorithm
         0x1021, 0x2042, 0x4084, 0x8108, 0x1231, 0x2462, 0x48C4
     ];
 
-    public XorManaged()
-    {
-    }
-
     public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV)
     {
         return new XorTransform(rgbKey, 0);
@@ -81,7 +77,28 @@ internal sealed class XorManaged : SymmetricAlgorithm
         return (ushort)(verifier ^ 0xCE4B);
     }
 
-    internal static ushort CreateXorKey_Method1(byte[] passwordBytes)
+    /// <summary>
+    /// Generates a 16 byte obfuscation array based on the POI/LibreOffice implementations.
+    /// </summary>
+    internal static byte[] CreateXorArray_Method1(byte[] passwordBytes)
+    {
+        var obfuscationArray = new byte[16];
+        Array.Copy(passwordBytes, 0, obfuscationArray, 0, passwordBytes.Length);
+        Array.Copy(PadArray, 0, obfuscationArray, passwordBytes.Length, PadArray.Length - passwordBytes.Length + 1);
+
+        var xorKey = CreateXorKey_Method1(passwordBytes);
+        byte[] baseKeyLE = [(byte)(xorKey & 0xFF), (byte)((xorKey >> 8) & 0xFF)];
+        const int nRotateSize = 2;
+        for (int i = 0; i < obfuscationArray.Length; i++)
+        {
+            obfuscationArray[i] ^= baseKeyLE[i & 1];
+            obfuscationArray[i] = RotateLeft(obfuscationArray[i], nRotateSize);
+        }
+
+        return obfuscationArray;
+    }
+
+    private static ushort CreateXorKey_Method1(byte[] passwordBytes)
     {
         ushort xorKey = InitialCode[passwordBytes.Length - 1];
         var currentElement = 0x68;
@@ -103,28 +120,7 @@ internal sealed class XorManaged : SymmetricAlgorithm
 
         return xorKey;
     }
-
-    /// <summary>
-    /// Generates a 16 byte obfuscation array based on the POI/LibreOffice implementations.
-    /// </summary>
-    internal static byte[] CreateXorArray_Method1(byte[] passwordBytes)
-    {
-        var obfuscationArray = new byte[16];
-        Array.Copy(passwordBytes, 0, obfuscationArray, 0, passwordBytes.Length);
-        Array.Copy(PadArray, 0, obfuscationArray, passwordBytes.Length, PadArray.Length - passwordBytes.Length + 1);
-
-        var xorKey = CreateXorKey_Method1(passwordBytes);
-        byte[] baseKeyLE = [(byte)(xorKey & 0xFF), (byte)((xorKey >> 8) & 0xFF)];
-        int nRotateSize = 2;
-        for (int i = 0; i < obfuscationArray.Length; i++)
-        {
-            obfuscationArray[i] ^= baseKeyLE[i & 1];
-            obfuscationArray[i] = RotateLeft(obfuscationArray[i], nRotateSize);
-        }
-
-        return obfuscationArray;
-    }
-
+    
     private static byte RotateLeft(byte b, int shift)
     {
         return (byte)(((b << shift) | (b >> (8 - shift))) & 0xFF);

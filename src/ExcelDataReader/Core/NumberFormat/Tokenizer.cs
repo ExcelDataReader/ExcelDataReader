@@ -4,20 +4,18 @@ namespace ExcelDataReader.Core.NumberFormat;
 
 internal sealed class Tokenizer(string fmt)
 {
-    private readonly string _formatString = fmt;
-
     public int Position { get; private set; }
 
-    public int Length => _formatString.Length;
+    public int Length => Source.Length;
 
-    public string Source => _formatString;
+    public string Source { get; } = fmt;
 
     public double ParseDouble(int startIndex, int length)
     {
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-        return double.Parse(_formatString.AsSpan(startIndex, length), NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
+        return double.Parse(Source.AsSpan(startIndex, length), NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
 #else
-        return double.Parse(_formatString.Substring(startIndex, length), CultureInfo.InvariantCulture);
+        return double.Parse(Source.Substring(startIndex, length), CultureInfo.InvariantCulture);
 #endif
     }
 
@@ -28,9 +26,9 @@ internal sealed class Tokenizer(string fmt)
         if (length == count)
         {
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
-            return int.Parse(_formatString.AsSpan(start, length), NumberStyles.Integer, CultureInfo.InvariantCulture);
+            return int.Parse(Source.AsSpan(start, length), NumberStyles.Integer, CultureInfo.InvariantCulture);
 #else
-            return int.Parse(_formatString.Substring(start, length), CultureInfo.InvariantCulture);
+            return int.Parse(Source.Substring(start, length), CultureInfo.InvariantCulture);
 #endif
         }
 
@@ -40,26 +38,26 @@ internal sealed class Tokenizer(string fmt)
 #if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
         Span<char> digits = stackalloc char[10];
         for (int i = 0; i < count; i++)
-            digits[i] = _formatString[tokens[first + i].Start];
+            digits[i] = Source[tokens[first + i].Start];
         return int.Parse(digits[..count], NumberStyles.Integer, CultureInfo.InvariantCulture);
 #else
         var digits = new char[count];
         for (int i = 0; i < count; i++)
-            digits[i] = _formatString[tokens[first + i].Start];
+            digits[i] = Source[tokens[first + i].Start];
         return int.Parse(new string(digits), CultureInfo.InvariantCulture);
 #endif
     }
 
     public int Peek(int offset = 0)
     {
-        if (Position + offset >= _formatString.Length)
+        if (Position + offset >= Source.Length)
             return -1;
-        return _formatString[Position + offset];
+        return Source[Position + offset];
     }
 
     public void Advance(int characters = 1)
     {
-        Position = Math.Min(Position + characters, _formatString.Length);
+        Position = Math.Min(Position + characters, Source.Length);
     }
 
     public bool ReadOneOrMore(int c)
@@ -86,7 +84,7 @@ internal sealed class Tokenizer(string fmt)
 
     public bool ReadString(string s, bool ignoreCase = false)
     {
-        if (Position + s.Length > _formatString.Length)
+        if (Position + s.Length > Source.Length)
             return false;
 
         for (var i = 0; i < s.Length; i++)
@@ -127,7 +125,7 @@ internal sealed class Tokenizer(string fmt)
     private int PeekUntil(int startOffset, char until)
     {
         int start = Position + startOffset;
-        int end = _formatString.IndexOf(until, start);
+        int end = Source.IndexOf(until, start);
         return end < 0 ? 0 : end - start + 1;
     }
 

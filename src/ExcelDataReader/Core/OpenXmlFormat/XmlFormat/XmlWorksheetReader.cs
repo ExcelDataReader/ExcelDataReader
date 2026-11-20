@@ -94,14 +94,14 @@ internal sealed class XmlWorksheetReader(XmlReader reader, WorksheetReadMode mod
                     {
                         while (!_reader.EOF)
                         {
-                            if (_reader.NodeType == XmlNodeType.Element && _reader.LocalName == NC)
+                            if (_reader is { NodeType: XmlNodeType.Element, LocalName: NC })
                             {
                                 var control = ConsumeCell(_nextColumnIndex, out int columnIndex, ref handler);
                                 _nextColumnIndex = columnIndex + 1;
                                 if (control == WorksheetReadControl.Pause)
                                     return WorksheetReadStatus.Paused;
                             }
-                            else if (_reader.NodeType == XmlNodeType.EndElement && _reader.LocalName == NRow)
+                            else if (_reader is { NodeType: XmlNodeType.EndElement, LocalName: NRow })
                             {
                                 break;
                             }
@@ -125,7 +125,7 @@ internal sealed class XmlWorksheetReader(XmlReader reader, WorksheetReadMode mod
 
                     while (!_reader.EOF)
                     {
-                        if (_reader.NodeType == XmlNodeType.Element && _reader.LocalName == NRow)
+                        if (_reader is { NodeType: XmlNodeType.Element, LocalName: NRow })
                         {
                             if (int.TryParse(_reader.GetAttribute(AR), out int arValue))
                                 _rowIndex = arValue - 1;
@@ -397,13 +397,13 @@ internal sealed class XmlWorksheetReader(XmlReader reader, WorksheetReadMode mod
         CellError? error = null;
         while (!_reader.EOF)
         {
-            if (_reader.NodeType == XmlNodeType.Element && _reader.LocalName == NV)
+            if (_reader is { NodeType: XmlNodeType.Element, LocalName: NV })
             {
                 string rawValue = _reader.ReadElementContentAsString();
                 if (!string.IsNullOrEmpty(rawValue))
                     value = ConvertCellValue(rawValue, cellType, out error);
             }
-            else if (_reader.NodeType == XmlNodeType.Element && _reader.LocalName == NIs)
+            else if (_reader is { NodeType: XmlNodeType.Element, LocalName: NIs })
             {
                 string rawValue = StringHelper.ReadStringItem(_reader, _nsSpreadsheetMl);
                 if (!string.IsNullOrEmpty(rawValue))
