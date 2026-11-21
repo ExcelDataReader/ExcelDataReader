@@ -45,7 +45,8 @@ internal static class Parser
             }
             else if (source[token.Start] == '[')
             {
-                condition ??= ValidateCondition(reader, token.Start, token.Length);
+                var parsedCondition = ValidateCondition(reader, token.Start, token.Length);
+                condition ??= parsedCondition;
             }
             else
             {
