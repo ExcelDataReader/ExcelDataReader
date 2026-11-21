@@ -2,7 +2,12 @@ namespace ExcelDataReader.Core.NumberFormat;
 
 internal static class Parser
 {
-    public static SectionType? ParseSection(Tokenizer reader, List<Token> tokens, out bool syntaxError)
+    public static SectionType? ParseSection(
+        Tokenizer reader,
+        List<Token> tokens,
+        out bool syntaxError,
+        out bool moreSections,
+        out NumberFormatCondition? condition)
     {
         bool hasDateParts = false;
         bool hasDurationParts = false;
@@ -12,10 +17,15 @@ internal static class Parser
         string source = reader.Source;
 
         syntaxError = false;
+        moreSections = false;
+        condition = null;
         while (ReadToken(reader, out var token))
         {
             if (token.IsCharacter(source, ';'))
+            {
+                moreSections = true;
                 break;
+            }
 
             if (token.IsDatePart(source))
             {
@@ -35,7 +45,7 @@ internal static class Parser
             }
             else if (source[token.Start] == '[')
             {
-                ValidateCondition(reader, token.Start, token.Length);
+                condition ??= ValidateCondition(reader, token.Start, token.Length);
             }
             else
             {
@@ -170,7 +180,7 @@ internal static class Parser
         return reader.ReadEnclosed('"', '"');
     }
 
-    private static void ValidateCondition(Tokenizer reader, int startIndex, int length)
+    private static NumberFormatCondition? ValidateCondition(Tokenizer reader, int startIndex, int length)
     {
         // An unmatched '[' was previously passed to Substring with a negative length.
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 2);
@@ -179,11 +189,27 @@ internal static class Parser
         int position = startIndex + 1;
         int end = startIndex + length - 1;
         if (position == end || source[position] is not ('<' or '>' or '='))
-            return;
+            return null;
 
         char first = source[position++];
+        ConditionOperator op = first switch
+        {
+            '<' => ConditionOperator.LessThan,
+            '>' => ConditionOperator.GreaterThan,
+            '=' => ConditionOperator.Equal,
+            _ => throw new InvalidOperationException(),
+        };
         if (position < end && ((first is '<' or '>' && source[position] == '=') || (first == '<' && source[position] == '>')))
+        {
+            op = (first, source[position]) switch
+            {
+                ('<', '=') => ConditionOperator.LessThanOrEqual,
+                ('>', '=') => ConditionOperator.GreaterThanOrEqual,
+                ('<', '>') => ConditionOperator.NotEqual,
+                _ => op,
+            };
             position++;
+        }
 
         int start = position;
         if (position < end && source[position] == '-')
@@ -201,10 +227,13 @@ internal static class Parser
             int exponentStart = position;
             ReadDigits(source, ref position, end);
             if (position == exponentStart)
-                return;
+                return null;
         }
 
-        reader.ParseDouble(start, position - start);
+        double value = start == end && op == ConditionOperator.GreaterThanOrEqual
+            ? 0
+            : reader.ParseDouble(start, position - start);
+        return new NumberFormatCondition(op, value);
     }
 
     private static void ReadDigits(string source, ref int position, int end)

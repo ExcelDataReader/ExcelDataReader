@@ -113,6 +113,12 @@ internal class CommonWorkbook
         }
     }
 
+    private static bool IsRepresentableDuration(double value) =>
+        !double.IsNaN(value) &&
+        !double.IsInfinity(value) &&
+        value <= TimeSpan.MaxValue.TotalDays &&
+        value >= TimeSpan.MinValue.TotalDays;
+
     private object ConvertFormattedString(string value, int numberFormatIndex, bool date1904)
     {
         var format = GetNumberFormatString(numberFormatIndex, null);
@@ -135,27 +141,23 @@ internal class CommonWorkbook
     private object ConvertNumericValueCore(object value, int numberFormatIndex, bool date1904)
     {
         var format = GetNumberFormatString(numberFormatIndex, null);
-        if (format != null)
-        {
-            if (format.IsDateTimeFormat)
-            {
-                return value switch
-                {
-                    int integer => Helpers.ConvertFromOATime(integer, date1904),
-                    double number => Helpers.ConvertFromOATime(number, date1904),
-                    _ => value,
-                };
-            }
+        if (format == null || value is not (double or int))
+            return value;
 
-            if (format.IsTimeSpanFormat)
-            {
-                return value switch
-                {
-                    int integer => DateTimeHelper.DurationFromDays(integer),
-                    double number => DateTimeHelper.DurationFromDays(number),
-                    _ => value,
-                };
-            }
+        double numericValue = value is int intValue ? intValue : (double)value;
+        var section = format.GetSection(numericValue);
+        if (section?.Type == SectionType.Date)
+        {
+            return value is int integer
+                ? Helpers.ConvertFromOATime(integer, date1904)
+                : Helpers.ConvertFromOATime(numericValue, date1904);
+        }
+
+        if (section?.Type == SectionType.Duration && IsRepresentableDuration(numericValue))
+        {
+            return value is int integer
+                ? DateTimeHelper.DurationFromDays(integer)
+                : DateTimeHelper.DurationFromDays(numericValue);
         }
 
         return value;

@@ -769,7 +769,7 @@ public abstract class ExcelTestBase
         using var reader = OpenReader("Issue283_TimeSpan");
         reader.Read();
         Assert.That(new TimeSpan(0), Is.EqualTo((TimeSpan)reader[0]));
-        Assert.That(new DateTime(1899, 12, 31), Is.EqualTo((DateTime)reader[2])); // Excel says 1/0/1900, not valid in .NET
+        Assert.That(new DateTime(1899, 12, 31), Is.EqualTo((DateTime)reader[2]));
 
         reader.Read();
         Assert.That(new TimeSpan(1, 0, 0, 0, 0), Is.EqualTo((TimeSpan)reader[0]));
@@ -787,7 +787,7 @@ public abstract class ExcelTestBase
 
         reader.Read();
         Assert.That(new TimeSpan(0, 1440, 0, 0, 0), Is.EqualTo((TimeSpan)reader[0]));
-        Assert.That(new DateTime(1900, 2, 28), Is.EqualTo((DateTime)reader[2])); // Excel says 2/29/1900, not valid in .NET
+        Assert.That(new DateTime(1900, 2, 28), Is.EqualTo((DateTime)reader[2]));
 
         reader.Read();
         Assert.That(new TimeSpan(0, 1464, 0, 0, 0), Is.EqualTo((TimeSpan)reader[0]));

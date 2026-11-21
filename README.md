@@ -357,7 +357,7 @@ An XLS file declaring an unsupported code page now throws instead of retaining t
 
 ### Date and duration precision
 
-Numeric date and duration values are converted to `DateTime` or `TimeSpan` at tick precision rather than being rounded to milliseconds. Results can differ from 3.x and between values that Excel displays identically.
+Numeric date and duration values are converted to `DateTime` or `TimeSpan` at tick precision rather than being rounded to milliseconds. Excel can display distinct underlying serial values identically, while ExcelDataReader retains their tick-level differences. For multi-section number formats, the selected section now determines whether a value is converted, so `GetValue()` and `AsDataSet()` column types can differ according to the cell value and format conditions. Durations that cannot be represented as a `TimeSpan` remain numeric instead of throwing.
 
 ### Logging API removed
 

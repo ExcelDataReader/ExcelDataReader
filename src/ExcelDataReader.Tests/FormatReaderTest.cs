@@ -123,11 +123,19 @@ public class FormatReaderTest
         Assert.That(format.IsTimeSpanFormat, Is.EqualTo(duration));
     }
 
-    [TestCase("[>=]0")]
     [TestCase("[<.]0")]
     public void EmptyConditionValue_PreservesFormatException(string text)
     {
         Assert.Throws<FormatException>(() => new NumberFormatString(text));
+    }
+
+    [Test]
+    public void EmptyConditionValueIsNormalizedToZero()
+    {
+        var format = new NumberFormatString("[>=]yyyy;0");
+        Assert.That(format.IsValid, Is.True);
+        Assert.That(format.GetSection(0)?.Type, Is.EqualTo(SectionType.Date));
+        Assert.That(format.GetSection(-1)?.Type, Is.EqualTo(SectionType.Number));
     }
 
     [TestCase("[")]
