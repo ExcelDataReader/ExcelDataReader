@@ -248,7 +248,12 @@ public abstract class ExcelOpenXmlReaderBase : ExcelTestBase
                 {
                     for (int column = 0; column < 3; column++)
                     {
-                        Assert.That(actualReader.GetValue(column), Is.EqualTo(expectedReader.GetValue(column)));
+                        object actualValue = actualReader.GetValue(column);
+                        object expectedValue = expectedReader.GetValue(column);
+                        Assert.That(
+                            actualValue,
+                            Is.EqualTo(expectedValue),
+                            $"Row {rows}, column {column}; actual format '{actualReader.GetNumberFormatString(column)}', expected format '{expectedReader.GetNumberFormatString(column)}'");
                         Assert.That(actualReader.GetFieldType(column), Is.EqualTo(expectedReader.GetFieldType(column)));
                         Assert.That(actualReader.GetCellError(column), Is.EqualTo(expectedReader.GetCellError(column)));
                     }

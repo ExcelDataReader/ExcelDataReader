@@ -12,6 +12,9 @@ public partial class ExcelSpreadsheetXmlReaderTest : ExcelTestBase
 
     protected override bool SupportsCodeName => false;
 
+    // The SpreadsheetML fixture stores these cells as DateTime values, not numeric serials.
+    protected override bool SupportsIssue791NumericSerialCases => false;
+
     [TestCase(false)]
     [TestCase(true)]
     public void StyledValuesPreserveDateEpochsAndParsingFallbacks(bool singlePass)
@@ -71,6 +74,23 @@ public partial class ExcelSpreadsheetXmlReaderTest : ExcelTestBase
             Assert.That(reader.Read(), Is.False);
             reader.Reset();
         }
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void Issue791_ExplicitDateTimeCellsKeepTheirType(bool singlePass)
+    {
+        using var reader = OpenReader(
+            OpenFixtureStream("Issue791"),
+            new ExcelReaderConfiguration { SinglePassMode = singlePass });
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetValue(1), Is.EqualTo(new DateTime(1900, 1, 2)));
+        Assert.That(reader.GetFieldType(1), Is.EqualTo(typeof(DateTime)));
+
+        Assert.That(reader.Read(), Is.True);
+        Assert.That(reader.GetValue(1), Is.EqualTo(new DateTime(1899, 12, 29)));
+        Assert.That(reader.GetFieldType(1), Is.EqualTo(typeof(DateTime)));
     }
 
     [TestCase("ShEeThIdDeN", "hidden")]
@@ -378,6 +398,7 @@ public partial class ExcelSpreadsheetXmlReaderTest : ExcelTestBase
     {
         "10x10" => true,
         "CellComments" => true,
+        "Issue791" => true,
         "Issue578" => true,
         "Issue486" => true,
         "Issue518" => true,

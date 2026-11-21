@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>Johan Appelgren</Author>
+  <LastAuthor>Johan Appelgren</LastAuthor>
+  <Created>2026-11-21T19:52:11Z</Created>
+  <LastSaved>2026-11-21T21:15:04Z</LastSaved>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>13650</WindowHeight>
+  <WindowWidth>27555</WindowWidth>
+  <WindowTopX>10020</WindowTopX>
+  <WindowTopY>1650</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Aptos Narrow" x:Family="Swiss" ss:Size="11"
+    ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s16">
+   <NumberFormat ss:Format="yyyy/mm/dd;0\.00;0\.00"/>
+  </Style>
+  <Style ss:ID="s17">
+   <NumberFormat ss:Format="[&gt;=1]yyyy/mm/dd;0\.00"/>
+  </Style>
+  <Style ss:ID="s18">
+   <NumberFormat ss:Format="[&gt;1]yyyy/mm/dd;[&lt;0]0.00;yyyy/mm/dd"/>
+  </Style>
+  <Style ss:ID="s19">
+   <NumberFormat ss:Format="[&gt;1]yyyy/mm/dd;[&lt;0]0\.00;[h]:mm"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Blad1">
+  <Table ss:ExpandedColumnCount="4" ss:ExpandedRowCount="4" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultRowHeight="15">
+   <Column ss:AutoFitWidth="0" ss:Width="104.25"/>
+   <Column ss:StyleID="s18" ss:Width="54.75"/>
+   <Column ss:AutoFitWidth="0" ss:Width="75.75"/>
+   <Column ss:StyleID="s19" ss:Width="54.75"/>
+   <Row>
+    <Cell ss:StyleID="s16"><Data ss:Type="DateTime">1900-01-02T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="DateTime">1900-01-02T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s17"><Data ss:Type="DateTime">1899-12-31T12:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="DateTime">1900-01-02T00:00:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s16"><Data ss:Type="DateTime">1899-12-30T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="DateTime">1899-12-29T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s17"><Data ss:Type="DateTime">1900-01-01T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="DateTime">1899-12-29T00:00:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s16"><Data ss:Type="DateTime">1899-12-31T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="DateTime">1899-12-31T12:00:00.000</Data></Cell>
+    <Cell ss:Index="4"><Data ss:Type="DateTime">1899-12-31T12:00:00.000</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2"><Data ss:Type="DateTime">1900-01-01T00:00:00.000</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.3"/>
+    <Footer x:Margin="0.3"/>
+    <PageMargins x:Bottom="0.75" x:Left="0.7" x:Right="0.7" x:Top="0.75"/>
+   </PageSetup>
+   <Selected/>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>3</ActiveRow>
+     <ActiveCol>3</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>

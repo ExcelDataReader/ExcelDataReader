@@ -7,7 +7,8 @@ namespace ExcelDataReader.Tests;
 
 public class FormatReaderCharacterizationTest
 {
-    // Frozen outcomes from 5f675d4: edge cases, section combinations, and seed-765 generated formats.
+    // Frozen outcomes from 5f675d4, updated for [>=] normalization.
+    // Includes edge cases, section combinations, and seed-765 generated formats.
     private const string SnapshotName =
 #if NETFRAMEWORK
         "NumberFormatClassification.net462.txt.gz";

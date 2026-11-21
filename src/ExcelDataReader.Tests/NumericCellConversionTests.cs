@@ -101,9 +101,10 @@ public class NumericCellConversionTests
         var workbook = new CommonWorkbook();
         Assert.That(workbook.ConvertNumericValue(TimeSpan.MaxValue.TotalDays, 46, false), Is.EqualTo(TimeSpan.FromTicks(9223372036854775429L)));
         Assert.That(workbook.ConvertNumericValue(TimeSpan.MinValue.TotalDays, 46, false), Is.EqualTo(TimeSpan.FromTicks(-9223372036854775429L)));
-        Assert.Throws<OverflowException>(() => workbook.ConvertNumericValue(double.PositiveInfinity, 46, false));
-        Assert.Throws<OverflowException>(() => workbook.ConvertNumericValue(double.NegativeInfinity, 46, false));
-        Assert.Throws<ArgumentException>(() => workbook.ConvertNumericValue(double.NaN, 46, false));
+        Assert.That(workbook.ConvertNumericValue(double.PositiveInfinity, 46, false), Is.EqualTo(double.PositiveInfinity));
+        Assert.That(workbook.ConvertNumericValue(double.NegativeInfinity, 46, false), Is.EqualTo(double.NegativeInfinity));
+        Assert.That(double.IsNaN((double)workbook.ConvertNumericValue(double.NaN, 46, false)), Is.True);
+        Assert.That(workbook.ConvertNumericValue(int.MaxValue, 46, false), Is.EqualTo(int.MaxValue));
     }
 
     [TestCase(false)]
@@ -146,8 +147,8 @@ public class NumericCellConversionTests
         workbook.AddNumberFormat(164, "yyyy;[h]:mm");
         Assert.That(workbook.ConvertNumericValue(2, 14, date1904), Is.EqualTo(TimeSpan.FromDays(2)));
         Assert.That(workbook.ConvertNumericValue(-0.5, 14, date1904), Is.EqualTo(TimeSpan.FromHours(-12)));
-        Assert.Throws<OverflowException>(() => workbook.ConvertNumericValue(double.MaxValue, 14, date1904));
-        Assert.Throws<OverflowException>(() => workbook.ConvertNumericValue(int.MaxValue, 14, date1904));
+        Assert.That(workbook.ConvertNumericValue(double.MaxValue, 14, date1904), Is.EqualTo(double.MaxValue));
+        Assert.That(workbook.ConvertNumericValue(int.MaxValue, 14, date1904), Is.EqualTo(int.MaxValue));
         Assert.That(
             workbook.ConvertNumericValue(2, 164, date1904),
             Is.EqualTo(date1904 ? new DateTime(1904, 1, 3) : new DateTime(1900, 1, 2)));
@@ -156,6 +157,51 @@ public class NumericCellConversionTests
         numericWorkbook.AddNumberFormat(14, "0.00");
         Assert.That(numericWorkbook.ConvertNumericValue(2, 14, date1904), Is.TypeOf<int>().And.EqualTo(2));
         Assert.That(numericWorkbook.ConvertNumericValue(2.5, 14, date1904), Is.TypeOf<double>().And.EqualTo(2.5));
+    }
+
+    [Test]
+    public void NumericValuesUseTheSelectedFormatSection()
+    {
+        var workbook = new CommonWorkbook();
+        workbook.AddNumberFormat(164, "[>=1]yyyy;0");
+        Assert.That(workbook.ConvertNumericValue(0.5, 164, false), Is.TypeOf<double>().And.EqualTo(0.5));
+        Assert.That(workbook.ConvertNumericValue(1, 164, false), Is.EqualTo(new DateTime(1900, 1, 1)));
+
+        workbook.AddNumberFormat(165, ";yyyy");
+        Assert.That(workbook.ConvertNumericValue(1, 165, false), Is.TypeOf<int>().And.EqualTo(1));
+        Assert.That(workbook.ConvertNumericValue(-1, 165, false), Is.EqualTo(new DateTime(1899, 12, 29)));
+
+        workbook.AddNumberFormat(166, "[>1]yyyy;[<-1]0.00;[h]:mm");
+        Assert.That(workbook.ConvertNumericValue(0.5, 166, false), Is.EqualTo(TimeSpan.FromHours(12)));
+        Assert.That(workbook.ConvertNumericValue(-2, 166, false), Is.TypeOf<int>().And.EqualTo(-2));
+    }
+
+    [Test]
+    public void EmptyConditionValuesDefaultToZero()
+    {
+        var workbook = new CommonWorkbook();
+        workbook.AddNumberFormat(164, "[>=]yyyy;0");
+        Assert.That(workbook.ConvertNumericValue(0, 164, false), Is.EqualTo(new DateTime(1899, 12, 31)));
+        Assert.That(workbook.ConvertNumericValue(1, 164, false), Is.EqualTo(new DateTime(1900, 1, 1)));
+        Assert.That(workbook.ConvertNumericValue(-1, 164, false), Is.TypeOf<int>().And.EqualTo(-1));
+    }
+
+    [Test]
+    public void CalendarDateSerialsKeepTheirExistingDateTimeConversion()
+    {
+        var workbook = new CommonWorkbook();
+        workbook.AddNumberFormat(164, "yyyy-mm-dd");
+        Assert.That(workbook.ConvertNumericValue(0, 164, false), Is.EqualTo(new DateTime(1899, 12, 31)));
+        Assert.That(workbook.ConvertNumericValue(60, 164, false), Is.EqualTo(new DateTime(1900, 2, 28)));
+        Assert.That(workbook.ConvertNumericValue(60.5, 164, false), Is.EqualTo(new DateTime(1900, 2, 28, 12, 0, 0)));
+
+        workbook.AddNumberFormat(166, @"m/d/yyyy\ h:mm:ss");
+        Assert.That(workbook.ConvertNumericValue(0.0, 166, false), Is.EqualTo(new DateTime(1899, 12, 31)));
+
+        workbook.AddNumberFormat(165, "h:mm");
+        Assert.That(workbook.ConvertNumericValue(0.5, 165, false), Is.TypeOf<DateTime>().And.EqualTo(new DateTime(1899, 12, 31, 12, 0, 0)));
+        Assert.That(workbook.ConvertNumericValue(60.5, 165, false), Is.TypeOf<DateTime>().And.EqualTo(new DateTime(1900, 2, 28, 12, 0, 0)));
+        Assert.That(workbook.ConvertNumericValue(0, 164, true), Is.EqualTo(new DateTime(1904, 1, 1)));
     }
 
     private static IExcelDataReader OpenXmlCell(string value, string type)
