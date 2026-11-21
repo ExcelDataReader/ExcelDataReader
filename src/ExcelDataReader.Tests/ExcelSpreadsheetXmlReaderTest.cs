@@ -10,11 +10,6 @@ public partial class ExcelSpreadsheetXmlReaderTest : ExcelTestBase
 {
     protected override DateTime Issue82_TodayDate => new(2013, 4, 19);
 
-    protected override bool SupportsCodeName => false;
-
-    // The SpreadsheetML fixture stores these cells as DateTime values, not numeric serials.
-    protected override bool SupportsIssue791NumericSerialCases => false;
-
     [TestCase(false)]
     [TestCase(true)]
     public void StyledValuesPreserveDateEpochsAndParsingFallbacks(bool singlePass)
@@ -393,64 +388,6 @@ public partial class ExcelSpreadsheetXmlReaderTest : ExcelTestBase
     {
         return ExcelReaderFactory.CreateReader(stream, configuration);
     }
-
-    protected override bool IsFixtureSupported(string name) => name switch
-    {
-        "10x10" => true,
-        "CellComments" => true,
-        "Issue791" => true,
-        "Issue578" => true,
-        "Issue486" => true,
-        "Issue518" => true,
-        "Issue642" => true,
-        "Issue642_Onesheet" => true,
-        "10x10000" => true,
-        "255x10" => true,
-        "Open" => true,
-        "MultiSheet" => true,
-        "CollapsedHide" => true,
-        "BlankHeader" => true,
-        "roo_1900_base" => true,
-        "roo_1904_base" => true,
-        "DoublePrecision" => true,
-        "Decimal1109" => true,
-        "UnicodeChars" => true,
-        "Issue329_Error" => true,
-        "OldIssue10725" => true,
-        "OldIssue11397" => true,
-        "OldIssue11573_BlankValues" => true,
-        "OldIssue4031_NullColumn" => true,
-        "OldIssue11435_Colors" => true,
-        "OldIssue11479_BlankSheet" => true,
-        "OldIssue11773_Exponential" => true,
-        "OldIssue7433_IllegalOleAutDate" => true,
-        "OldIssue8536" => true,
-        "DateFormatButNotDate" => true,
-        "SpreadsheetXml2003" => true,
-        "SpreadsheetXml2003_HiddenRefreshRow" => true,
-        "SpreadsheetXml2003_SinglePassFieldCount" => true,
-        "SpreadsheetXml2003_Visibility" => true,
-        "SpreadsheetXml2003_MergedCells" => true,
-        "SpreadsheetXml2003_LeadingWhitespace" => true,
-        "SpreadsheetXml2003_WrongExpandedCounts" => true,
-        "BoolFormula" => true,
-        "Chess" => true,
-        "LotsOfSheets" => true,
-        "Issue250_Richtext" => true,
-        "ColumnWidthsTest" => true,
-        "Issue532" => true,
-        "Issue574" => true,
-        "Issue694_TimeSpan" => true,
-        "Issue694_TimeSpanFormula" => true,
-        "MergedCell" => true,
-        "ExcelDataset" => true,
-        "EncodingFormulaDate1520" => true,
-        "Issue224_Simple" => true,
-        "Issue270" => true,
-        "Issue283_TimeSpan" => true,
-        "NumDoubleDateBoolString" => true,
-        _ => false,
-    };
 
     private static IExcelDataReader CreateReader(string worksheets, bool singlePass = false)
     {

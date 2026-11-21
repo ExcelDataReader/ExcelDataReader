@@ -7,6 +7,39 @@ namespace ExcelDataReader.Tests;
 
 public class NumericCellConversionTests
 {
+    [Test]
+    public void Issue791_NumberFormatSectionsUseCellValue(
+        [Values("xls", "xlsx", "xlsb")] string format, [Values(false, true)] bool singlePass)
+    {
+        using var reader = ExcelReaderFactory.CreateReader(
+            Configuration.GetTestWorkbook("Issue791." + format),
+            new ExcelReaderConfiguration { SinglePassMode = singlePass });
+
+        object[][] numericSerialRows =
+        [
+            [new DateTime(1900, 1, 2), new DateTime(1900, 1, 2), 0.5D, new DateTime(1900, 1, 2)],
+            [-1D, -2D, new DateTime(1900, 1, 1), -2D],
+            [0D, new DateTime(1899, 12, 31, 12, 0, 0), DBNull.Value, TimeSpan.FromHours(12)],
+            [DBNull.Value, new DateTime(1900, 1, 1), DBNull.Value, DBNull.Value],
+        ];
+
+        for (int row = 0; row < numericSerialRows.Length; row++)
+        {
+            Assert.That(reader.Read(), Is.True, $"Expected row {row}");
+            if (row == 0)
+                Assert.That(reader.FieldCount, Is.EqualTo(numericSerialRows[0].Length));
+
+            for (int column = 0; column < numericSerialRows[row].Length; column++)
+            {
+                object expected = numericSerialRows[row][column];
+                Assert.That(reader.GetValue(column), Is.EqualTo(expected), $"Row {row}, column {column}");
+                Assert.That(reader.GetFieldType(column), Is.EqualTo(expected.GetType()), $"Row {row}, column {column}");
+            }
+        }
+
+        Assert.That(reader.Read(), Is.False);
+    }
+
     [TestCase("0")]
     [TestCase("0000000000")]
     [TestCase("999999999")]

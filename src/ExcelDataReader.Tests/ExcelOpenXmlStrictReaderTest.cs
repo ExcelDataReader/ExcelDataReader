@@ -10,9 +10,6 @@ public class ExcelOpenXmlStrictReaderTest : ExcelOpenXmlReaderBase
 
     protected override bool UsesStrictWorksheet => true;
 
-    // Excel saves the Strict fixture's date-formatted values as explicit dates, not numeric serials.
-    protected override bool SupportsIssue791NumericSerialCases => false;
-
     [TestCase(false)]
     [TestCase(true)]
     public void Issue791_NegativeNumericCellsUseNumericSection(bool singlePass)

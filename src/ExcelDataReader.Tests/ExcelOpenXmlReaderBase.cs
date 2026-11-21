@@ -2,7 +2,7 @@ using System.Data;
 
 namespace ExcelDataReader.Tests;
 
-public abstract class ExcelOpenXmlReaderBase : ExcelTestBase
+public abstract class ExcelOpenXmlReaderBase : ExcelWorkbookTestBase
 {
     protected virtual bool UsesBinaryWorksheet => false;
 

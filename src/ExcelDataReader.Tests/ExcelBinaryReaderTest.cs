@@ -3,7 +3,7 @@ using ExcelDataReader.Exceptions;
 
 namespace ExcelDataReader.Tests;
 
-public class ExcelBinaryReaderTest : ExcelTestBase
+public class ExcelBinaryReaderTest : ExcelWorkbookTestBase
 {
     /// <inheritdoc />
     protected override DateTime Issue82_TodayDate => new(2009, 6, 28);

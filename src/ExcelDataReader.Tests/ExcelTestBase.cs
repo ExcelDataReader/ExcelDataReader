@@ -8,46 +8,6 @@ public abstract class ExcelTestBase
 {
     protected abstract DateTime Issue82_TodayDate { get; }
 
-    protected virtual bool SupportsCodeName => true;
-
-    protected virtual bool SupportsIssue791NumericSerialCases => true;
-
-    [TestCase(false)]
-    [TestCase(true)]
-    public void Issue791_NumberFormatSectionsUseCellValue(bool singlePass)
-    {
-        if (!SupportsIssue791NumericSerialCases)
-            Assert.Ignore("This fixture does not contain equivalent numeric serial values.");
-
-        using var reader = OpenReader(
-            OpenFixtureStream("Issue791"),
-            new ExcelReaderConfiguration { SinglePassMode = singlePass });
-
-        object[][] numericSerialRows =
-        [
-            [new DateTime(1900, 1, 2), new DateTime(1900, 1, 2), 0.5D, new DateTime(1900, 1, 2)],
-            [-1D, -2D, new DateTime(1900, 1, 1), -2D],
-            [0D, new DateTime(1899, 12, 31, 12, 0, 0), DBNull.Value, TimeSpan.FromHours(12)],
-            [DBNull.Value, new DateTime(1900, 1, 1), DBNull.Value, DBNull.Value],
-        ];
-
-        for (int row = 0; row < numericSerialRows.Length; row++)
-        {
-            Assert.That(reader.Read(), Is.True, $"Expected row {row}");
-            if (row == 0)
-                Assert.That(reader.FieldCount, Is.EqualTo(numericSerialRows[0].Length));
-
-            for (int column = 0; column < numericSerialRows[row].Length; column++)
-            {
-                object expected = numericSerialRows[row][column];
-                Assert.That(reader.GetValue(column), Is.EqualTo(expected), $"Row {row}, column {column}");
-                Assert.That(reader.GetFieldType(column), Is.EqualTo(expected.GetType()), $"Row {row}, column {column}");
-            }
-        }
-
-        Assert.That(reader.Read(), Is.False);
-    }
-
     [TestCase(false)]
     [TestCase(true)]
     public void IssueFileLock5161_NextResultCanAbandonPartiallyReadSheets(bool singlePass)
@@ -159,24 +119,6 @@ public abstract class ExcelTestBase
         Assert.That(value, Is.TypeOf<DateTime>());
         Assert.That(reader.GetFieldType(5), Is.EqualTo(typeof(DateTime)));
         Assert.That(reader.GetDateTime(5), Is.EqualTo((DateTime)value));
-    }
-
-    [TestCase(false)]
-    [TestCase(true)]
-    public void Issue788_PreservesDateAndDurationPrecision(bool singlePass)
-    {
-        using var reader = OpenReader(OpenFixtureStream("Issue788_Precision"), new ExcelReaderConfiguration { SinglePassMode = singlePass });
-        for (int pass = 0; pass < 2; pass++)
-        {
-            Assert.That(reader.Read(), Is.True);
-            Assert.That(reader.GetValue(1), Is.EqualTo(new DateTime(1899, 12, 31).AddTicks(4000)));
-            Assert.That(reader.GetValue(2), Is.EqualTo(TimeSpan.FromSeconds(11)));
-            Assert.That(reader.GetValue(3), Is.EqualTo(TimeSpan.FromTicks(-4000)));
-            Assert.That(reader.GetValue(4), Is.EqualTo(new DateTime(1899, 12, 31).AddTicks(3219)));
-            Assert.That(reader.GetValue(5), Is.EqualTo(0.0004 / 86400));
-            Assert.That(reader.Read(), Is.False);
-            reader.Reset();
-        }
     }
 
     [Test]
@@ -608,17 +550,6 @@ public abstract class ExcelTestBase
         // Test no CodeName = null
         using var reader = OpenReader("10x10");
         Assert.That(reader.CodeName, Is.EqualTo(null));
-    }
-
-    [Test]
-    public void Issue245_CodeName()
-    {
-        if (!SupportsCodeName)
-            Assert.Ignore($"{GetType().Name} does not support sheet code names.");
-
-        // Test CodeName is set
-        using var reader = OpenReader("ExcelDataset");
-        Assert.That(reader.CodeName, Is.EqualTo("Sheet1"));
     }
 
     [Test]
@@ -1457,14 +1388,6 @@ public abstract class ExcelTestBase
     }
 
     [Test]
-    public void Issue541_BuiltinFormat55IsDate()
-    {
-        using var reader = OpenReader("Issue541");
-        Assert.That(reader.Read(), Is.True);
-        Assert.That(reader.GetValue(0), Is.EqualTo(new DateTime(2021, 1, 15)));
-    }
-
-    [Test]
     public void AsDataSetTestFillEmptyCellsInMergedRangeNotUseHeaderRow()
     {
         using IExcelDataReader excelReader = OpenReader("MergedCell");
@@ -1638,15 +1561,7 @@ public abstract class ExcelTestBase
         return OpenReader(OpenFixtureStream(name));
     }
 
-    protected Stream OpenFixtureStream(string name)
-    {
-        if (!IsFixtureSupported(name))
-            Assert.Ignore($"Fixture '{name}' is not supported by {GetType().Name}.");
-
-        return OpenStream(name);
-    }
-
-    protected virtual bool IsFixtureSupported(string name) => true;
+    protected Stream OpenFixtureStream(string name) => OpenStream(name);
 
     protected abstract Stream OpenStream(string name);
 
