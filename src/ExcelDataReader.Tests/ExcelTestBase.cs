@@ -10,6 +10,44 @@ public abstract class ExcelTestBase
 
     protected virtual bool SupportsCodeName => true;
 
+    protected virtual bool SupportsIssue791NumericSerialCases => true;
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void Issue791_NumberFormatSectionsUseCellValue(bool singlePass)
+    {
+        if (!SupportsIssue791NumericSerialCases)
+            Assert.Ignore("This fixture does not contain equivalent numeric serial values.");
+
+        using var reader = OpenReader(
+            OpenFixtureStream("Issue791"),
+            new ExcelReaderConfiguration { SinglePassMode = singlePass });
+
+        object[][] numericSerialRows =
+        [
+            [new DateTime(1900, 1, 2), new DateTime(1900, 1, 2), 0.5D, new DateTime(1900, 1, 2)],
+            [-1D, -2D, new DateTime(1900, 1, 1), -2D],
+            [0D, new DateTime(1899, 12, 31, 12, 0, 0), DBNull.Value, TimeSpan.FromHours(12)],
+            [DBNull.Value, new DateTime(1900, 1, 1), DBNull.Value, DBNull.Value],
+        ];
+
+        for (int row = 0; row < numericSerialRows.Length; row++)
+        {
+            Assert.That(reader.Read(), Is.True, $"Expected row {row}");
+            if (row == 0)
+                Assert.That(reader.FieldCount, Is.EqualTo(numericSerialRows[0].Length));
+
+            for (int column = 0; column < numericSerialRows[row].Length; column++)
+            {
+                object expected = numericSerialRows[row][column];
+                Assert.That(reader.GetValue(column), Is.EqualTo(expected), $"Row {row}, column {column}");
+                Assert.That(reader.GetFieldType(column), Is.EqualTo(expected.GetType()), $"Row {row}, column {column}");
+            }
+        }
+
+        Assert.That(reader.Read(), Is.False);
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void IssueFileLock5161_NextResultCanAbandonPartiallyReadSheets(bool singlePass)
