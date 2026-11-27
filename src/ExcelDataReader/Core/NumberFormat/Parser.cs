@@ -133,26 +133,21 @@ internal static class Parser
     private static bool ReadToken(Tokenizer reader, out Token token)
     {
         int offset = reader.Position;
-        if (ReadLiteral(reader) ||
-            reader.ReadEnclosed('[', ']') ||
-            reader.ReadOneOf("#?,!&%+-$\u20AC\u00A30123456789{}():;/.@ ") ||
-            reader.ReadString("e+", true) ||
-            reader.ReadString("e-", true) ||
-            reader.ReadString("General", true) ||
-            reader.ReadString("am/pm", true) ||
-            reader.ReadString("a/p", true) ||
-            reader.ReadOneOrMore('y') ||
-            reader.ReadOneOrMore('Y') ||
-            reader.ReadOneOrMore('m') ||
-            reader.ReadOneOrMore('M') ||
-            reader.ReadOneOrMore('d') ||
-            reader.ReadOneOrMore('D') ||
-            reader.ReadOneOrMore('h') ||
-            reader.ReadOneOrMore('H') ||
-            reader.ReadOneOrMore('s') ||
-            reader.ReadOneOrMore('S') ||
-            reader.ReadOneOrMore('g') ||
-            reader.ReadOneOrMore('G'))
+
+        // Dispatch on the first character: each alternative can only match when it starts with that character.
+        int c = reader.Peek();
+        bool matched = c switch
+        {
+            '\\' or '*' or '_' or '"' => ReadLiteral(reader),
+            '[' => reader.ReadEnclosed('[', ']'),
+            'e' or 'E' => reader.ReadString("e+", true) || reader.ReadString("e-", true),
+            'g' or 'G' => reader.ReadString("General", true) || reader.ReadOneOrMore(c),
+            'a' or 'A' => reader.ReadString("am/pm", true) || reader.ReadString("a/p", true),
+            'y' or 'Y' or 'm' or 'M' or 'd' or 'D' or 'h' or 'H' or 's' or 'S' => reader.ReadOneOrMore(c),
+            _ => reader.ReadOneOf("#?,!&%+-$\u20AC\u00A30123456789{}():;/.@ "),
+        };
+
+        if (matched)
         {
             token = new Token(offset, reader.Position - offset);
             return true;
